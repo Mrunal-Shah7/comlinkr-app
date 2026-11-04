@@ -23,6 +23,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  type SharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
@@ -118,7 +119,18 @@ function SwipeTabsNavigator({
   screenOptions,
   screenLayout,
   UNSTABLE_router,
-}: BottomTabNavigatorProps) {
+  renderTabBar,
+}: BottomTabNavigatorProps & {
+  /** Design D (plan 01): draw a custom, floating tab bar that follows the pager (offset and page width). */
+  renderTabBar?: (p: {
+    state: TabNavigationState<ParamListBase>;
+    descriptors: BottomTabDescriptorMap;
+    navigation: any;
+    insets: { bottom: number };
+    offset: SharedValue<number>;
+    width: SharedValue<number>;
+  }) => ReactNode;
+}) {
   const { state, descriptors, navigation, NavigationContent } = useNavigationBuilder<
     TabNavigationState<ParamListBase>,
     TabRouterOptions,
@@ -252,7 +264,9 @@ function SwipeTabsNavigator({
             </Animated.View>
           </View>
         </GestureDetector>
-        <BottomTabBar state={state} descriptors={descriptors} navigation={navigation} insets={insets} />
+        {renderTabBar
+          ? renderTabBar({ state, descriptors, navigation, insets, offset, width: widthSV })
+          : <BottomTabBar state={state} descriptors={descriptors} navigation={navigation} insets={insets} />}
       </View>
     </NavigationContent>
   );
