@@ -114,7 +114,7 @@ export function Segmented({ items, value, onChange, style }: { items: { key: str
         return (
           <Pressable key={it.key} onLayout={onItem(it.key)} onPress={() => { if (!on) { void Haptics.selectionAsync(); onChange(it.key); } }}
             style={s.segBtn} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <Text style={[body(700), { fontSize: 13.5, color: on ? '#fff' : tc.textSecondary }]} numberOfLines={1}>{it.label}</Text>
+            <Text style={[body(700), { fontSize: 13, color: on ? '#fff' : tc.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{it.label}</Text>
           </Pressable>
         );
       })}
@@ -173,7 +173,7 @@ const s = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 7, borderRadius: RADIUS.chip, borderWidth: 1 },
   seg: { flexDirection: 'row', padding: 4, borderRadius: 18, borderWidth: 1 },
   segInd: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 14, overflow: 'hidden', shadowColor: '#1A6BAE', shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  segBtn: { flex: 1, paddingVertical: 8, paddingHorizontal: 10, alignItems: 'center', borderRadius: 14 },
+  segBtn: { flex: 1, paddingVertical: 8, paddingHorizontal: 3, alignItems: 'center', borderRadius: 14 },
   tile: { borderRadius: RADIUS.tile, padding: 14, overflow: 'hidden', minHeight: 118 },
   tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });

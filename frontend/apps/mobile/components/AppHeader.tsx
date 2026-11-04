@@ -1,76 +1,89 @@
+// components/AppHeader.tsx — the top bar of the four tabs (design D, plan 01).
+//
+// Left: your avatar in a gradient ring (opens the menu). Centre: the tab's title, which fades into the bar as
+// the page's large title scrolls away (interpolate(scrollY, [0, 64], [0, 1])); the bar's glass background
+// fades in with it. Right: notifications and messages, each with a dot while something is unread.
+// The prototype's search button is left out: there is no city-wide search behind it yet (plan 01).
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../src/theme/colors";
-import { useThemeStore } from "../src/store/theme.store";
+import Animated, { interpolate, useAnimatedStyle, type SharedValue } from "react-native-reanimated";
+import { useQuery } from "@tanstack/react-query";
 import HamburgerMenu from "./HamburgerMenu";
-import { rs } from "../src/utils/responsive";
+import { useTheme } from "../src/theme/useTheme";
+import { TYPE, body } from "../src/theme/d";
+import { GradientFill } from "../src/shared/d";
+import { FadeImage } from "./FadeImage";
+import { useAuthStore } from "../src/store/auth.store";
+import { useSidebarStore } from "../src/store/sidebar.store";
 import { useRequireAuth } from "../src/shared/hooks/useRequireAuth";
+import { getUnreadCount } from "../src/api/chat.api";
+import { resolveApiAssetUrl } from "../src/api/feed.api";
 
-const BRAND_BLUE  = Colors.brand.blue;
-const BRAND_GREEN = "#26B324";
+export const APP_HEADER_HEIGHT = 56;
 
-export default function AppHeader() {
+export default function AppHeader({ title, scrollY }: { title?: string; scrollY?: SharedValue<number> }) {
   const router = useRouter();
+  const { tc } = useTheme();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const isDark = useThemeStore((s) => s.isDark);
   const { requireAuth } = useRequireAuth();
+  const user = useAuthStore((s) => s.user);
+  const unreadNotif = useSidebarStore((s) => s.unreadNotifCount);
+  const { data: chatUnread } = useQuery({
+    queryKey: ["chat-unread-count"],
+    queryFn: getUnreadCount,
+    enabled: !!user,
+    staleTime: 60_000,
+  });
 
-  const menuBg      = isDark ? "rgba(255,255,255,0.08)" : "#F0F4FA";
-  const menuBorder  = isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+  const barBg = useAnimatedStyle(() => ({ opacity: scrollY ? interpolate(scrollY.value, [0, 64], [0, 1], "clamp") : 1 }));
+  const titleStyle = useAnimatedStyle(() => {
+    const c = scrollY ? interpolate(scrollY.value, [0, 64], [0, 1], "clamp") : 1;
+    return { opacity: c, transform: [{ translateY: (1 - c) * 6 }] };
+  });
+
+  const initials = (user?.name ?? "Guest").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const avatarUri = user?.avatarUrl ? resolveApiAssetUrl(user.avatarUrl) : null;
+
+  const iconBtn = (icon: keyof typeof Ionicons.glyphMap, label: string, dot: boolean, onPress: () => void) => (
+    <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
+      style={({ pressed }) => [s.ib, pressed && { backgroundColor: tc.inputBg }]}>
+      <Ionicons name={icon} size={22} color={tc.textPrimary} />
+      {dot ? <View style={[s.dot, { borderColor: tc.pageBg }]} /> : null}
+    </Pressable>
+  );
 
   return (
     <>
-      <View style={[s.header, {
-        backgroundColor: isDark ? "#0E1724" : "#FFFFFF",
-        borderBottomColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.07)",
-      }]}>
-
-        {/* Hamburger */}
-        <Pressable
-          onPress={() => setDrawerOpen(true)}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Open menu"
-          style={({ pressed }) => [
-            s.menuBtn,
-            {
-              backgroundColor: pressed ? (isDark ? "rgba(255,255,255,0.12)" : "#E8ECF2") : menuBg,
-              borderColor: menuBorder,
-            },
-          ]}
-        >
-          <Ionicons name="menu" size={rs(20)} color={isDark ? "#C5D5E8" : "#334155"} />
+      <View style={s.header}>
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }, barBg]} />
+        <Pressable onPress={() => setDrawerOpen(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open menu" style={s.avBtn}>
+          <GradientFill style={s.ring}>
+            <View style={[s.avInner, { borderColor: tc.pageBg }]}>
+              {avatarUri ? <FadeImage uri={avatarUri} style={s.avImg} /> : (
+                <GradientFill style={s.avImg}><Text style={[body(800), { color: "#fff", fontSize: 11 }]}>{initials}</Text></GradientFill>
+              )}
+            </View>
+          </GradientFill>
         </Pressable>
 
-        {/* Wordmark — center */}
-        <View style={s.wordmarkWrap} pointerEvents="none">
-          <Text style={[s.brandName, { color: BRAND_BLUE }]}>ComLinkr</Text>
-          <Text style={s.brandTag}>WE FIND FOR YOU</Text>
-        </View>
+        {title ? (
+          <Animated.View pointerEvents="none" style={[s.titleWrap, titleStyle]}>
+            <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>{title}</Text>
+          </Animated.View>
+        ) : null}
 
-        {/* Right: Chat */}
-        <Pressable
-          onPress={() => {
+        <View style={s.right}>
+          {iconBtn("notifications-outline", "Notifications", unreadNotif > 0, () => {
+            if (!requireAuth(undefined, "Sign in to see your notifications.")) return;
+            router.push("/notifications" as any);
+          })}
+          {iconBtn("chatbubble-outline", "Messages", (chatUnread?.count ?? 0) > 0, () => {
             if (!requireAuth(undefined, "Sign in to message other members.")) return;
             router.push("/chat" as any);
-          }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Open messages"
-          style={({ pressed }) => [
-            s.chatBtn,
-            { opacity: pressed ? 0.75 : 1 },
-          ]}
-        >
-          <Ionicons name="chatbubble-ellipses" size={rs(20)} color="#FFF" />
-        </Pressable>
+          })}
+        </View>
       </View>
 
       <HamburgerMenu visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
@@ -79,54 +92,13 @@ export default function AppHeader() {
 }
 
 const s = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: rs(14),
-    paddingTop: rs(10),
-    paddingBottom: rs(10),
-    borderBottomWidth: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
-    zIndex: 10,
-  },
-
-  menuBtn: {
-    width: rs(38), height: rs(38), borderRadius: rs(12),
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1,
-  },
-
-  wordmarkWrap: {
-    position: "absolute",
-    left: 0, right: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  brandName: {
-    fontSize: rs(18),
-    fontWeight: "800",
-    letterSpacing: -0.5,
-    lineHeight: rs(22),
-    includeFontPadding: false,
-  },
-  brandTag: {
-    fontSize: rs(7),
-    fontWeight: "800",
-    color: BRAND_GREEN,
-    letterSpacing: 1.6,
-    lineHeight: rs(10),
-    textTransform: "uppercase",
-    includeFontPadding: false,
-  },
-
-  chatBtn: {
-    width: rs(36), height: rs(36), borderRadius: rs(11),
-    alignItems: "center", justifyContent: "center",
-    backgroundColor: BRAND_BLUE,
-  },
+  header: { height: APP_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 10, zIndex: 10 },
+  avBtn: { padding: 4 },
+  ring: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  avInner: { width: 33, height: 33, borderRadius: 17, borderWidth: 2.5, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  avImg: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  titleWrap: { position: "absolute", left: 64, right: 104, alignItems: "center" },
+  right: { marginLeft: "auto", flexDirection: "row", gap: 2 },
+  ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  dot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: "#EF4444", borderWidth: 2 },
 });

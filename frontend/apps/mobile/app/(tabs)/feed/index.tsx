@@ -1,6 +1,13 @@
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Animated, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView, LayoutAnimation, AccessibilityInfo } from "react-native";
+import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
+import { Chip, Segmented } from "../../../src/shared/d";
+import { TYPE } from "../../../src/theme/d";
+import { revealIn } from "../../../src/shared/motion/presets";
+import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { runAfterTransition } from "../../../src/utils/afterTransition";
@@ -105,6 +112,10 @@ export default function FeedScreen() {
     exploreTab?: string;
   }>();
   const feedScrollRef = useRef<FlatList<FeedRow>>(null);
+  // Design D (plan 01): the header title fades in as the large "Explore" title scrolls away.
+  const exploreScrollY = useSharedValue(0);
+  const onExploreScroll = useAnimatedScrollHandler((e) => { exploreScrollY.value = e.contentOffset.y; });
+  const exploreInsets = useSafeAreaInsets();
   useScrollToTop(feedScrollRef); // re-tap the Explore tab → back to top
 
   // SPRINT-27: removed scroll-to-top on focus — preserves scroll position across tab switches
@@ -1605,6 +1616,9 @@ export default function FeedScreen() {
   const cityTz = CITY_TZ[city] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const cityHour = parseInt(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: cityTz }).format(new Date()), 10);
   const greeting = cityHour < 12 ? "Good morning" : cityHour < 18 ? "Good afternoon" : "Good evening";
+  const cityDay = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: cityTz }).format(new Date()).replace(/,/g, "");
+  const cityClock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: cityTz }).format(new Date());
+  const dateLine = `${cityDay} · ${cityClock}`.toUpperCase();
 
   const currentPoll = wyrPolls[wyrIndex];
   const currentWYR = currentPoll ? pollToWyrCardModel(currentPoll, wyrIndex, wyrPolls.length) : null;
@@ -1704,7 +1718,7 @@ export default function FeedScreen() {
   const onShareArticleRow = useStableCallback(shareArticle);
   const onToggleSaveArticleRow = useStableCallback(toggleNewsSave);
 
-  const renderFeedRow = ({ item, index }: { item: FeedRow; index: number }) => {
+  const renderFeedRowInner = ({ item, index }: { item: FeedRow; index: number }) => {
     switch (item.kind) {
       case "event": {
         const e = item.event;
@@ -1823,9 +1837,14 @@ export default function FeedScreen() {
     }
   };
 
+  // Design D (plan 01): rows rise in on first load, 45 ms apart (capped).
+  const renderFeedRow = (p: { item: FeedRow; index: number }) => (
+    <Reanimated.View entering={revealIn(Math.min(p.index, 6))}>{renderFeedRowInner(p)}</Reanimated.View>
+  );
+
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      <AppHeader />
+      <AppHeader title="Explore" scrollY={exploreScrollY} />
       {!user ? <GuestCityBanner /> : null}
       {!user ? (
         <GuestCityPickerModal
@@ -1834,10 +1853,12 @@ export default function FeedScreen() {
         />
       ) : null}
 
-      <FlatList
-        ref={feedScrollRef}
+      <Reanimated.FlatList
+        ref={feedScrollRef as any}
+        onScroll={onExploreScroll}
+        scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={s.content}
+        contentContainerStyle={[s.content, { paddingBottom: tabBarClearance(exploreInsets.bottom) }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.brand.blue} />}
         data={feedRows}
@@ -1848,181 +1869,41 @@ export default function FeedScreen() {
         windowSize={7}
         ListHeaderComponent={
           <>
-            {/* ── Feed Tab bar — above hero ── */}
-            <View style={{ flexDirection: "row", gap: rs(6), paddingHorizontal: rs(14), paddingVertical: rs(10), backgroundColor: tc.pageBg }}>
-              {FEED_TABS.map((tab) => (
-                <Pressable
-                  key={tab}
-                  onPress={() => { if (feedTab !== tab) Haptics.selectionAsync(); setFeedTab(tab); }}
-                  style={({ pressed }) => [
-                    {
-                      flex: 1,
-                      alignItems: "center",
-                      paddingVertical: rs(8),
-                      borderRadius: rs(10),
-                      borderWidth: 1,
-                      backgroundColor: tc.cardBg,
-                      borderColor: tc.borderLight,
-                    },
-                    feedTab === tab && { backgroundColor: Colors.brand.blue, borderColor: Colors.brand.blue },
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Text style={[{ fontSize: rs(12), fontWeight: "700", color: tc.textSecondary }, feedTab === tab && { color: "#FFF" }]}>{tab}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* ── Hero — only visible on the News tab ── */}
-            {feedTab === "News" && <LinearGradient
-              colors={[Colors.brand.blue, Colors.brand.blueDark]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={s.hero}
-            >
-              <View style={s.heroBg1} />
-              <View style={s.heroBg2} />
-              <View style={s.heroBg3} />
-
-              {/* Top row: city label only */}
-              <View style={s.heroTopRow}>
-                <View style={s.citySwitcherRow}>
-                  <Pressable
-                    style={s.cityLabel}
-                    onPress={() => {
-                      if (!user) setGuestCityPickerVisible(true);
-                      else router.push("/edit-profile" as any);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={hasChosenCity ? `Change city, currently ${city}` : "Choose your city"}
-                    hitSlop={8}
-                  >
-                    <Text style={{ fontSize: rs(11) }}>{countryGeo.flag}</Text>
-                    <Ionicons name="location-sharp" size={13} color="rgba(255,255,255,0.9)" />
-                    <Text style={s.cityLabelText}>{hasChosenCity ? city.toUpperCase() : "CHOOSE YOUR CITY"}</Text>
-                    <Ionicons name="chevron-down" size={12} color="rgba(255,255,255,0.85)" />
-                  </Pressable>
-                </View>
-              </View>
-
-              {/* Greeting + title */}
-              <Text style={s.heroGreet} numberOfLines={1}>{greeting}, {user?.name?.split(" ")[0] ?? "neighbor"}</Text>
-              <Text style={s.heroTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{hasChosenCity ? `Discover what's happening in ${city}` : "Discover what's happening near you"}</Text>
-
-              {/* ── Live Activity Ticker ── */}
-              {(heroTickerRows.length > 0 || exploreEventsLoading) && (
-              <View style={s.heroTickerSection}>
-                <View style={s.heroTickerHeader}>
-                  <View style={s.heroTickerLiveDot} />
-                  <Text style={s.heroTickerTitle}>Recent activity</Text>
-                </View>
-                <GHScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={s.heroTickerScroll}
-                >
-                  {heroTickerRows.length === 0 && !exploreEventsLoading ? (
-                    <Text style={s.heroTickerEmpty}>No recent activity in {city} yet.</Text>
-                  ) : (
-                    heroTickerRows.map((tick) => (
-                      <Pressable
-                        key={tick.id}
-                        style={({ pressed }) => [s.heroTickerCard, pressed && { opacity: 0.82 }]}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          // SPRINT-30: community post → post detail modal
-                          if (tick.postId) {
-                            setFeedTab("News");
-                            setNewsSubTab("community");
-                            setFeedCommentPostId(tick.postId);
-                            setFeedCommentTitle("Post");
-                            return;
-                          }
-                          // SPRINT-30: event → event detail modal
-                          if (tick.eventId) {
-                            setFeedTab("Events");
-                            const ev = exploreEvents.find((e) => e.id === tick.eventId);
-                            if (ev) {
-                              setSelectedEvent(ev);
-                            } else {
-                              void getEvent(tick.eventId).then((e) => {
-                                if (e) setSelectedEvent(apiEventToExploreRow(e as ApiEvent));
-                              }).catch(() => {});
-                            }
-                            return;
-                          }
-                          if (tick.nav === "housing") router.push("/(tabs)/housing" as any);
-                          else if (tick.nav === "food") router.push("/(tabs)/food" as any);
-                          else if (tick.nav === "events") setFeedTab("Events");
-                          else if (tick.nav === "stories") setFeedTab("Stories");
-                          else setFeedTab("News");
-                        }}
-                      >
-                        <FadeImage uri={tick.avatar} style={s.heroTickerAvatar} />
-                        <View style={s.heroTickerContent}>
-                          <Text style={s.heroTickerName}>
-                            {tick.name} <Text style={s.heroTickerAction}>{tick.action}</Text>
-                          </Text>
-                          <View style={s.heroTickerTargetRow}>
-                            <View style={[s.heroTickerIconDot, { backgroundColor: tick.color + "30" }]}>
-                              <Ionicons name={tick.icon} size={10} color={tick.color} />
-                            </View>
-                            <Text style={s.heroTickerTarget} numberOfLines={1}>
-                              {tick.target}
-                            </Text>
-                            {tick.eventId && (tick.totalReviews ?? 0) > 0 ? ( // SPRINT-42: ticker rating when space permits
-                              <Text style={{ color: "#FBBF24", fontSize: rs(10), fontWeight: "800", marginLeft: 4 }}>
-                                ★{(tick.averageRating ?? 0).toFixed(1)}
-                              </Text>
-                            ) : null}
-                          </View>
-                        </View>
-                        <Text style={s.heroTickerTime}>{tick.time}</Text>
-                      </Pressable>
-                    ))
-                  )}
-                </GHScrollView>
-              </View>
-              )}
-
-              {/* Sprint 21: hide hero stats row (counts still fetched for other uses) */}
-              {false && (
-                <View style={s.heroStats}>
-                  <Pressable
-                    style={({ pressed }) => [s.heroStat, pressed && { opacity: 0.7 }]}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFeedTab("Events"); }}
-                  >
-                    <Text style={s.heroStatNum}>{heroEventsTotal}</Text>
-                    <Text style={s.heroStatLbl}>Events</Text>
-                  </Pressable>
-                  <View style={s.heroStatDiv} />
-                  <Pressable
-                    style={({ pressed }) => [s.heroStat, pressed && { opacity: 0.7 }]}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/(tabs)/housing" as any); }}
-                  >
-                    <Text style={s.heroStatNum}>{heroListingsTotal}</Text>
-                    <Text style={s.heroStatLbl}>Listings</Text>
-                  </Pressable>
-                  <View style={s.heroStatDiv} />
-                  <Pressable
-                    style={({ pressed }) => [s.heroStat, pressed && { opacity: 0.7 }]}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFeedTab("Polls"); }}
-                  >
-                    <Text style={s.heroStatNum}>{wyrPolls.length || pollQuestionPosts.length}</Text>
-                    <Text style={s.heroStatLbl}>Polls</Text>
-                  </Pressable>
-                  <View style={s.heroStatDiv} />
-                  <Pressable
-                    style={({ pressed }) => [s.heroStat, pressed && { opacity: 0.7 }]}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push("/(tabs)/community" as any); }}
-                  >
-                    <Text style={s.heroStatNum}>{heroCommunityStats?.membersCount ?? 0}</Text>
-                    <Text style={s.heroStatLbl}>Members</Text>
-                  </Pressable>
-                </View>
-              )}
-
-            </LinearGradient>}
+            {/* ── Design D (plan 01): large title, the bento, one row of tabs ── */}
+            <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2, paddingBottom: 12 }]}>Explore</Text>
+            {hasChosenCity ? (
+              <ExploreBento
+                city={city}
+                dateLine={dateLine}
+                greeting={greeting}
+                firstName={user?.name?.split(" ")[0] ?? "neighbour"}
+                onCity={() => {
+                  if (!user) setGuestCityPickerVisible(true);
+                  else router.push("/edit-profile" as any);
+                }}
+                nextEvent={exploreEvents[0]}
+                onEvent={(e) => setSelectedEvent(e)}
+                homesCount={heroListingsTotal}
+                onHomes={() => router.push("/(tabs)/housing" as any)}
+                stories={storyAuthorGroups}
+                onAddStory={() => {
+                  if (!requireAuth(undefined, "Sign in to share your story with the neighborhood.")) return;
+                  router.push({ pathname: "/create-post", params: { type: "story" } } as any);
+                }}
+                onStory={(ai) => openStoryViewerAt(ai, 0)}
+                quest={questsList[0]}
+                onQuest={() => setFeedTab("Quests")}
+                poll={wyrPolls[0]}
+                onPoll={() => setFeedTab("Polls")}
+                onQuestion={() => router.push("/(tabs)/community" as any)}
+              />
+            ) : null}
+            <Segmented
+              style={{ marginHorizontal: 16, marginBottom: 12 }}
+              items={FEED_TABS.map((t) => ({ key: t, label: t }))}
+              value={feedTab}
+              onChange={(k) => setFeedTab(k as typeof feedTab)}
+            />
 
             {!hasChosenCity ? (
               <ListState
@@ -2283,31 +2164,25 @@ export default function FeedScreen() {
             {/* ── NEWS ── */}
             {hasChosenCity && feedTab === "News" && (
               <>
-                {/* ── Sub-tab switcher: Community / Live News ── */}
-                <View style={[nw.subTabBar, { backgroundColor: tc.sectionBg }]}>
-                  <Pressable
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setNewsSubTab("live"); }}
-                    style={[nw.subTab, newsSubTab === "live" && nw.subTabActive]}
-                  >
-                    <View style={nw.liveDotSmall} />
-                    <Text style={[nw.subTabText, { color: tc.textSecondary }, newsSubTab === "live" && nw.subTabTextActive]}>Live News</Text>
-                    {newsLoading && <ActivityIndicator size="small" color={newsSubTab === "live" ? "#FFF" : Colors.brand.blue} style={{ marginLeft: rs(4) }} />}
-                  </Pressable>
-                  <Pressable
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setNewsSubTab("community"); }}
-                    style={[nw.subTab, newsSubTab === "community" && nw.subTabActive]}
-                  >
-                    <Ionicons name="people" size={16} color={newsSubTab === "community" ? "#FFF" : tc.textSecondary} />
-                    <Text style={[nw.subTabText, { color: tc.textSecondary }, newsSubTab === "community" && nw.subTabTextActive]}>Community</Text>
-                  </Pressable>
-                </View>
+                {/* ── Design D: one row of chips (categories, then neighbours' posts) ── */}
+                <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
+                  {NEWS_CATEGORIES.map((cat) => (
+                    <Chip
+                      key={cat.id}
+                      label={cat.id === "all" ? "For you" : cat.label}
+                      on={newsSubTab === "live" && newsCategory === cat.id}
+                      onPress={() => { setNewsSubTab("live"); setNewsCategory(cat.id as NewsCategory); }}
+                    />
+                  ))}
+                  <Chip label="Neighbours" on={newsSubTab === "community"} onPress={() => setNewsSubTab("community")} />
+                  {newsLoading && newsSubTab === "live" ? <ActivityIndicator size="small" color={tc.accent} style={{ marginLeft: 4 }} /> : null}
+                </GHScrollView>
                 {/* ═══ Community Tab ═══ */}
                 {newsSubTab === "community" && (
                   <View style={nw.sectionBlock}>
                     <View style={nw.sectionHeader}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[nw.sectionTitle, { color: tc.textPrimary }]}>Community News</Text>
-                        <Text style={[nw.sectionSubtitle, { color: tc.textSecondary }]}>Posts from your neighbors & community</Text>
+                        <Text style={[TYPE.section, { color: tc.textPrimary }]}>Neighbours say</Text>
                       </View>
                       <Pressable
                         style={nw.sectionCreateBtn}
@@ -2333,29 +2208,6 @@ export default function FeedScreen() {
                 {/* ═══ Live News Tab ═══ */}
                 {newsSubTab === "live" && (
                   <View style={nw.sectionBlock}>
-                    {/* Category Filter */}
-                    <GHScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={nw.catRow}
-                    >
-                      {NEWS_CATEGORIES.map((cat) => {
-                        const active = newsCategory === cat.id;
-                        return (
-                          <Pressable
-                            key={cat.id}
-                            onPress={() => {
-                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                              setNewsCategory(cat.id as NewsCategory);
-                            }}
-                            style={[nw.catPill, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && nw.catPillActive]}
-                          >
-                            <Ionicons name={cat.icon as any} size={rs(13)} color={active ? Colors.brand.blue : (tc.textSecondary as string)} />
-                            <Text style={[nw.catText, { color: tc.textSecondary }, active && nw.catTextActive]}>{cat.label}</Text>
-                          </Pressable>
-                        );
-                      })}
-                    </GHScrollView>
                     {primaryLoaded && (
                       <View style={nw.phaseTwoLoaderWrap}>
                         <View style={nw.phaseTwoLoaderTrack}>

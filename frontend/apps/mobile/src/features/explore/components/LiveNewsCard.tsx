@@ -1,29 +1,49 @@
 import { memo } from "react";
-import { View, Text, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
-import { rs } from "../../../utils/responsive";
-import { nw } from "../styles/news.styles";
+import { RADIUS, TYPE, body, display } from "../../../theme/d";
+import { PressableScale } from "../../../shared/d";
+import { SPRING } from "../../../shared/motion/presets";
+import { FadeImage } from "../../../../components/FadeImage";
 import { type NewsArticle, BASE_NEWS_CATEGORIES, newsTimeAgo, isSameContent } from "../news";
 
-/** A Live News article card (Explore → News → Live News). Handlers must be stable (the row is memoized). */
+const LIKE = "#F0457E";
+
+/** Heart / bookmark that pops when toggled (scale 1 → 1.32 → 1, spring). */
+function PopIcon({ on, name, onName, color, onColor, size, onPress, label, count }: {
+  on: boolean; name: keyof typeof Ionicons.glyphMap; onName: keyof typeof Ionicons.glyphMap; color: string; onColor: string; size: number; onPress: () => void; label: string; count?: number;
+}) {
+  const sc = useSharedValue(1);
+  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  return (
+    <Pressable hitSlop={6} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }}
+      onPress={(e) => { e.stopPropagation?.(); sc.value = withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press)); onPress(); }}
+      style={s.act}>
+      <Animated.View style={st}><Ionicons name={on ? onName : name} size={size} color={on ? onColor : color} /></Animated.View>
+      {count ? <Text style={[body(700), { fontSize: 13, color: on ? onColor : color }]}>{count}</Text> : null}
+    </Pressable>
+  );
+}
+
+/** A Live News article (Explore → News), design D (plan 01). The first article is a feature card; the rest
+ *  are compact rows. A photo shows only when the article has one. Handlers must be stable (memoized row). */
 export const LiveNewsCard = memo(function LiveNewsCard({
   article,
   isFeatured,
   isExpanded,
-  isLiked: isArticleLiked,
-  isSaved: isArticleSaved,
+  isLiked,
+  isSaved,
   isRead,
   likeCount,
   commentCount,
   onOpen,
-  onToggleExpand: toggleExpandArticle,
-  onLike: handleNewsLike,
-  onComments: openNewsComments,
-  onShare: shareArticle,
-  onToggleSave: toggleNewsSave,
+  onToggleExpand,
+  onLike,
+  onComments,
+  onShare,
+  onToggleSave,
 }: {
   article: NewsArticle;
   isFeatured: boolean;
@@ -40,130 +60,73 @@ export const LiveNewsCard = memo(function LiveNewsCard({
   onShare: (article: NewsArticle) => unknown;
   onToggleSave: (id: string) => unknown;
 }) {
-  const { tc } = useTheme();
-  const isTrending = false; // EXP-02: list position is not a popularity signal; no Trending claim without a ranking signal
-  // Reading time: word count of description / 200 wpm (minimum 1 min)
-  const wordCount = article.description
-    ? article.description.split(/\s+/).filter(Boolean).length
-    : article.title.split(/\s+/).length * 3;
-  const readMins = Math.max(1, Math.round(wordCount / 200));
+  const { tc, isDark } = useTheme();
   const catMeta = BASE_NEWS_CATEGORIES.find((c) => c.id === article.category);
+  const hasDesc = article.description.length > 0 && !isSameContent(article.title, article.description);
+  const meta = `${article.source} · ${newsTimeAgo(article.publishedAt)}`;
 
-  const openArticle = () => onOpen(article);
+  const actions = (
+    <View style={s.actions}>
+      <PopIcon on={isLiked} name="heart-outline" onName="heart" color={tc.textSecondary} onColor={LIKE} size={19} label="Like" count={likeCount} onPress={() => void onLike(article.id)} />
+      <Pressable hitSlop={6} onPress={(e) => { e.stopPropagation?.(); void onComments(article.id); }} style={s.act} accessibilityRole="button" accessibilityLabel="Comments">
+        <Ionicons name="chatbubble-outline" size={18} color={tc.textSecondary} />
+        {commentCount ? <Text style={[body(700), { fontSize: 13, color: tc.textSecondary }]}>{commentCount}</Text> : null}
+      </Pressable>
+      <Pressable hitSlop={6} onPress={(e) => { e.stopPropagation?.(); void onShare(article); }} style={s.act} accessibilityRole="button" accessibilityLabel="Share">
+        <Ionicons name="share-social-outline" size={18} color={tc.textSecondary} />
+      </Pressable>
+      <View style={{ marginLeft: "auto" }}>
+        <PopIcon on={isSaved} name="bookmark-outline" onName="bookmark" color={tc.textSecondary} onColor={tc.accentText} size={19} label="Save" onPress={() => void onToggleSave(article.id)} />
+      </View>
+    </View>
+  );
 
-  const catId = catMeta?.id as string | undefined;
-  const accentColors: [string, string] = isFeatured
-    ? ["#0076EB", "#26B324"]
-    : catId === "sports" ? ["#EF4444", "#FF7B00"]
-    : catId === "health" ? ["#26B324", "#00A878"]
-    : catId === "technology" ? ["#7C3AED", "#0076EB"]
-    : catId === "entertainment" ? ["#DB2777", "#FF7B00"]
-    : catId === "world" ? ["#0076EB", "#6D28D9"]
-    : ["#0076EB", "#0055CC"];
+  const card = [s.card, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }];
+
+  if (isFeatured) {
+    return (
+      <PressableScale onPress={() => onOpen(article)} style={card} accessibilityRole="button" accessibilityLabel={article.title}>
+        {article.image ? <FadeImage uri={article.image} style={s.featImg} /> : null}
+        <View style={s.featBody}>
+          <View style={s.metaRow}>
+            <View style={[s.tag, { backgroundColor: tc.accentSoft }]}><Text style={[body(700), { fontSize: 11.5, color: tc.accentText }]}>{catMeta?.label ?? "News"}</Text></View>
+            {isRead ? <View style={[s.tag, { backgroundColor: tc.mintSoft }]}><Text style={[body(700), { fontSize: 11.5, color: tc.successText }]}>Read</Text></View> : null}
+            <Text style={[TYPE.small, { color: tc.textSecondary, flexShrink: 1 }]} numberOfLines={1}>{meta}</Text>
+          </View>
+          <Text style={[display(700), { fontSize: 18, lineHeight: 22, color: tc.textPrimary, marginTop: 8 }]} numberOfLines={4}>{article.title}</Text>
+          {hasDesc ? (
+            <Pressable onPress={(e) => { e.stopPropagation?.(); onToggleExpand(article.id); }}>
+              <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 6 }]} numberOfLines={isExpanded ? undefined : 3}>{article.description}</Text>
+            </Pressable>
+          ) : null}
+          {actions}
+        </View>
+      </PressableScale>
+    );
+  }
 
   return (
-    <Pressable
-      style={({ pressed }) => [nw.newsCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.94 }]}
-      onPress={openArticle}
-    >
-      {/* Left accent bar */}
-      <View style={nw.newsCardInner}>
-        <LinearGradient
-          colors={accentColors}
-          style={nw.newsAccentBar}
-          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-        />
-
-        <View style={[nw.newsCardBody, { paddingLeft: rs(16) }]}>
-          {/* Top row: badges left | time right — no overlap */}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), flexWrap: "wrap", flex: 1, marginRight: rs(8) }}>
-              <View style={[nw.articleCatPill, { backgroundColor: tc.pillBg, borderWidth: 1, borderColor: tc.borderLight, flexDirection: "row", alignItems: "center", gap: rs(4) }]}>
-                <Ionicons name={(catMeta?.icon ?? "newspaper-outline") as any} size={rs(10)} color={tc.textSecondary as string} />
-                <Text style={[nw.articleCatText, { color: tc.textSecondary, fontWeight: "700" }]}>
-                  {catMeta?.label || "News"}
-                </Text>
-              </View>
-              {isFeatured && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: Colors.brand.blue, borderRadius: rs(7), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
-                  <Ionicons name="star" size={rs(9)} color="#FFF" />
-                  <Text style={{ fontSize: rs(9), fontWeight: "900", color: "#FFF", letterSpacing: 0.5 }}>FEATURED</Text>
-                </View>
-              )}
-              {isTrending && !isFeatured && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: rs(3), backgroundColor: "#EF4444", borderRadius: rs(7), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
-                  <Ionicons name="trending-up" size={rs(9)} color="#FFF" />
-                  <Text style={{ fontSize: rs(9), fontWeight: "900", color: "#FFF", letterSpacing: 0.4 }}>TRENDING</Text>
-                </View>
-              )}
-              {isRead && (
-                <View style={{ backgroundColor: "#DCFCE7", borderRadius: rs(7), paddingHorizontal: rs(7), paddingVertical: rs(3) }}>
-                  <Text style={{ fontSize: rs(9), fontWeight: "900", color: "#16A34A", letterSpacing: 0.4 }}>✓ READ</Text>
-                </View>
-              )}
-            </View>
-            <Text style={[nw.newsCardTime, { color: tc.textTertiary }]} numberOfLines={1}>{newsTimeAgo(article.publishedAt)}</Text>
-          </View>
-
-          {/* Title */}
-          <Text style={[nw.newsCardTitle, { color: tc.textPrimary }, isFeatured && nw.newsCardTitleFeatured]} numberOfLines={isFeatured ? 4 : 3}>
-            {article.title}
-          </Text>
-
-          {/* Description — always show up to 3 lines */}
-          {article.description.length > 0 && !isSameContent(article.title, article.description) ? (
-            <Text
-              style={[nw.newsCardDesc, { color: tc.textSecondary }]}
-              numberOfLines={isExpanded ? undefined : 3}
-            >
-              {article.description}
-            </Text>
-          ) : (
-            <Text style={[nw.newsCardDesc, { color: tc.textTertiary, fontStyle: "italic" }]} numberOfLines={2}>
-              Tap to read the full story from {article.source}.
-            </Text>
-          )}
-
-          {/* Expand / Collapse */}
-          {article.description.length > 120 && !isSameContent(article.title, article.description) && (
-            <Pressable
-              onPress={(e) => { e.stopPropagation?.(); toggleExpandArticle(article.id); }}
-              style={nw.expandBtn}
-            >
-              <Text style={nw.expandBtnText}>{isExpanded ? "Show less" : "Read more"}</Text>
-              <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={rs(13)} color={Colors.brand.blue} />
-            </Pressable>
-          )}
-
-          {/* Source + read time + actions */}
-          <View style={[nw.newsActions, { borderTopColor: tc.borderLight }]}>
-            <View style={nw.newsCardSourceRow}>
-              <View style={nw.sourceDot} />
-              <Text style={nw.newsCardSource} numberOfLines={1}>{article.source}</Text>
-              <View style={[nw.readTimeChip, { backgroundColor: tc.inputBg }]}>
-                <Ionicons name="time-outline" size={rs(10)} color={tc.textTertiary} />
-                <Text style={[nw.readTimeText, { color: tc.textTertiary }]}>{readMins} min</Text>
-              </View>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4), marginLeft: "auto" as any }}>
-              <Pressable onPress={(e) => { e.stopPropagation?.(); void handleNewsLike(article.id); }} style={[nw.newsAction, { flexDirection: "row", alignItems: "center", gap: rs(3) }]}>
-                <Ionicons name={isArticleLiked ? "heart" : "heart-outline"} size={rs(15)} color={isArticleLiked ? "#EF4444" : tc.textSecondary} />
-                {likeCount > 0 && <Text style={{ fontSize: rs(11), fontWeight: "700", color: isArticleLiked ? "#EF4444" : tc.textSecondary }}>{likeCount}</Text>}
-              </Pressable>
-              <Pressable onPress={(e) => { e.stopPropagation?.(); void openNewsComments(article.id); }} style={[nw.newsAction, { flexDirection: "row", alignItems: "center", gap: rs(3) }]}>
-                <Ionicons name="chatbubble-outline" size={rs(14)} color={tc.textSecondary} />
-                {commentCount > 0 && <Text style={{ fontSize: rs(11), fontWeight: "700", color: tc.textSecondary }}>{commentCount}</Text>}
-              </Pressable>
-              <Pressable onPress={(e) => { e.stopPropagation?.(); shareArticle(article); }} style={nw.newsAction}>
-                <Ionicons name="share-social-outline" size={rs(15)} color={tc.textSecondary} />
-              </Pressable>
-              <Pressable onPress={(e) => { e.stopPropagation?.(); toggleNewsSave(article.id); }} style={nw.newsAction}>
-                <Ionicons name={isArticleSaved ? "bookmark" : "bookmark-outline"} size={rs(16)} color={isArticleSaved ? Colors.brand.blue : tc.textSecondary} />
-              </Pressable>
-            </View>
-          </View>
+    <PressableScale onPress={() => onOpen(article)} style={card} accessibilityRole="button" accessibilityLabel={article.title}>
+      <View style={s.row}>
+        {article.image ? <FadeImage uri={article.image} style={s.thumb} /> : null}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[TYPE.small, { color: tc.textSecondary }]} numberOfLines={1}>{isRead ? "Read · " : ""}{meta}</Text>
+          <Text style={[display(700), { fontSize: 15.5, lineHeight: 19, color: tc.textPrimary, marginTop: 3 }]} numberOfLines={3}>{article.title}</Text>
         </View>
       </View>
-    </Pressable>
+      <View style={{ paddingHorizontal: 14, paddingBottom: 4 }}>{actions}</View>
+    </PressableScale>
   );
+});
+
+const s = StyleSheet.create({
+  card: { borderRadius: RADIUS.card, overflow: "hidden", marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  featImg: { margin: 6, borderRadius: 22, aspectRatio: 16 / 11 },
+  featBody: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  row: { flexDirection: "row", gap: 12, padding: 14, paddingBottom: 2, alignItems: "center" },
+  thumb: { width: 96, height: 84, borderRadius: 18 },
+  actions: { flexDirection: "row", alignItems: "center", gap: 2, marginTop: 6, marginHorizontal: -8 },
+  act: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: 8, borderRadius: 10 },
 });
