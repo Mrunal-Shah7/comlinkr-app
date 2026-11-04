@@ -80,4 +80,22 @@ a backend change with its own migration-free DTO change and e2e test).
 
 ## Decided while building
 
-(empty)
+- **Search button left out** of the tab header: the prototype shows one, but there is no city-wide search
+  behind it (same rule as the missing data above).
+- **"Recent activity" ticker removed** with the old Explore hero; the bento replaces both.
+- **Glass is a translucent fill, not a blur** (`tc.glass`): Android blur is costly and not in Expo Go's
+  reach for every surface. Looks close to the prototype on the dark theme.
+- **`Colors.brand.orange` now maps to the gradient's teal** (`#257A86`), because design D has no orange. The
+  only use that meant a warning is the chat's "pending request" state (`app/chat.tsx:346, 537, 1077`); it moves
+  to `tc.warningText` / `tc.warningBg` when chat is restyled.
+- **News categories and neighbours' posts are one chip row** ("For you", Local, National, World, …,
+  Neighbours), replacing the Live News / Community toggle plus a second row of categories. Same data, same
+  filters.
+- **The homes tile says "Homes in <city>"** with the city's listing total, not "new this week": the API has no
+  weekly count.
+- **Screen transitions use the JS stack inside expo-router** (`ZoomStack`), not the native stack, so the zoom
+  can match the prototype. Edge swipe back now works on Android through the stack itself; `EdgeSwipeBack` is no
+  longer used by the root layout.
+- **Fonts on Android:** each weight is its own family (`Manrope_700Bold`, …); screens use `body()` /
+  `display()` from `src/theme/d.ts` instead of `fontWeight`. Screens not yet restyled keep the system font
+  until their turn.

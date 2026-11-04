@@ -116,6 +116,7 @@ export default function FeedScreen() {
   const exploreScrollY = useSharedValue(0);
   const onExploreScroll = useAnimatedScrollHandler((e) => { exploreScrollY.value = e.contentOffset.y; });
   const exploreInsets = useSafeAreaInsets();
+  const feedRevealArmed = useRef(true);
   useScrollToTop(feedScrollRef); // re-tap the Explore tab → back to top
 
   // SPRINT-27: removed scroll-to-top on focus — preserves scroll position across tab switches
@@ -833,7 +834,8 @@ export default function FeedScreen() {
   }, [feedTab, loadExploreEvents]);
 
   useEffect(() => {
-    if (feedTab !== "Stories") return;
+    // Design D: the Explore bento shows story rings, so News loads stories too.
+    if (feedTab !== "Stories" && feedTab !== "News") return;
     // SPRINT-30: sub-tab cache gate
     if (!useListFetchCacheStore.getState().shouldFetch("feed:stories")) return;
     void loadStories({ silent: feedBackgroundHydratedRef.current }).then(() => {
@@ -842,7 +844,8 @@ export default function FeedScreen() {
   }, [feedTab, loadStories]);
 
   useEffect(() => {
-    if (feedTab !== "Quests") return;
+    // Design D: the Explore bento shows a quest, so News (the default tab) loads quests too.
+    if (feedTab !== "Quests" && feedTab !== "News") return;
     // SPRINT-30: sub-tab cache gate
     if (!useListFetchCacheStore.getState().shouldFetch("feed:quests")) return;
     void loadQuests().then(() => {
@@ -851,7 +854,8 @@ export default function FeedScreen() {
   }, [feedTab, loadQuests]);
 
   useEffect(() => {
-    if (feedTab !== "Polls") return;
+    // Design D: the Explore bento shows a poll, so News loads polls too.
+    if (feedTab !== "Polls" && feedTab !== "News") return;
     // SPRINT-30: sub-tab cache gate
     if (!useListFetchCacheStore.getState().shouldFetch("feed:polls")) return;
     Promise.allSettled([loadPollFeed(), loadWyrPolls()]).then(() => {
@@ -1837,9 +1841,17 @@ export default function FeedScreen() {
     }
   };
 
-  // Design D (plan 01): rows rise in on first load, 45 ms apart (capped).
+  const feedHasRows = feedRows.length > 0;
+  useEffect(() => {
+    if (!feedHasRows || !feedRevealArmed.current) return;
+    const t = setTimeout(() => { feedRevealArmed.current = false; }, 1500);
+    return () => clearTimeout(t);
+  }, [feedHasRows]);
+
+  // Design D (plan 01): rows rise in on first load, 45 ms apart (capped). Once the first screen has settled the
+  // entrance is switched off, so rows that remount while scrolling just appear (as in the prototype).
   const renderFeedRow = (p: { item: FeedRow; index: number }) => (
-    <Reanimated.View entering={revealIn(Math.min(p.index, 6))}>{renderFeedRowInner(p)}</Reanimated.View>
+    <Reanimated.View entering={feedRevealArmed.current ? revealIn(Math.min(p.index, 6)) : undefined}>{renderFeedRowInner(p)}</Reanimated.View>
   );
 
   return (

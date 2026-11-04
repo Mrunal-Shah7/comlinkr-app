@@ -3,6 +3,25 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
+## 2026-11-05 (latest) - building design D, phase 1 in progress (plan 01)
+
+- **Where:** branch `feature/design-d` (from base commit `6720646` on `main`). Commits so far: `bb696fe`
+  foundation (palette, fonts, motion kit, ZoomStack, floating tab bar, + sheet), `fb739c8` Explore part 1
+  (header, bento, chips, news cards), then Explore fixes and tab-bar clearance on the other tabs.
+- **Checked on the phone:** foundation, navigation, Explore header, bento, News. Log:
+  [device-runs/2026-11-05-design-d.md](device-runs/2026-11-05-design-d.md) (includes an accidental Play Store
+  visit, nothing changed).
+- **Next, in order:** Explore's Events, Stories, Quests, Polls and neighbour-post cards, then the event detail,
+  RSVP, ticket and story viewer; then Listings, Food, Community, the "You" screens, the composers (phase 1 =
+  restyle only). Check light mode once per section. Build note in `docs/build/` when phase 1 is finished.
+- **How screens are restyled:** use `src/shared/d` (PressableScale, GradientButton, SoftButton, Chip,
+  Segmented, BentoTile, Reveal/TileIn, useShake, DSheet), `src/theme/d.ts` (TYPE, body(), display(), RADIUS,
+  GRADIENT) and `tc.*` tokens; scroll lists in tabs add `tabBarClearance(insets.bottom)`. Decisions are in the
+  plan's "Decided while building".
+- **Running:** backend (`pnpm start:dev`, email off) and Metro (port 8083, local API, Fast Refresh on) in this
+  session's background; phone has `adb reverse` 4000/8083, Expo Go signed in as `ui_tester`. Driving helpers
+  (`shot.sh`, `t.sh`, `app.sh`) live in the session scratchpad.
+
 ## 2026-11-05 (later) - design D is C in the brand gradient
 
 - The owner likes C best. The first D (a new design from the brand colours) was deleted. The new D,

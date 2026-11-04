@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import { View, Text, ScrollView, FlatList, Pressable, TextInput, Animated, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
@@ -982,7 +983,7 @@ export default function HousingScreen() {
       <FlatList
         ref={housingScrollRef}
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import { DatePickerField, TimePickerField } from "../../../components/DateTimePickerField";
 import {
   View,
@@ -913,7 +914,7 @@ export default function FoodScreen() {
       <ScrollView
         ref={foodScrollRef}
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

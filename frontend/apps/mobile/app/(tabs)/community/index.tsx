@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { tabBarClearance } from '../../../src/shared/navigation/DTabBar';
 import {
   View,
   Text,
@@ -972,7 +973,7 @@ export default function CommunityScreen() {
       <ScrollView
         ref={communityScrollRef}
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
