@@ -1,0 +1,1747 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============== ENUMS ==============
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// SPRINT-55: why a user is in the Sprint 10 deletion window (NONE = not pending / legacy-compatible)
+enum DeletionSource {
+  NONE
+  SELF
+  ADMIN
+}
+
+// SPRINT-55: compliance log entry kinds
+enum PrivacyRequestType {
+  DATA_EXPORT
+  ERASURE
+}
+
+// SPRINT-55: export starts COMPLETED; erasure starts PENDING then APPROVED | REJECTED | COMPLETED
+enum PrivacyRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum AuthProviderType {
+  LOCAL
+  GOOGLE
+  APPLE
+}
+
+enum OtpType {
+  REGISTRATION
+  PASSWORD_RESET
+}
+
+enum SleepSchedule {
+  EARLY_BIRD
+  NIGHT_OWL
+  FLEXIBLE
+}
+
+enum Cleanliness {
+  CLEAN
+  MODERATE
+  RELAXED
+}
+
+enum NoiseTolerance {
+  QUIET
+  MODERATE
+  SOCIAL
+}
+
+enum RoomType { // SPRINT-28
+  PRIVATE_ROOM
+  SHARED_ROOM
+  STUDIO
+  EN_SUITE
+}
+
+enum FurnishedStatus { // SPRINT-28
+  FULLY_FURNISHED
+  PARTIALLY_FURNISHED
+  UNFURNISHED
+}
+
+enum GuestsFrequency {
+  NEVER
+  OCCASIONALLY
+  FREQUENTLY
+}
+
+enum FeedCategory {
+  COMMUNITY
+  ANNOUNCEMENT
+  JOBS
+  ALERT
+  DISCUSSION
+  QUESTION
+  TIP
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  STUDIO
+  ROOM
+}
+
+enum ListingStatus {
+  AVAILABLE
+  RENTED
+  UNLISTED
+}
+
+enum PriceRange {
+  BUDGET
+  MODERATE
+  PREMIUM
+  LUXURY
+}
+
+enum ListingReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum ListingReportTargetType {
+  HOUSING
+  RESTAURANT
+  USER // SPRINT-51: direct user report
+  COMMUNITY_POST // SPRINT-51: feed/community post report
+  COMMUNITY_MEMBER // SPRINT-51: community-member behaviour report (targetId = user id)
+  COMMUNITY_QUESTION // SPRINT-51: community Q&A question report
+  COMMUNITY_ANSWER // SPRINT-51: community Q&A answer report
+  EVENT // SPRINT-51: event report (migrated from ContentReport string)
+  CHAT_MESSAGE // SPRINT-51: chat message report (actions deferred to Sprint 53)
+}
+
+enum CommunityQuestionCategory {
+  HOUSING
+  FOOD
+  TRANSIT
+  EVENTS
+  SAFETY
+  GENERAL
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ConversationContextType {
+  GENERAL
+  LISTING
+  EVENT
+}
+
+enum ConversationMemberRole {
+  MEMBER
+  ADMIN
+}
+
+enum ConversationMemberStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+// SPRINT-53: distinguish not-a-block / user-initiated block / admin chat ban (replaces boolean blockedByUserBlock)
+enum BlockProvenance {
+  NONE
+  USER_BLOCK
+  ADMIN_BAN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+  AUDIO // SPRINT-36: represent a voice-note message without reordering existing enum values
+}
+
+enum EventCategory {
+  SOCIAL
+  SPORTS
+  MUSIC
+  ARTS
+  FOOD_DRINK
+  TECH
+  HEALTH
+  COMMUNITY
+  EDUCATION
+}
+
+enum EventFormat {
+  IN_PERSON
+  VIRTUAL
+  HYBRID
+}
+
+enum TicketType {
+  FREE
+  PAID
+}
+
+enum EventRegistrationStatus { // SPRINT-38: Preserve cancelled tickets so scanners can distinguish them from invalid identifiers.
+  ACTIVE // SPRINT-38: The registration currently grants admission.
+  CANCELLED // SPRINT-38: The attendee cancelled and the persisted ticket must be rejected explicitly.
+} // SPRINT-38: End event registration lifecycle states.
+
+enum StoryMediaType {
+  REEL
+  PHOTO
+  VIDEO
+}
+
+enum StoryCategory {
+  EVENTS
+  FOOD
+  HOUSING
+  CULTURE
+  LOCAL_NEWS
+}
+
+enum ChallengeType {
+  PHOTO
+  FITNESS
+  FOOD
+  EXPLORE
+  SOCIAL
+  CREATIVE
+  GREEN
+  TRIVIA
+}
+
+enum ChallengeDuration {
+  ONE_DAY
+  THREE_DAYS
+  ONE_WEEK
+  TWO_WEEKS
+  ONE_MONTH
+}
+
+enum ChallengeStatus {
+  ACTIVE
+  ENDED
+}
+
+enum NeighborhoodMood {
+  GREAT
+  EXCITING
+  CHILL
+  MEH
+  NOISY
+}
+
+enum BadgeType {
+  LANDLORD
+  RESTAURANT_OWNER
+  AGENCY
+  LOCAL_REVIEWER
+}
+
+enum BadgeApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OwnershipType {
+  OWN
+  MANAGE
+}
+
+enum NotificationType {
+  EVENT_NEARBY
+  COMMENT
+  LIKE
+  MESSAGE
+  BADGE_UPDATE
+  SYSTEM
+}
+
+enum SupportTicketStatus {
+  OPEN
+  REPLIED
+  CLOSED
+}
+
+// SPRINT-57: admin-selectable delivery priority, persisted per broadcast
+enum BroadcastPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// SPRINT-57: real lifecycle state - scheduled broadcasts are dispatched later by AdminCronService
+enum BroadcastStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum BroadcastAudienceType {
+  ALL
+  CITY
+  SELECTIVE
+}
+
+enum SharedSpaceApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PropertyApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SIGNED
+  WITHDRAWN
+}
+
+enum SignatureType {
+  TYPED
+  DRAWN
+}
+
+enum DepositStatus {
+  PENDING
+  HELD
+  RELEASED
+  DISPUTED
+}
+
+enum UserDocumentType {
+  TENANCY_AGREEMENT
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum UpvoteTargetType {
+  QUESTION
+  ANSWER
+}
+
+enum CommunityCategory {
+  CULTURAL_HERITAGE
+  NATIONAL_DIASPORA
+  LIFESTYLE
+  PROFESSIONAL
+  SOCIAL_CAUSE
+  FAITH_SPIRITUAL
+}
+
+// ============== USER & AUTH ==============
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  username             String    @unique
+  fullName             String
+  avatarUrl            String?
+  bio                  String?   @db.VarChar(200)
+  phoneNumber          String?
+  dateOfBirth          DateTime? // SPRINT-57: date of birth is the durable source for displayed age (age itself would go stale)
+  role                 Role      @default(USER)
+  isActive             Boolean   @default(true)
+  sessionVersion       Int       @default(0) // SEC-02: bumped on password recovery/suspension to revoke existing sessions
+  deletedAt            DateTime?
+  deletionSource       DeletionSource @default(NONE) // SPRINT-55: SELF vs ADMIN pending deletion; NONE preserves pre-sprint self-cancel
+  onboardingCompleted  Boolean   @default(false)
+  agreementAcceptedAt  DateTime?
+  termsAcceptedVersion String?   @db.VarChar(20) // SPRINT-32: server-side terms version audit
+  lastActiveAt         DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  authProviders           AuthProvider[]
+  location                UserLocation?
+  vibes                   Vibe[]                 @relation("UserVibes")
+  interests               Interest[]            @relation("UserInterests")
+  communities             Community[]           @relation("UserCommunities")
+  roommatePreferences     RoommatePreferences?
+  feedPosts               FeedPost[]
+  feedLikes               FeedLike[]
+  feedComments            FeedComment[]
+  feedSaves               FeedSave[]
+  feedPostViews           FeedPostView[]        // SPRINT-57
+  housingListings         HousingListing[]
+  housingInterests        HousingInterest[]
+  restaurants             Restaurant[]
+  restaurantReviews       RestaurantReview[]
+  restaurantReservations  RestaurantReservation[]
+  restaurantFavorites     RestaurantFavorite[]
+  communityQuestions      CommunityQuestion[]
+  communityAnswers        CommunityAnswer[]
+  communityUpvotes        CommunityUpvote[]
+  communitySaves          CommunitySave[]
+  communityPollVotes      CommunityPollVote[]
+  neighborhoodMoodVotes   NeighborhoodMoodVote[]
+  createdConversations    Conversation[]
+  conversationMemberships ConversationMember[]
+  sentMessages            Message[]
+  events                   Event[]
+  eventAttendances         EventAttendee[]
+  eventReviews             EventReview[] // SPRINT-38: Reciprocal relation for reviews authored by this user.
+  eventCheckIns            EventAttendee[] @relation("EventCheckIns") // SPRINT-38: Registrations this user checked in.
+  eventSaves               EventSave[]
+  housingSaves             HousingSave[]
+  restaurantSaves          RestaurantSave[]
+  roommateSaves            RoommateSave[]       @relation("RoommateSaver")
+  savedByUsers             RoommateSave[]       @relation("RoommateSavedProfile")
+  storySaves               StorySave[]
+  contentReports           ContentReport[]       @relation("UserContentReports")
+  stories                  Story[]
+  challenges               Challenge[]
+  challengeParticipations ChallengeParticipant[]
+  badgeApplications        BadgeApplication[]     @relation("Applicant")
+  userBadges               UserBadge[]
+  reviewedBadgeApplications BadgeApplication[]    @relation("Reviewer")
+  notifications           Notification[]
+  newsArticleLikes        NewsArticleLike[]
+  newsArticleComments     NewsArticleComment[]
+  newsArticleSaves        NewsArticleSave[] // SPRINT-30
+  storyComments           StoryComment[]
+  storyLikes              StoryLike[]
+  listingReports          ListingReport[]
+  pushDevices             PushDevice[]
+  pushTokens              PushToken[]
+  broadcastsSent          BroadcastNotification[]
+  supportTickets          SupportTicket[]
+  repliedSupportTickets   SupportTicket[]          @relation("SupportTicketRepliedBy")
+  adminPolls              AdminPoll[]
+  adminPollVotes          AdminPollVote[]
+  notificationPreference  NotificationPreference?
+  privacySettings         PrivacySettings?
+  blockedUsers            BlockedUser[]          @relation("Blocker")
+  blockedBy               BlockedUser[]         @relation("Blocked")
+  sharedSpaces            SharedSpace[]
+  sharedSpaceApplications SharedSpaceApplication[]
+  sharedSpaceSaves        SharedSpaceSave[]
+  warningRecordsReceived  WarningRecord[] @relation("WarnedUser") // SPRINT-51: warnings issued against this user
+  warningRecordsIssued    WarningRecord[] @relation("WarningIssuer") // SPRINT-51: warnings issued by this admin
+  banRecordsReceived      BanRecord[]     @relation("BannedUser") // SPRINT-51: suspensions against this user
+  banRecordsIssued        BanRecord[]     @relation("BanIssuer") // SPRINT-51: suspensions issued by this admin
+  banRecordsLifted        BanRecord[]     @relation("BanLifter") // SPRINT-51: suspensions manually lifted by this admin
+  adminAuditLogs          AdminAuditLog[] // SPRINT-52: general admin activity trail
+  privacyRequestsAsTarget PrivacyRequest[] @relation("PrivacyRequestTarget") // SPRINT-55
+  privacyRequestsRequested PrivacyRequest[] @relation("PrivacyRequestRequester") // SPRINT-55
+  privacyRequestsResolved PrivacyRequest[] @relation("PrivacyRequestResolver") // SPRINT-55
+  propertyApplications    PropertyApplication[] @relation("PropertyApplicant")
+  receivedPropertyApplications PropertyApplication[] @relation("PropertyLandlord")
+  documents               UserDocument[]
+
+  @@index([email])
+  @@index([username])
+  @@index([isActive])
+}
+
+model AuthProvider {
+  id             String            @id @default(uuid())
+  userId         String
+  provider       AuthProviderType
+  providerUserId String?
+  refreshToken   String?           @db.Text // SPRINT-34: retain Apple's refresh token for account-deletion revocation
+  passwordHash   String?
+  createdAt      DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  type      OtpType
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([type])
+}
+
+// ============== ONBOARDING & PROFILE ==============
+
+model UserLocation {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  country    String
+  countryCode String
+  dialCode   String
+  state      String
+  city       String
+  latitude   Float?
+  longitude  Float?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vibe {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  description String
+  emoji       String
+
+  users User[] @relation("UserVibes")
+}
+
+model Interest {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  description String
+  icon        String
+
+  users User[] @relation("UserInterests")
+}
+
+model Community {
+  id          String            @id @default(uuid())
+  slug        String            @unique
+  name        String
+  category    CommunityCategory
+  countryCode String?
+  emoji       String
+
+  users User[] @relation("UserCommunities")
+}
+
+model RoommatePreferences {
+  id              String           @id @default(uuid())
+  userId          String          @unique
+  budgetMin       Int?
+  budgetMax       Int?
+  moveInDate      DateTime?
+  sleepSchedule   SleepSchedule?
+  cleanliness     Cleanliness?
+  noiseTolerance  NoiseTolerance?
+  petFriendly     Boolean         @default(false)
+  smokingAllowed  Boolean         @default(false)
+  guestsFrequency GuestsFrequency?
+  workFromHome    Boolean         @default(false)
+  aboutMe         String?         @db.VarChar(500)
+  isLooking       Boolean         @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============== FEED ==============
+
+model FeedPost {
+  id            String       @id @default(uuid())
+  authorId      String
+  title         String       @db.VarChar(120)
+  content       String       @db.VarChar(2000)
+  category      FeedCategory
+  tags          String[]
+  location      String?
+  sourceLabel   String?
+  likesCount    Int          @default(0)
+  commentsCount Int          @default(0)
+  savesCount    Int          @default(0)
+  viewsCount    Int          @default(0) // SPRINT-57: denormalised unique-viewer count kept in step with FeedPostView
+  isPublished   Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  editedAt      DateTime?    // SPRINT-37: track explicit author edits separately from automatic updates
+
+  author  User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media   FeedPostMedia[]
+  likes   FeedLike[]
+  comments FeedComment[]
+  saves   FeedSave[]
+  views   FeedPostView[] // SPRINT-57
+}
+
+// SPRINT-57: one row per viewer per post so viewsCount counts people, not scroll events
+model FeedPostView {
+  id         String   @id @default(uuid())
+  userId     String
+  feedPostId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedPostId])
+  @@index([feedPostId])
+}
+
+model FeedPostMedia {
+  id         String   @id @default(uuid())
+  feedPostId String
+  imageUrl   String
+  order      Int      @default(0)
+
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+}
+
+model FeedLike {
+  id         String   @id @default(uuid())
+  userId     String
+  feedPostId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedPostId])
+}
+
+model FeedComment {
+  id         String   @id @default(uuid())
+  userId     String
+  feedPostId String
+  content    String   @db.VarChar(500)
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+}
+
+model FeedSave {
+  id         String   @id @default(uuid())
+  userId     String
+  feedPostId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feedPostId])
+}
+
+// ============== HOUSING ==============
+
+model HousingListing {
+  id             String        @id @default(uuid())
+  ownerId        String
+  title          String        @db.VarChar(120)
+  description    String
+  propertyType   PropertyType
+  price          Decimal
+  currency       String        @default("USD")
+  deposit        Decimal?
+  bedrooms       Int
+  bathrooms      Int
+  sqft           Int?
+  floor          String?
+  address        String
+  neighborhood   String?
+  city           String
+  state          String?
+  country        String
+  latitude       Float?
+  longitude      Float?
+  availableDate  DateTime?
+  leaseTerm      String?
+  isFurnished    Boolean       @default(false)
+  petPolicy      String?
+  parking        String?
+  laundry        String?
+  heating        String?
+  cooling        String?
+  utilities      String?
+  yearBuilt      Int?
+  amenities      String[]
+  transitInfo    String?
+  walkScore      Int?
+  isVerified     Boolean       @default(false)
+  isFeatured     Boolean       @default(false)
+  status         ListingStatus @default(AVAILABLE)
+  viewsCount     Int           @default(0)
+  moderationReason String?     @db.VarChar(500) // SPRINT-54: admin rejection note visible only to listing owner
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  owner   User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images  HousingImage[]
+  interests HousingInterest[]
+  saves   HousingSave[]
+  applications PropertyApplication[]
+}
+
+model HousingImage {
+  id        String   @id @default(uuid())
+  listingId String
+  imageUrl  String
+  order     Int      @default(0)
+  caption   String?
+
+  listing HousingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+}
+
+model HousingInterest {
+  id        String   @id @default(uuid())
+  listingId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  listing HousingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([listingId, userId])
+}
+
+model HousingSave {
+  id        String   @id @default(uuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing HousingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+}
+
+model SharedSpace {
+  id               String   @id @default(uuid())
+  ownerId          String
+  title            String   @db.VarChar(120)
+  description      String   @db.VarChar(2000)
+  address          String
+  city             String
+  state            String?
+  country          String
+  latitude         Float?
+  longitude        Float?
+  price            Decimal
+  currency         String   @default("USD")
+  deposit          Decimal?
+  rooms            Int
+  bathrooms        Int
+  totalOccupants   Int
+  currentOccupants Int      @default(0)
+  availableSpots   Int
+  petPolicy        String?
+  smoking          Boolean  @default(false)
+  sleepSchedule    SleepSchedule?   // SPRINT-28
+  noiseTolerance   NoiseTolerance?  // SPRINT-28
+  roomType         RoomType?        // SPRINT-28
+  furnishedStatus  FurnishedStatus? // SPRINT-28
+  availableFrom    DateTime?        // SPRINT-28
+  cleanliness      String?          @db.VarChar(100) // SPRINT-28
+  guestPolicy      String?          @db.VarChar(200) // SPRINT-28
+  leaseTerm        String?          @db.VarChar(100) // SPRINT-28
+  genderPreference String?          @db.VarChar(100) // SPRINT-28
+  amenities        String[]
+  houseRules       String[]
+  isVerified       Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  owner        User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images       SharedSpaceImage[]
+  applications SharedSpaceApplication[]
+  saves        SharedSpaceSave[]
+
+  @@index([city])
+  @@index([ownerId])
+}
+
+model SharedSpaceImage {
+  id            String @id @default(uuid())
+  sharedSpaceId String
+  imageUrl      String
+  order         Int    @default(0)
+
+  sharedSpace SharedSpace @relation(fields: [sharedSpaceId], references: [id], onDelete: Cascade)
+}
+
+model SharedSpaceApplication {
+  id            String                       @id @default(uuid())
+  sharedSpaceId String
+  userId        String
+  message       String?
+  status        SharedSpaceApplicationStatus @default(PENDING)
+  createdAt     DateTime                     @default(now())
+
+  sharedSpace SharedSpace @relation(fields: [sharedSpaceId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sharedSpaceId, userId])
+}
+
+model SharedSpaceSave {
+  id            String   @id @default(uuid())
+  userId        String
+  sharedSpaceId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sharedSpace SharedSpace @relation(fields: [sharedSpaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sharedSpaceId])
+}
+
+// ============== FOOD / RESTAURANT ==============
+
+model Restaurant {
+  id                 String    @id @default(uuid())
+  ownerId            String
+  name               String
+  cuisine            String
+  description        String?
+  address            String
+  city               String
+  state              String?
+  country            String
+  latitude           Float?
+  longitude          Float?
+  phoneNumber        String?
+  priceRange         PriceRange
+  avgPricePerPerson  Int?      // SPRINT-33: persist optional average spend per diner
+  averageRating      Decimal   @default(0)
+  totalReviews       Int       @default(0)
+  distanceMiles      Decimal?
+  waitTimeMinutes    Int?
+  openingTime        String?
+  closingTime        String?
+  timezone           String?   // FOD-02: IANA business timezone (e.g. America/New_York)
+  currency           String?   // FOD-02: ISO-4217 code the prices are quoted in
+  isOpen             Boolean   @default(true)
+  isVerified         Boolean   @default(false)
+  availableServices  String[]
+  popularDishes      Json?
+  tags               String[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  owner       User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images      RestaurantImage[]
+  reviews     RestaurantReview[]
+  reservations RestaurantReservation[]
+  favorites   RestaurantFavorite[]
+  saves       RestaurantSave[]
+}
+
+model RestaurantImage {
+  id           String   @id @default(uuid())
+  restaurantId String
+  imageUrl     String
+  order        Int      @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model RestaurantReview {
+  id           String   @id @default(uuid())
+  restaurantId String
+  userId       String
+  rating       Int
+  content      String
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, userId])
+}
+
+model RestaurantReservation {
+  id           String            @id @default(uuid())
+  restaurantId String
+  userId       String
+  date         DateTime
+  time         String
+  partySize    Int
+  note         String?           @db.VarChar(500) // SPRINT-29
+  status       ReservationStatus @default(PENDING)
+  createdAt    DateTime          @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RestaurantFavorite {
+  id           String   @id @default(uuid())
+  restaurantId String
+  userId       String
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, userId])
+}
+
+model RestaurantSave {
+  id           String   @id @default(uuid())
+  userId       String
+  restaurantId String
+  createdAt    DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, restaurantId])
+  @@index([userId])
+  @@index([restaurantId])
+}
+
+// ============== COMMUNITY Q&A ==============
+
+model CommunityQuestion {
+  id         String                     @id @default(uuid())
+  authorId  String
+  title     String                     @db.VarChar(300)
+  body      String?
+  category  CommunityQuestionCategory
+  tags      String[]
+  upvoteCount Int                      @default(0)
+  answerCount  Int                     @default(0)
+  city      String
+  createdAt DateTime                   @default(now())
+
+  author   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  answers  CommunityAnswer[]
+  saves    CommunitySave[]
+}
+
+model CommunityAnswer {
+  id         String   @id @default(uuid())
+  questionId String
+  authorId  String
+  content   String   @db.VarChar(2000)
+  upvoteCount Int    @default(0)
+  createdAt DateTime @default(now())
+
+  question CommunityQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author   User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model CommunityUpvote {
+  id         String           @id @default(uuid())
+  userId     String
+  targetType UpvoteTargetType
+  targetId   String
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+}
+
+model CommunitySave {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  createdAt  DateTime @default(now())
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question CommunityQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+}
+
+/// City-scoped binary “Would you rather” polls for the Explore tab.
+model CommunityPoll {
+  id           String   @id @default(uuid())
+  city         String
+  category     String   @db.VarChar(32)
+  question     String   @db.VarChar(500)
+  optionAId    String   @default("a") @db.VarChar(8)
+  optionALabel String   @db.VarChar(300)
+  optionBId    String   @default("b") @db.VarChar(8)
+  optionBLabel String   @db.VarChar(300)
+  votesA       Int      @default(0)
+  votesB       Int      @default(0)
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  votes CommunityPollVote[]
+
+  @@index([city, isActive])
+}
+
+model CommunityPollVote {
+  id        String   @id @default(uuid())
+  userId    String
+  pollId    String
+  optionId  String   @db.VarChar(8)
+  createdAt DateTime @default(now())
+
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poll CommunityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pollId])
+}
+
+model NeighborhoodMoodVote {
+  id        String           @id @default(uuid())
+  userId    String
+  city      String
+  cityKey   String
+  mood      NeighborhoodMood
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cityKey])
+  @@index([cityKey, mood])
+}
+
+// ============== MESSAGING ==============
+
+model Conversation {
+  id            String                 @id @default(uuid())
+  type          ConversationType
+  title         String?
+  contextType   ConversationContextType @default(GENERAL)
+  contextId     String?
+  createdById   String
+  lastMessageAt DateTime?
+  createdAt     DateTime              @default(now())
+
+  createdBy User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  members   ConversationMember[]
+  messages  Message[]
+  event     Event?
+  banRecords BanRecord[] // SPRINT-53: conversation-scoped chat bans referencing this thread
+}
+
+model ConversationMember {
+  id             String                   @id @default(uuid())
+  conversationId String
+  userId         String
+  role           ConversationMemberRole  @default(MEMBER)
+  status         ConversationMemberStatus @default(PENDING)
+  lastReadAt     DateTime?
+  isHidden       Boolean                 @default(false) // SPRINT-27: per-user soft hide from inbox
+  blockProvenance BlockProvenance        @default(NONE) // SPRINT-53: NONE | USER_BLOCK | ADMIN_BAN (replaced blockedByUserBlock)
+  isMuted        Boolean                 @default(false) // SPRINT-45: this member's own mute of this conversation (suppresses push + bell badge only)
+  joinedAt       DateTime                @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  type           MessageType @default(TEXT)
+  imageUrl       String?
+  durationSeconds Int?        // SPRINT-36: store rounded whole-second audio duration beside attachment metadata
+  isEdited       Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+// ============== EVENTS, STORIES & CHALLENGES ==============
+
+model Event {
+  id            String        @id @default(uuid())
+  authorId      String
+  title         String        @db.VarChar(120)
+  description   String        @db.VarChar(2000)
+  category      EventCategory
+  format        EventFormat
+  date          DateTime
+  startTime     String
+  endTime       String?
+  venue         String
+  city          String
+  ticketType    TicketType    @default(FREE)
+  ticketPrice   Decimal?
+  capacity      Int?
+  attendeeCount Int           @default(0)
+  averageRating Decimal       @default(0) // SPRINT-38: Mirror Restaurant.averageRating for reusable rating responses.
+  totalReviews  Int           @default(0) // SPRINT-38: Mirror Restaurant.totalReviews for denormalised review counts.
+  conversationId String?    @unique
+  createdAt     DateTime      @default(now())
+
+  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  attendees      EventAttendee[]
+  reviews        EventReview[] // SPRINT-38: Reviews associated with this event.
+  saves          EventSave[]
+  eventImages    EventImage[]
+}
+
+model EventImage {
+  id      String @id @default(uuid())
+  eventId String
+  imageUrl  String?
+  order   Int    @default(0)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model EventSave {
+  id        String   @id @default(uuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([userId])
+}
+
+model PushDevice {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @db.VarChar(512)
+  platform  String   @db.VarChar(16)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, token])
+  @@index([userId])
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BroadcastNotification {
+  id              String                @id @default(uuid())
+  title           String
+  body            String
+  sentById        String
+  audienceType    BroadcastAudienceType
+  audienceCity    String?
+  audienceUserIds String[]
+  recipientCount  Int                   @default(0)
+  priority        BroadcastPriority     @default(NORMAL) // SPRINT-57
+  status          BroadcastStatus       @default(SENT)   // SPRINT-57: existing rows are all already-sent broadcasts
+  scheduledFor    DateTime?             // SPRINT-57: null = send immediately
+  sentAt          DateTime?             // SPRINT-57: when dispatch actually happened
+  failureReason   String?               // SPRINT-57: populated when status = FAILED
+  createdAt       DateTime              @default(now())
+
+  sentBy User @relation(fields: [sentById], references: [id], onDelete: Cascade)
+
+  @@index([sentById])
+  @@index([createdAt])
+  @@index([status, scheduledFor]) // SPRINT-57: cron scans due scheduled broadcasts
+}
+
+model SupportTicket {
+  id          String              @id @default(uuid())
+  userId      String
+  subject     String              @db.VarChar(200)
+  message     String              @db.VarChar(2000)
+  status      SupportTicketStatus @default(OPEN)
+  adminReply  String?             @db.VarChar(2000)
+  repliedAt   DateTime?
+  repliedById String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repliedBy User? @relation("SupportTicketRepliedBy", fields: [repliedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AdminPoll {
+  id          String            @id @default(uuid())
+  question    String            @db.VarChar(300)
+  createdById String
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  options   AdminPollOption[]
+  votes     AdminPollVote[]
+
+  @@index([createdById])
+}
+
+model AdminPollOption {
+  id         String   @id @default(uuid())
+  pollId     String
+  text       String   @db.VarChar(200)
+  votesCount Int      @default(0)
+  order      Int      @default(0)
+
+  poll  AdminPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes AdminPollVote[]
+
+  @@index([pollId])
+}
+
+model AdminPollVote {
+  id        String   @id @default(uuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  poll   AdminPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option AdminPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([optionId])
+  @@index([userId])
+}
+
+model ContentReport {
+  id         String   @id @default(uuid())
+  reporterId String
+  targetType String   @db.VarChar(32)
+  targetId   String   @db.VarChar(36)
+  reason     String   @db.VarChar(500)
+  createdAt  DateTime @default(now())
+
+  reporter User @relation("UserContentReports", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([targetType, targetId])
+  @@index([reporterId])
+}
+
+model ListingReport {
+  id         String                  @id @default(uuid())
+  reporterId String
+  targetType ListingReportTargetType
+  targetId   String
+  reason     String
+  status     ListingReportStatus     @default(PENDING)
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+
+  reporter       User            @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  warningRecords WarningRecord[] // SPRINT-51: warnings linked back to this report
+  banRecords     BanRecord[] // SPRINT-51: bans linked back to this report
+
+  @@index([targetType, targetId])
+  @@index([reporterId])
+  @@index([status])
+}
+
+// SPRINT-51: durable admin warning history (warnUser also continues to send a notification)
+model WarningRecord {
+  id        String   @id @default(uuid())
+  userId    String
+  adminId   String
+  reason    String
+  reportId  String?
+  createdAt DateTime @default(now())
+
+  user   User           @relation("WarnedUser", fields: [userId], references: [id], onDelete: Cascade)
+  admin  User           @relation("WarningIssuer", fields: [adminId], references: [id], onDelete: Cascade)
+  report ListingReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([adminId])
+  @@index([reportId])
+}
+
+// SPRINT-51: durable suspension/ban history; expiry is the source of truth for automatic lifts
+model BanRecord {
+  id              String    @id @default(uuid())
+  userId          String
+  adminId         String
+  reason          String
+  reportId        String?
+  conversationId  String? // SPRINT-53: when set, this is a conversation-scoped chat ban (not account-wide)
+  durationDays    Int? // SPRINT-51: null = indefinite/manual (e.g. PATCH /admin/users without duration)
+  startedAt       DateTime  @default(now())
+  expiresAt       DateTime? // SPRINT-51: null when indefinite; cron lifts only when set and past
+  liftedAt        DateTime?
+  liftedByAdminId String? // SPRINT-51: null when the suspension-expiry cron performs the lift
+  createdAt       DateTime  @default(now())
+
+  user         User           @relation("BannedUser", fields: [userId], references: [id], onDelete: Cascade)
+  admin        User           @relation("BanIssuer", fields: [adminId], references: [id], onDelete: Cascade)
+  liftedBy     User?          @relation("BanLifter", fields: [liftedByAdminId], references: [id], onDelete: SetNull)
+  report       ListingReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  conversation Conversation?  @relation(fields: [conversationId], references: [id], onDelete: Cascade) // SPRINT-53
+
+  @@index([userId])
+  @@index([adminId])
+  @@index([reportId])
+  @@index([conversationId]) // SPRINT-53
+  @@index([expiresAt, liftedAt])
+}
+
+// SPRINT-52: general-purpose admin activity trail (successful mutations only)
+model AdminAuditLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  httpMethod   String   @db.VarChar(16)
+  routePattern String   @db.VarChar(255)
+  targetType   String?  @db.VarChar(64)
+  targetId     String?  @db.VarChar(64)
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([routePattern])
+}
+
+model EventAttendee {
+  id       String   @id @default(uuid())
+  eventId  String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  attendeeName  String?
+  attendeeEmail String?
+  attendeePhone String?
+  ticketCount     Int     @default(1)
+  status          EventRegistrationStatus @default(ACTIVE) // SPRINT-38: Retain cancellation state without replacing the Sprint 28 ticket UUID.
+  cancelledAt     DateTime? // SPRINT-38: Record when a registration stopped granting admission.
+  checkedInAt     DateTime? // SPRINT-38: Record the first successful ticket redemption.
+  checkedInById   String? // SPRINT-38: Record the organiser who redeemed the ticket.
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkedInBy User? @relation("EventCheckIns", fields: [checkedInById], references: [id], onDelete: SetNull) // SPRINT-38: Keep check-in time if the organiser account is removed.
+
+  @@unique([eventId, userId])
+  @@index([eventId, status, checkedInAt]) // SPRINT-38: Support organiser status totals and filtered attendee lists.
+}
+
+model EventReview { // SPRINT-38: Mirror RestaurantReview with Event as the parent.
+  id        String   @id @default(uuid()) // SPRINT-38: Match the restaurant review identifier.
+  eventId   String // SPRINT-38: Parent event identifier.
+  userId    String // SPRINT-38: Reviewing attendee identifier.
+  rating    Int // SPRINT-38: Match the restaurant integer rating.
+  content   String // SPRINT-38: Match the restaurant review body field and type.
+  createdAt DateTime @default(now()) // SPRINT-38: Match restaurant review creation tracking.
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade) // SPRINT-38: Delete reviews with their event.
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade) // SPRINT-38: Delete reviews with their author.
+
+  @@unique([eventId, userId]) // SPRINT-38: Enforce one review per attendee per event under concurrency.
+} // SPRINT-38: End event review model.
+
+model Story {
+  id              String         @id @default(uuid())
+  authorId        String
+  title           String         @db.VarChar(120)
+  mediaType       StoryMediaType
+  category        StoryCategory
+  details         String?        @db.VarChar(500)
+  hashtags        String[]
+  durationSeconds Int?
+  location        String?
+  mediaUrl        String
+  viewsCount      Int            @default(0)
+  commentCount    Int            @default(0)
+  likeCount       Int            @default(0)
+  expiresAt       DateTime
+  createdAt       DateTime       @default(now())
+
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  saves    StorySave[]
+  comments StoryComment[]
+  likes    StoryLike[]
+}
+
+model StoryComment {
+  id        String   @id @default(uuid())
+  storyId   String
+  authorId  String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  story  Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([storyId, createdAt(sort: Asc)])
+  @@index([authorId])
+}
+
+model RoommateSave {
+  id          String   @id @default(uuid())
+  userId      String
+  savedUserId String
+  createdAt   DateTime @default(now())
+
+  user      User @relation("RoommateSaver", fields: [userId], references: [id], onDelete: Cascade)
+  savedUser User @relation("RoommateSavedProfile", fields: [savedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, savedUserId])
+  @@index([userId])
+}
+
+model StorySave {
+  id        String   @id @default(uuid())
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+  @@index([userId])
+}
+
+model StoryLike {
+  id        String   @id @default(uuid())
+  storyId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+  @@index([storyId])
+  @@index([userId])
+}
+
+model Challenge {
+  id               String           @id @default(uuid())
+  authorId         String
+  title            String          @db.VarChar(120)
+  type             ChallengeType
+  details          String?         @db.VarChar(500)
+  duration         ChallengeDuration
+  goalCondition    String
+  reward           String
+  maxParticipants  Int?
+  hashtags         String[]
+  location         String?
+  participantCount Int            @default(0)
+  status           ChallengeStatus @default(ACTIVE)
+  startsAt         DateTime
+  endsAt           DateTime
+  createdAt        DateTime        @default(now())
+
+  author       User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  participants ChallengeParticipant[]
+}
+
+model ChallengeParticipant {
+  id          String   @id @default(uuid())
+  challengeId String
+  userId      String
+  joinedAt    DateTime @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+}
+
+// ============== BADGE & VERIFICATION ==============
+
+model BadgeApplication {
+  id                String                 @id @default(uuid())
+  userId            String
+  badgeType         BadgeType
+  status            BadgeApplicationStatus @default(PENDING)
+  fullLegalName     String
+  businessPhone     String
+  businessEmail     String?
+  ownershipType     OwnershipType?
+  propertyAddress   String?
+  restaurantName    String?
+  cuisineType       String?
+  restaurantAddress String?
+  agencyName        String?
+  agencyLicense     String?
+  propertiesManaged Int?
+  companyWebsite    String?
+  neighborhoodArea  String?
+  reviewerBio       String?
+  adminNotes        String?
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  createdAt         DateTime              @default(now())
+
+  applicant User            @relation("Applicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer  User?            @relation("Reviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  documents BadgeDocument[]
+  userBadge UserBadge?
+}
+
+model BadgeDocument {
+  id           String   @id @default(uuid())
+  applicationId String
+  documentKey  String?
+  documentType String
+  createdAt    DateTime @default(now())
+
+  application BadgeApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model UserBadge {
+  id            String       @id @default(uuid())
+  userId        String
+  badgeType     BadgeType
+  applicationId String       @unique
+  grantedAt     DateTime     @default(now())
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application BadgeApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeType])
+}
+
+// ============== NOTIFICATION & SETTINGS ==============
+
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String
+  type         NotificationType
+  title        String
+  body         String
+  referenceType String?
+  referenceId   String?
+  isRead       Boolean          @default(false)
+  createdAt    DateTime        @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([referenceType, referenceId]) // SPRINT-57: open-rate aggregation per broadcast
+}
+
+model NewsArticleLike {
+  id        String   @id @default(uuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+  @@index([userId])
+}
+
+model NewsArticleComment {
+  id        String   @id @default(uuid())
+  userId    String
+  articleId String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+// SPRINT-30: saved live news articles (RSS articleId + metadata snapshot)
+model NewsArticleSave {
+  id          String    @id @default(uuid())
+  userId      String
+  articleId   String
+  title       String    @db.VarChar(500)
+  url         String    @db.VarChar(2000)
+  imageUrl    String?   @db.VarChar(2000)
+  source      String?   @db.VarChar(200)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId])
+  @@index([articleId])
+}
+
+model NotificationPreference {
+  id            String   @id @default(uuid())
+  userId       String   @unique
+  pushEnabled  Boolean  @default(true)
+  emailEnabled Boolean  @default(false)
+  eventsNearby Boolean  @default(true)
+  comments     Boolean  @default(true)
+  likes        Boolean  @default(false)
+  messages     Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PrivacySettings {
+  id            String   @id @default(uuid())
+  userId       String   @unique
+  publicProfile Boolean @default(true)
+  showLocation Boolean  @default(true)
+  activityStatus Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+}
+
+model PlatformSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   // JSON-stringified value
+  updatedAt DateTime @updatedAt
+}
+
+// SPRINT-55: compliance log for admin data-export and erasure; survives target user hard-delete
+model PrivacyRequest {
+  id                   String               @id @default(uuid())
+  userId               String? // SPRINT-55: nullified when user is hard-deleted; snapshot remains
+  snapshotUsername     String               @db.VarChar(120)
+  snapshotEmail        String               @db.VarChar(255)
+  type                 PrivacyRequestType
+  status               PrivacyRequestStatus
+  requestedByAdminId   String?
+  reason               String?              @db.VarChar(1000)
+  exportFileKey        String? // SPRINT-55: private storage key or inline marker
+  exportPayload        Json? // SPRINT-55: export body served only via admin-guarded download
+  resolvedAt           DateTime?
+  resolvedByAdminId    String?
+  createdAt            DateTime             @default(now())
+
+  user             User? @relation("PrivacyRequestTarget", fields: [userId], references: [id], onDelete: SetNull)
+  requestedByAdmin User? @relation("PrivacyRequestRequester", fields: [requestedByAdminId], references: [id], onDelete: SetNull)
+  resolvedByAdmin  User? @relation("PrivacyRequestResolver", fields: [resolvedByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============== PROPERTY APPLICATIONS ==============
+
+// Tenancy application for a housing listing. Step payloads are stored as JSON
+// snapshots; rent/deposit are copied from the listing so the tenant cannot alter them.
+model PropertyApplication {
+  id                 String                    @id @default(uuid())
+  listingId          String
+  applicantId        String
+  landlordId         String // listing owner at creation time
+  status             PropertyApplicationStatus @default(DRAFT)
+  currentStep        Int                       @default(1)
+  personalInfo       Json?
+  rentalHistory      Json?
+  financialDetails   Json?
+  agreementTerms     Json?
+  moveInDate         DateTime?
+  rentAmount         Decimal?
+  depositAmount      Decimal?
+  currency           String                    @default("USD")
+  signature          String? // typed legal name or base64 image
+  signatureType      SignatureType?
+  tenantSignedAt     DateTime? // tenant may sign while submitted/under review; final SIGNED waits for approval
+  landlordNote       String?                   @db.VarChar(1000)
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  decidedAt          DateTime?
+  signedAt           DateTime?
+  withdrawnAt        DateTime?
+  depositStatus      DepositStatus             @default(PENDING)
+  depositReference   String?                   @unique
+  depositScheme      String?
+  depositRequestedAt DateTime?
+  depositHeldAt      DateTime?
+  depositReleasedAt  DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  listing   HousingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  applicant User           @relation("PropertyApplicant", fields: [applicantId], references: [id], onDelete: Cascade)
+  landlord  User           @relation("PropertyLandlord", fields: [landlordId], references: [id], onDelete: Cascade)
+  document  UserDocument?
+
+  @@index([applicantId])
+  @@index([landlordId, status])
+  @@index([listingId, applicantId])
+}
+
+// Files shown under the user's "My Documents".
+model UserDocument {
+  id                    String           @id @default(uuid())
+  userId                String
+  type                  UserDocumentType
+  title                 String           @db.VarChar(200)
+  fileKey               String // private storage key, served via signed URL
+  mimeType              String
+  sizeBytes             Int
+  propertyApplicationId String?          @unique
+  createdAt             DateTime         @default(now())
+
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyApplication PropertyApplication? @relation(fields: [propertyApplicationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}

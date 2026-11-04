@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="{{FONTS}}" rel="stylesheet">
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+<div id="chrome">
+  <aside id="left">
+    <div class="brand"><small>Comlinkr redesign · 2026-11-05</small><h1>{{NAME}}</h1><p>{{TAGLINE}}</p></div>
+    <div class="toggles">
+      <button data-theme-toggle title="Switch light and dark">◐ Theme</button>
+      <button data-rm-toggle title="Preview with reduced motion">Reduce motion</button>
+    </div>
+    <nav id="index" aria-label="All screens"></nav>
+    <div class="others">Other designs: {{OTHERS}}</div>
+  </aside>
+  <main id="stage">
+    <div class="mbar"><select id="mindex" aria-label="Jump to screen"></select><button data-theme-toggle aria-label="Theme">◐</button><button data-rm-toggle aria-label="Reduce motion">RM</button></div>
+    <div class="device">
+      <div class="statusbar"><span id="sbtime">9:41</span><span class="sbr"><i class="sig"></i><i class="wifi"></i><i class="bat"></i></span></div>
+      <div id="vp"></div>
+    </div>
+    <p class="hint">Drag the tab content sideways · swipe from the phone's left edge to go back · drag a sheet down to close · Esc = back</p>
+  </main>
+  <aside id="right"><div id="notes"></div>
+    <div class="legend"><h4>Everywhere</h4><ul>
+      <li>One accent colour; a real title on every screen; at most one row of tabs.</li>
+      <li>Missing data is hidden, never "N/A".</li>
+      <li>Report lives in the ··· menu.</li>
+      <li>Reduce motion swaps slides and springs for short fades.</li>
+    </ul></div>
+  </aside>
+</div>
+<script>
+{{JS}}
+</script>
+</body>
+</html>

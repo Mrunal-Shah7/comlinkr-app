@@ -1,0 +1,27 @@
+# Rules for the whole repository. backend/ and frontend/ keep their own .gitignore files too.
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.expo/
+graphify-out/
+
+# Secrets: never committed. Each app keeps a committed .env.example instead.
+.env
+.env.*
+!.env.example
+*.pem
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+
+# Logs and scratch output
+*.log
+out.txt
+
+# Editors and OS
+.DS_Store
+Thumbs.db

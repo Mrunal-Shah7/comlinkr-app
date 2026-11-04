@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.comlinkr.app",
+      "sha256_cert_fingerprints": [
+        "DB70005DD089C318281EF0293DAB4EBBB0D25039470FB8A297369A79FA7B94BF"
+      ]
+    }
+  }
+]

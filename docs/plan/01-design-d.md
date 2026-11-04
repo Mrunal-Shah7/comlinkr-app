@@ -1,0 +1,83 @@
+# 01. Build design D (Night Market in the brand gradient)
+
+**Status: Building (phase 1).** Triage [TR-005](../triage.md). Review:
+[2026-11-05 design review](../review/2026-11-05-design-audit.md). Design:
+[`d-night-market-gradient.html`](../design/2026-11-05-redesign/d-night-market-gradient.html), built from
+`docs/design/2026-11-05-redesign/src/` (`c1.js`, `a2.js`, `a3.js`, `a4.js`, `c3.js`, `a.css` + `c.css` + `d.css`).
+
+## Problem
+
+The app's screens are inconsistent (an accent colour per section, three levels of tabs, very tall cards, "N/A" for
+missing data, red report flags everywhere) and have almost no motion feedback. Posting takes too many fields.
+The owner chose design D from four proposals.
+
+## What will change
+
+### Phase 1: look and motion, with today's behaviour
+
+Every screen of the four sections and the shared screens takes D's look and motion. Fields, steps and flows stay
+as they are today, except where only the presentation changes (a hidden "N/A" is presentation).
+
+1. **Tokens and type** (`src/theme/`): D's palette for light and dark (near-black blue-grey `#091218` dark,
+   `#F2F6F8` light, accent `#1A6BAE`, green `#30855B`, gradient `#1A6BAE → #257A86 → #30855B`), radii (24 cards,
+   18 buttons, 14 chips), Bricolage Grotesque for headings and Manrope for text (`@expo-google-fonts/*`).
+2. **Motion kit** (`src/shared/motion/`): the springs and timings in the prototype as named presets
+   (`press`, `sheet`, `push`, `reveal`, `pop`, `shake`), `useReducedMotion` everywhere, and shared pieces:
+   `PressableScale`, `Reveal` (staggered FadeInDown), `GradientButton`, `Segmented` with a sliding gradient
+   indicator, `Chip`, `BentoTile`, `GlassSurface`, `Toast`, `Sheet`.
+3. **Navigation**: the tab bar becomes a floating glass bar with a central **+** (opens the compose sheet, the +
+   turns into ×) and a mint "liquid" indicator that stretches between tabs while the pager is dragged (today's
+   `SwipeTabs` keeps the finger-following pager). Pushed screens zoom in (scale 0.88 → 1, corner radius 44 → 0,
+   spring) instead of sliding. Detail screens open with a shared photo where the current code allows it.
+4. **Screens**, section by section, each checked on the phone before the next:
+   - Sign in: login, sign-up, code (OTP: pop per digit, shake on wrong code, green sweep on success), forgot
+     password, onboarding (look only in phase 1).
+   - Explore: the bento home (greeting with city and time, next event, new-homes count, hot question, stories,
+     quest, poll), then News, Events, Stories, Quests, Polls; neighbour post, event detail, RSVP sheet and ticket,
+     door check-in, story viewer, all events.
+   - Listings: homes (feature card + tile grid), rooms, roommates; listing detail, gallery, room detail, roommate
+     profile (animated match ring), apply and agreement, my listings, landlord applications.
+   - Food: bento top, tiles, restaurant detail, rating sheet (drag across stars), my restaurants.
+   - Community: ask box, question bubbles, question thread, ask sheet.
+   - You: side menu, profile, public profile, edit profile, messages, conversation, notifications, saved,
+     settings, help, badges, badge status, terms and privacy, my posts.
+   - Post: the compose sheet and every composer form restyled.
+   Missing values are hidden instead of "N/A", "—", "$0–$0" (TR-001, B6), and report moves into the ··· menu.
+
+### Phase 2: behaviour changes (after phase 1 is on the phone)
+
+One question per screen for listing a place, photos first, profile prefill and optional facts as chips;
+restaurant review by search list; event date and time pickers; room currency from the country; tags as chips;
+onboarding to 5 steps with the terms as one tick-box on the last step (still calling `acceptAgreement`);
+Saved, Interested and Favourites merged; story photo-first (needs `CreateStoryDto.title` and `category` optional,
+a backend change with its own migration-free DTO change and e2e test).
+
+## What will not change
+
+- The admin console (`app/admin/*`); it keeps working with the new tokens.
+- Tab names: Explore, Listings, Food, Community (owner, 2026-11-05).
+- The API, except the story DTO in phase 2.
+- Things with no data behind them today are left out: the temperature in the greeting tile, the "similar homes"
+  rent hint, walk score and transit from the address, location from the phone (owner, 2026-11-05).
+
+## Questions and answers (2026-11-05)
+
+| Question | Answer |
+|---|---|
+| Deliver in one go or in phases? | Phases: look and motion first, behaviour second |
+| Tab names | Keep today's |
+| Data the prototype shows that does not exist | Leave it out |
+| Git | One base commit on `main` of the current state, then `feature/design-d`; commit per phase, no push or PR until asked |
+
+## How it will be checked
+
+- `pnpm typecheck` in `frontend/apps/mobile` after each step (it fails today on `audioPlayback.ts`, T-006; only new
+  errors count).
+- On the phone (Expo Go, local backend, `ui_tester`), per section: every screen side by side with the prototype
+  in light and dark, the motions (tab drag and liquid indicator, + sheet, push zoom, sheets, OTP, press, reveal),
+  reduce motion on, the way back, and the smoke checklist (`docs/system-review/checklists/00-smoke.md`).
+- A build note per phase in `docs/build/`, and a device-run log.
+
+## Decided while building
+
+(empty)

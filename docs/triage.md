@@ -1,0 +1,18 @@
+# Triage log
+
+_Every incoming task, wherever it came from (chat, a teammate, a store review, a device run, a ticket), sorted
+before any work. Newest first. IDs are TR-nnn and are never reused. People are named by role only; names and
+emails of real users stay out of this file._
+
+**Columns.** _Source_: where it came from. _Raised by_: role. _Module_: the system review it belongs to.
+_Verdict_: bug, change, question, not a bug, duplicate. _Why_: what the code or a run shows, with file and line.
+_Path_: **light** (a fix with a build note) or **full** (a plan first, because it changes what the product does).
+_Goes to_: the review, plan or build note. _State_: open, building, built (branch), merged, closed.
+
+| ID | Date | Source | Raised by | In short | Module | Verdict | Why | Path | Goes to | State |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TR-005 | 2026-11-05 | Chat | Owner | Design overhaul of every screen in the four sections, subtle motion everywhere (Telegram as a reference for feel), and less effort when posting | all (01–06) | change | Walked on the phone 2026-11-05 and read in code: three levels of tabs on Explore and Listings, a different accent per section, "N/A"/"—" for missing data, very tall cards, a listing composer of about 30 fields over 4 steps with photos last (`app/create-post.tsx:2895-3265`), a restaurant review that needs the exact name typed (`create-post.tsx:2631-2646`). Findings in [the design review](review/2026-11-05-design-audit.md) | full | review, then three design files in `docs/design/2026-11-05-redesign/`, then a plan once the owner picks one | building: design D chosen 2026-11-05, [plan 01](plan/01-design-d.md) |
+| TR-004 | 2026-11-04 | [Device run](device-runs/2026-11-04-00-smoke.md) S-13 | Claude | In light mode the Android navigation bar stays dark grey | 08 Platform | bug, cosmetic | Seen on the phone (OnePlus, Android 16, Expo Go). Not read in code; Expo Go may control the bar, so check on a development build first | light | review 08 | open |
+| TR-003 | 2026-11-04 | [Device run](device-runs/2026-11-04-00-smoke.md) S-14 | Claude | After sign-out, with no city chosen, the Explore hero's "Recent activity" ticker still shows Los Angeles posts | 02 Explore | question | Seen on the phone. Not read in code: either the ticker is built from data cached before sign-out, or it is meant to show recent activity everywhere | light | review 02 | open |
+| TR-002 | 2026-11-04 | [Device run](device-runs/2026-11-04-00-smoke.md) S-14 | Claude | Opening the side menu as a guest sends six signed-in-only requests, each answered 401 | 08 Platform | bug, low | `components/HamburgerMenu.tsx:77-80` calls `useSidebarStore.refreshIfStale` whenever the menu opens, guest or not; `src/store/sidebar.store.ts:42-48` (`fetchSidebarData`) then requests stats, `/auth/me`, unread count, saves, my listings and my restaurants with no session check. Backend log 02:33:05: six `401`s. No user-visible error | light | review 08 | built 2026-11-04, checked on the phone, not committed: [build note](build/2026-11-04-TR-002-guest-menu-401s.md) |
+| TR-001 | 2026-11-04 | [Device run](device-runs/2026-11-04-00-smoke.md) S-07, S-09 | Claude | Missing values shown as "N/A": floor (listing card and detail), "Deposit N/A" on the card, Security deposit, Year built, Heating, Cooling, Utilities in Property Details, "N/A Wait Time" on a restaurant | 03 Listings, 04 Food | question | Against the rule from B6 ("missing data must not look like a bad value"), which was applied only to the walk and transit pills. Needs a product decision: hide the field, or say "Not provided" as the Hours row does | full | reviews 03 and 04; a plan if the answer is "hide" | open |

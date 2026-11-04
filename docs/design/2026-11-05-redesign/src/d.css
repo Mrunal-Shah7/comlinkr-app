@@ -1,0 +1,44 @@
+/* ===== D · Night Market, brand gradient =====
+   Design C unchanged except colour: violet → the gradient's blue, pink and mint → its green, violet-tinted greys →
+   blue-grey. Gradient sampled from the owner's screenshot: #1A6BAE → #257A86 → #30855B. */
+:root{
+  --g1:#1A6BAE;--g2:#257A86;--g3:#30855B;
+  --grad:linear-gradient(135deg,var(--g1) 0%,var(--g2) 50%,var(--g3) 100%);
+  --page:#E3ECEF;--bezel:#10202A;
+  --bg:#F2F6F8;--surface:#FFFFFF;--surface2:#E7EFF2;--surface3:#D6E3E9;
+  --line:rgba(15,26,33,.07);--line2:rgba(15,26,33,.14);
+  --text:#0F1A21;--text2:#4F6470;--text3:#8A9DA8;
+  --accent:#1A6BAE;--accent-soft:rgba(26,107,174,.12);--accent-text:#155A93;--on-accent:#fff;
+  --mint:#30855B;--mint-soft:rgba(48,133,91,.14);--pink:#30855B;
+  --ok:#30855B;--ok-soft:rgba(48,133,91,.14);
+  --glass:rgba(255,255,255,.72);--glass-line:rgba(15,26,33,.08);
+  --shadow:0 2px 6px rgba(15,40,60,.06),0 12px 28px -12px rgba(15,40,60,.2);
+  --confetti1:#1A6BAE;--confetti2:#257A86;--confetti3:#30855B;--confetti4:#8CC4E6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --page:#050C10;--bezel:#1C2C35;
+  --bg:#091218;--surface:#10202A;--surface2:#172B37;--surface3:#213A49;
+  --line:rgba(255,255,255,.06);--line2:rgba(255,255,255,.12);
+  --text:#EEF5F8;--text2:#9DB4C0;--text3:#66808E;
+  --accent:#1A6BAE;--accent-soft:rgba(26,107,174,.24);--accent-text:#7DB4E2;
+  --mint:#30855B;--mint-soft:rgba(48,133,91,.22);--pink:#30855B;--ok:#30855B;--ok-soft:rgba(48,133,91,.22);
+  --glass:rgba(16,32,42,.66);--glass-line:rgba(255,255,255,.09);
+}}
+:root[data-theme=dark]{
+  --page:#050C10;--bezel:#1C2C35;
+  --bg:#091218;--surface:#10202A;--surface2:#172B37;--surface3:#213A49;
+  --line:rgba(255,255,255,.06);--line2:rgba(255,255,255,.12);
+  --text:#EEF5F8;--text2:#9DB4C0;--text3:#66808E;
+  --accent:#1A6BAE;--accent-soft:rgba(26,107,174,.24);--accent-text:#7DB4E2;
+  --mint:#30855B;--mint-soft:rgba(48,133,91,.22);--pink:#30855B;--ok:#30855B;--ok-soft:rgba(48,133,91,.22);
+  --glass:rgba(16,32,42,.66);--glass-line:rgba(255,255,255,.09);
+}
+/* C's two-colour gradients become the full blue → teal → green band */
+.seg-ind,.btn.pri,.bubble.out,.typecard .gi,.tabbar .plus,.bt-tile.hello{background:var(--grad)}
+.bar2 i,.progress i{background:var(--grad)}
+/* text on the green fills: white instead of C's near-black (which suited mint) */
+.chip.on,.otp label.ok,.success .ck,.vf,.bt-tile.mint{color:#fff}
+.bt-tile.mint small{color:rgba(255,255,255,.8)}
+[style*="#06130D"]{color:#fff!important}
+/* your own avatar: C tints it violet (hue 260); D gives it the gradient */
+.bar .avring .av,.askbox .avring .av{background:var(--grad)}

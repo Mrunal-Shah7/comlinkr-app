@@ -1,0 +1,25 @@
+{
+  "name": "comlinkr-final-app",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix apps/web && npm install --prefix apps/mobile",
+    "dev:web": "npm run dev --prefix apps/web",
+    "build:web": "npm run build --prefix apps/web",
+    "preview:web": "npm run preview --prefix apps/web",
+    "dev:mobile": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd start",
+    "dev:mobile:clear": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd start --clear",
+    "dev:mobile:tunnel": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd start --tunnel",
+    "dev:mobile:lan": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd start --lan",
+    "android": "npm run android --prefix apps/mobile",
+    "ios": "npm run ios --prefix apps/mobile",
+    "build:android": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd run:android",
+    "build:ios": "cd apps/mobile && .\\node_modules\\.bin\\expo.cmd run:ios"
+  },
+  "devDependencies": {},
+  "pnpm": {
+    "overrides": {
+      "react": "19.2.3",
+      "react-dom": "19.2.3"
+    }
+  }
+}

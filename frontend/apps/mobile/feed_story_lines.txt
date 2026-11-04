@@ -1,0 +1,134 @@
+65: getStory,
+66: toggleStorySave,
+67: buildStoryAuthorGroups,
+68: type ApiStory,
+69: type StoryAuthorGroup,
+1241: const STORY_CATEGORIES = ["All", "Events", "Food", "Housing", "Culture", "Local News"] as const;
+1242: type StoryCategory = typeof STORY_CATEGORIES[number];
+1244: interface CommunityStory {
+1254: category: Exclude<StoryCategory, "All">;
+1261: hasNewStory: boolean;
+1290: const COMMUNITY_STORIES: CommunityStory[] = [
+1308: hasNewStory: true,
+1332: hasNewStory: true,
+1356: hasNewStory: true,
+1380: hasNewStory: false,
+1404: hasNewStory: false,
+1428: hasNewStory: true,
+1452: hasNewStory: false,
+1476: hasNewStory: false,
+1485: const STORY_CATEGORY_META: Record<Exclude<StoryCategory, "All">, { emoji: string; color: string; bg: string }> = {
+1798: stories: ApiStory[];
+1890: target: (s.title || s.category || "Story").slice(0, 38),
+1903: function storyTimeAgo(iso: string): string {
+1907: /** Align with story viewer: treat missing `isSaved` as false; accept legacy `savedByMe`. */
+1908: function apiStoryIsSaved(s: ApiStory | undefined): boolean {
+1913: function normalizeApiStoryForFeed(s: ApiStory): ApiStory {
+1914: return { ...s, isSaved: apiStoryIsSaved(s) };
+1917: function mapApiStoryToCommunityStory(s: ApiStory): CommunityStory {
+1919: let uiCat: Exclude<StoryCategory, "All"> = "Local News";
+1931: const mediaType: CommunityStory["mediaType"] =
+1950: timeAgo: storyTimeAgo(s.createdAt),
+1951: hasNewStory: false,
+1952: isBookmarked: apiStoryIsSaved(s),
+1960: function formatStoryTimeLeft(expiresAt: string): string {
+3475: openStory?: string;
+3523: const [apiStoriesList, setApiStoriesList] = useState<CommunityStory[]>([]);
+3525: const [storiesFromApi, setStoriesFromApi] = useState<ApiStory[]>([]);
+3526: const [myStoriesFromApi, setMyStoriesFromApi] = useState<ApiStory[]>([]);
+3915: const listNorm = list.map(normalizeApiStoryForFeed);
+3916: const myNorm = myList.map(normalizeApiStoryForFeed);
+3919: setApiStoriesList(listNorm.map(mapApiStoryToCommunityStory));
+4075: const [storyFilter, setStoryFilter] = useState<StoryCategory>("All");
+4076: const [storyFollowing, setStoryFollowing] = useState<Set<string>>(new Set(["tc1", "tc2"]));
+4077: const [storyReacted, setStoryReacted] = useState<Record<string, string>>({});
+4079: const [storySortBy, setStorySortBy] = useState<"trending" | "latest" | "popular">("trending");
+4081: const storyAuthorGroups = useMemo(
+4082: () => buildStoryAuthorGroups(storiesFromApi, user?.id),
+4097: if (storyFilter !== "All") {
+4098: list = list.filter((s) => apiCatToUi(s.category) === storyFilter);
+4100: if (storySortBy === "popular") list.sort((a, b) => b.viewsCount - a.viewsCount);
+4101: else if (storySortBy === "latest") {
+4108: filteredStories: list.map(mapApiStoryToCommunityStory),
+4110: }, [storiesFromApi, storyFilter, storySortBy]);
+4112: const openStoryViewerAt = useCallback((authorIndex: number, storyIndex: number) => {
+4114: pathname: "/story-viewer",
+4115: params: { authorIndex: String(authorIndex), storyIndex: String(storyIndex) },
+4119: const findStoryIndices = useCallback(
+4120: (storyId: string): { ai: number; si: number } => {
+4121: for (let ai = 0; ai < storyAuthorGroups.length; ai++) {
+4122: const si = storyAuthorGroups[ai].stories.findIndex((s) => s.id === storyId);
+4127: [storyAuthorGroups],
+4130: const patchStorySavedInFeed = useCallback((storyId: string, saved: boolean) => {
+4131: setStoriesFromApi((prev) => prev.map((s) => (s.id === storyId ? { ...s, isSaved: saved } : s)));
+4133: prev.map((row) => (row.id === storyId ? { ...row, isBookmarked: saved } : row)),
+4137: const onToggleStorySaveFromFeed = useCallback(
+4138: async (storyId: string) => {
+4139: const cur = storiesFromApi.find((s) => s.id === storyId);
+4140: const next = !apiStoryIsSaved(cur);
+4141: patchStorySavedInFeed(storyId, next);
+4143: const r = await toggleStorySave(storyId);
+4144: patchStorySavedInFeed(storyId, r.isSaved === true || r.saved === true);
+4146: patchStorySavedInFeed(storyId, !next);
+4149: [storiesFromApi, patchStorySavedInFeed],
+4533: const deepLinkStoryRef = useRef<string | null>(null);
+4581: const raw = params.openStory;
+4583: if (!id || deepLinkStoryRef.current === id) return;
+4584: deepLinkStoryRef.current = id;
+4588: await getStory(id);
+4593: const listNorm = list.map(normalizeApiStoryForFeed);
+4595: setApiStoriesList(listNorm.map(mapApiStoryToCommunityStory));
+4596: const groups = buildStoryAuthorGroups(listNorm, user?.id);
+4610: pathname: "/story-viewer",
+4611: params: { authorIndex: String(ai), storyIndex: String(si) },
+4621: }, [params.openStory, user?.id]);
+4972: <Text style={[st.storySectionTitle, { color: tc.textPrimary }]}>Stories</Text>
+4974: {/* ── Add Story card (full-width, non-Instagram style) ── */}
+4979: const gi = storyAuthorGroups.findIndex((g) => g.author.id === user?.id);
+4980: openStoryViewerAt(gi >= 0 ? gi : 0, 0);
+4982: router.push({ pathname: "/create-post", params: { type: "story" } } as any);
+5004: {myStoriesFromApi.length > 0 ? "View Your Story" : "Share Your Story"}
+5008: ? `${myStoriesFromApi.length} story posted · tap to view`
+5016: {/* Active story count chips */}
+5051: {STORY_CATEGORIES.map((cat) => {
+5052: const active = storyFilter === cat;
+5053: const meta = cat !== "All" ? STORY_CATEGORY_META[cat] : null;
+5058: onPress={() => { Haptics.selectionAsync(); setStoryFilter(cat); }}
+5072: const active = storySortBy === sortOpt;
+5078: onPress={() => { Haptics.selectionAsync(); setStorySortBy(sortOpt); }}
+5089: {/* Story list (API-backed) */}
+5092: const ui = mapApiStoryToCommunityStory(apiSt);
+5093: const catM = STORY_CATEGORY_META[ui.category];
+5098: const { ai, si } = findStoryIndices(apiSt.id);
+5103: st.storyCard,
+5109: openStoryViewerAt(ai, si);
+5114: <View style={[st.storyCardImg, { alignItems: "center", justifyContent: "center", overflow: "hidden" }]}>
+5120: <Text style={{ color: "rgba(255,255,255,0.9)", fontSize: rs(11), fontWeight: "700" }}>Video Story</Text>
+5128: <FadeImage uri={thumb} style={st.storyCardImg} />
+5131: style={st.storyListBookmark}
+5135: void onToggleStorySaveFromFeed(apiSt.id);
+5145: <View style={st.storyCardBody}>
+5147: <View style={[st.storyCatChipInline, { borderColor: catM.color, backgroundColor: catM.color + "18" }]}>
+5148: <Text style={[st.storyCatChipInlineText, { color: catM.color }]}>{catM.emoji} {ui.category}</Text>
+5150: <Text style={[st.storyListExpiry, { color: tc.textTertiary }]}>
+5151: {formatStoryTimeLeft(apiSt.expiresAt)}
+5154: <Text style={[st.storyCardTitle, { color: tc.textPrimary }]} numberOfLines={2}>
+5158: <Text style={[st.storyCardDesc, { color: tc.textSecondary }]} numberOfLines={2}>
+5163: <View style={[st.storyHashtags, { marginBottom: rs(8) }]}>
+5165: <Text key={i} style={st.storyHashtag}>{h.startsWith("#") ? h : `#${h}`}</Text>
+5169: <View style={[st.storyAuthorRow, { marginBottom: rs(8) }]}>
+5170: <FadeImage uri={ui.authorAvatar} style={st.storyAuthorAv} />
+5172: <Text style={[st.storyAuthorName, { color: tc.textPrimary }]}>{ui.author}</Text>
+5173: <Text style={[st.storyTime, { color: tc.textTertiary }]}>{ui.timeAgo}</Text>
+5177: <Text style={[st.storyEngTextLight, { color: tc.textTertiary }]}>
+5183: <View style={[st.storyEngBar, { paddingTop: rs(10) }]}>
+5185: style={st.storyEngItem}
+5199: <Text style={[st.storyEngText, { color: likedStories.has(apiSt.id) ? "#EF4444" : tc.textTertiary }]}>
+5204: style={st.storyEngItem}
+5209: openStoryViewerAt(ai, si);
+5213: <Text style={[st.storyEngText, { color: tc.textTertiary }]}>Comment</Text>
+5216: style={st.storyEngItem}
+5225: <Text style={[st.storyEngText, { color: tc.textTertiary }]}>Share</Text>
+5240: Be the first to share one — tap Add Story above!
+5711: {/* Hero image — taller for featured top story */}
+5729: <Text style={nw.featuredBadgeText}>⭐ TOP STORY</Text>

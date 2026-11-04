@@ -1,0 +1,109 @@
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { Prisma } from '@prisma/client';
+
+const ERROR_CODES: Record<number, string> = {
+  [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
+  [HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
+  [HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+  [HttpStatus.NOT_FOUND]: 'RESOURCE_NOT_FOUND',
+  [HttpStatus.CONFLICT]: 'CONFLICT',
+  [HttpStatus.PAYLOAD_TOO_LARGE]: 'FILE_TOO_LARGE',
+  [HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_ERROR',
+};
+
+/**
+ * Clients show the top-level message to the user, so pick the clearest error for
+ * the first failing field. class-validator lists a field's errors bottom decorator
+ * first (e.g. MaxLength before IsNotEmpty), which reads wrongly for a missing value.
+ */
+function headlineValidationMessage(
+  details: Array<{ field: string; message: string }>,
+): string | undefined {
+  const first = details[0];
+  if (!first) return undefined;
+  const sameField = details.filter((d) => d.field === first.field);
+  const missing = sameField.find((d) =>
+    d.message.endsWith('should not be empty'),
+  );
+  // The last entry is the field's first-declared decorator, usually its basic type check.
+  return (missing ?? sameField[sameField.length - 1]).message;
+}
+
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  catch(exception: unknown, host: ArgumentsHost): void {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let code = 'INTERNAL_ERROR';
+    let message = 'An unexpected error occurred';
+    let details: Array<{ field: string; message: string }> | undefined;
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const res = exception.getResponse();
+      if (typeof res === 'object' && res !== null) {
+        const body = res as Record<string, unknown>;
+        if (typeof body.code === 'string') code = body.code;
+        if (typeof body.message === 'string') message = body.message;
+        else if (Array.isArray(body.message)) {
+          const messages = body.message as string[];
+          details = messages.map((msg) => {
+            const fieldMatch =
+              msg.match(/^property ([\w.]+) should not exist/) ??
+              msg.match(/^([\w.]+)\s/);
+            return {
+              field: fieldMatch ? fieldMatch[1] : 'field',
+              message: msg,
+            };
+          });
+          message = headlineValidationMessage(details) ?? 'Validation failed';
+          code = 'VALIDATION_ERROR';
+        }
+      } else if (typeof res === 'string') {
+        message = res;
+      }
+      if (code === 'INTERNAL_ERROR' && status in ERROR_CODES) {
+        code = ERROR_CODES[status];
+      }
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (exception.code === 'P2002') {
+        status = HttpStatus.CONFLICT;
+        code = 'DUPLICATE_ENTRY';
+        message = 'A record with this value already exists';
+      } else if (exception.code === 'P2025') {
+        status = HttpStatus.NOT_FOUND;
+        code = 'RESOURCE_NOT_FOUND';
+        message = 'Record not found';
+      } else {
+        // SEC-12: never return raw ORM text; keep diagnostics server-side.
+        this.logger.error(
+          `Unmapped Prisma error ${exception.code}: ${exception.message}`,
+        );
+        message = 'An unexpected error occurred';
+      }
+    } else if (exception instanceof Error) {
+      this.logger.error(exception.stack);
+    }
+
+    response.status(status).json({
+      success: false,
+      error: {
+        code,
+        message,
+        ...(details && details.length > 0 && { details }),
+      },
+    });
+  }
+}

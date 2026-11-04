@@ -1,0 +1,75 @@
+{
+  "cli": {
+    "version": ">= 9.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.comlinkr.com/api",
+        "EXPO_PUBLIC_WEB_URL": "https://www.comlinkr.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "178685561232-svdpkf3fahdd41pku7n5cee6fniuubvi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "178685561232-aeqff9v9tot57shhjkicce0988gue1f4.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "178685561232-shvmr9g6c3s2u1grsi4kr1labrmcl571.apps.googleusercontent.com"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.comlinkr.com/api",
+        "EXPO_PUBLIC_WEB_URL": "https://www.comlinkr.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "178685561232-svdpkf3fahdd41pku7n5cee6fniuubvi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "178685561232-aeqff9v9tot57shhjkicce0988gue1f4.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "178685561232-shvmr9g6c3s2u1grsi4kr1labrmcl571.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "178685561232-svdpkf3fahdd41pku7n5cee6fniuubvi.apps.googleusercontent.com"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.comlinkr.com/api",
+        "EXPO_PUBLIC_WEB_URL": "https://www.comlinkr.com",
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "178685561232-svdpkf3fahdd41pku7n5cee6fniuubvi.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "178685561232-aeqff9v9tot57shhjkicce0988gue1f4.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "178685561232-shvmr9g6c3s2u1grsi4kr1labrmcl571.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID": "178685561232-svdpkf3fahdd41pku7n5cee6fniuubvi.apps.googleusercontent.com"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "raopavan610@gmail.com",
+        "ascAppId": "6770242217",
+        "appleTeamId": "CZ93N4AV36"
+      }
+    }
+  }
+}

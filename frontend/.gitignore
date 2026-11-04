@@ -1,0 +1,14 @@
+node_modules
+dist
+.vite
+.env
+.env.*
+!.env.example
+.DS_Store
+
+apps/**/node_modules
+apps/**/dist
+apps/mobile/node_modules
+packages/**/node_modules
+graphify-out/
+coverage
