@@ -12,20 +12,27 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/useTheme';
 import { GRADIENT, GRADIENT_END, GRADIENT_START, RADIUS, TYPE, body } from '../../theme/d';
 import { SHAKE, SPRING, TIMING, revealIn, tileIn } from '../motion/presets';
 
 /* ---------- press feedback ---------- */
-type PressableScaleProps = PressableProps & { style?: StyleProp<ViewStyle>; scaleTo?: number; children?: ReactNode; haptic?: boolean };
+type PressableScaleProps = PressableProps & {
+  style?: StyleProp<ViewStyle>;
+  /** Layout for the touchable wrapper itself (flex, width, margins) — use for tiles that share a row. */
+  outerStyle?: StyleProp<ViewStyle>;
+  scaleTo?: number; children?: ReactNode; haptic?: boolean;
+};
 /** Scales to 0.96 with a spring while pressed (the prototype's `.press`). */
-export function PressableScale({ style, scaleTo = 0.96, children, haptic, onPressIn, onPressOut, onPress, ...rest }: PressableScaleProps) {
+export function PressableScale({ style, outerStyle, scaleTo = 0.96, children, haptic, onPressIn, onPressOut, onPress, ...rest }: PressableScaleProps) {
   const s = useSharedValue(1);
   const reduce = useReducedMotion();
   const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
   return (
     <Pressable
       {...rest}
+      style={outerStyle}
       onPress={(e) => { if (haptic) void Haptics.selectionAsync(); onPress?.(e); }}
       onPressIn={(e) => { if (!reduce) s.value = withSpring(scaleTo, SPRING.press); onPressIn?.(e); }}
       onPressOut={(e) => { s.value = withSpring(1, SPRING.press); onPressOut?.(e); }}
@@ -177,3 +184,21 @@ const s = StyleSheet.create({
   tile: { borderRadius: RADIUS.tile, padding: 14, overflow: 'hidden', minHeight: 118 },
   tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });
+
+/* ---------- empty state ---------- */
+/** One empty state for every list (problem 14): an icon in a soft tile, a title, a line, an optional action. */
+export function EmptyState({ icon, title, sub, actionLabel, onAction }: {
+  icon: keyof typeof Ionicons.glyphMap; title: string; sub?: string; actionLabel?: string; onAction?: () => void;
+}) {
+  const { tc } = useTheme();
+  return (
+    <View style={{ alignItems: 'center', paddingVertical: 36, paddingHorizontal: 30 }}>
+      <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: tc.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+        <Ionicons name={icon} size={32} color={tc.accentText} />
+      </View>
+      <Text style={[TYPE.cardTitle, { color: tc.textPrimary, textAlign: 'center' }]}>{title}</Text>
+      {sub ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: 'center', marginTop: 6 }]}>{sub}</Text> : null}
+      {actionLabel && onAction ? <View style={{ marginTop: 16 }}><GradientButton small label={actionLabel} onPress={onAction} /></View> : null}
+    </View>
+  );
+}

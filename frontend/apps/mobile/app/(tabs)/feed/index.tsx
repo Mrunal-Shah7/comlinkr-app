@@ -4,7 +4,7 @@ import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Animated
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
-import { Chip, Segmented } from "../../../src/shared/d";
+import { Chip, EmptyState, Segmented, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
 import { revealIn } from "../../../src/shared/motion/presets";
 import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
@@ -52,19 +52,19 @@ import { type ExploreEventRow, type HeroTickerRow, apiEventToExploreRow, buildHe
 import { type NewsArticle, LIVE_NEWS_SESSION_CACHE, type NewsCategory, COUNTRY_NEWS_MAP, BASE_NEWS_CATEGORIES, LIVE_NEWS_PAGE_SIZE, FALLBACK_NEWS, fetchArticleMeta, newsTimeAgo, isSameContent } from "../../../src/features/explore/news";
 import { WYRCard } from "../../../src/features/explore/components/WYRCard";
 import { nw } from "../../../src/features/explore/styles/news.styles";
-import { FeaturedEventCard, EventRowCard } from "../../../src/features/explore/components/EventCards";
+import { EventTile } from "../../../src/features/explore/components/EventCards";
 import { StoryVideoThumb, NewsLeadImage } from "../../../src/features/explore/components/NewsImages";
 import { PostCard } from "../../../src/features/explore/components/PostCard";
 import { EventDetailModal } from "../../../src/features/explore/components/EventDetailModal";
-import { StoryCard } from "../../../src/features/explore/components/StoryCard";
+import { StoryCard, AddStoryTile } from "../../../src/features/explore/components/StoryCard";
 import { QuestCard } from "../../../src/features/explore/components/QuestCard";
 import { LiveNewsCard } from "../../../src/features/explore/components/LiveNewsCard";
 import { useStableCallback } from "../../../src/shared/hooks/useStableCallback";
 
 /** A row of the Explore FlatList — which kind depends on the active tab / news sub-tab. */
 type FeedRow =
-  | { kind: "event"; event: ExploreEventRow }
-  | { kind: "story"; story: ApiStory }
+  | { kind: "eventPair"; events: ExploreEventRow[] }
+  | { kind: "storyPair"; items: (ApiStory | "add")[] }
   | { kind: "quest"; quest: ApiChallenge }
   | { kind: "post"; post: FeedPost }
   | { kind: "news"; article: NewsArticle; index: number }
@@ -72,8 +72,8 @@ type FeedRow =
 
 const feedRowKey = (row: FeedRow) => {
   switch (row.kind) {
-    case "event": return `e:${row.event.id}`;
-    case "story": return `s:${row.story.id}`;
+    case "eventPair": return `e:${row.events.map((e) => e.id).join("+")}`;
+    case "storyPair": return `s:${row.items.map((it) => (it === "add" ? "add" : it.id)).join("+")}`;
     case "quest": return `q:${row.quest.id}`;
     case "post": return `p:${row.post.id}`;
     case "news": return `n:${row.article.id}`;
@@ -1687,8 +1687,15 @@ export default function FeedScreen() {
 
   let feedRows: FeedRow[] = [];
   if (hasChosenCity) {
-    if (feedTab === "Events") feedRows = exploreEvents.map((event) => ({ kind: "event", event }));
-    else if (feedTab === "Stories") feedRows = filteredApiStories.map((story) => ({ kind: "story", story }));
+    // Design D: events are a two-column grid of tiles, so each row holds two.
+    if (feedTab === "Events") {
+      for (let i = 0; i < exploreEvents.length; i += 2) feedRows.push({ kind: "eventPair", events: exploreEvents.slice(i, i + 2) });
+    }
+    else if (feedTab === "Stories") {
+      // Design D: a two-column grid of tall tiles, "Add a story" first.
+      const items: (ApiStory | "add")[] = ["add", ...filteredApiStories];
+      for (let i = 0; i < items.length; i += 2) feedRows.push({ kind: "storyPair", items: items.slice(i, i + 2) });
+    }
     else if (feedTab === "Quests") feedRows = questsList.map((quest) => ({ kind: "quest", quest }));
     else if (feedTab === "Polls") feedRows = pollQuestionPosts.map((post) => ({ kind: "poll", post }));
     else if (newsSubTab === "community") feedRows = visibleCommunityPosts.map((post) => ({ kind: "post", post }));
@@ -1697,6 +1704,17 @@ export default function FeedScreen() {
 
   // Stable handlers for the memoized rows (StoryCard / QuestCard / LiveNewsCard).
   const onOpenStoryRow = useStableCallback(openStoryViewerAt);
+  const onAddStoryTile = useStableCallback(() => {
+    if (myStoriesFromApi.length > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const gi = storyAuthorGroups.findIndex((g) => g.author.id === user?.id);
+      openStoryViewerAt(gi >= 0 ? gi : 0, 0);
+      return;
+    }
+    if (!requireAuth(undefined, "Sign in to share your story with the neighborhood.")) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({ pathname: "/create-post", params: { type: "story" } } as any);
+  });
   const onDeleteStoryRow = useStableCallback(onDeleteStoryFromFeed);
   const onToggleStorySaveRow = useStableCallback(onToggleStorySaveFromFeed);
   const onToggleStoryLikeRow = useStableCallback(onToggleStoryLikeFromFeed);
@@ -1724,46 +1742,38 @@ export default function FeedScreen() {
 
   const renderFeedRowInner = ({ item, index }: { item: FeedRow; index: number }) => {
     switch (item.kind) {
-      case "event": {
-        const e = item.event;
+      case "eventPair":
         return (
-          <View style={feedSectionRowPad}>
-            <EventRowCard
-              event={e}
-              isSaved={e.isSaved}
-              onToggleSave={() => { void toggleEventSave(e); }}
-              isRegistered={e.registeredByMe}
-              onToggleGoing={() => { void toggleEventGoing(e); }}
-              canAccessEventChat={e.canAccessChat}
-              conversationId={e.conversationId}
-              onPress={() => setSelectedEvent(e)}
-              rsvp={() => {
-                if (!requireAuth(undefined, "Sign in to register for this event.")) return;
-                setRegEvent(e);
-                setRegModalOpen(true);
-              }}
-            />
+          <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 14 }}>
+            {item.events.map((e) => (
+              <EventTile key={e.id} event={e} isSaved={e.isSaved} onToggleSave={() => { void toggleEventSave(e); }} onPress={() => setSelectedEvent(e)} />
+            ))}
+            {item.events.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
         );
-      }
-      case "story": {
-        const apiSt = item.story;
-        const { ai, si } = findStoryIndices(apiSt.id);
+      case "storyPair":
         return (
-          <View style={feedSectionRowPad}>
-            <StoryCard
-              story={apiSt}
-              authorIndex={ai}
-              storyIndex={si}
-              isOwnStory={!!user?.id && apiSt.author?.id === user.id}
-              onOpen={onOpenStoryRow}
-              onDelete={onDeleteStoryRow}
-              onToggleSave={onToggleStorySaveRow}
-              onToggleLike={onToggleStoryLikeRow}
-            />
+          <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginBottom: 10 }}>
+            {item.items.map((it) => {
+              if (it === "add") return <AddStoryTile key="add" hasOwn={myStoriesFromApi.length > 0} onPress={onAddStoryTile} />;
+              const { ai, si } = findStoryIndices(it.id);
+              return (
+                <StoryCard
+                  key={it.id}
+                  story={it}
+                  authorIndex={ai}
+                  storyIndex={si}
+                  isOwnStory={!!user?.id && it.author?.id === user.id}
+                  onOpen={onOpenStoryRow}
+                  onDelete={onDeleteStoryRow}
+                  onToggleSave={onToggleStorySaveRow}
+                  onToggleLike={onToggleStoryLikeRow}
+                />
+              );
+            })}
+            {item.items.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
         );
-      }
       case "quest":
         return (
           <View style={[feedSectionRowPad, index > 0 && { marginTop: rs(14) }]}>
@@ -1822,19 +1832,14 @@ export default function FeedScreen() {
       }
       case "poll": {
         const p = item.post;
+        // Design D: a question bubble (rounded, with a small tail at the bottom left).
         return (
-          <View style={feedSectionRowPad}>
-            <View
-              style={[s.debateCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight, marginBottom: rs(12) }]}
-            >
-              <Text style={[s.debateQ, { color: tc.textPrimary }]}>{p.title}</Text>
-              <Text style={{ color: tc.textSecondary, fontSize: rs(13), lineHeight: rs(18) }} numberOfLines={4}>
-                {p.content}
-              </Text>
-              <Text style={{ color: tc.textTertiary, fontSize: rs(12), marginTop: rs(8) }}>
-                {p.likesCount ?? 0} likes · {p.commentsCount ?? 0} comments
-              </Text>
-            </View>
+          <View style={{ marginHorizontal: 16, marginBottom: 12, padding: 16, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderBottomLeftRadius: 6, backgroundColor: tc.cardBg }}>
+            <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{p.title}</Text>
+            {p.content ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 6 }]} numberOfLines={4}>{p.content}</Text> : null}
+            {(p.likesCount ?? 0) + (p.commentsCount ?? 0) > 0 ? (
+              <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 8 }]}>{p.likesCount ?? 0} likes · {p.commentsCount ?? 0} comments</Text>
+            ) : null}
           </View>
         );
       }
@@ -1931,24 +1936,16 @@ export default function FeedScreen() {
             {/* ── EVENTS ── */}
             {hasChosenCity && feedTab === "Events" && (
               <>
-                {/* ── Events header with create shortcut ── */}
-                <View style={[nw.sectionBlock, { marginBottom: rs(4) }]}>
-                  <View style={nw.sectionHeader}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[nw.sectionTitle, { color: tc.textPrimary }]}>Upcoming Events</Text>
-                      <Text style={[nw.sectionSubtitle, { color: tc.textSecondary }]}>Events happening in {city}</Text>
-                    </View>
-                    <Pressable
-                      style={nw.sectionCreateBtn}
-                      onPress={() => {
-                        if (!requireAuth(undefined, "Sign in to host your own event.")) return;
-                        router.push({ pathname: "/create-post", params: { type: "event" } } as any);
-                      }}
-                    >
-                      <Ionicons name="add" size={16} color="#FFF" />
-                      <Text style={nw.sectionCreateBtnText}>Create</Text>
-                    </Pressable>
-                  </View>
+                {/* ── Design D: host shortcut above the grid ── */}
+                <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                  <SoftButton
+                    block
+                    label="Host an event"
+                    onPress={() => {
+                      if (!requireAuth(undefined, "Sign in to host your own event.")) return;
+                      router.push({ pathname: "/create-post", params: { type: "event" } } as any);
+                    }}
+                  />
                 </View>
 
                 {exploreEventsLoading && exploreEvents.length === 0 && (
@@ -1965,208 +1962,50 @@ export default function FeedScreen() {
                     </Text>
                   </View>
                 )}
-                {exploreEvents.length > 0 && (
-                  <>
-                    <FeaturedEventCard
-                      event={exploreEvents[0]}
-                      isSaved={exploreEvents[0].isSaved}
-                      onToggleSave={() => { void toggleEventSave(exploreEvents[0]); }}
-                      isRegistered={exploreEvents[0].registeredByMe}
-                      onToggleGoing={() => { void toggleEventGoing(exploreEvents[0]); }}
-                      canAccessEventChat={exploreEvents[0].canAccessChat}
-                      conversationId={exploreEvents[0].conversationId}
-                      onPress={() => setSelectedEvent(exploreEvents[0])}
-                      rsvp={() => {
-                        if (!requireAuth(undefined, "Sign in to register for this event.")) return;
-                        setRegEvent(exploreEvents[0]);
-                        setRegModalOpen(true);
-                      }}
-                    />
-                    <View style={[s.section, { marginTop: rs(16) }]}>
-                      <Text style={[s.secTitle, { color: tc.textPrimary }]}>🗓 All Events</Text>
-                    </View>
-                  </>
-                )}
               </>
             )}
 
             {/* ── STORIES (Sprint 14) ── */}
             {hasChosenCity && feedTab === "Stories" && (
               <>
-                <Text style={[st.storySectionTitle, { color: tc.textPrimary }]}>Stories</Text>
-
-                {/* ── Add Story card (full-width, non-Instagram style) ── */}
-                <Pressable
-                  onPress={() => {
-                    if (myStoriesFromApi.length > 0) {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      const gi = storyAuthorGroups.findIndex((g) => g.author.id === user?.id);
-                      openStoryViewerAt(gi >= 0 ? gi : 0, 0);
-                      return;
-                    }
-                    if (!requireAuth(undefined, "Sign in to share your story with the neighborhood.")) return;
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    router.push({ pathname: "/create-post", params: { type: "story" } } as any);
-                  }}
-                  style={({ pressed }) => [{ marginHorizontal: rs(14), marginBottom: rs(14), borderRadius: rs(20), overflow: "hidden", opacity: pressed ? 0.92 : 1 }]}
-                >
-                  <LinearGradient
-                    colors={[Colors.brand.blue, Colors.brand.green]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={{ padding: rs(20), borderRadius: rs(20) }}
-                  >
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: rs(14) }}>
-                      <View style={{ width: rs(52), height: rs(52), borderRadius: rs(16), backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" }}>
-                        {myStoriesFromApi.length > 0 && user?.avatarUrl ? (
-                          <FadeImage uri={resolveApiAssetUrl(user.avatarUrl)} style={{ width: rs(52), height: rs(52), borderRadius: rs(16) }} /> // SPRINT-42: render story-owner avatar with FadeImage.
-                        ) : (
-                          <Ionicons name={myStoriesFromApi.length > 0 ? "book-outline" : "add-circle-outline"} size={26} color="#FFF" />
-                        )}
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: rs(16), fontWeight: "900", color: "#FFF", letterSpacing: -0.2 }}>
-                          {myStoriesFromApi.length > 0 ? "View Your Story" : "Share Your Story"}
-                        </Text>
-                        <Text style={{ fontSize: rs(12), color: "rgba(255,255,255,0.82)", marginTop: rs(3), fontWeight: "500" }}>
-                          {myStoriesFromApi.length > 0
-                            ? `${myStoriesFromApi.length} story posted · tap to view`
-                            : "Post a photo, update or local moment with your community"}
-                        </Text>
-                      </View>
-                      <View style={{ width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
-                        <Ionicons name="arrow-forward" size={18} color="#FFF" />
-                      </View>
-                    </View>
-                    {/* Active story count chips */}
-                    {storiesFromApi.length > 0 && (
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: rs(8), marginTop: rs(14) }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.15)", borderRadius: rs(10), paddingHorizontal: rs(10), paddingVertical: rs(5) }}>
-                          <Ionicons name="people-outline" size={12} color="rgba(255,255,255,0.9)" />
-                          <Text style={{ fontSize: rs(11), fontWeight: "700", color: "rgba(255,255,255,0.9)" }}>{storiesFromApi.length} active stories</Text>
-                        </View>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.15)", borderRadius: rs(10), paddingHorizontal: rs(10), paddingVertical: rs(5) }}>
-                          <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.9)" />
-                          <Text style={{ fontSize: rs(11), fontWeight: "700", color: "rgba(255,255,255,0.9)" }}>{city}</Text>
-                        </View>
-                      </View>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-
+                {/* ── Design D: category chips, then sort chips; tiles below ── */}
+                <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 10 }}>
+                  {STORY_CATEGORIES.map((cat) => (
+                    <Chip key={cat} label={cat} on={storyFilter === cat} onPress={() => setStoryFilter(cat)} />
+                  ))}
+                </GHScrollView>
+                <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
+                  {(["trending", "latest", "popular"] as const).map((sortOpt) => (
+                    <Chip key={sortOpt} label={sortOpt.charAt(0).toUpperCase() + sortOpt.slice(1)} on={storySortBy === sortOpt} onPress={() => setStorySortBy(sortOpt)} />
+                  ))}
+                </View>
                 {storiesLoading && storiesFromApi.length === 0 && myStoriesFromApi.length === 0 ? (
-                  <View style={{ paddingHorizontal: rs(16), gap: rs(12) }}>
-                    {Array.from({ length: 2 }).map((_, idx) => (
-                      <Animated.View
-                        key={`story-skeleton-${idx}`}
-                        style={[
-                          nw.newsSkeletonCard,
-                          { backgroundColor: tc.cardBg, borderColor: tc.borderLight, opacity: newsSkeletonOpacity },
-                        ]}
-                      />
-                    ))}
+                  <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginBottom: 10 }}>
+                    <View style={{ flex: 1, aspectRatio: 3 / 4.4, borderRadius: 24, backgroundColor: tc.skeletonBg }} />
+                    <View style={{ flex: 1, aspectRatio: 3 / 4.4, borderRadius: 24, backgroundColor: tc.skeletonBg }} />
                   </View>
                 ) : null}
-
-                <View style={st.headerBlock}>
-                  <View style={st.headerLeft}>
-                    <Text style={[st.headerSubtitle, { color: tc.textTertiary }]}>
-                      {storiesLoading
-                        ? " "
-                        : storiesFromApi.length > 0
-                          ? `${storiesFromApi.length} stories in ${city}`
-                          : city
-                            ? `Stories from ${city}`
-                            : "Local stories"}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* ── Category Filter ── */}
-                <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.catRow}>
-                  {STORY_CATEGORIES.map((cat) => {
-                    const active = storyFilter === cat;
-                    const meta = cat !== "All" ? STORY_CATEGORY_META[cat] : null;
-                    return (
-                      <Pressable
-                        key={cat}
-                        style={[st.catChip, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && st.catChipActive, active && meta && { backgroundColor: isDark ? meta.darkBg : meta.bg, borderColor: meta.color }]}
-                        onPress={() => { Haptics.selectionAsync(); setStoryFilter(cat); }}
-                      >
-                        {meta && <Ionicons name={meta.icon as any} size={rs(13)} color={active ? meta.color : (tc.textSecondary as string)} />}
-                        <Text style={[st.catChipText, { color: tc.textSecondary }, active && st.catChipTextActive, active && meta && { color: meta.color }]}>
-                          {cat}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </GHScrollView>
-
-                {/* ── Sort Row ── */}
-                <View style={st.sortRow}>
-                  {(["trending", "latest", "popular"] as const).map((sortOpt) => {
-                    const active = storySortBy === sortOpt;
-                    const iconMap = { trending: "trending-up", latest: "time-outline", popular: "flame-outline" } as const;
-                    return (
-                      <Pressable
-                        key={sortOpt}
-                        style={[st.sortPill, { backgroundColor: tc.inputBg }, active && st.sortPillActive]}
-                        onPress={() => { Haptics.selectionAsync(); setStorySortBy(sortOpt); }}
-                      >
-                        <Ionicons name={iconMap[sortOpt]} size={14} color={active ? "#FFF" : tc.textTertiary} />
-                        <Text style={[st.sortPillText, { color: tc.textTertiary }, active && st.sortPillTextActive]}>
-                          {sortOpt.charAt(0).toUpperCase() + sortOpt.slice(1)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                {/* Story list (API-backed) — rows below; st.feedSection's top margin */}
-                <View style={{ height: rs(10) }} />
               </>
             )}
 
             {/* ── QUESTS ── */}
             {hasChosenCity && feedTab === "Quests" && (
               <>
-                {/* Section header */}
-                <LinearGradient
-                  colors={[Colors.brand.orange, "#CC5500"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={{ marginHorizontal: rs(14), marginBottom: rs(16), borderRadius: rs(20), padding: rs(20), overflow: "hidden" }}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: rs(14) }}>
-                    <View style={{ width: rs(52), height: rs(52), borderRadius: rs(16), backgroundColor: "rgba(255,255,255,0.18)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" }}>
-                      <Ionicons name="trophy-outline" size={26} color="#FFF" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: rs(17), fontWeight: "900", color: "#FFF", letterSpacing: -0.2 }}>Community Quests</Text>
-                      <Text style={{ fontSize: rs(12), color: "rgba(255,255,255,0.85)", marginTop: rs(3), fontWeight: "500" }}>Complete challenges, earn rewards, connect with neighbors</Text>
-                    </View>
-                    <Pressable
-                      onPress={() => {
-                        if (!requireAuth(undefined, "Sign in to start a community challenge.")) return;
-                        router.push({ pathname: "/create-post", params: { type: "challenge" } } as any);
-                      }}
-                      style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: rs(12), paddingHorizontal: rs(12), paddingVertical: rs(8) })}
-                    >
-                      <Text style={{ fontSize: rs(12), fontWeight: "800", color: "#FFF" }}>+ New</Text>
-                    </Pressable>
-                  </View>
-                  <View style={{ flexDirection: "row", gap: rs(8), marginTop: rs(14) }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.15)", borderRadius: rs(10), paddingHorizontal: rs(10), paddingVertical: rs(5) }}>
-                      <Ionicons name="flame-outline" size={12} color="rgba(255,255,255,0.9)" />
-                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: "rgba(255,255,255,0.9)" }}>{questsList.length} active quests</Text>
-                    </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.15)", borderRadius: rs(10), paddingHorizontal: rs(10), paddingVertical: rs(5) }}>
-                      <Ionicons name="gift-outline" size={12} color="rgba(255,255,255,0.9)" />
-                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: "rgba(255,255,255,0.9)" }}>Earn rewards</Text>
-                    </View>
-                  </View>
-                </LinearGradient>
+                {/* ── Design D: start-a-quest button above the quests ── */}
+                <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                  <SoftButton
+                    block
+                    label="Start a quest"
+                    onPress={() => {
+                      if (!requireAuth(undefined, "Sign in to start a community challenge.")) return;
+                      router.push({ pathname: "/create-post", params: { type: "challenge" } } as any);
+                    }}
+                  />
+                </View>
 
                 {questsLoading && questsList.length === 0 ? (
                   <View style={{ paddingVertical: rs(32), alignItems: "center" }}>
-                    <ActivityIndicator size="large" color="#FF7B00" />
+                    <ActivityIndicator size="large" color={tc.accent} />
                     <Text style={{ marginTop: rs(10), color: tc.textTertiary }}>Loading quests…</Text>
                   </View>
                 ) : null}
@@ -2266,19 +2105,13 @@ export default function FeedScreen() {
               <>
                 {renderWYR()}
 
-                <View style={[s.section, { marginTop: rs(20) }]}>
-                  <Text style={[s.secTitle, { color: tc.textPrimary }]}>💬 Questions from the feed</Text>
-                  <Text style={{ color: tc.textSecondary, marginBottom: rs(12), paddingHorizontal: rs(2) }}>
-                    Real prompts from neighbors (Community Q&A lives in the Community tab).
-                  </Text>
-                  {pollPostsLoading && pollQuestionPosts.length === 0 && (
-                    <View style={{ paddingVertical: rs(20), alignItems: "center" }}>
-                      <ActivityIndicator color={Colors.brand.blue} />
-                    </View>
-                  )}
-                  {!pollPostsLoading && pollQuestionPosts.length === 0 && (
-                    <Text style={{ color: tc.textTertiary, paddingVertical: rs(8) }}>No question posts in your area yet.</Text>
-                  )}
+                {/* Design D: section heading; question posts follow as bubbles */}
+                <View style={{ paddingHorizontal: 18, paddingTop: 10, paddingBottom: 8 }}>
+                  <Text style={[TYPE.section, { color: tc.textPrimary }]}>Questions from the feed</Text>
+                  {pollPostsLoading && pollQuestionPosts.length === 0 ? <ActivityIndicator color={tc.accent} style={{ marginTop: 16 }} /> : null}
+                  {!pollPostsLoading && pollQuestionPosts.length === 0 ? (
+                    <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 6 }]}>No question posts in {city} yet.</Text>
+                  ) : null}
                 </View>
               </>
             )}
@@ -2301,15 +2134,7 @@ export default function FeedScreen() {
                 ) : null}
 
                 {!storiesLoading && !storiesError && storiesFromApi.length === 0 && myStoriesFromApi.length === 0 ? (
-                  <View style={st.emptyState}>
-                    <View style={st.emptyIconWrap}>
-                      <Ionicons name="videocam-outline" size={44} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[st.emptyTitle, { color: tc.textPrimary }]}>No stories in your area yet</Text>
-                    <Text style={[st.emptySubtitle, { color: tc.textTertiary }]}>
-                      Be the first to share one — tap Add Story above!
-                    </Text>
-                  </View>
+                  <EmptyState icon="videocam-outline" title="No stories here yet" sub="Be the first: tap Add a story." />
                 ) : null}
 
                 {!storiesLoading && filteredApiStories.length === 0 && storiesFromApi.length > 0 ? (
@@ -2323,40 +2148,23 @@ export default function FeedScreen() {
             {hasChosenCity && feedTab === "Quests" && (
               <View style={{ paddingHorizontal: rs(14) }}>
                 {!questsLoading && questsList.length === 0 ? (
-                  <View style={{ alignItems: "center", paddingVertical: rs(48) }}>
-                    <View style={{ width: rs(72), height: rs(72), borderRadius: rs(22), backgroundColor: isDark ? "#261000" : "#FFF7ED", alignItems: "center", justifyContent: "center", marginBottom: rs(14) }}>
-                      <Ionicons name="trophy-outline" size={34} color="#FF7B00" />
-                    </View>
-                    <Text style={{ fontSize: rs(17), fontWeight: "800", color: isDark ? "#F1F5F9" : "#0A1628", marginBottom: rs(6) }}>No Active Quests Yet</Text>
-                    <Text style={{ fontSize: rs(13), color: tc.textTertiary, textAlign: "center", fontWeight: "500", paddingHorizontal: rs(32) }}>
-                      Be the first to create a community quest and challenge your neighbors!
-                    </Text>
-                    <Pressable
-                      onPress={() => {
-                        if (!requireAuth(undefined, "Sign in to create the first community quest.")) return;
-                        router.push({ pathname: "/create-post", params: { type: "challenge" } } as any);
-                      }}
-                      style={({ pressed }) => ({ marginTop: rs(16), borderRadius: rs(14), overflow: "hidden", opacity: pressed ? 0.85 : 1 })}
-                    >
-                      <LinearGradient colors={["#FF7B00", "#E55A00"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingHorizontal: rs(24), paddingVertical: rs(12), flexDirection: "row", alignItems: "center", gap: rs(6) }}>
-                        <Ionicons name="add-circle-outline" size={16} color="#FFF" />
-                        <Text style={{ fontSize: rs(14), fontWeight: "800", color: "#FFF" }}>Create a Quest</Text>
-                      </LinearGradient>
-                    </Pressable>
-                  </View>
+                  <EmptyState
+                    icon="trophy-outline"
+                    title="No quests yet"
+                    sub="Start one and challenge your neighbours."
+                    actionLabel="Start a quest"
+                    onAction={() => {
+                      if (!requireAuth(undefined, "Sign in to create the first community quest.")) return;
+                      router.push({ pathname: "/create-post", params: { type: "challenge" } } as any);
+                    }}
+                  />
                 ) : null}
               </View>
             )}
 
             {hasChosenCity && feedTab === "News" && newsSubTab === "community" && !communityNewsLoading && visibleCommunityPosts.length === 0 && (
               <View style={feedNewsRowPad}>
-                <View style={{ paddingVertical: rs(28), paddingHorizontal: rs(16), alignItems: "center" }}>
-                  <Text style={{ fontSize: rs(40), marginBottom: rs(8) }}>📰</Text>
-                  <Text style={[nw.sectionTitle, { color: tc.textPrimary, textAlign: "center" }]}>No posts yet</Text>
-                  <Text style={{ color: tc.textTertiary, textAlign: "center", marginTop: rs(6), maxWidth: 280 }}>
-                    Be the first to share news from your neighborhood — tap Post above.
-                  </Text>
-                </View>
+                <EmptyState icon="newspaper-outline" title="No posts from neighbours yet" sub="Share something happening near you with the + button." />
               </View>
             )}
 

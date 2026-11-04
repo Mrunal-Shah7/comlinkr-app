@@ -1,9 +1,12 @@
 import { rs } from "../../../utils/responsive";
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, ActivityIndicator } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
+import { TYPE, body, display } from "../../../theme/d";
+import { SPRING } from "../../../shared/motion/presets";
 import { FadeImage } from "../../../../components/FadeImage";
 import { VerifiedBadgePill } from "../../../../components/BadgeIndicator";
 import { LinkifiedText } from "../../../../components/LinkifiedText";
@@ -11,10 +14,27 @@ import { reportCommunityPost } from "../../../api/community.api";
 import { showToast } from "../../../shared/ui/Toast";
 import { appAlert } from "../../../shared/ui/Dialogs";
 import { type PostCardModel } from "../models";
- // SPRINT-42: preserve backend edit state through the feed-card model.
 
+const LIKE = "#F0457E";
+
+function Pop({ on, name, onName, color, onColor, label, count, onPress }: {
+  on: boolean; name: keyof typeof Ionicons.glyphMap; onName: keyof typeof Ionicons.glyphMap; color: string; onColor: string; label: string; count?: number | string; onPress?: () => void;
+}) {
+  const sc = useSharedValue(1);
+  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  return (
+    <Pressable disabled={!onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }}
+      onPress={() => { sc.value = withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press)); onPress?.(); }} style={pcd.act}>
+      <Animated.View style={st}><Ionicons name={on ? onName : name} size={18} color={on ? onColor : color} /></Animated.View>
+      {count !== undefined ? <Text style={[body(700), { fontSize: 13, color: on ? onColor : color }]}>{count}</Text> : null}
+    </Pressable>
+  );
+}
+
+/** A neighbour's post in Explore, design D (plan 01): a speech bubble with the author, title, text, an optional
+ *  photo and tags. Report and block live in the ··· menu (problem 7), as do edit and delete for the owner. */
 export function PostCard({
-  post, isLiked, isSaved, onLike, onSave, onBlock, onComment, onShare, onDelete, onEdit, // SPRINT-42: expose owner edit in the card overflow.
+  post, isLiked, isSaved, onLike, onSave, onBlock, onComment, onShare, onDelete, onEdit,
 }: {
   post: PostCardModel;
   isLiked: boolean; isSaved: boolean;
@@ -24,91 +44,71 @@ export function PostCard({
   onShare?: () => void;
   /** Shown in header when user owns the post */
   onDelete?: () => void;
-  onEdit?: () => void; // SPRINT-42: route an authoritative owner to the shared editor.
+  onEdit?: () => void;
 }) {
   const { tc, isDark } = useTheme();
   const [showReportModal, setShowReportModal] = useState(false);
+  const more = () => {
+    if (post.isOwner && onDelete && onEdit) {
+      appAlert("Post options", undefined, [{ text: "Edit", onPress: onEdit }, { text: "Delete", style: "destructive", onPress: onDelete }, { text: "Cancel", style: "cancel" }]);
+      return;
+    }
+    appAlert(post.author, "What would you like to do?", [
+      { text: "Report post", onPress: () => setShowReportModal(true) },
+      ...(onBlock ? [{ text: "Block " + post.author, style: "destructive" as const, onPress: onBlock }] : []),
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
   return (
-    <View style={[pc.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-      <FadeImage uri={post.image} style={pc.img} />
-      <View style={pc.body}>
-        <View style={pc.head}>
-          <View style={pc.headLeft}>
-            <FadeImage uri={post.avatar} style={pc.avatar} resizeMode="cover" />
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={pc.nameRow}>
-                <Text style={[pc.author, isDark && { color: tc.textPrimary }]}>{post.author}</Text>
-                {post.verified && <VerifiedBadgePill badge="local_reviewer" />}
-              </View>
-              <Text style={[pc.time, isDark && { color: tc.textTertiary }]}>{post.time}</Text>
-            </View>
+    <View style={[pcd.bubble, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]}>
+      <View style={pcd.head}>
+        <FadeImage uri={post.avatar} style={pcd.avatar} resizeMode="cover" />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <View style={pcd.nameRow}>
+            <Text style={[body(700), { color: tc.textPrimary, fontSize: 14 }]} numberOfLines={1}>{post.author}</Text>
+            {post.verified ? <VerifiedBadgePill badge="local_reviewer" /> : null}
           </View>
-          {post.isOwner && onDelete && onEdit ? ( // SPRINT-42: backend isOwner is the sole owner-action authority.
-            <Pressable
-              onPress={() => appAlert("Post options", undefined, [{ text: "Edit", onPress: onEdit }, { text: "Delete", style: "destructive", onPress: onDelete }, { text: "Cancel", style: "cancel" }])} // SPRINT-42: keep delete while adding Edit to overflow.
-              hitSlop={10}
-              style={[pc.deleteBtn, isDark && { backgroundColor: tc.sectionBg }]}
-              accessibilityLabel="Post options" // SPRINT-42: identify the owner overflow action.
-            >
-              <Ionicons name="ellipsis-horizontal" size={18} color={tc.textSecondary} />
-              {/* SPRINT-42: use an overflow icon for Edit and Delete. */}
-            </Pressable>
-          ) : null}
+          <Text style={[TYPE.small, { color: tc.textSecondary }]}>{post.time}{post.isEdited ? " · Edited" : ""}</Text>
         </View>
-        <Text style={[pc.title, isDark && { color: tc.textPrimary }]}>{post.title}</Text>
-        {post.isEdited ? <Text style={{ fontSize: rs(10), color: tc.textTertiary, marginBottom: rs(3) }}>Edited</Text> : null}
-        {/* SPRINT-42: card marker is driven only by backend isEdited. */}
-        <LinkifiedText text={post.content} style={[pc.content, isDark && { color: tc.textSecondary }]} />
-        <View style={pc.tags}>
+        <Pressable onPress={more} hitSlop={8} style={pcd.more} accessibilityRole="button" accessibilityLabel="More options">
+          <Ionicons name="ellipsis-horizontal" size={18} color={tc.textSecondary} />
+        </Pressable>
+      </View>
+      <Text style={[display(700), { fontSize: 18, lineHeight: 22, color: tc.textPrimary, marginTop: 8 }]}>{post.title}</Text>
+      {post.content ? <LinkifiedText text={post.content} style={[TYPE.body, { color: tc.textSecondary, marginTop: 4 }]} /> : null}
+      {post.image ? <FadeImage uri={post.image} style={pcd.img} /> : null}
+      {post.tags.length ? (
+        <View style={pcd.tags}>
           {post.tags.map((t) => (
-            <View key={t} style={[pc.tag, isDark && { backgroundColor: Colors.brand.blue + "22" }]}><Text style={[pc.tagText, isDark && { color: "#60A5FA" }]}>{t}</Text></View>
+            <View key={t} style={[pcd.tag, { backgroundColor: tc.accentSoft }]}><Text style={[body(700), { fontSize: 12, color: tc.accentText }]}>{t}</Text></View>
           ))}
         </View>
-        <View style={[pc.actions, isDark && { borderTopColor: tc.borderLight }]}>
-          <Pressable onPress={onLike} style={pc.action}>
-            <Ionicons name={isLiked ? "heart" : "heart-outline"} size={17} color={isLiked ? "#EF4444" : (isDark ? tc.textSecondary : Colors.text.secondary)} />
-            <Text style={[pc.actionText, isDark && { color: tc.textSecondary }]}>{post.likes + (isLiked ? 1 : 0)}</Text>
-          </Pressable>
-          <Pressable onPress={onComment} style={pc.action} disabled={!onComment}>
-            <Ionicons name="chatbubble-outline" size={16} color={isDark ? tc.textSecondary : Colors.text.secondary} />
-            <Text style={[pc.actionText, isDark && { color: tc.textSecondary }]}>{post.comments}</Text>
-          </Pressable>
-          <Pressable onPress={onShare} style={pc.action} disabled={!onShare}>
-            <Ionicons name="share-social-outline" size={16} color={isDark ? tc.textSecondary : Colors.text.secondary} />
-            <Text style={[pc.actionText, isDark && { color: tc.textSecondary }]}>Share</Text>
-          </Pressable>
-          <Pressable onPress={onSave} style={[pc.action, { marginLeft: "auto" as any }]}>
-            <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={16} color={isSaved ? Colors.brand.blue : (isDark ? tc.textSecondary : Colors.text.secondary)} />
-          </Pressable>
-          {!post.isOwner ? (
-            <Pressable
-              style={[pc.reportBtn, isDark && { backgroundColor: tc.inputBg }]}
-              onPress={() =>
-                appAlert(
-                  post.author,
-                  "What would you like to do?",
-                  [
-                    { text: "🚩  Report post", onPress: () => setShowReportModal(true) },
-                    { text: "🚫  Block " + post.author, style: "destructive", onPress: onBlock },
-                    { text: "Cancel", style: "cancel" },
-                  ]
-                )
-              }
-            >
-              <Ionicons name="flag-outline" size={16} color="#DC2626" />
-            </Pressable>
-          ) : null}
+      ) : null}
+      <View style={pcd.actions}>
+        <Pop on={isLiked} name="heart-outline" onName="heart" color={tc.textSecondary} onColor={LIKE} label="Like" count={post.likes + (isLiked ? 1 : 0)} onPress={onLike} />
+        <Pop on={false} name="chatbubble-outline" onName="chatbubble" color={tc.textSecondary} onColor={tc.textSecondary} label="Comments" count={post.comments} onPress={onComment} />
+        <Pop on={false} name="share-social-outline" onName="share-social" color={tc.textSecondary} onColor={tc.textSecondary} label="Share" onPress={onShare} />
+        <View style={{ marginLeft: "auto" }}>
+          <Pop on={isSaved} name="bookmark-outline" onName="bookmark" color={tc.textSecondary} onColor={tc.accentText} label="Save" onPress={onSave} />
         </View>
       </View>
-
-      <ReportPostModal
-        visible={showReportModal}
-        postId={post.id}
-        onClose={() => setShowReportModal(false)}
-      />
+      <ReportPostModal visible={showReportModal} postId={post.id} onClose={() => setShowReportModal(false)} />
     </View>
   );
 }
+
+const pcd = StyleSheet.create({
+  bubble: { padding: 16, paddingBottom: 8, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderBottomLeftRadius: 6, marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  head: { flexDirection: "row", alignItems: "center", gap: 10 },
+  avatar: { width: 32, height: 32, borderRadius: 16 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  more: { width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  img: { width: "100%", aspectRatio: 16 / 10, borderRadius: 18, marginTop: 10 },
+  tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
+  tag: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
+  actions: { flexDirection: "row", alignItems: "center", marginTop: 6, marginHorizontal: -8 },
+  act: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: 8 },
+});
 
 // ── Report post modal (proper modal with a real close button, instead of
 //    nesting one Alert.alert inside another's callback — nested native Alerts

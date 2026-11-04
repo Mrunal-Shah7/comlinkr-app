@@ -2,28 +2,29 @@ import { memo } from "react";
 import { View, Text, Pressable, StyleSheet, Share, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
-import { rs } from "../../../utils/responsive";
+import { body, display } from "../../../theme/d";
+import { GradientFill, PressableScale } from "../../../shared/d";
 import { getShareLink } from "../../../utils/shareLinks";
 import { FadeImage } from "../../../../components/FadeImage";
 import { resolveApiAssetUrl } from "../../../api/feed.api";
 import type { ApiStory } from "../../../api/stories.api";
-import { st } from "../../../styles/feedScreen.styles";
-import { STORY_CATEGORY_META } from "../constants";
 import { mapApiStoryToCommunityStory, formatStoryTimeLeft } from "../models";
 import { StoryVideoThumb } from "./NewsImages";
 
-/** A story row in the Explore → Stories list. Handlers must be stable (the row is memoized). */
+const LIKE = "#F0457E";
+
+/** A story tile in Explore → Stories (design D, plan 01): a tall photo with the author's ring, the title, and
+ *  small glass buttons (like, save or delete). Long-press shares. Handlers must be stable (the row is memoized). */
 export const StoryCard = memo(function StoryCard({
   story: apiSt,
   authorIndex: ai,
   storyIndex: si,
   isOwnStory,
-  onOpen: openStoryViewerAt,
-  onDelete: onDeleteStoryFromFeed,
-  onToggleSave: onToggleStorySaveFromFeed,
-  onToggleLike: onToggleStoryLikeFromFeed,
+  onOpen,
+  onDelete,
+  onToggleSave,
+  onToggleLike,
 }: {
   story: ApiStory;
   authorIndex: number;
@@ -34,154 +35,81 @@ export const StoryCard = memo(function StoryCard({
   onToggleSave: (storyId: string) => unknown;
   onToggleLike: (storyId: string) => unknown;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc } = useTheme();
   const ui = mapApiStoryToCommunityStory(apiSt);
-  const catM = STORY_CATEGORY_META[ui.category];
-  const thumb = resolveApiAssetUrl(apiSt.mediaUrl || "") || ui.thumbnail;
-  const isVideo =
-    (apiSt.mediaType || "").toUpperCase() === "VIDEO" ||
-    (apiSt.mediaType || "").toUpperCase() === "REEL";
+  const isVideo = ["VIDEO", "REEL"].includes((apiSt.mediaType || "").toUpperCase());
   const mediaUrl = resolveApiAssetUrl(apiSt.mediaUrl || "");
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        st.storyCard,
-        { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-        pressed && { opacity: 0.96 },
-      ]}
-      onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); openStoryViewerAt(ai, si); }}
-    >
-      {/* ── Media area — image or paused video first-frame ── */}
-      <View style={{ height: 230, position: "relative", overflow: "hidden", borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
-        {isVideo && mediaUrl ? (
-          <StoryVideoThumb uri={mediaUrl} style={StyleSheet.absoluteFill} />
-        ) : (
-          <FadeImage uri={thumb} style={StyleSheet.absoluteFill} />
-        )}
-        {/* VIDEO badge — on the image, bottom-left */}
-        {isVideo && (
-          <View style={{ position: "absolute", bottom: 10, left: 10, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
-            <Ionicons name="videocam" size={11} color="#FFF" />
-            <Text style={{ color: "#FFF", fontSize: 10, fontWeight: "800" }}>VIDEO</Text>
-          </View>
-        )}
-        {/* Delete button — own stories only */}
-        {isOwnStory && (
-          <Pressable
-            style={st.storyListDelete}
-            hitSlop={4}
-            onPress={(e) => { e.stopPropagation(); onDeleteStoryFromFeed(apiSt.id); }}
-            accessibilityLabel="Delete story"
-          >
-            <Ionicons name="trash-outline" size={18} color="#DC2626" />
-          </Pressable>
-        )}
-        {/* Single bookmark button on image */}
-        <Pressable
-          style={st.storyListBookmark}
-          hitSlop={8}
-          onPress={(e) => { e.stopPropagation(); void onToggleStorySaveFromFeed(apiSt.id); }}
-        >
-          <Ionicons
-            name={apiSt.isSaved ? "bookmark" : "bookmark-outline"}
-            size={20}
-            color={apiSt.isSaved ? "#F59E0B" : Colors.brand.blue}
-          />
-        </Pressable>
-      </View>
-      <View style={st.storyCardBody}>
-        {/* Category chip + expiry — clean row, no overlapping elements */}
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: rs(6) }}>
-            <View style={[st.storyCatChipInline, { borderColor: catM.color, backgroundColor: catM.color + "18" }]}>
-              <Ionicons name={catM.icon as any} size={rs(11)} color={catM.color} />
-              <Text style={[st.storyCatChipInlineText, { color: catM.color }]}>{ui.category}</Text>
-            </View>
-            {isOwnStory && (
-              <View style={[st.storyCatChipInline, { borderColor: Colors.brand.blue, backgroundColor: isDark ? "rgba(0,118,235,0.18)" : Colors.brand.blueLight }]}>
-                <Ionicons name="person-outline" size={rs(11)} color={Colors.brand.blue} />
-                <Text style={[st.storyCatChipInlineText, { color: Colors.brand.blue }]}>Your story</Text>
-              </View>
-            )}
-          </View>
-          <Text style={[st.storyListExpiry, { color: tc.textTertiary }]}>
-            {formatStoryTimeLeft(apiSt.expiresAt)}
-          </Text>
-        </View>
-        {/* Metrics row for videos */}
-        {isVideo && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="eye-outline" size={14} color={tc.textTertiary} />
-              <Text style={[st.storyEngTextLight, { color: tc.textTertiary }]}>
-                {apiSt.viewsCount >= 1000 ? `${(apiSt.viewsCount / 1000).toFixed(1)}K` : apiSt.viewsCount}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="heart-outline" size={14} color={tc.textTertiary} />
-              <Text style={[st.storyEngTextLight, { color: tc.textTertiary }]}>
-                {apiSt.likeCount ?? 0}
-              </Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="chatbubble-outline" size={14} color={tc.textTertiary} />
-              <Text style={[st.storyEngTextLight, { color: tc.textTertiary }]}>
-                {apiSt.commentCount ?? 0}
-              </Text>
-            </View>
-          </View>
-        )}
-      </View>
-
-      {/* ── Card body ── */}
-      <View style={[st.storyCardBody, { paddingTop: 12 }]}>
-        <Text style={[st.storyCardTitle, { color: tc.textPrimary }]} numberOfLines={2}>{apiSt.title}</Text>
-        {apiSt.details ? (
-          <Text style={[st.storyCardDesc, { color: tc.textSecondary }]} numberOfLines={2}>{apiSt.details}</Text>
-        ) : null}
-        {apiSt.hashtags?.length ? (
-          <View style={[st.storyHashtags, { marginBottom: 10 }]}>
-            {apiSt.hashtags.slice(0, 3).map((h, i) => (
-              <Text
-                key={i}
-                style={[
-                  st.storyHashtag,
-                  { backgroundColor: isDark ? "rgba(0,118,235,0.18)" : "rgba(0,118,235,0.08)" },
-                ]}
-              >
-                {h.startsWith("#") ? h : `#${h}`}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        {/* Action row */}
-        <View style={[st.storyEngBar, { paddingTop: 10, borderTopColor: tc.borderLight }]}>
-          <Pressable style={st.storyEngItem} hitSlop={8}
-            onPress={(e) => { e.stopPropagation(); Haptics.selectionAsync(); void onToggleStoryLikeFromFeed(apiSt.id); }}>
-            <Ionicons name={apiSt.likedByMe ? "heart" : "heart-outline"} size={18} color={apiSt.likedByMe ? "#EF4444" : tc.textTertiary} />
-            <Text style={[st.storyEngText, { color: apiSt.likedByMe ? "#EF4444" : tc.textTertiary }]}>{apiSt.likedByMe ? "Liked" : "Like"}</Text>
-          </Pressable>
-          <Pressable style={st.storyEngItem} hitSlop={8}
-            onPress={(e) => { e.stopPropagation(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); openStoryViewerAt(ai, si); }}>
-            <Ionicons name="chatbubble-outline" size={17} color={tc.textTertiary} />
-            <Text style={[st.storyEngText, { color: tc.textTertiary }]}>Comment</Text>
-          </Pressable>
-          <Pressable style={st.storyEngItem} hitSlop={8}
-            onPress={(e) => {
-              e.stopPropagation();
-              Haptics.selectionAsync();
-              const link = getShareLink("story", apiSt.id);
-              void Share.share({
-                message: `${apiSt.title}${apiSt.details ? ` — ${apiSt.details}` : ""}\n\nShared via ComLinkr\n\n${link}`,
-                ...(Platform.OS === "ios" ? { url: link } : {}),
-              });
-            }}>
-            <Ionicons name="share-social-outline" size={17} color={tc.textTertiary} />
-            <Text style={[st.storyEngText, { color: tc.textTertiary }]}>Share</Text>
-          </Pressable>
-        </View>
-      </View>
+  const thumb = mediaUrl || ui.thumbnail;
+  const avatar = apiSt.author?.avatarUrl ? resolveApiAssetUrl(apiSt.author.avatarUrl) : null;
+  const name = (apiSt.author?.name || apiSt.author?.username || "").split(" ")[0];
+  const ini = (apiSt.author?.name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const share = () => {
+    const link = getShareLink("story", apiSt.id);
+    void Share.share({ message: `${apiSt.title}\n\nShared via ComLinkr\n\n${link}`, ...(Platform.OS === "ios" ? { url: link } : {}) });
+  };
+  const glassBtn = (icon: keyof typeof Ionicons.glyphMap, color: string, label: string, onPress: () => void) => (
+    <Pressable hitSlop={6} onPress={(e) => { e.stopPropagation(); void Haptics.selectionAsync(); onPress(); }} style={s.glassBtn} accessibilityRole="button" accessibilityLabel={label}>
+      <Ionicons name={icon} size={16} color={color} />
     </Pressable>
   );
+
+  return (
+    <PressableScale
+      onPress={() => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onOpen(ai, si); }}
+      onLongPress={share}
+      outerStyle={{ flex: 1 }}
+      style={[s.tile, { backgroundColor: tc.cardBg }]}
+      accessibilityRole="button"
+      accessibilityLabel={`Story: ${apiSt.title}, by ${apiSt.author?.name ?? "a neighbour"}`}
+    >
+      {isVideo && mediaUrl ? <StoryVideoThumb uri={mediaUrl} style={StyleSheet.absoluteFill} /> : <FadeImage uri={thumb} style={StyleSheet.absoluteFill} />}
+      <GradientFill colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.65)"] as const} style={[StyleSheet.absoluteFill, { top: "40%" }]} />
+
+      <GradientFill colors={[tc.mint, tc.accent] as const} style={s.ring}>
+        <View style={[s.ringIn, { borderColor: tc.cardBg }]}>
+          {avatar ? <FadeImage uri={avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: "#fff", fontSize: 11 }]}>{ini}</Text></GradientFill>}
+        </View>
+      </GradientFill>
+
+      <View style={s.topRight}>
+        {isVideo ? <View style={s.glassBtn}><Ionicons name="videocam" size={15} color="#fff" /></View> : null}
+        {isOwnStory
+          ? glassBtn("trash-outline", "#fff", "Delete story", () => onDelete(apiSt.id))
+          : glassBtn(apiSt.isSaved ? "bookmark" : "bookmark-outline", "#fff", apiSt.isSaved ? "Remove from saved" : "Save story", () => void onToggleSave(apiSt.id))}
+      </View>
+
+      <View style={s.bottom}>
+        <View style={{ flex: 1 }}>
+          <Text style={[display(700), { color: "#fff", fontSize: 14, lineHeight: 17 }]} numberOfLines={2}>{apiSt.title}</Text>
+          <Text style={[body(600), { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 }]} numberOfLines={1}>
+            {[name, formatStoryTimeLeft(apiSt.expiresAt)].filter(Boolean).join(" · ")}
+          </Text>
+        </View>
+        {glassBtn(apiSt.likedByMe ? "heart" : "heart-outline", apiSt.likedByMe ? LIKE : "#fff", apiSt.likedByMe ? "Unlike" : "Like", () => void onToggleLike(apiSt.id))}
+      </View>
+    </PressableScale>
+  );
+});
+
+/** The first tile of the Stories grid: add your own. */
+export function AddStoryTile({ onPress, hasOwn }: { onPress: () => void; hasOwn: boolean }) {
+  const { tc } = useTheme();
+  return (
+    <PressableScale onPress={onPress} outerStyle={{ flex: 1 }} style={[s.tile, s.add, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }]} accessibilityRole="button" accessibilityLabel={hasOwn ? "View your story" : "Add a story"}>
+      <Ionicons name={hasOwn ? "book-outline" : "camera-outline"} size={30} color={tc.textPrimary} />
+      <Text style={[body(700), { color: tc.textPrimary, marginTop: 6 }]}>{hasOwn ? "Your story" : "Add a story"}</Text>
+      <Text style={[body(500), { color: tc.textSecondary, fontSize: 12.5 }]}>{hasOwn ? "Tap to view" : "Photo or video"}</Text>
+    </PressableScale>
+  );
+}
+
+const s = StyleSheet.create({
+  tile: { flex: 1, aspectRatio: 3 / 4.4, borderRadius: 24, overflow: "hidden" },
+  add: { alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderStyle: "dashed" },
+  ring: { position: "absolute", top: 10, left: 10, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  ringIn: { width: 31, height: 31, borderRadius: 16, borderWidth: 2, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  av: { width: 27, height: 27, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  topRight: { position: "absolute", top: 10, right: 10, flexDirection: "row", gap: 6 },
+  glassBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.35)", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
+  bottom: { position: "absolute", left: 10, right: 10, bottom: 10, flexDirection: "row", alignItems: "flex-end", gap: 8 },
 });
