@@ -1,5 +1,9 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
+import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { BentoTile, Chip, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
+import { TYPE } from "../../../src/theme/d";
 import { DatePickerField, TimePickerField } from "../../../components/DateTimePickerField";
 import {
   View,
@@ -379,6 +383,9 @@ export default function FoodScreen() {
   const foodScrollRef = useRef<ScrollView>(null);
   useScrollToTop(foodScrollRef); // re-tap the Food tab → back to top
   const insets = useSafeAreaInsets();
+  // Design D (plan 01): the header title fades in as the large title scrolls away.
+  const foodScrollY = useSharedValue(0);
+  const onFoodScroll = useAnimatedScrollHandler((e) => { foodScrollY.value = e.contentOffset.y; });
   const { isDark, tc } = useTheme();
   const user = useAuthStore((s) => s.user);
   const { requireAuth } = useRequireAuth();
@@ -910,9 +917,11 @@ export default function FoodScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
-      <AppHeader />
-      <ScrollView
-        ref={foodScrollRef}
+      <AppHeader title="Food" scrollY={foodScrollY} />
+      <Reanimated.ScrollView
+        ref={foodScrollRef as any}
+        onScroll={onFoodScroll}
+        scrollEventThrottle={16}
         style={s.scroll}
         contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
@@ -925,27 +934,12 @@ export default function FoodScreen() {
           />
         }
       >
-        {/* Hero */}
-        <LinearGradient
-          colors={[Colors.brand.greenDark, Colors.brand.green]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.hero}
-        >
-          <View style={s.heroRow}>
-            <Ionicons name="restaurant-outline" size={rs(12)} color="#86EFAC" />
-            <Text style={s.heroLabel}>FOOD & DINING</Text>
-          </View>
-          <Text style={s.heroTitle}>
-            {user?.name?.split(" ")[0] ? `Hi ${user.name.split(" ")[0]},` : "Discover"} Local Flavors
-          </Text>
-          <Text style={s.heroSub}>
-            {hasCity ? `Restaurants, cafes & eateries in ${appCity}` : "Restaurants, cafes & eateries near you"}
-          </Text>
-        </LinearGradient>
+        {/* ── Design D: large title and city ── */}
+        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Food</Text>
+        {user?.city ? <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 12 }]}>{user.city}</Text> : <View style={{ height: 12 }} />}
 
         {/* Search */}
-        <View style={[s.searchWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight, paddingRight: rs(8) }]}>
+        <View style={[s.searchWrap, { backgroundColor: tc.inputBg, borderColor: "transparent", borderRadius: 16 }]}>
           <Ionicons name="search-outline" size={rs(16)} color={tc.textTertiary} />
           <TextInput
             style={[s.searchInput, { color: tc.textPrimary }]}
@@ -954,23 +948,6 @@ export default function FoodScreen() {
             value={search}
             onChangeText={setSearch}
           />
-          <Pressable
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              if (!user?.id) {
-                appAlert("Sign in required", "Log in to list your restaurant on ComLinkr.");
-                return;
-              }
-              router.push({ pathname: "/create-post" as any, params: { type: "restaurant" } });
-            }}
-            style={[s.addRestaurantFab, { width: "auto", minWidth: rs(34), height: rs(34), borderRadius: rs(10), paddingHorizontal: rs(10), flexDirection: "row", gap: rs(4), backgroundColor: Colors.brand.green }]}
-            hitSlop={10}
-            accessibilityLabel="Add restaurant listing"
-            accessibilityRole="button"
-          >
-            <Ionicons name="add" size={rs(18)} color="#FFF" />
-            <Text style={{ color: "#FFF", fontSize: rs(12), fontWeight: "800" }}>Add</Text>
-          </Pressable>
         </View>
 
         {/* View Tabs — hidden */}
@@ -1003,155 +980,90 @@ export default function FoodScreen() {
           </Pressable>
         ) : null}
 
-        {/* Restaurant Cards */}
-        {filtered.map((r) => (
-          <Pressable key={r.id} onPress={() => setSelectedRestaurant(r)} onLongPress={() => void openCardActions(r)} delayLongPress={350} style={({ pressed }) => [s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.95 }]}>
-            {/* ── Full-width image carousel ── */}
-            <View>
-              <ImageCarousel images={r.images && r.images.length > 0 ? r.images : [r.image]} height={rs(165)}
-                onImagePress={(idx) => onCardPhotoPress(r, idx)} />
-              {burstId === r.id ? (
-                <Animated.View
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: rs(165), alignItems: "center", justifyContent: "center",
-                    opacity: burstAnim,
-                    transform: [{ scale: burstAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
-                  }}
-                >
-                  <Ionicons name="heart" size={64} color="#FFFFFF" />
-                </Animated.View>
+        {/* ── Design D: bento, filter chips, two-column tiles ── */}
+        {hasCity && filtered.length > 0 ? (() => {
+          const pick = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
+          const openCount = restaurants.filter((r) => restaurantIsOpen(r)).length;
+          const topCount = restaurants.filter((r) => r.rating >= 4.5).length;
+          return (
+            <View style={{ paddingHorizontal: 16, gap: 10, marginBottom: 14 }}>
+              {pick ? (
+                <TileIn i={0}>
+                  <BentoTile onPress={() => setSelectedRestaurant(pick)} style={{ minHeight: 190, justifyContent: "flex-end" }} accessibilityLabel={`Pick of the week: ${pick.name}`}>
+                    <FadeImage uri={(pick.images && pick.images[0]) || pick.image} style={StyleSheet.absoluteFill} />
+                    <GradientFill colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"] as const} style={[StyleSheet.absoluteFill, { top: "30%" }]} />
+                    <TileLabel light>PICK OF THE WEEK{pick.city ? ` · ${String(pick.city).toUpperCase()}` : ""}</TileLabel>
+                    <Text style={[TYPE.cardTitle, { color: "#fff", fontSize: 22, lineHeight: 25, marginTop: 4 }]} numberOfLines={2}>{pick.name}</Text>
+                    <TileLabel light style={{ marginTop: 2 }}>{[(pick.reviews ?? 0) > 0 ? `★ ${pick.rating}` : "", pick.cuisine, pick.price ? getDisplayPrice(pick, countryCode) : ""].filter(Boolean).join(" · ")}</TileLabel>
+                  </BentoTile>
+                </TileIn>
               ) : null}
-              {/* Availability — only claims open/closed when hours and timezone are known */}
-              {(() => {
-                const av = getAvailability(r);
-                return (
-                  <View style={[s.statusBadge, av.state === "open" ? s.statusOpen : av.state === "closed" ? s.statusClosed : s.statusNeutral]}>
-                    <View style={s.statusDot} />
-                    <Text style={s.statusText}>{av.label}</Text>
-                  </View>
-                );
-              })()}
-              {/* Bookmark (Saved) + favorite heart */}
-              <Pressable style={s.bookmarkIconBtn} accessibilityRole="button" accessibilityLabel={bookmarkedIds.has(r.id) || r.isSaved ? "Remove from saved" : "Save restaurant"} accessibilityState={{ selected: bookmarkedIds.has(r.id) || !!r.isSaved }} onPress={(e) => { e.stopPropagation?.(); void toggleBookmark(r.id); }}>
-                <Ionicons
-                  name={bookmarkedIds.has(r.id) || r.isSaved ? "bookmark" : "bookmark-outline"}
-                  size={18}
-                  color={bookmarkedIds.has(r.id) || r.isSaved ? "#FF7B00" : "#FFF"}
-                />
-              </Pressable>
-              <Pressable style={s.favIconBtn} accessibilityRole="button" accessibilityLabel={favorites.has(r.id) ? "Remove from favorites" : "Add to favorites"} accessibilityState={{ selected: favorites.has(r.id) }} onPress={(e) => { e.stopPropagation?.(); void toggleFav(r.id); }}>
-                <Ionicons
-                  name={favorites.has(r.id) ? "heart" : "heart-outline"}
-                  size={18}
-                  color={favorites.has(r.id) ? "#EF4444" : "#FFF"}
-                />
-              </Pressable>
-              {/* Price badge removed — dollar signs were visually noisy */}
-            </View>
-
-            {/* ── Card body ── */}
-            <View style={s.cardBody}>
-              {/* Name + verified */}
-              <View style={s.cardNameRow}>
-                <Text style={[s.cardName, isDark && { color: tc.textPrimary }]}>{r.name}</Text>
-                {r.verified && (
-                  <View style={[s.vBadge, isDark && { backgroundColor: Colors.brand.green + "25" }]}>
-                    <Ionicons name="shield-checkmark" size={10} color={Colors.brand.green} />
-                    <Text style={[s.vText, isDark && { color: Colors.brand.green }]}>Verified</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[s.cardCuisine, { color: tc.textSecondary }]}>{r.cuisine}</Text>
-
-              {/* Rating + price + distance + wait */}
-              <View style={s.infoRow}>
-                <View style={[s.ratingChip, { backgroundColor: isDark ? tc.inputBg : "#FFF8E6" }]}>
-                  <Ionicons name="star" size={12} color={(r.reviews ?? 0) > 0 ? "#F59E0B" : tc.textTertiary} />
-                  {(r.reviews ?? 0) > 0 ? (
-                    <>
-                      <Text style={[s.ratingNum, isDark && { color: tc.textPrimary }]}>{r.rating}</Text>
-                      <Text style={[s.reviewCount, isDark && { color: tc.textTertiary }]}>({r.reviews})</Text>
-                    </>
-                  ) : (
-                    <Text style={[s.reviewCount, { color: tc.textTertiary }]}>No reviews yet</Text>
-                  )}
-                </View>
-                {r.price ? (
-                  <View style={[s.priceChip, { backgroundColor: isDark ? tc.inputBg : "#F0FDF4" }]}>
-                    <Text style={[s.priceText, isDark && { color: Colors.brand.green }]}>{getDisplayPrice(r, countryCode)}</Text>
-                  </View>
-                ) : null}
-                {hasDistance(r) ? (
-                  <View style={[s.distChip, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }]}>
-                    <Ionicons name="location-outline" size={11} color={isDark ? tc.textTertiary : Colors.text.tertiary} />
-                    <Text style={[s.metaText, isDark && { color: tc.textSecondary }]}>{r.distance}</Text>
-                  </View>
-                ) : null}
-                {r.waitTime && (
-                  <View style={[s.waitChip, { backgroundColor: isDark ? "#2A1A00" : "#FFF3E6" }]}>
-                    <Ionicons name="time-outline" size={11} color="#FF7B00" />
-                    <Text style={s.waitText}>{r.waitTime} wait</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Service options */}
-              <View style={s.servicesRow}>
-                {safeList(r.services).map((sv, i) => (
-                  <View key={`${r.id}-service-${i}-${itemLabel(sv)}`} style={[s.serviceChip, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                    <Text style={[s.serviceText, isDark && { color: Colors.brand.green }]}>{itemLabel(sv)}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Popular dishes */}
-              {safeList(r.popularDishes).length > 0 ? (
-                <View style={s.dishesRow}>
-                  <Ionicons name="flame-outline" size={12} color="#FF7B00" />
-                  <Text style={s.dishesLabel}>Popular: </Text>
-                  <Text style={[s.dishesText, { color: tc.textSecondary }]} numberOfLines={1}>
-                    {safeList(r.popularDishes).map(itemLabel).join(" · ")}
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Tags + action buttons */}
-              <View style={[s.cardMeta, { borderTopColor: tc.borderLight }]}>
-                <View style={s.cardTags}>
-                  {safeList(r.tags).slice(0, 2).map((t, i) => (
-                    <View key={`${r.id}-tag-${i}-${itemLabel(t)}`} style={[s.cardTag, isDark && { backgroundColor: Colors.brand.greenDark + "25", borderWidth: 1, borderColor: Colors.brand.greenDark + "40" }]}><Text style={[s.cardTagText, isDark && { color: Colors.brand.green }]}>{itemLabel(t)}</Text></View>
-                  ))}
-                </View>
-                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                  {!restaurantIsMine(r, user?.id) ? (
-                  <Pressable
-                    style={[s.reportBtn, isDark && { backgroundColor: tc.inputBg }]}
-                    onPress={(e) => {
-                      e.stopPropagation?.();
-                      setReportSheetId(r.id);
-                    }}
-                  >
-                    <Ionicons name="flag-outline" size={16} color="#DC2626" />
-                  </Pressable>
+              {openCount > 0 || topCount > 0 ? (
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  {openCount > 0 ? (
+                    <TileIn i={1} style={{ flex: 1 }}>
+                      <BentoTile tone="mint" onPress={() => setActiveTab("open")} accessibilityLabel={`${openCount} open now`}>
+                        <TileLabel style={{ color: "rgba(255,255,255,0.85)" }}>OPEN NOW</TileLabel>
+                        <Text style={[TYPE.tileBig, { color: "#fff", marginTop: "auto" }]}>{openCount}</Text>
+                      </BentoTile>
+                    </TileIn>
                   ) : null}
-                  <Pressable style={[s.chatBtn, isDark && { backgroundColor: Colors.brand.blue + "25", borderWidth: 1, borderColor: Colors.brand.blue + "40" }]} onPress={(e) => { e.stopPropagation?.(); handleDirections(r); }}>
-                    <Ionicons name="navigate-outline" size={14} color={isDark ? "#60A5FA" : Colors.brand.blue} />
-                  </Pressable>
-                  {hasReservations(r) && (
-                    <Pressable
-                      style={[s.orderBtn, { backgroundColor: Colors.brand.green }]}
-                      onPress={(e) => { e.stopPropagation?.(); handleReserve(r); }}
-                    >
-                      <Ionicons name="calendar-outline" size={rs(12)} color="#FFF" />
-                      <Text style={s.orderBtnText}>Reserve</Text>
-                    </Pressable>
-                  )}
+                  {topCount > 0 ? (
+                    <TileIn i={2} style={{ flex: 1 }}>
+                      <BentoTile onPress={() => setActiveTab("top")} accessibilityLabel={`${topCount} rated 4.5 or more`}>
+                        <TileLabel>RATED 4.5+</TileLabel>
+                        <Text style={[TYPE.tileBig, { color: tc.textPrimary, marginTop: "auto" }]}>{topCount}</Text>
+                      </BentoTile>
+                    </TileIn>
+                  ) : null}
                 </View>
-              </View>
+              ) : null}
             </View>
-          </Pressable>
-        ))}
+          );
+        })() : null}
+
+        {hasCity ? (
+          <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
+            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].map(([k, label]) => (
+              <Chip key={k} label={label} on={activeTab === k} onPress={() => setActiveTab(k)} />
+            ))}
+          </GHScrollView>
+        ) : null}
+
+        {(() => {
+          const rows: Restaurant[][] = [];
+          for (let i = 0; i < filtered.length; i += 2) rows.push(filtered.slice(i, i + 2));
+          return rows.map((pair, ri) => (
+            <Reveal key={pair.map((r) => r.id).join("+")} i={ri} style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
+              {pair.map((r) => {
+                const saved = bookmarkedIds.has(r.id) || !!r.isSaved;
+                return (
+                  <PressableScale key={r.id} outerStyle={{ flex: 1 }} onPress={() => setSelectedRestaurant(r)} onLongPress={() => void openCardActions(r)} delayLongPress={350} accessibilityRole="button" accessibilityLabel={r.name}>
+                    <View>
+                      <FadeImage uri={(r.images && r.images[0]) || r.image} style={{ width: "100%", aspectRatio: 1, borderRadius: 22 }} />
+                      {(r.reviews ?? 0) > 0 ? (
+                        <View style={{ position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, backgroundColor: tc.glass, borderColor: tc.glassLine }}>
+                          <Text style={[TYPE.bodyStrong, { fontSize: 13.5, color: tc.textPrimary }]}>★ {r.rating}</Text>
+                        </View>
+                      ) : null}
+                      <Pressable
+                        hitSlop={8}
+                        onPress={(e) => { e.stopPropagation?.(); void toggleBookmark(r.id); }}
+                        style={{ position: "absolute", right: 8, top: 8, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", borderWidth: 1, backgroundColor: tc.glass, borderColor: tc.glassLine }}
+                        accessibilityRole="button" accessibilityLabel={saved ? "Remove from saved" : "Save restaurant"} accessibilityState={{ selected: saved }}
+                      >
+                        <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={17} color={saved ? tc.accentText : tc.textPrimary} />
+                      </Pressable>
+                    </View>
+                    <Text style={[TYPE.cardTitle, { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={1}>{r.name}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{[r.cuisine, r.price ? getDisplayPrice(r, countryCode) : ""].filter(Boolean).join(" · ")}</Text>
+                  </PressableScale>
+                );
+              })}
+              {pair.length === 1 ? <View style={{ flex: 1 }} /> : null}
+            </Reveal>
+          ));
+        })()}
 
         {hasCity && hasMore && filtered.length > 0 ? (
           <Pressable
@@ -1201,7 +1113,7 @@ export default function FoodScreen() {
         )}
 
         <View style={{ height: 20 }} />
-      </ScrollView>
+      </Reanimated.ScrollView>
 
       {/* ── Restaurant Detail Modal ── */}
       {selectedRestaurant && (

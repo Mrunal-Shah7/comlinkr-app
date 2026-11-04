@@ -5,6 +5,8 @@ else. Keep old entries short: what was done and where it is written._
 
 ## 2026-11-05 (latest) - building design D, phase 1 in progress (plan 01)
 
+- **Stopped here (usage limit).** Done and checked on the phone: foundation, navigation (zoom stack, floating tab bar, + sheet), Explore tab (all five sub-tabs), Listings tab (homes, rooms, roommates). Food tab restyled and type-checked but **not yet checked on the phone** (last commit). Not started: Community tab, all detail screens and modals, the You screens, sign-in and onboarding, the composers. Backend and Metro were stopped.
+
 - **Where:** branch `feature/design-d` (from base commit `6720646` on `main`). Commits so far: `bb696fe`
   foundation (palette, fonts, motion kit, ZoomStack, floating tab bar, + sheet), `fb739c8` Explore part 1
   (header, bento, chips, news cards), then Explore fixes and tab-bar clearance on the other tabs.
