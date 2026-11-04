@@ -1,5 +1,9 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
+import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
+import { Chip, Segmented, SoftButton } from "../../../src/shared/d";
+import { TYPE } from "../../../src/theme/d";
 import { View, Text, ScrollView, FlatList, Pressable, TextInput, Animated, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
@@ -48,11 +52,15 @@ type HousingTab = "listings" | "roommates";
 /** A row of the main FlatList — which kind depends on the active tab / sub-tab. */
 type HousingRow =
   | { kind: "listing"; listing: Listing }
-  | { kind: "room"; room: AvailableRoom }
+  | { kind: "listingPair"; listings: Listing[] }
+  | { kind: "roomPair"; rooms: AvailableRoom[] }
   | { kind: "roommate"; roommate: Roommate };
 
 const housingRowKey = (row: HousingRow) =>
-  row.kind === "listing" ? `l:${row.listing.id}` : row.kind === "room" ? `r:${row.room.id}` : `m:${row.roommate.id}`;
+  row.kind === "listing" ? `l:${row.listing.id}`
+  : row.kind === "listingPair" ? `lp:${row.listings.map((l) => l.id).join("+")}`
+  : row.kind === "roomPair" ? `rp:${row.rooms.map((r) => r.id).join("+")}`
+  : `m:${row.roommate.id}`;
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 export default function HousingScreen() {
@@ -60,6 +68,9 @@ export default function HousingScreen() {
   useScrollToTop(housingScrollRef); // re-tap the Listings tab → back to top
   const { isDark, tc } = useTheme();
   const insets = useSafeAreaInsets();
+  // Design D (plan 01): the header title fades in as the large title scrolls away.
+  const housingScrollY = useSharedValue(0);
+  const onHousingScroll = useAnimatedScrollHandler((e) => { housingScrollY.value = e.contentOffset.y; });
   const user = useAuthStore((s) => s.user);
   const updateRoommatePrefs = useAuthStore((s) => s.updateRoommatePrefs);
   const { requireAuth } = useRequireAuth();
@@ -889,9 +900,14 @@ export default function HousingScreen() {
   // One FlatList for every mode: the hero / switcher / search / chips live in ListHeaderComponent,
   // the rows are whichever list the active (sub-)tab shows, so only on-screen cards are mounted.
   const listRows = useMemo<HousingRow[]>(() => {
-    if (activeTab === "listings") return filtered.map((listing) => ({ kind: "listing", listing }));
+    // Design D: the first home is a feature card, the rest two-column tiles; rooms are tiles too.
+    const pairs = <T,>(arr: T[]) => { const out: T[][] = []; for (let i = 0; i < arr.length; i += 2) out.push(arr.slice(i, i + 2)); return out; };
+    if (activeTab === "listings") {
+      if (filtered.length === 0) return [];
+      return [{ kind: "listing", listing: filtered[0] } as HousingRow, ...pairs(filtered.slice(1)).map((listings) => ({ kind: "listingPair", listings }) as HousingRow)];
+    }
     if (rmSubTab === "searching") {
-      return (availableRoomsLoading ? [] : availableRooms).map((room) => ({ kind: "room", room }));
+      return pairs(availableRoomsLoading ? [] : availableRooms).map((rooms) => ({ kind: "roomPair", rooms }) as HousingRow);
     }
     return sortedRoommates.map((roommate) => ({ kind: "roommate", roommate }));
   }, [activeTab, rmSubTab, filtered, availableRooms, availableRoomsLoading, sortedRoommates]);
@@ -899,27 +915,22 @@ export default function HousingScreen() {
   const renderHousingRow = useCallback(
     ({ item }: { item: HousingRow }) => {
       if (item.kind === "listing") {
-        const listing = item.listing;
+        return <ListingFeature listing={item.listing} saved={savedIds.has(item.listing.id)} onToggleSaveId={onToggleListingSave} onOpen={setSelectedListing} />;
+      }
+      if (item.kind === "listingPair") {
         return (
-          <MemoListingCard
-            listing={listing}
-            saved={savedIds.has(listing.id)}
-            onToggleSaveId={onToggleListingSave}
-            onOpen={setSelectedListing}
-            onOpenImages={openListingImages}
-          />
+          <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
+            {item.listings.map((l) => <ListingTile key={l.id} listing={l} saved={savedIds.has(l.id)} onToggleSaveId={onToggleListingSave} onOpen={setSelectedListing} />)}
+            {item.listings.length === 1 ? <View style={{ flex: 1 }} /> : null}
+          </View>
         );
       }
-      if (item.kind === "room") {
-        const room = item.room;
+      if (item.kind === "roomPair") {
         return (
-          <AvailableRoomCard
-            room={room}
-            requested={requestedRooms.has(room.id)}
-            onRequest={() => setSelectedAvailableRoom(room)}
-            onPress={() => setSelectedAvailableRoom(room)}
-            isOwner={!!room.api?.isOwner}
-          />
+          <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
+            {item.rooms.map((r) => <RoomTile key={r.id} room={r} onOpen={setSelectedAvailableRoom} />)}
+            {item.rooms.length === 1 ? <View style={{ flex: 1 }} /> : null}
+          </View>
         );
       }
       const rm = item.roommate;
@@ -979,9 +990,11 @@ export default function HousingScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      <AppHeader />
-      <FlatList
-        ref={housingScrollRef}
+      <AppHeader title="Listings" scrollY={housingScrollY} />
+      <Reanimated.FlatList
+        ref={housingScrollRef as any}
+        onScroll={onHousingScroll}
+        scrollEventThrottle={16}
         style={s.scroll}
         contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
@@ -1001,90 +1014,22 @@ export default function HousingScreen() {
         windowSize={7}
         ListHeaderComponent={
           <>
-            {/* Hero */}
-            <LinearGradient
-              colors={
-                isDark
-                  ? (activeTab === "listings" ? ["#0A1A2E", "#0A1840", "#0A1228"] : ["#0A1A0A", "#0A2010", "#0A1A08"])
-                  : (activeTab === "listings" ? ["#E8F2FF", "#C2DDFF", "#EBF5FF"] : ["#E5F9E5", "#C2F0C2", "#EAFBEA"])
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={s.hero}
-            >
-              <View style={s.heroRow}>
-                <Ionicons
-                  name={activeTab === "listings" ? "home-outline" : "people-outline"}
-                  size={10}
-                  color={activeTab === "listings" ? Colors.brand.blue : Colors.brand.green}
-                />
-                <Text style={s.heroLabel}>
-                  {activeTab === "listings" ? "HOUSING & RENTALS" : "ROOMMATE MATCHING"}
-                </Text>
-              </View>
-              <Text style={[s.heroTitle, { color: tc.textPrimary }]}>
-                {activeTab === "listings" ? "Find Your Perfect Home" : "Connect with Ideal Housemates"}
-              </Text>
-              <Text style={[s.heroSub, { color: tc.textSecondary }]}>
-                {activeTab === "listings"
-                  ? userCity
-                    ? `Rental listings in ${userCity}`
-                    : "Rental listings in your area"
-                  : roommatesLoading
-                    ? "Finding compatible roommates..."
-                    : userCity
-                      ? `Rooms & roommates available in ${userCity}`
-                      : "Rooms & roommates near you"}
-              </Text>
-            </LinearGradient>
+            {/* ── Design D: large title, city, one row of tabs (Homes / Rooms / Roommates) ── */}
+            <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Listings</Text>
+            {userCity ? <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 12 }]}>{userCity}</Text> : <View style={{ height: 12 }} />}
+            <Segmented
+              style={{ marginHorizontal: 16, marginBottom: 12 }}
+              items={[{ key: "homes", label: "Homes" }, { key: "rooms", label: "Rooms" }, { key: "mates", label: "Roommates" }]}
+              value={activeTab === "listings" ? "homes" : rmSubTab === "searching" ? "rooms" : "mates"}
+              onChange={(k) => {
+                if (k === "homes") { switchTab("listings"); return; }
+                if (activeTab !== "roommates") switchTab("roommates");
+                setRmSubTab(k === "rooms" ? "searching" : "matching");
+              }}
+            />
 
-            {/* ── Tab Switcher ── */}
-            <View style={s.tabSwitcherWrap}>
-              <View
-                style={[s.tabSwitcher, { backgroundColor: tc.sectionBg, borderWidth: isDark ? 1 : 0, borderColor: tc.borderLight }]}
-                onLayout={(e) => setTabSwitcherWidth(e.nativeEvent.layout.width)}
-              >
-                <Animated.View
-                  style={[
-                    s.tabIndicator,
-                    { left: 0, transform: [{ translateX: tabSlide }], backgroundColor: tc.cardElevated },
-                  ]}
-                />
-                <Pressable style={s.tabBtn} onPress={() => switchTab("listings")}>
-                  <Ionicons
-                    name="home-outline"
-                    size={15}
-                    color={activeTab === "listings" ? Colors.brand.blue : tc.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      s.tabBtnText,
-                      activeTab === "listings" ? s.tabBtnTextActive : { color: tc.textSecondary },
-                    ]}
-                  >
-                    Listings
-                  </Text>
-                </Pressable>
-                <Pressable style={s.tabBtn} onPress={() => switchTab("roommates")}>
-                  <Ionicons
-                    name="people-outline"
-                    size={15}
-                    color={activeTab === "roommates" ? Colors.brand.blue : tc.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      s.tabBtnText,
-                      activeTab === "roommates" ? s.tabBtnTextActive : { color: tc.textSecondary },
-                    ]}
-                  >
-                    Rooms & Mates
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Search */}
-            <View style={[s.searchWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                        {/* Search */}
+            <View style={[s.searchWrap, { backgroundColor: tc.inputBg, borderColor: "transparent", borderRadius: 16 }]}>
               <Ionicons name="search-outline" size={17} color={tc.textTertiary} />
               <TextInput
                 style={[s.searchInput, { color: tc.textPrimary }]}
@@ -1107,70 +1052,17 @@ export default function HousingScreen() {
             {/* ═══ LISTINGS TAB ═══ */}
             {activeTab === "listings" && (
               <>
-                {/* Filters */}
+                {/* Design D: type chips, then Filters (posting lives behind the tab bar's +) */}
                 <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingVertical: 8, alignItems: "center" }}>
-                  <Pressable
-                    onPress={() => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      if (!user?.id) {
-                        appAlert("Sign in required", "Log in to publish a property listing.");
-                        return;
-                      }
-                      router.push({ pathname: "/create-post" as any, params: { type: "listing" } });
-                    }}
-                    style={[s.addListingFab, { width: "auto", minWidth: 34, height: 34, borderRadius: 12, shadowOpacity: 0.1 }]}
-                    hitSlop={10}
-                    accessibilityLabel="Add property listing"
-                    accessibilityRole="button"
-                  >
-                    <LinearGradient
-                      colors={[Colors.brand.blue, "#0054CC"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={[s.addListingFabGrad, { width: "auto", minWidth: 34, height: 34, borderRadius: 12, paddingHorizontal: 10, flexDirection: "row", gap: 4 }]}
-                    >
-                      <Ionicons name="add" size={20} color="#FFF" />
-                      <Text numberOfLines={1} style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>Post</Text>
-                    </LinearGradient>
-                  </Pressable>
-
                   {FILTERS.map((f) => (
-                    <Pressable
-                      key={f}
-                      onPress={() => { if (propertyTypeFilter !== f) Haptics.selectionAsync(); setPropertyTypeFilter(f); }}
-                      style={[
-                        s.filterChip,
-                        { alignItems: "center", backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                        propertyTypeFilter === f && s.filterChipActive,
-                      ]}
-                    >
-                      <Text style={[s.filterText, { color: tc.textSecondary }, propertyTypeFilter === f && s.filterTextActive]} numberOfLines={1}>{f}</Text>
-                    </Pressable>
+                    <Chip key={f} label={f} on={propertyTypeFilter === f} onPress={() => setPropertyTypeFilter(f)} />
                   ))}
-
-                  <Pressable
-                    onPress={() => { Haptics.selectionAsync(); setShowFilterSheet(true); }}
-                    style={[
-                      s.filterChip,
-                      { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                      (minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) && s.filterChipActive,
-                    ]}
-                  >
-                    <Ionicons
-                      name="options-outline"
-                      size={14}
-                      color={(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) ? "#FFF" : tc.textSecondary}
-                    />
-                    <Text
-                      style={[
-                        s.filterText,
-                        { color: tc.textSecondary },
-                        (minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) && s.filterTextActive,
-                      ]}
-                    >
-                      Filters
-                    </Text>
-                  </Pressable>
+                  <Chip
+                    label="Filters"
+                    on={!!(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null)}
+                    onPress={() => setShowFilterSheet(true)}
+                    icon={<Ionicons name="options-outline" size={14} color={(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) ? "#FFF" : tc.textSecondary} />}
+                  />
                 </GHScrollView>
 
                 {/* <View style={s.listingsResultsRow}>
@@ -1205,82 +1097,26 @@ export default function HousingScreen() {
             {/* ═══ ROOMMATES TAB ═══ */}
             {activeTab === "roommates" && (
               <>
-                {/* ── Sub-tab Switcher ── */}
-                <View style={[s.rmSubTabWrap, { backgroundColor: tc.sectionBg }]}>
-                  <Pressable
-                    style={[s.rmSubTab, rmSubTab === "searching" && s.rmSubTabActive]}
-                    onPress={() => setRmSubTab("searching")}
-                  >
-                    <LinearGradient
-                      colors={rmSubTab === "searching" ? [Colors.brand.blue, Colors.brand.green] : ["transparent", "transparent"]}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                      style={s.rmSubTabGrad}
-                    >
-                      <Ionicons name="key-outline" size={14} color={rmSubTab === "searching" ? "#FFF" : tc.textTertiary} />
-                      <Text style={[s.rmSubTabText, { color: tc.textTertiary }, rmSubTab === "searching" && s.rmSubTabTextActive]}>Available Rooms</Text>
-                    </LinearGradient>
-                  </Pressable>
-                  <Pressable
-                    style={[s.rmSubTab, rmSubTab === "matching" && s.rmSubTabActive]}
-                    onPress={() => setRmSubTab("matching")}
-                  >
-                    <LinearGradient
-                      colors={rmSubTab === "matching" ? [Colors.brand.orange, "#CC5800"] : ["transparent", "transparent"]}
-                      start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                      style={s.rmSubTabGrad}
-                    >
-                      <Ionicons name="people-outline" size={14} color={rmSubTab === "matching" ? "#FFF" : tc.textTertiary} />
-                      <Text style={[s.rmSubTabText, { color: tc.textTertiary }, rmSubTab === "matching" && s.rmSubTabTextActive]}>Find Roommates</Text>
-                    </LinearGradient>
-                  </Pressable>
-                </View>
-
                 {/* ── SEARCHING SUB-TAB ── */}
                 {rmSubTab === "searching" && (
                   <>
-                    {/* List Your Space CTA */}
-                    <Pressable
-                      style={ar.listYourSpaceBanner}
-                      onPress={() => {
-                        if (!user?.id) {
-                          appAlert("Sign in required", "Log in to list a shared space.");
-                          return;
-                        }
-                        router.push({ pathname: "/create-post" as any, params: { type: "shared_space" } });
-                      }}
-                    >
-                      <LinearGradient
-                        colors={[Colors.brand.blue, "#0099CC", Colors.brand.green]}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                        style={ar.listYourSpaceBannerGrad}
-                      >
-                        <View style={ar.listYourSpaceIcon}>
-                          <Ionicons name="home" size={24} color="#FFF" />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={ar.listYourSpaceTitle}>Have a Spare Room?</Text>
-                          <Text style={ar.listYourSpaceSub}>List your space and find a compatible housemate nearby</Text>
-                        </View>
-                        <View style={ar.listYourSpaceArrow}>
-                          <Ionicons name="arrow-forward" size={16} color="#FFF" />
-                        </View>
-                      </LinearGradient>
-                    </Pressable>
-
-                    {/* Section header */}
-                    <View style={ar.sectionHeader}>
-                      <View style={ar.sectionHeaderLeft}>
-                        <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={ar.sectionHeaderIcon}>
-                          <Ionicons name="key" size={15} color="#FFF" />
-                        </LinearGradient>
-                        <View>
-                          <Text style={[ar.sectionHeaderTitle, { color: tc.textPrimary }]}>Available Rooms</Text>
-                          <Text style={[ar.sectionHeaderSub, { color: tc.textTertiary }]}>Residents sharing their space</Text>
-                        </View>
-                      </View>
+                    {/* Design D: one button to list a room */}
+                    <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                      <SoftButton
+                        block
+                        label="Rent out a room in my home"
+                        icon={<Ionicons name="key-outline" size={18} color={tc.accentText} />}
+                        onPress={() => {
+                          if (!user?.id) {
+                            appAlert("Sign in required", "Log in to list a shared space.");
+                            return;
+                          }
+                          router.push({ pathname: "/create-post" as any, params: { type: "shared_space" } });
+                        }}
+                      />
                     </View>
 
-                    {availableRoomsLoading ? (
+                                        {availableRoomsLoading ? (
                       <View accessibilityLabel="Loading shared spaces">
                         <SkeletonCard imageHeight={170} />
                         <SkeletonCard imageHeight={170} />
@@ -1301,47 +1137,14 @@ export default function HousingScreen() {
                 {/* ── ROOMMATE MATCHING SUB-TAB ── */}
                 {rmSubTab === "matching" && (
                   <>
-                    {/* Filters */}
+                    {/* Design D: sort as chips; one line says how matches are ordered */}
                     <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingVertical: 8 }}>
                       {ROOMMATE_FILTERS.map((f) => (
-                        <Pressable
-                          key={f}
-                          onPress={() => { if (rmFilter !== f) Haptics.selectionAsync(); setRmFilter(f); }}
-                          style={[
-                            s.filterChip,
-                            { alignItems: "center", backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                            rmFilter === f && {
-                              backgroundColor: Colors.brand.orange,
-                              borderColor: Colors.brand.orange,
-                            },
-                          ]}
-                        >
-                          <Text style={[s.filterText, { color: tc.textSecondary }, rmFilter === f && s.filterTextActive]} numberOfLines={1}>{f}</Text>
-                        </Pressable>
+                        <Chip key={f} label={f} on={rmFilter === f} onPress={() => setRmFilter(f)} />
                       ))}
                     </GHScrollView>
-
-                    {/* Smart matching info banner */}
-                    <View style={[s.matchInfoBanner, { borderColor: isDark ? "#4D2800" : "#FFD9B3", backgroundColor: isDark ? "#1A1000" : "#FFF8F0" }]}>
-                      <LinearGradient
-                        colors={[Colors.brand.orange, "#CC5800"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={s.matchInfoIcon}
-                      >
-                        <Ionicons name="sparkles" size={14} color="#FFF" />
-                      </LinearGradient>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[s.matchInfoTitle, { color: isDark ? "#FFF" : Colors.text.primary }]}>Smart Matching</Text>
-                        <Text style={[s.matchInfoSub, { color: tc.textSecondary }]}>
-                          Based on your communities, vibes, interests & lifestyle preferences
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Result count */}
-                    <Text style={[s.resultCount, { color: tc.textTertiary }]}>
-                      {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · sorted by match %
+                    <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginBottom: 10 }]}>
+                      {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · matched on communities, vibes, interests and lifestyle
                     </Text>
 
                     {roommatesLoading ? (
