@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { tabBarClearance } from '../../../src/shared/navigation/DTabBar';
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton } from '../../../src/shared/d';
+import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag, VoteButton } from '../../../src/shared/d';
 import { DSheet } from '../../../src/shared/d/Sheet';
 import { TYPE } from '../../../src/theme/d';
 import {
@@ -64,6 +64,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '../../../src/api/client';
 
 const TOPICS = ["All", "Housing", "Food", "Transit", "Events", "Safety", "General"];
+const ASK_TOPICS = ["Housing", "Food", "Transit", "Events", "Safety", "General"];
+/** Guesses a question's topic from its words; null when nothing matches. */
+const TOPIC_WORDS: [string, RegExp][] = [
+  ["Housing", /\b(rent|room|roommate|flat|apartment|lease|landlord|deposit|house|housing|sublet|studio|move|moving)\b/i],
+  ["Food", /\b(food|eat|restaurant|cafe|coffee|grocer(y|ies)|brunch|lunch|dinner|bakery|halal|vegan|takeaway|takeout)\b/i],
+  ["Transit", /\b(bus|train|metro|subway|tram|bike|parking|car|driv(e|ing)|licen[cs]e|commute|airport|uber|taxi|transit)\b/i],
+  ["Events", /\b(event|meetup|party|concert|festival|club|tonight|weekend|game|match)\b/i],
+  ["Safety", /\b(safe|safety|scam|police|crime|stolen|emergency|dangerous|night)\b/i],
+];
+function guessTopic(text: string): string | null {
+  for (const [t, re] of TOPIC_WORDS) if (re.test(text)) return t;
+  return null;
+}
 
 const QUESTION_CATEGORIES = ["Housing", "Food", "Transit", "Events", "Safety", "General"] as const;
 
@@ -932,11 +945,16 @@ export default function CommunityScreen() {
     }
   };
 
+  // The topic chip: your pick wins; otherwise the guess from the words.
+  const [pickedTopic, setPickedTopic] = useState<string | null>(null);
+  const guessed = guessTopic(newQ);
+  const askTopic = pickedTopic ?? guessed;
+
   const handleSubmitQuestion = async () => {
     if (!newQ.trim() || posting) return;
     setPosting(true);
     try {
-      const topic = filter && filter !== "All" ? filter : null;
+      const topic = askTopic ?? (filter && filter !== "All" ? filter : null);
       const category =
         topic === "Housing"
           ? "HOUSING"
@@ -960,6 +978,7 @@ export default function CommunityScreen() {
       setQuestions((prev) => [uiQ, ...prev]);
       setExpandedIds((p) => { const n = new Set(p); n.add(uiQ.id); return n; });
       setNewQ("");
+      setPickedTopic(null);
       setShowAsk(false);
     } catch (e) {
       // Keep the draft so the user can retry.
@@ -1091,12 +1110,7 @@ export default function CommunityScreen() {
                   </View>
                   <LinkifiedText text={q.question} style={[TYPE.cardTitle, { fontSize: 18, lineHeight: 22, color: tc.textPrimary, marginTop: 8, marginBottom: 10 }]} />
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                    <PressableScale onPress={() => handleVote(q.id)} scaleTo={0.9}
-                      style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 32, paddingHorizontal: 10, borderRadius: 10, backgroundColor: voted ? tc.accent : tc.inputBg }}
-                      accessibilityRole="button" accessibilityLabel={voted ? "Remove upvote" : "Upvote"} accessibilityState={{ selected: voted }}>
-                      <Ionicons name="arrow-up" size={15} color={voted ? "#fff" : tc.textPrimary} />
-                      <Text style={[TYPE.bodyStrong, { fontSize: 13.5, color: voted ? "#fff" : tc.textPrimary }]}>{q.votes}</Text>
-                    </PressableScale>
+                    <VoteButton on={voted} count={q.votes} onPress={() => handleVote(q.id)} />
                     <Pressable onPress={() => (total > 0 ? toggleExpanded(q.id) : setAnsweringId(answeringId === q.id ? null : q.id))} hitSlop={6}
                       style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 32, paddingHorizontal: 8 }}>
                       <Ionicons name={open ? "chatbubble" : "chatbubble-outline"} size={17} color={tc.textSecondary} />
@@ -1131,25 +1145,22 @@ export default function CommunityScreen() {
 
                   {open && q.answers.length > 0 ? (
                     <View style={{ marginTop: 10, gap: 8 }}>
-                      {q.answers.map((a) => (
-                        <Reveal key={a.id}>
+                      {[...q.answers].sort((x, y) => y.votes - x.votes).map((a, ai) => (
+                        <Reveal key={a.id} i={ai}>
                           <View style={{ padding: 12, borderRadius: 16, backgroundColor: tc.inputBg }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                               <FadeImage uri={a.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} showLoadingSpinner={true} />
                               <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]} numberOfLines={1}>
                                 <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{a.author}</Text> · {a.time}
                               </Text>
-                              <PressableScale onPress={() => handleAnswerVote(a.id, q.id)} scaleTo={0.9}
-                                style={{ flexDirection: "row", alignItems: "center", gap: 3, height: 28, paddingHorizontal: 8, borderRadius: 9, backgroundColor: answerVotedIds.has(a.id) ? tc.accent : tc.cardBg }}>
-                                <Ionicons name="arrow-up" size={13} color={answerVotedIds.has(a.id) ? "#fff" : tc.textPrimary} />
-                                <Text style={[TYPE.label, { color: answerVotedIds.has(a.id) ? "#fff" : tc.textPrimary }]}>{a.votes}</Text>
-                              </PressableScale>
+                              <VoteButton small on={answerVotedIds.has(a.id)} count={a.votes} onPress={() => handleAnswerVote(a.id, q.id)} />
                               {a.author === "You" ? (
                                 <Pressable onPress={() => handleDeleteAnswer(a.id, q.id)} hitSlop={8} accessibilityLabel="Delete answer">
                                   <Ionicons name="trash-outline" size={15} color={tc.dangerText} />
                                 </Pressable>
                               ) : null}
                             </View>
+                            {ai === 0 && a.votes > 0 && q.answers.length > 1 ? <Tag label="Best answer" ok icon="checkmark" style={{ marginTop: 6 }} /> : null}
                             <LinkifiedText text={a.text} style={[TYPE.body, { color: tc.textPrimary, marginTop: 6 }]} />
                           </View>
                         </Reveal>
@@ -1191,13 +1202,13 @@ export default function CommunityScreen() {
       </KeyboardAvoidingView>
 
       {/* Ask a question (design D sheet) */}
-      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask the people around you" grow>
+      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours" grow>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
-            <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 12 }]}>Locals who know the area answer here.</Text>
+            <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Your question</Text>
             <TextInput
-              style={[TYPE.body, { minHeight: 110, maxHeight: 200, borderRadius: 18, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
-              placeholder="What do you want to know?"
+              style={[TYPE.body, { minHeight: 90, maxHeight: 200, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
+              placeholder="e.g. Where can I get my driving licence translated?"
               placeholderTextColor={tc.textTertiary}
               value={newQ}
               onChangeText={setNewQ}
@@ -1207,11 +1218,15 @@ export default function CommunityScreen() {
               multiline
               autoFocus
             />
-            <Text style={[TYPE.small, { alignSelf: "flex-end", fontSize: 11.5, color: tc.textTertiary, marginTop: 6 }]}>{newQ.length}/300</Text>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
-              <SoftButton ghost block label="Cancel" outerStyle={{ flex: 1 }} disabled={posting} onPress={() => setShowAsk(false)} />
-              <GradientButton block label="Post question" outerStyle={{ flex: 1.4 }} loading={posting} disabled={!newQ.trim()} onPress={handleSubmitQuestion} />
+            <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 10, marginBottom: 8 }]}>
+              Topic <Text style={{ color: tc.textTertiary }}>{pickedTopic ? "" : guessed ? "(guessed from your words)" : "(we guess it from your words)"}</Text>
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+              {ASK_TOPICS.map((t) => (
+                <Chip key={t} label={t} on={askTopic === t} onPress={() => setPickedTopic(pickedTopic === t ? null : t)} />
+              ))}
             </View>
+            <GradientButton block label="Ask" loading={posting} disabled={!newQ.trim()} onPress={handleSubmitQuestion} />
           </View>
         </KeyboardAvoidingView>
       </DSheet>

@@ -309,3 +309,27 @@ export function RollNumber({ value, style }: { value: number | string; style?: S
   const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }] }));
   return <View style={{ overflow: 'hidden' }}><Animated.Text style={[style, a]}>{value}</Animated.Text></View>;
 }
+
+/* ---------- upvote ---------- */
+/** An upvote pill: turning it on bounces it (scale 1 → 1.32 → 1 on the sheet spring, `[data-like]`) and the
+ *  count rolls to its new value. */
+export function VoteButton({ on, count, onPress, small }: { on: boolean; count: number; onPress: () => void; small?: boolean }) {
+  const { tc } = useTheme();
+  const reduce = useReducedMotion();
+  const sc = useSharedValue(1);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const press = () => {
+    if (!on && !reduce) sc.value = withSequence(withTiming(1.32, { duration: 140 }), withSpring(1, SPRING.sheet));
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
+  const fg = on ? '#fff' : tc.textPrimary;
+  return (
+    <Pressable onPress={press} hitSlop={6} accessibilityRole="button" accessibilityLabel={on ? 'Remove upvote' : 'Upvote'} accessibilityState={{ selected: on }}>
+      <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: small ? 3 : 4, height: small ? 28 : 32, paddingHorizontal: small ? 8 : 10, borderRadius: small ? 9 : 10, backgroundColor: on ? tc.accent : small ? tc.cardBg : tc.inputBg }, a]}>
+        <Ionicons name="arrow-up" size={small ? 13 : 15} color={fg} />
+        <RollNumber value={count} style={[small ? TYPE.label : TYPE.bodyStrong, { fontSize: small ? 12 : 13.5, color: fg }]} />
+      </Animated.View>
+    </Pressable>
+  );
+}
