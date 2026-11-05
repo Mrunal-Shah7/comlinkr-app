@@ -1,5 +1,7 @@
 import { rs } from "../../../utils/responsive";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Animated from "react-native-reanimated";
+import { HeroExpand, takeHero, useHeroFade, type HeroOrigin } from "../../../shared/d/Hero";
 import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TouchableOpacity, Dimensions, Linking, ActivityIndicator, Share, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -101,6 +103,18 @@ export function EventDetailModal({
   }, [visible, event?.id, event?.isOwner]);
 
   const insetsD = useSafeAreaInsets();
+  // Card to detail (design D): take the tapped card photo, if any, as the modal opens.
+  const heroOrigin = useRef<HeroOrigin | null>(null);
+  const wasVisible = useRef(false);
+  if (visible && !wasVisible.current) heroOrigin.current = takeHero();
+  wasVisible.current = visible;
+  const [heroLanded, setHeroLanded] = useState(false);
+  const [heroDone, setHeroDone] = useState(false);
+  useEffect(() => { if (!visible) { setHeroLanded(false); setHeroDone(false); } }, [visible]);
+  const heroActive = visible && !!heroOrigin.current;
+  const heroFlying = heroActive && !heroLanded; // the page stays hidden until the photo lands
+  const showFlyer = heroActive && !heroDone; // the photo stays until the page has faded in under it
+  const pageFade = useHeroFade(heroFlying);
   if (!event) return null;
   /** Prefer detail for copy/images; keep RSVP/save/chat fields in sync with live list state. */
   const displayEvent: ExploreEventRow = detailFromApi
@@ -185,8 +199,9 @@ export function EventDetailModal({
   const h2 = (t: string) => <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 24, marginBottom: 10 }]}>{t}</Text>;
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={handleClose} statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
+    <Modal visible={visible} animationType={heroOrigin.current ? "none" : "slide"} transparent={!!heroOrigin.current} onRequestClose={handleClose} statusBarTranslucent>
+      <View style={{ flex: 1, opacity: heroFlying ? 0 : 1 }}>
+      <Animated.View style={[{ flex: 1, backgroundColor: tc.pageBg }, pageFade]}>
         {/* Hero (swipe when there are several photos) */}
         <View style={{ height: 340 }}>
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
@@ -306,7 +321,9 @@ export function EventDetailModal({
             <GradientButton label="RSVP" onPress={onRegister} style={{ paddingHorizontal: 12 }} icon={<Ionicons name="ticket-outline" size={17} color="#fff" />} />
           )}
         </View>
+      </Animated.View>
       </View>
+      {showFlyer && heroOrigin.current ? <HeroExpand origin={heroOrigin.current} height={340} onLanded={() => setHeroLanded(true)} onDone={() => setHeroDone(true)} /> : null}
     </Modal>
   );
 }

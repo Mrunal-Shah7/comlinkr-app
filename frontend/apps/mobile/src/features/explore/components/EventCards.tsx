@@ -1,3 +1,4 @@
+import { useRef } from "react";
 // src/features/explore/components/EventCards.tsx — Explore → Events, design D (plan 01).
 // Events show as a two-column grid of tiles (design C): a square photo with a glass date chip, the title, then
 // "N going · price". Save stays on the tile; RSVP, chat and the rest live in the event detail.
@@ -8,6 +9,7 @@ import { FadeImage } from "../../../../components/FadeImage";
 import { useTheme } from "../../../theme/useTheme";
 import { TYPE, body, display } from "../../../theme/d";
 import { PressableScale } from "../../../shared/d";
+import { rememberHero } from "../../../shared/d/Hero";
 import { SPRING } from "../../../shared/motion/presets";
 import { EVENT_IMAGE_BY_CATEGORY, type ExploreEventRow } from "../models";
 
@@ -19,13 +21,14 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
 }) {
   const { tc } = useTheme();
   const sc = useSharedValue(1);
+  const imgRef = useRef<View>(null);
   const pop = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   const fallback = EVENT_IMAGE_BY_CATEGORY[event.category] ?? EVENT_IMAGE_BY_CATEGORY.Community;
   const meta = [event.interested > 0 ? `${event.interested} going` : "", event.price].filter(Boolean).join(" · ");
   return (
-    <PressableScale onPress={onPress} outerStyle={{ flex: 1 }} style={s.tile} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}>
+    <PressableScale onPress={() => rememberHero(imgRef.current, event.image || fallback, () => onPress?.())} outerStyle={{ flex: 1 }} style={s.tile} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}>
       <View>
-        <FadeImage uri={event.image} fallbackUri={fallback} style={s.img} />
+        <View ref={imgRef} collapsable={false}><FadeImage uri={event.image} fallbackUri={fallback} style={s.img} /></View>
         <View style={[s.chip, { backgroundColor: tc.glass, borderColor: tc.glassLine }]}>
           <Text style={[body(800), { fontSize: 12.5, color: tc.textPrimary }]} numberOfLines={1}>{event.date}</Text>
         </View>
