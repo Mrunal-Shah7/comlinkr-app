@@ -151,7 +151,8 @@ export function ListingQuestions(p: ListingQuestionsProps) {
 
   return (
     <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
-      <View style={[st.bar, { paddingTop: insets.top + 4 }]}>
+      {/* The composer screen already clears the status bar. */}
+      <View style={[st.bar, { paddingTop: 4 }]}>
         <Pressable onPress={back} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={st.ib}>
           <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
         </Pressable>
@@ -164,7 +165,8 @@ export function ListingQuestions(p: ListingQuestionsProps) {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 24 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Animated.View key={q} entering={reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200)} style={shakeStyle}>
+        <Animated.View key={q} entering={reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200)}>
+        <Animated.View style={shakeStyle}>
           {q === 0 ? (
             <>
               {H("Show it off", "Add photos. The first one is the cover.")}
@@ -303,6 +305,7 @@ export function ListingQuestions(p: ListingQuestionsProps) {
           )}
           {p.error ? <Text style={[TYPE.small, { color: tc.dangerText, marginTop: 12 }]}>{p.error}</Text> : null}
         </Animated.View>
+        </Animated.View>
       </ScrollView>
 
       <View style={{ paddingHorizontal: 22, paddingTop: 12, paddingBottom: insets.bottom + 18 }}>
@@ -316,7 +319,7 @@ const st = StyleSheet.create({
   bar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingBottom: 6 },
   ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   progress: { flex: 1, height: 4, borderRadius: 4, overflow: "hidden", marginHorizontal: 8 },
-  slots: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "space-between" },
+  slots: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   slot: { aspectRatio: 1, borderRadius: 18, borderWidth: 1.5, borderStyle: "dashed", alignItems: "center", justifyContent: "center", overflow: "hidden" },
   x: { position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
   cover: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.5)" },

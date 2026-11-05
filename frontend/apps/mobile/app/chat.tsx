@@ -559,12 +559,13 @@ function Thread({
   // Messages on screen when the thread opens appear at once; later ones pop in from their own side.
   const msgsShown = useRef(false);
   const reduceMotion = useReducedMotion();
-  useEffect(() => { if (threadMsgs.length > 0) msgsShown.current = true; }, [threadMsgs.length]);
   const threadMsgsRef = useRef<ThreadMsg[]>([]); // SPRINT-40: cleanup retryable local recordings on thread exit
   threadMsgsRef.current = threadMsgs; // SPRINT-40:
   const conversationGenerationRef = useRef(0); // SPRINT-40: prevent async delivery from mutating a later thread
   const audioDeliveriesInFlightRef = useRef<Set<string>>(new Set()); // SPRINT-40: retry lock
   const [threadLoading, setThreadLoading] = useState(true);
+  // Once the first load is on screen (even an empty thread), later messages animate in.
+  useEffect(() => { if (!threadLoading) { const t = setTimeout(() => { msgsShown.current = true; }, 50); return () => clearTimeout(t); } }, [threadLoading]);
   const [liveMembers, setLiveMembers] = useState<{ id: string; name: string; role: string }[]>([]);
 
   const [text, setText] = useState("");

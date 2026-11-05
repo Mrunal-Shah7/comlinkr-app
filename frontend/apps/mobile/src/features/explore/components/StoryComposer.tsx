@@ -23,7 +23,7 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       <StatusBar style="light" />
-      <View style={[st.bar, { paddingTop: insets.top + 4 }]}>
+      <View style={[st.bar, { paddingTop: 4 }]}>
         <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={st.ib}>
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </Pressable>
@@ -56,7 +56,7 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
         <TextInput value={caption} onChangeText={onCaption} maxLength={120} placeholder="Add a caption (optional)" placeholderTextColor="rgba(255,255,255,0.55)"
           style={[body(500), { color: "#fff", fontSize: 15.5, paddingVertical: 0 }]} accessibilityLabel="Caption" />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingBottom: insets.bottom + 24 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: insets.bottom + 24 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, alignItems: "center" }}>
         {topics.map((t) => {
           const on = topic === t;
           return (
