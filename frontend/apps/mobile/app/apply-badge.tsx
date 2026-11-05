@@ -39,7 +39,7 @@ import { createThemedStyles } from '../src/theme/themedStyles';
 import Animated, { FadeInRight, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 import { TYPE } from '../src/theme/d';
 import { SPRING } from '../src/shared/motion/presets';
-import { GradientFill, PressableScale } from '../src/shared/d';
+import { GradientButton, GradientFill, PressableScale } from '../src/shared/d';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 
 const MAX_DOC_BYTES = 10 * 1024 * 1024; // 10MB — matches the "max 10MB" copy shown in the upload UI
@@ -452,7 +452,7 @@ function StepDots({ total, current }: { total: number; current: number; idleColo
   useEffect(() => { p.value = withSpring((current + 1) / total, SPRING.settle); }, [current, total, p]);
   const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
   return (
-    <View style={{ height: 6, borderRadius: 3, backgroundColor: tc.surface3, overflow: "hidden", marginHorizontal: 16, marginBottom: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current + 1 }}>
+    <View style={{ height: 4, borderRadius: 4, backgroundColor: tc.surface3, overflow: "hidden", marginHorizontal: 16, marginBottom: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current + 1 }}>
       <Animated.View style={[{ height: "100%", borderRadius: 3, overflow: "hidden" }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Animated.View>
     </View>
   );
@@ -775,7 +775,7 @@ export default function ApplyBadgeScreen() {
   };
 
   // ── Step 1: What you unlock + requirements ──────────────────────────────────
-  const renderRequirements = () => {
+  const renderRequirements = (embedded = false) => {
     if (!config || !selectedBadge) return null;
     return (
       <View style={styles.section}>
@@ -816,6 +816,7 @@ export default function ApplyBadgeScreen() {
           </Text>
         </View>
 
+        {!embedded && (
         <View style={styles.navRow}>
           {!preselected && (
             <Pressable onPress={() => setStep(0)} style={[styles.backBtn, { borderColor: tc.borderLight, backgroundColor: tc.cardBg }]}>
@@ -830,22 +831,27 @@ export default function ApplyBadgeScreen() {
             </LinearGradient>
           </Pressable>
         </View>
+        )}
       </View>
     );
   };
 
+  // Whether the details page is complete (used by its Continue button).
+  const detailsPhoneOk = validatePhoneNumber(businessPhone, market).valid;
+  const step2Valid = fullName.trim().length > 0 && businessPhone.trim().length > 0 && detailsPhoneOk &&
+    (selectedBadge === "landlord" ? propertyAddress.trim().length > 0 : true) &&
+    (selectedBadge === "restaurant_owner" ? restaurantName.trim().length > 0 && restaurantAddress.trim().length > 0 : true) &&
+    (selectedBadge === "agency" ? agencyName.trim().length > 0 : true) &&
+    (selectedBadge === "local_reviewer" ? reviewerNeighborhood.trim().length > 0 && reviewerBio.trim().length > 0 : true);
+  const step3Valid = selectedBadge === "local_reviewer" ? !!fileGovId : !!fileGovId && !!fileSecondary;
+
   // ── Step 2: Business details form ───────────────────────────────────────────
-  const renderForm = () => {
+  const renderForm = (embedded = false) => {
     if (!config || !selectedBadge) return null;
     const phoneValidation = validatePhoneNumber(businessPhone, market);
     const phoneError = phoneTouched && businessPhone.trim().length > 0 && !phoneValidation.valid
       ? phoneValidation.error
       : null;
-    const step2Valid = fullName.trim().length > 0 && businessPhone.trim().length > 0 && phoneValidation.valid &&
-      (selectedBadge === "landlord" ? propertyAddress.trim().length > 0 : true) &&
-      (selectedBadge === "restaurant_owner" ? restaurantName.trim().length > 0 && restaurantAddress.trim().length > 0 : true) &&
-      (selectedBadge === "agency" ? agencyName.trim().length > 0 : true) &&
-      (selectedBadge === "local_reviewer" ? reviewerNeighborhood.trim().length > 0 && reviewerBio.trim().length > 0 : true);
 
     return (
       <View style={styles.section}>
@@ -960,6 +966,7 @@ export default function ApplyBadgeScreen() {
           </>
         )}
 
+        {!embedded && (
         <View style={styles.navRow}>
           <Pressable onPress={() => setStep(1)} style={[styles.backBtn, { borderColor: tc.borderLight, backgroundColor: tc.cardBg }]}>
             <Ionicons name="chevron-back" size={16} color={Colors.brand.blue} />
@@ -975,17 +982,14 @@ export default function ApplyBadgeScreen() {
             </LinearGradient>
           </Pressable>
         </View>
+        )}
       </View>
     );
   };
 
   // ── Step 3: Document upload ─────────────────────────────────────────────────
-  const renderDocuments = () => {
+  const renderDocuments = (embedded = false) => {
     if (!config || !selectedBadge) return null;
-    const step3Valid =
-      selectedBadge === "local_reviewer"
-        ? !!fileGovId
-        : !!fileGovId && !!fileSecondary;
 
     const secondaryLabel =
       selectedBadge === "landlord"
@@ -1087,6 +1091,7 @@ export default function ApplyBadgeScreen() {
           ))}
         </View>
 
+        {!embedded && (
         <View style={styles.navRow}>
           <Pressable onPress={() => setStep(2)} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={16} color={Colors.brand.blue} />
@@ -1099,6 +1104,7 @@ export default function ApplyBadgeScreen() {
             </LinearGradient>
           </Pressable>
         </View>
+        )}
       </View>
     );
   };
@@ -1115,7 +1121,7 @@ export default function ApplyBadgeScreen() {
       const phoneCheck = validatePhoneNumber(businessPhone, market);
       if (!phoneCheck.valid) {
         appAlert("Invalid phone number", phoneCheck.error ?? "Enter a valid business phone number.");
-        setStep(2);
+        setStep(1);
         return;
       }
       const docs: PickedDocument[] = [];
@@ -1229,7 +1235,7 @@ export default function ApplyBadgeScreen() {
         </Pressable>
 
         <View style={styles.navRow}>
-          <Pressable onPress={() => setStep(selectedBadge === "restaurant_owner" ? 2 : 3)} style={styles.backBtn}>
+          <Pressable onPress={() => setStep(1)} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={16} color={Colors.brand.blue} />
             <Text style={styles.backBtnText}>Back</Text>
           </Pressable>
@@ -1288,28 +1294,40 @@ export default function ApplyBadgeScreen() {
   );
 
   // Current visible step index for dot indicator (skip chooser when deep-linked to an eligible badge)
-  const adjustedTotal = preselectedSkipsChooser ? 4 : 5;
-  const adjustedStep = preselectedSkipsChooser ? Math.max(0, step - 1) : step;
+  const visible = step === 0 ? 0 : step <= 3 ? 1 : 2;
+  const adjustedTotal = preselectedSkipsChooser ? 2 : 3;
+  const adjustedStep = preselectedSkipsChooser ? Math.max(0, visible - 1) : visible;
+  const stepName = ["Choose", "Your details", "Send"][visible];
 
   const goBackStep = () => {
     const atEntryPoint = step <= 0 || step >= 5 || (step === 1 && Boolean(preselected));
     if (atEntryPoint) { goBackOr("/(tabs)/feed"); return; }
-    if (step === 4 && selectedBadge === "restaurant_owner") { setStep(2); return; }
-    setStep(step - 1);
+    setStep(step === 4 ? 1 : step - 1);
   };
   return (
     <DPage
       title={step >= 5 ? "Application sent" : "Get a badge"}
-      sub={step < 5 ? `Step ${adjustedStep + 1} of ${adjustedTotal}${config ? ` · ${config.label}` : ""}` : undefined}
+      sub={step < 5 ? `Step ${adjustedStep + 1} of ${adjustedTotal} · ${stepName}` : undefined}
       onBack={goBackStep}
     >
       {step < 5 ? <StepDots total={adjustedTotal} current={adjustedStep} /> : null}
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <Animated.View key={step} style={{ paddingHorizontal: 16, paddingTop: 10 }} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200)}>
           {step === 0 && renderBadgeSelect()}
-          {step === 1 && renderRequirements()}
-          {step === 2 && renderForm()}
-          {step === 3 && renderDocuments()}
+          {step === 1 && (
+            <>
+              {renderRequirements(true)}
+              {renderForm(true)}
+              {selectedBadge !== "restaurant_owner" ? renderDocuments(true) : null}
+              <GradientButton
+                block
+                label="Continue"
+                disabled={!(step2Valid && (selectedBadge === "restaurant_owner" || step3Valid))}
+                onPress={() => setStep(4)}
+                outerStyle={{ marginTop: 8, marginBottom: 12 }}
+              />
+            </>
+          )}
           {step === 4 && renderReview()}
           {step === 5 && renderConfirmation()}
         </Animated.View>
