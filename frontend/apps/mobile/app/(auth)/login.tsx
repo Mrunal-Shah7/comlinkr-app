@@ -34,7 +34,8 @@ import { rs } from "../../src/utils/responsive";
 import { Image } from "expo-image";
 import { appAlert } from '../../src/shared/ui/Dialogs';
 import { TYPE, display } from '../../src/theme/d';
-import { GradientButton, Reveal, SoftButton } from '../../src/shared/d';
+import { GradientButton, Reveal, SoftButton, useShake } from '../../src/shared/d';
+import Reanimated from 'react-native-reanimated';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
@@ -92,11 +93,15 @@ export default function LoginScreen() {
   const [oauthProvider, setOauthProvider] = useState<"google" | "apple">("google");
 
   const passwordRef = useRef<TextInput>(null);
+  // Errors sit under the field they belong to and the fields shake (design D `login`).
+  const [fieldError, setFieldError] = useState<"email" | "password" | "">("");
+  const { style: shakeStyle, shake } = useShake();
 
   async function handleLogin() {
     if (!email.trim() || !password.trim()) {
-      setError("Please fill in both fields");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setFieldError(!email.trim() ? "email" : "password");
+      setError(!email.trim() ? "Enter your email or username." : "Enter your password.");
+      shake();
       return;
     }
     setError("");
@@ -109,8 +114,9 @@ export default function LoginScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
     } catch (e: unknown) {
+      setFieldError("password");
       setError(formatLoginError(e));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      shake();
     } finally {
       setLoading(false);
     }
@@ -263,12 +269,14 @@ export default function LoginScreen() {
               <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
             </Reveal>
 
-            <Reveal i={4} style={{ gap: 14 }}>
+            <Reveal i={4}>
+            <Reanimated.View style={[{ gap: 14 }, shakeStyle]}>
               <Input
+                error={fieldError === "email" && error ? error : undefined}
                 label="Email"
                 placeholder="you@example.com"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(v) => { setEmail(v); if (fieldError) { setFieldError(""); setError(""); } }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -281,7 +289,8 @@ export default function LoginScreen() {
                 label="Password"
                 placeholder="Your password"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(v) => { setPassword(v); if (fieldError) { setFieldError(""); setError(""); } }}
+                error={fieldError === "password" && error ? error : undefined}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoComplete="password"
@@ -294,9 +303,10 @@ export default function LoginScreen() {
                   </Pressable>
                 }
               />
+            </Reanimated.View>
             </Reveal>
 
-            {error ? (
+            {error && !fieldError ? (
               <Reveal style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14, padding: 12, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.12)" }}>
                 <Ionicons name="alert-circle" size={17} color={tc.dangerText} />
                 <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{error}</Text>

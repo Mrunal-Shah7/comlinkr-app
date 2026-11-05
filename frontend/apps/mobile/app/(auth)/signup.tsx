@@ -36,7 +36,8 @@ import { appAlert } from '../../src/shared/ui/Dialogs';
 import { showToast } from '../../src/shared/ui/Toast';
 import { TYPE, display } from '../../src/theme/d';
 import { GradientButton, Reveal, SoftButton } from '../../src/shared/d';
-import { OtpBoxes, type OtpHandle } from '../../src/shared/d/Otp';
+import { PasswordRules } from '../../src/shared/d/PasswordRules';
+import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
@@ -109,6 +110,7 @@ export default function SignupScreen() {
   const toastAnim = useRef(new Animated.Value(0)).current;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [passwordFocused, setPasswordFocused] = useState(false);
   function showPasswordToast() {
     if (password.length > 0) return;
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -292,26 +294,6 @@ export default function SignupScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
-      {/* Password rules toast */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.toast,
-          {
-            opacity: toastAnim,
-            transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
-          },
-        ]}
-      >
-        <Ionicons name="lock-closed" size={15} color="#FFFFFF" />
-        <View style={styles.toastTextWrap}>
-          <Text style={styles.toastTitle}>Password must have:</Text>
-          <Text style={styles.toastLine}>· At least 8 characters</Text>
-          <Text style={styles.toastLine}>· 1 uppercase letter (A–Z)</Text>
-          <Text style={styles.toastLine}>· 1 number (0–9)</Text>
-        </View>
-      </Animated.View>
-
       <OAuthUsernamePickerModal
         visible={usernamePickerVisible}
         tempToken={oauthTempToken}
@@ -424,7 +406,8 @@ export default function SignupScreen() {
                   autoCapitalize="none"
                   autoComplete="new-password"
                   returnKeyType="go"
-                  onFocus={showPasswordToast}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   onSubmitEditing={handleSendCode}
                   rightIcon={
                     <Pressable
@@ -443,44 +426,15 @@ export default function SignupScreen() {
               ) : (
               <Reveal key="otp" style={{ marginTop: 4 }}>
                 <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); setError(""); }} onComplete={() => void handleVerifyAndCreate()} autoFocus />
+                <View style={{ marginTop: 18 }}><ResendCode onResend={handleSendCode} busy={loading} /></View>
                 <Pressable onPress={() => { setStep("form"); setCode(""); setError(""); }} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
                   <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Edit details</Text></Text>
                 </Pressable>
               </Reveal>
               )}
 
-              {/* Password Strength */}
-              {step === "form" && password.length > 0 && (
-                <View style={styles.strengthRow}>
-                  {[1, 2, 3].map((i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.strengthBar,
-                        {
-                          backgroundColor:
-                            strengthLevel >= i
-                              ? strengthColors[strengthLevel]
-                              : tc.borderLight,
-                        },
-                      ]}
-                    />
-                  ))}
-                  <Text
-                    style={[
-                      styles.strengthLabel,
-                      {
-                        color:
-                          strengthLevel > 0
-                            ? strengthColors[strengthLevel]
-                            : tc.textTertiary,
-                      },
-                    ]}
-                  >
-                    {strengthLabels[strengthLevel]}
-                  </Text>
-                </View>
-              )}
+              {/* Password rules, live (design D `signup`) */}
+              {step === "form" && (passwordFocused || password.length > 0) ? <PasswordRules password={password} /> : null}
 
               {/* Username hint */}
               {step === "form" && username.length > 0 && username.length < 3 && (

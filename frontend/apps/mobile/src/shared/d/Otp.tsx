@@ -2,11 +2,11 @@
 // One hidden TextInput holds the code (so paste, autofill and the number pad all work); six boxes show it.
 // Motion: each digit pops in on a spring, a wrong code shakes the row (useShake), and a right code sweeps the boxes
 // green from left to right. Reduce motion keeps the colours and drops the movement.
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { useTheme } from "../../theme/useTheme";
-import { display } from "../../theme/d";
+import { TYPE, display } from "../../theme/d";
 import { useShake } from "./index";
 
 export type OtpHandle = { shake: () => void; focus: () => void };
@@ -43,7 +43,11 @@ export const OtpBoxes = forwardRef<OtpHandle, {
 }>(function OtpBoxes({ value, onChange, onComplete, ok = false, autoFocus, length = 6 }, ref) {
   const input = useRef<TextInput>(null);
   const { style, shake } = useShake();
-  useImperativeHandle(ref, () => ({ shake, focus: () => input.current?.focus() }), [shake]);
+  // A wrong code shakes the row, then the boxes empty so the next try starts clean (design D `otp`).
+  useImperativeHandle(ref, () => ({
+    shake: () => { shake(); setTimeout(() => { onChange(""); input.current?.focus(); }, 440); },
+    focus: () => input.current?.focus(),
+  }), [shake, onChange]);
   const digits = value.replace(/\D/g, "").slice(0, length);
   return (
     <Pressable onPress={() => input.current?.focus()} accessibilityRole="none" accessibilityLabel={`Code, ${digits.length} of ${length} digits`}>
@@ -78,3 +82,26 @@ const s = StyleSheet.create({
   box: { width: 48, height: 58, borderRadius: 16, borderWidth: 1.5, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });
+
+/** "Send again in 0:30", counting down; then a "Send again" link that restarts the count when pressed. */
+export function ResendCode({ onResend, seconds = 30, busy }: { onResend: () => void | Promise<void>; seconds?: number; busy?: boolean }) {
+  const { tc } = useTheme();
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    if (left <= 0) return;
+    const t = setTimeout(() => setLeft((n) => n - 1), 1000);
+    return () => clearTimeout(t);
+  }, [left]);
+  if (left > 0) {
+    return (
+      <Text style={[TYPE.small, { color: tc.textTertiary, textAlign: "center" }]} accessibilityLiveRegion="polite">
+        Send again in 0:{String(left).padStart(2, "0")}
+      </Text>
+    );
+  }
+  return (
+    <Pressable onPress={async () => { await onResend(); setLeft(seconds); }} disabled={busy} hitSlop={8} accessibilityRole="button" style={{ alignSelf: "center" }}>
+      <Text style={[TYPE.small, { color: tc.accentText, fontFamily: "Manrope_700Bold", opacity: busy ? 0.5 : 1 }]}>Send again</Text>
+    </Pressable>
+  );
+}

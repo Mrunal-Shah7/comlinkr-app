@@ -20,7 +20,9 @@ import { useTheme } from "../../src/theme/useTheme";
 import { rs } from "../../src/utils/responsive";
 import { TYPE } from '../../src/theme/d';
 import { GradientButton, Reveal } from '../../src/shared/d';
-import { OtpBoxes, type OtpHandle } from '../../src/shared/d/Otp';
+import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
+import { PasswordRules, passwordOk } from '../../src/shared/d/PasswordRules';
+import Reanimated, { FadeInLeft, FadeInRight, useReducedMotion } from 'react-native-reanimated';
 import { DPage, goBackOr } from '../../src/shared/d/Page';
 
 function GradientText({
@@ -47,7 +49,7 @@ function GradientText({
   );
 }
 
-type Step = "email" | "otp";
+type Step = "email" | "otp" | "password";
 
 export default function ForgotPasswordScreen() {
   const { isDark, tc } = useTheme();
@@ -70,6 +72,9 @@ export default function ForgotPasswordScreen() {
   const newPassRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
   const otpRef = useRef<OtpHandle>(null);
+  const reduceMotion = useReducedMotion();
+  const [dir, setDir] = useState<1 | -1>(1);
+  const go = (s: "email" | "otp" | "password", d: 1 | -1) => { setDir(d); setStep(s); };
 
   async function handleSendOtp() {
     const trimmed = email.trim();
@@ -86,7 +91,7 @@ export default function ForgotPasswordScreen() {
     try {
       await authService.forgotPassword(trimmed);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setStep("otp");
+      if (step === "email") go("otp", 1);
     } catch (e: unknown) {
       const msg =
         e && typeof e === "object" && "message" in e ? String((e as Error).message) : String(e);
@@ -98,17 +103,13 @@ export default function ForgotPasswordScreen() {
   }
 
   async function handleResetPassword() {
-    if (!otp.trim()) {
+    if (otp.replace(/\D/g, "").length !== 6) {
       setResetError("Enter the 6-digit code from your email");
-      otpRef.current?.shake();
+      go("otp", -1);
       return;
     }
-    if (!newPassword) {
-      setResetError("Please enter a new password");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setResetError("Password must be at least 6 characters");
+    if (!passwordOk(newPassword)) {
+      setResetError("Your new password needs 8 characters, a capital letter and a number");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -125,7 +126,8 @@ export default function ForgotPasswordScreen() {
       const msg =
         e && typeof e === "object" && "message" in e ? String((e as Error).message) : String(e);
       setResetError(msg || "Invalid or expired code. Please try again.");
-      otpRef.current?.shake();
+      go("otp", -1);
+      setTimeout(() => otpRef.current?.shake(), 380);
     } finally {
       setResetLoading(false);
     }
@@ -141,13 +143,14 @@ export default function ForgotPasswordScreen() {
   return (
     <DPage
       title="Reset password"
-      sub={step === "email" ? "We email you a 6-digit code." : `Code sent to ${email.trim()}`}
-      onBack={() => (step === "otp" ? setStep("email") : goBackOr("/(auth)/login"))}
+      sub={step === "email" ? "We email you a 6-digit code." : step === "otp" ? `Code sent to ${email.trim()}` : "Choose a new password."}
+      onBack={() => (step === "password" ? go("otp", -1) : step === "otp" ? go("email", -1) : goBackOr("/(auth)/login"))}
     >
       <KeyboardAvoidingView behavior="padding">
         <View style={{ paddingHorizontal: 18 }}>
+          <Reanimated.View key={step} entering={reduceMotion ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200)}>
           {step === "email" ? (
-            <Reveal key="email">
+            <View>
               <Input
                 label="Email"
                 placeholder="you@example.com"
@@ -158,34 +161,48 @@ export default function ForgotPasswordScreen() {
                 autoComplete="email"
                 returnKeyType="send"
                 onSubmitEditing={handleSendOtp}
+                error={emailError || undefined}
                 icon={<Ionicons name="mail-outline" size={19} color={tc.textTertiary} />}
               />
-              {emailError ? errorBox(emailError) : null}
               <GradientButton block label={emailLoading ? "Sending…" : "Email me a code"} loading={emailLoading} onPress={handleSendOtp} style={{ marginTop: 18 }} />
-            </Reveal>
-          ) : (
-            <Reveal key="otp">
-              <View style={{ marginTop: 6, marginBottom: 18 }}>
-                <OtpBoxes ref={otpRef} value={otp} onChange={(v) => { setOtp(v); setResetError(""); }} onComplete={() => newPassRef.current?.focus()} autoFocus />
+            </View>
+          ) : step === "otp" ? (
+            <View>
+              <View style={{ marginTop: 6, marginBottom: 14 }}>
+                <OtpBoxes ref={otpRef} value={otp} onChange={(v) => { setOtp(v); setResetError(""); }} onComplete={() => go("password", 1)} autoFocus />
               </View>
+              {resetError ? errorBox(resetError) : null}
+              <View style={{ marginTop: 16 }}>
+                <ResendCode onResend={handleSendOtp} busy={emailLoading} />
+              </View>
+              <Pressable onPress={() => go("email", -1)} hitSlop={8} style={{ alignSelf: "center", marginTop: 16 }} accessibilityRole="button">
+                <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Change it</Text></Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View>
               <View style={{ gap: 14 }}>
-                <Input
-                  ref={newPassRef}
-                  label="New password"
-                  placeholder="At least 6 characters"
-                  value={newPassword}
-                  onChangeText={(t) => { setNewPassword(t); setResetError(""); }}
-                  secureTextEntry={!showNew}
-                  autoCapitalize="none"
-                  returnKeyType="next"
-                  onSubmitEditing={() => confirmRef.current?.focus()}
-                  icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
-                  rightIcon={
-                    <Pressable onPress={() => setShowNew(!showNew)} hitSlop={8} accessibilityLabel={showNew ? "Hide password" : "Show password"}>
-                      <Ionicons name={showNew ? "eye-off-outline" : "eye-outline"} size={20} color={tc.textTertiary} />
-                    </Pressable>
-                  }
-                />
+                <View>
+                  <Input
+                    ref={newPassRef}
+                    label="New password"
+                    placeholder="Your new password"
+                    value={newPassword}
+                    onChangeText={(t) => { setNewPassword(t); setResetError(""); }}
+                    secureTextEntry={!showNew}
+                    autoCapitalize="none"
+                    autoFocus
+                    returnKeyType="next"
+                    onSubmitEditing={() => confirmRef.current?.focus()}
+                    icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
+                    rightIcon={
+                      <Pressable onPress={() => setShowNew(!showNew)} hitSlop={8} accessibilityLabel={showNew ? "Hide password" : "Show password"}>
+                        <Ionicons name={showNew ? "eye-off-outline" : "eye-outline"} size={20} color={tc.textTertiary} />
+                      </Pressable>
+                    }
+                  />
+                  <PasswordRules password={newPassword} />
+                </View>
                 <Input
                   ref={confirmRef}
                   label="Type it again"
@@ -196,6 +213,7 @@ export default function ForgotPasswordScreen() {
                   autoCapitalize="none"
                   returnKeyType="go"
                   onSubmitEditing={handleResetPassword}
+                  error={confirmPassword.length > 0 && confirmPassword !== newPassword && confirmPassword.length >= newPassword.length ? "Passwords do not match" : undefined}
                   icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
                   rightIcon={
                     <Pressable onPress={() => setShowConfirm(!showConfirm)} hitSlop={8} accessibilityLabel={showConfirm ? "Hide password" : "Show password"}>
@@ -205,12 +223,10 @@ export default function ForgotPasswordScreen() {
                 />
               </View>
               {resetError ? errorBox(resetError) : null}
-              <GradientButton block label={resetLoading ? "Saving…" : "Save new password"} loading={resetLoading} onPress={handleResetPassword} style={{ marginTop: 18 }} />
-              <Pressable onPress={handleSendOtp} disabled={emailLoading} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
-                <Text style={[TYPE.small, { color: tc.textSecondary }]}>No email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>{emailLoading ? "Sending…" : "Send it again"}</Text></Text>
-              </Pressable>
-            </Reveal>
+              <GradientButton block label={resetLoading ? "Saving…" : "Save new password"} loading={resetLoading} disabled={!passwordOk(newPassword) || newPassword !== confirmPassword} onPress={handleResetPassword} style={{ marginTop: 18 }} />
+            </View>
           )}
+          </Reanimated.View>
 
           <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 28 }}>
             <Text style={[TYPE.body, { color: tc.textSecondary }]}>Remember it? </Text>
