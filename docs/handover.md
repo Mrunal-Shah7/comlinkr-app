@@ -3,6 +3,22 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
+## 2026-11-05 (latest, later) - design D full match in progress (owner: include phase 2 behaviour)
+
+- **Owner, 2026-11-05:** every screen must match design D exactly, motion included; asked whether to fold in the
+  phase 2 behaviour changes, answered "Yes, include them now".
+- **Done since phase 1 (type-checked, committed, not yet walked on the phone):** RSVP sheet with profile prefill and
+  the ticket flip; door check-in (scanner box, rolling counts); glass toast with an optional Undo; story viewer photo
+  cross-fade; gallery (1 of n, swipe down to close; Food uses it); apply and sign (short application, one offer page,
+  finger sign pad sending a drawn PNG, terms chips sent with the server terms step, Decline withdraws); landlord
+  one-tap decisions with the slide-away. Toolkit: Stepper, Prefill, Tag, PersonAvatar, RollNumber, DStick, SignPad.
+- **Left:** the checklist in the session scratchpad `gaps.md` (copied below in short): Food review stars drag and
+  review search; question upvote bounce, ask topic chip; badges in 3 steps; base-coat sheets; Saved/Interested/
+  Favourites merge; messages swipe actions; chat side-pop; my-posts undo; edit-profile save as you go; help search;
+  login errors under fields; signup live rules; OTP clear and 0:30 resend; forgot on one screen; onboarding 5 steps;
+  every composer change (story title optional needs a backend DTO change and e2e test); card-to-hero; city picker;
+  then the side-by-side check against the prototype on the phone, docs (build note, tracker, system reviews).
+
 ## 2026-11-05 (latest) - design D phase 1 built on `feature/design-d` (plan 01)
 
 - **State:** of the plan's 57 tracker rows, 40 are rebuilt and seen on the phone, 9 rebuilt but not walked, 2
