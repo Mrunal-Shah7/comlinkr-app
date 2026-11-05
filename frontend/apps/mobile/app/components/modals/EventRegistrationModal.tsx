@@ -15,6 +15,7 @@ import {
 import { Image } from "expo-image"; // SPRINT-31:
 import { FadeImage } from "../../../components/FadeImage"; // SPRINT-31:
 import { LinearGradient } from "expo-linear-gradient";
+import { createThemedStyles } from "../../../src/theme/themedStyles";
 import { Ionicons } from "@expo/vector-icons";
 import * as Brightness from "expo-brightness"; // SPRINT-42: raise screen brightness while QR is visible
 import { Colors } from "../../../src/theme/colors";
@@ -179,7 +180,7 @@ export default function EventRegistrationModal({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              <LinearGradient colors={["#22C55E", "#16A34A"]} style={st.successCircle}>
+              <LinearGradient colors={["#30855B", "#256B49"]} style={st.successCircle}>
                 <Ionicons name="checkmark" size={42} color="#FFF" />
               </LinearGradient>
               <Text style={[st.successTitle, { color: tc.textPrimary }]}>You're Registered! 🎉</Text>
@@ -191,7 +192,7 @@ export default function EventRegistrationModal({
               {/* Ticket visual */}
               <View style={[st.ticketVisual, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
                 <LinearGradient
-                  colors={[Colors.brand.orange, "#CC5800"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={st.ticketHeader}
@@ -258,7 +259,7 @@ export default function EventRegistrationModal({
 
               <Pressable style={st.doneBtn} onPress={resetForm}>
                 <LinearGradient
-                  colors={[Colors.brand.green, "#16A34A"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={st.doneBtnGrad}
@@ -431,7 +432,7 @@ export default function EventRegistrationModal({
                   disabled={!regName.trim() || !validateEmail(regEmail) || registering}
                 >
                   <LinearGradient
-                    colors={(!regName.trim() || !validateEmail(regEmail) || registering) ? ["#D1D5DB", "#D1D5DB"] : [Colors.brand.orange, "#E56800"]}
+                    colors={(!regName.trim() || !validateEmail(regEmail) || registering) ? ["rgba(26,107,174,0.45)", "rgba(48,133,91,0.45)"] : ["#1A6BAE", "#257A86", "#30855B"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={st.confirmBtnGrad}
@@ -457,7 +458,7 @@ export default function EventRegistrationModal({
   );
 }
 
-const st = StyleSheet.create({
+const st = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.55)",
