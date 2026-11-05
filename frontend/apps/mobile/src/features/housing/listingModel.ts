@@ -210,7 +210,7 @@ export function toUiListing(l: HousingListing, _currentUserId?: string | null): 
       since: l.landlord?.since || "2024",
       rating: l.landlord?.rating ?? 4.5,
       responseTime: l.landlord?.responseTime || "N/A",
-      color: l.landlord?.color || "#0076EB",
+      color: l.landlord?.color || "#1A6BAE",
     },
     isOwner: ext.isOwner === true, // SPRINT-42: remove client identity-comparison ownership inference.
     listingStatus: ext.status,

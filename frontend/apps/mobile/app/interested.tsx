@@ -30,7 +30,7 @@ import { createThemedStyles } from '../src/theme/themedStyles';
 
 const TYPE_META: Record<string, { label: string; color: string; bg: string; icon: string; route: string }> = {
   listing:    { label: "Housing",   color: Colors.brand.blue,   bg: "#EEF5FF",  icon: "home-outline",       route: "/(tabs)/housing" },
-  restaurant: { label: "Food",      color: "#FF7B00",           bg: "#FFF3E6",  icon: "restaurant-outline", route: "/(tabs)/food" },
+  restaurant: { label: "Food",      color: "#257A86",           bg: "#E2F0F1",  icon: "restaurant-outline", route: "/(tabs)/food" },
   event:      { label: "Event",     color: "#8B5CF6",           bg: "#F5F3FF",  icon: "calendar-outline",   route: "/(tabs)/feed" },
   post:       { label: "Post",      color: "#0891B2",           bg: "#ECFEFF",  icon: "document-text-outline",route: "/(tabs)/feed" },
   question:   { label: "Q&A",       color: Colors.brand.green,  bg: "#F0FDF4",  icon: "help-circle-outline", route: "/(tabs)/community" },

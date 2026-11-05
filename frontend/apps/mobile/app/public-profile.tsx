@@ -34,19 +34,19 @@ import { showToast } from '../src/shared/ui/Toast';
 
 const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
   homefinder:       { icon: "home",                 color: "#0060D0" },
-  foodie:           { icon: "restaurant",           color: "#FF7B00" },
-  connector:        { icon: "people",               color: "#26B324" },
+  foodie:           { icon: "restaurant",           color: "#257A86" },
+  connector:        { icon: "people",               color: "#30855B" },
   storyteller:      { icon: "book",                 color: "#8B5CF6" },
   explorer:         { icon: "compass",              color: "#06B6D4" },
   neighborly:       { icon: "heart",                color: "#EF4444" },
   local_expert:     { icon: "star",                 color: "#F59E0B" },
   event_host:       { icon: "calendar",             color: "#EC4899" },
   verified_landlord:{ icon: "shield-checkmark",     color: "#0060D0" },
-  verified_owner:   { icon: "shield-checkmark",     color: "#26B324" },
+  verified_owner:   { icon: "shield-checkmark",     color: "#30855B" },
 };
 
 function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: number }) {
-  const colors = ["#0060D0", "#26B324", "#6D28D9", "#D97706", "#DC2626", "#0891B2", "#DB2777"];
+  const colors = ["#0060D0", "#30855B", "#6D28D9", "#D97706", "#DC2626", "#0891B2", "#DB2777"];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   const bg = colors[Math.abs(h) % colors.length];

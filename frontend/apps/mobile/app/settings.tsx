@@ -74,7 +74,7 @@ const BADGE_ITEMS: {
   {
     key: "restaurant_owner",
     icon: "restaurant-outline",
-    iconColors: [Colors.brand.green, "#1a8a18"] as [string, string],
+    iconColors: [Colors.brand.green, "#256B49"] as [string, string],
     title: "Restaurant Owner Badge",
     desc: "Trusted badge on your restaurant listings",
   },
@@ -747,7 +747,7 @@ export default function SettingsScreen() {
         <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>PREFERENCES</Text>
         <SettingsRow
           icon="location-outline"
-          iconColors={["#FF7B00", "#F59E0B"]}
+          iconColors={["#257A86", "#F59E0B"]}
           title="City"
           desc={user?.city || "Update your location"}
           onPress={() => setCityModal(true)}
@@ -764,7 +764,7 @@ export default function SettingsScreen() {
         <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>NOTIFICATIONS</Text>
         <ToggleRow
           icon="notifications-outline"
-          iconColors={["#FF7B00", "#F59E0B"]}
+          iconColors={["#257A86", "#F59E0B"]}
           title="Push notifications"
           desc="Event reminders and updates"
           enabled={pushEnabled}
@@ -879,7 +879,7 @@ export default function SettingsScreen() {
                 }
               }}
               right={
-                <View style={[s.applyBadgeBtn, st === "APPROVED" && { backgroundColor: "#EAFBE9", borderColor: "#BBF7D0" }]}>
+                <View style={[s.applyBadgeBtn, st === "APPROVED" && { backgroundColor: "#E3F1EA", borderColor: "#BBF7D0" }]}>
                   <Text style={[s.applyBadgeBtnText, { color: labelColor }]}>{label}</Text>
                 </View>
               }
@@ -950,7 +950,7 @@ export default function SettingsScreen() {
         <View style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
           <TouchableOpacity onPress={onPressMyRestaurantsHeader} activeOpacity={0.75}>
             <View style={s.cardInner}>
-              <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
+              <LinearGradient colors={[Colors.brand.green, "#256B49"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
                 <Ionicons name="fast-food-outline" size={18} color="#FFF" />
               </LinearGradient>
               <View style={s.cardText}>
@@ -1145,7 +1145,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="location-outline"
-            iconColors={["#FF7B00", "#F59E0B"]}
+            iconColors={["#257A86", "#F59E0B"]}
             title="Show location"
             desc="Display city on profile"
             enabled={showLocation}
@@ -1480,7 +1480,7 @@ const s = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
-    backgroundColor: "#EAFBE9",
+    backgroundColor: "#E3F1EA",
     borderRadius: rs(20),
     paddingHorizontal: rs(10),
     paddingVertical: rs(5),

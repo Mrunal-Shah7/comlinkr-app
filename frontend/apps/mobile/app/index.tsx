@@ -19,7 +19,7 @@ export default function Index() {
           contentFit="contain"
           transition={200}
         />
-        <ActivityIndicator size="large" color="#0076EB" />
+        <ActivityIndicator size="large" color="#1A6BAE" />
       </View>
     );
   }

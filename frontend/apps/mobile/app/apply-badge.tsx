@@ -78,7 +78,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   landlord: {
     label: "Verified Property Host",
     icon: "home",
-    gradient: ["#0076EB", "#0054CC"],
+    gradient: ["#1A6BAE", "#0054CC"],
     description: "List your property for rent, accommodation sharing, or short-stay on ComLinkr. Open to property owners and authorized managers.",
     unlocks: ["Verified trust badge on all your listings", "Priority placement in housing search results", "Direct tenant messaging"],
     requirements: ["Passport or government-issued photo ID", "Proof of right to list the property (ownership deed, tenancy agreement, or management authorization)", "Contact phone number", "Property address you intend to list"],
@@ -90,7 +90,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   restaurant_owner: {
     label: "Verified Restaurant Owner",
     icon: "restaurant",
-    gradient: ["#26B324", "#1a8a18"],
+    gradient: ["#30855B", "#256B49"],
     description: "Register your restaurant on ComLinkr and connect with local food lovers.",
     unlocks: ["Verified Business badge on your restaurant posts", "Priority placement in food search results", "Reply to community reviews", "Manage menu & hours"],
     requirements: ["Business registration number / license", "Government-issued ID", "Business phone and email", "Restaurant physical address"],
@@ -102,7 +102,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   agency: {
     label: "Verified Agency",
     icon: "business",
-    gradient: ["#FF7B00", "#E56800"],
+    gradient: ["#257A86", "#E56800"],
     description: "Manage and list properties on behalf of multiple landlords. Ideal for lettings agencies.",
     unlocks: ["Unlimited listings", "Agency branding on all listings", "Priority search placement", "Multi-agent team support", "Agency Dashboard"],
     requirements: ["Registered company/agency name", "Business registration certificate", "Agency license number (if applicable)", "Primary contact name and title", "Business phone and email"],
@@ -427,7 +427,7 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
     marketDisplayName: "United Kingdom",
     docsCardTitle: "UK Accepted Documents",
     docsCardNote: "Documents in Welsh are also accepted. Foreign-language documents must include a certified English translation.",
-    docsCardGradient: ["#003087", "#0076EB"],
+    docsCardGradient: ["#003087", "#1A6BAE"],
   },
   // CA: {
   //   govIdDoc: "Passport, Provincial ID, or PR Card",
@@ -702,7 +702,7 @@ export default function ApplyBadgeScreen() {
             onPress={() => router.push("/verification-status" as any)}
             style={{ marginTop: rs(16) }}
           >
-            <LinearGradient colors={["#0076EB", "#0054CC"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={["#1A6BAE", "#0054CC"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>Open verification status</Text>
               <Ionicons name="arrow-forward" size={16} color="#FFF" />
             </LinearGradient>
@@ -799,7 +799,7 @@ export default function ApplyBadgeScreen() {
           <View style={[styles.unlockCardBody, { backgroundColor: tc.cardBg }]}>
             {config.unlocks.map((u, i) => (
               <View key={i} style={styles.unlockRow}>
-                <Ionicons name="checkmark-circle" size={14} color="#26B324" />
+                <Ionicons name="checkmark-circle" size={14} color="#30855B" />
                 <Text style={[styles.unlockText, { color: tc.textSecondary }]}>{u}</Text>
               </View>
             ))}
@@ -1262,7 +1262,7 @@ export default function ApplyBadgeScreen() {
   // ── Step 5: Confirmation ────────────────────────────────────────────────────
   const renderConfirmation = () => (
     <View style={[styles.section, { alignItems: "center", paddingTop: rs(40) }]}>
-      <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.successCircle}>
+      <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.successCircle}>
         <Ionicons name="checkmark" size={40} color="#FFF" />
       </LinearGradient>
       <Text style={[styles.successTitle, { color: tc.textPrimary }]}>Application Submitted!</Text>
@@ -1277,7 +1277,7 @@ export default function ApplyBadgeScreen() {
           "Once approved, your badge activates immediately",
         ].map((step, i) => (
           <View key={i} style={styles.nextStepRow}>
-            <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.nextStepNum}>
+            <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextStepNum}>
               <Text style={styles.nextStepNumText}>{i + 1}</Text>
             </LinearGradient>
             <Text style={[styles.nextStepText, { color: tc.textSecondary }]}>{step}</Text>
@@ -1290,7 +1290,7 @@ export default function ApplyBadgeScreen() {
           <Text style={styles.outlineBtnText}>Check Status</Text>
         </Pressable>
         <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={{ flex: 1 }}>
-          <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+          <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             <Text style={styles.nextBtnText}>Back to Home</Text>
           </LinearGradient>
         </Pressable>

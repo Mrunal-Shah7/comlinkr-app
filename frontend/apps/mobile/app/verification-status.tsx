@@ -30,9 +30,9 @@ import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 
 const BADGE_META: Record<string, { label: string; icon: string; gradient: [string, string]; unlocks: string }> = {
-  landlord:         { label: "Verified Landlord",         icon: "home",       gradient: ["#0076EB", "#0054CC"], unlocks: "Post housing listings & manage properties" },
-  restaurant_owner: { label: "Verified Restaurant Owner", icon: "restaurant", gradient: ["#26B324", "#1a8a18"], unlocks: "List & manage your restaurant" },
-  agency:           { label: "Verified Agency",           icon: "business",   gradient: ["#FF7B00", "#E56800"], unlocks: "Post unlimited listings with agency branding" },
+  landlord:         { label: "Verified Landlord",         icon: "home",       gradient: ["#1A6BAE", "#0054CC"], unlocks: "Post housing listings & manage properties" },
+  restaurant_owner: { label: "Verified Restaurant Owner", icon: "restaurant", gradient: ["#30855B", "#256B49"], unlocks: "List & manage your restaurant" },
+  agency:           { label: "Verified Agency",           icon: "business",   gradient: ["#257A86", "#E56800"], unlocks: "Post unlimited listings with agency branding" },
   local_reviewer:   { label: "Local Reviewer",            icon: "star",       gradient: ["#8B5CF6", "#6D3FD1"], unlocks: "Share trusted local reviews & recommendations" },
 };
 
@@ -342,7 +342,7 @@ export default function VerificationStatusScreen() {
       >
         {/* Intro card */}
         <LinearGradient
-          colors={["#0076EB", "#26B324"]}
+          colors={["#1A6BAE", "#30855B"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.introCard}
@@ -395,7 +395,7 @@ export default function VerificationStatusScreen() {
             { icon: "checkmark-circle", text: "All badge revocations are permanent and immediately effective" },
           ].map((item, i) => (
             <View key={i} style={styles.protectionRow}>
-              <Ionicons name={item.icon as any} size={14} color="#26B324" />
+              <Ionicons name={item.icon as any} size={14} color="#30855B" />
               <Text style={[styles.protectionText, { color: tc.textSecondary }]}>{item.text}</Text>
             </View>
           ))}

@@ -34,7 +34,7 @@ export function LinkifiedText({
         return (
           <React.Fragment key={i}>
             <Text
-              style={linkStyle ?? { color: "#0076EB", textDecorationLine: "underline" }}
+              style={linkStyle ?? { color: "#1A6BAE", textDecorationLine: "underline" }}
               onPress={() => {
                 Linking.openURL(url).catch(() => {
                   appAlert("Could not open link", "This link could not be opened.");

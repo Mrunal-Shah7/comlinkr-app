@@ -30,12 +30,12 @@ type VerificationLevel = "basic" | "verified" | "fully_verified";
 
 const VERIFICATION_PILL: Record<VerificationLevel, { label: string; color: string; bg: string }> = {
   basic:          { label: "Basic Verified",  color: "#3B82F6", bg: "#EFF6FF" },
-  verified:       { label: "Verified",         color: "#26B324", bg: "#EAFBE9" },
+  verified:       { label: "Verified",         color: "#30855B", bg: "#E3F1EA" },
   fully_verified: { label: "Fully Verified",   color: "#D97706", bg: "#FFFBEB" },
 };
 
 const LISTING_STATUS_PILL: Record<"AVAILABLE" | "RENTED" | "UNLISTED", { label: string; color: string; bg: string }> = {
-  AVAILABLE: { label: "Active",   color: "#26B324", bg: "#EAFBE9" },
+  AVAILABLE: { label: "Active",   color: "#30855B", bg: "#E3F1EA" },
   RENTED:    { label: "Rented",   color: "#DC2626", bg: "#FEE2E2" },
   UNLISTED:  { label: "Unlisted", color: "#6B7280", bg: "#F3F4F6" },
 };
@@ -169,7 +169,7 @@ export default function MyListingsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const badgeGradient: [string, string] = isVerifiedAgency ? ["#FF7B00", "#E56800"] : ["#0076EB", "#0054CC"];
+  const badgeGradient: [string, string] = isVerifiedAgency ? ["#257A86", "#E56800"] : ["#1A6BAE", "#0054CC"];
   const badgeLabel = isVerifiedAgency ? "Verified Agency" : "Verified Landlord";
   const maxListings = isVerifiedAgency ? "Unlimited" : "5";
 
@@ -252,7 +252,7 @@ export default function MyListingsScreen() {
             { icon: "star-outline", value: listings.filter((l) => l.isFeatured ?? l.featured).length, label: "Featured" }, // SPRINT-42: use canonical featured alias.
           ].map((s, i) => (
             <View key={i} style={[styles.overviewCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.overviewIcon}>
+              <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.overviewIcon}>
                 <Ionicons name={s.icon as any} size={14} color="#FFF" />
               </LinearGradient>
               <Text style={[styles.overviewValue, { color: tc.textPrimary }]}>{s.value}</Text>
@@ -383,7 +383,7 @@ export default function MyListingsScreen() {
                     onPress={() => router.push("/landlord-dashboard" as any)}
                     style={styles.chatBtn}
                   >
-                    <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.chatBtnGrad}>
+                    <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.chatBtnGrad}>
                       <Ionicons name="chatbubble-outline" size={14} color="#FFF" />
                       <Text style={styles.chatBtnText}>Inquiries</Text>
                     </LinearGradient>
@@ -425,8 +425,8 @@ export default function MyListingsScreen() {
                     </Text>
                   </View>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: "#EAFBE9" }]}>
-                  <Text style={[styles.statusBadgeText, { color: "#26B324" }]}>
+                <View style={[styles.statusBadge, { backgroundColor: "#E3F1EA" }]}>
+                  <Text style={[styles.statusBadgeText, { color: "#30855B" }]}>
                     {space.availableSpots > 0 ? `${space.availableSpots} spot${space.availableSpots > 1 ? "s" : ""} open` : "Full"}
                   </Text>
                 </View>
@@ -484,8 +484,8 @@ export default function MyListingsScreen() {
                   ) : (
                     (applicantsMap[space.id] ?? []).map((app) => {
                       const isOpen = expandedApplicant === app.id;
-                      const statusColor = app.status === "approved" ? "#26B324" : app.status === "rejected" ? "#EF4444" : "#D97706";
-                      const statusBg = app.status === "approved" ? "#EAFBE9" : app.status === "rejected" ? "#FEF2F2" : "#FFFBEB";
+                      const statusColor = app.status === "approved" ? "#30855B" : app.status === "rejected" ? "#EF4444" : "#D97706";
+                      const statusBg = app.status === "approved" ? "#E3F1EA" : app.status === "rejected" ? "#FEF2F2" : "#FFFBEB";
                       return (
                         <View key={app.id} style={{ marginBottom: rs(8), borderRadius: rs(12), borderWidth: 1, borderColor: tc.borderLight, backgroundColor: tc.cardBg, overflow: "hidden" }}>
                           {/* Applicant row */}
@@ -585,10 +585,10 @@ export default function MyListingsScreen() {
                                   </Pressable>
                                   <Pressable
                                     onPress={() => void handleDecide(space.id, app.id, "approved")}
-                                    style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(4), paddingVertical: rs(9), borderRadius: rs(10), backgroundColor: "#EAFBE9", borderWidth: 1, borderColor: "#86EFAC" }}
+                                    style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(4), paddingVertical: rs(9), borderRadius: rs(10), backgroundColor: "#E3F1EA", borderWidth: 1, borderColor: "#86EFAC" }}
                                   >
-                                    <Ionicons name="checkmark-circle-outline" size={15} color="#26B324" />
-                                    <Text style={{ fontSize: rs(13), fontWeight: "700", color: "#26B324" }}>Approve</Text>
+                                    <Ionicons name="checkmark-circle-outline" size={15} color="#30855B" />
+                                    <Text style={{ fontSize: rs(13), fontWeight: "700", color: "#30855B" }}>Approve</Text>
                                   </Pressable>
                                 </View>
                               )}
@@ -624,7 +624,7 @@ export default function MyListingsScreen() {
                   <Text style={[styles.deactivateBtnText, isDark && { color: tc.textSecondary }]}>Delete</Text>
                 </Pressable>
                 <Pressable onPress={() => router.push("/chat" as any)} style={styles.chatBtn}>
-                  <LinearGradient colors={["#0076EB", "#26B324"]} style={styles.chatBtnGrad}>
+                  <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.chatBtnGrad}>
                     <Ionicons name="chatbubble-outline" size={14} color="#FFF" />
                     <Text style={styles.chatBtnText}>Inquiries</Text>
                   </LinearGradient>
@@ -678,14 +678,14 @@ export default function MyListingsScreen() {
           {[
             {
               icon: "person-circle-outline" as const,
-              color: "#0076EB",
+              color: "#1A6BAE",
               bg: "#EEF5FF",
               title: "Verify the tenant's identity first",
               desc: "Before conducting a video tour, ask the prospective tenant to confirm their ComLinkr verified profile. Only show the property to users with a verified government ID on file.",
             },
             {
               icon: "videocam-outline" as const,
-              color: "#0076EB",
+              color: "#1A6BAE",
               bg: "#EEF5FF",
               title: "Conduct tours via ComLinkr chat only",
               desc: "Always schedule and confirm video tours through in-app messages — never via WhatsApp, email, or phone call. This creates a timestamped record protecting you against false claims.",
@@ -968,7 +968,7 @@ const styles = createThemedStyles({
   videoRequestCtaText: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#0076EB",
+    color: "#1A6BAE",
   },
   remoteTip: {
     flexDirection: "row",

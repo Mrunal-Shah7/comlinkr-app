@@ -53,8 +53,8 @@ export function VerificationBanner({ badge, status, rejectionReason }: Verificat
   if (status === "verified") {
     return (
       <View style={[styles.banner, styles.verifiedBanner]}>
-        <LinearGradient colors={["#EAFBE9", "#DCFCE7"]} style={styles.bannerBg} />
-        <View style={[styles.iconBox, { backgroundColor: "#26B324" }]}>
+        <LinearGradient colors={["#E3F1EA", "#DCFCE7"]} style={styles.bannerBg} />
+        <View style={[styles.iconBox, { backgroundColor: "#30855B" }]}>
           <Ionicons name="checkmark-circle" size={rs(14)} color="#FFF" />
         </View>
         <View style={styles.bannerText}>

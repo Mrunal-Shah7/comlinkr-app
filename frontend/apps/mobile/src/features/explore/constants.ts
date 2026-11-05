@@ -274,11 +274,11 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
 ];
 
 export const STORY_CATEGORY_META: Record<Exclude<StoryCategory, "All">, { icon: string; color: string; bg: string; darkBg: string }> = {
-  Events:       { icon: "calendar-outline",      color: "#FF7B00", bg: "#FFF3E6", darkBg: "rgba(255,123,0,0.18)" },
+  Events:       { icon: "calendar-outline",      color: "#257A86", bg: "#E2F0F1", darkBg: "rgba(37,122,134,0.18)" },
   Food:         { icon: "restaurant-outline",    color: "#EF4444", bg: "#FEE2E2", darkBg: "rgba(239,68,68,0.18)" },
-  Housing:      { icon: "home-outline",           color: Colors.brand.blue, bg: Colors.brand.blueLight, darkBg: "rgba(0,118,235,0.18)" },
+  Housing:      { icon: "home-outline",           color: Colors.brand.blue, bg: Colors.brand.blueLight, darkBg: "rgba(26,107,174,0.18)" },
   Culture:      { icon: "color-palette-outline",  color: "#8B5CF6", bg: "#F3F0FF", darkBg: "rgba(139,92,246,0.18)" },
-  "Local News": { icon: "newspaper-outline",     color: Colors.brand.green, bg: Colors.brand.greenLight, darkBg: "rgba(38,179,36,0.18)" },
+  "Local News": { icon: "newspaper-outline",     color: Colors.brand.green, bg: Colors.brand.greenLight, darkBg: "rgba(48,133,91,0.18)" },
 };
 
 // ── My Area Live Data ──────────────────────────────────
@@ -435,16 +435,16 @@ export const LIVE_CATEGORY_META: Record<Exclude<LiveCategory, "All">, { emoji: s
   Housing:   { emoji: "🏠", icon: "home-outline",          color: Colors.brand.blue, bg: "#E8F0FE" },
   Roommates: { emoji: "🤝", icon: "people-outline",        color: "#8B5CF6",         bg: "#F3F0FF" },
   Food:      { emoji: "🍜", icon: "restaurant-outline",    color: "#EF4444",         bg: "#FEE2E2" },
-  Events:    { emoji: "🎉", icon: "calendar-outline",      color: "#FF7B00",         bg: "#FFF3E6" },
+  Events:    { emoji: "🎉", icon: "calendar-outline",      color: "#257A86",         bg: "#E2F0F1" },
   Alerts:    { emoji: "⚠️", icon: "warning-outline",       color: "#D97706",         bg: "#FEF3C7" },
-  News:      { emoji: "📰", icon: "newspaper-outline",     color: Colors.brand.green, bg: "#EAFBE9" },
+  News:      { emoji: "📰", icon: "newspaper-outline",     color: Colors.brand.green, bg: "#E3F1EA" },
 };
 
 // ── Event category badge colors ─────────────────────────
 export const CATEGORY_COLOR: Record<string, { bg: string; text: string }> = {
   Community: { bg: "#E0F7FA", text: "#0891B2" },
-  Food:      { bg: "#FFF3E6", text: "#FF7B00" },
-  Arts:      { bg: "#EAFBE9", text: "#26B324" },
-  Tech:      { bg: "#EBF4FF", text: "#0076EB" },
-  Wellness:  { bg: "#EAFBE9", text: "#26B324" },
+  Food:      { bg: "#E2F0F1", text: "#257A86" },
+  Arts:      { bg: "#E3F1EA", text: "#30855B" },
+  Tech:      { bg: "#EBF4FF", text: "#1A6BAE" },
+  Wellness:  { bg: "#E3F1EA", text: "#30855B" },
 };

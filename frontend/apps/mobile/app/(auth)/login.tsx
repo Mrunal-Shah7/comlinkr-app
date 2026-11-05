@@ -37,7 +37,7 @@ import { appAlert } from '../../src/shared/ui/Dialogs';
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#0076EB", "#26B324"],
+  colors = ["#1A6BAE", "#30855B"],
   style,
 }: {
   text: string;
@@ -250,11 +250,11 @@ export default function LoginScreen() {
             </View>
 
             {/* Card */}
-            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(0,118,235,0.06)" }]}>
+            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(26,107,174,0.06)" }]}>
               <GradientText
                 text="Welcome back"
                 style={styles.heading}
-                colors={["#0076EB", "#26B324"]}
+                colors={["#1A6BAE", "#30855B"]}
               />
               <Text style={[styles.subheading, { color: tc.textSecondary }]}>
                 Sign in to continue exploring
@@ -281,7 +281,7 @@ export default function LoginScreen() {
                         <GradientText
                           text="Continue with Google"
                           style={styles.socialLabel}
-                          colors={["#4285F4", "#0076EB"]}
+                          colors={["#4285F4", "#1A6BAE"]}
                         />
                       </>
                     )}
@@ -372,7 +372,7 @@ export default function LoginScreen() {
                 <GradientText
                   text="Forgot password?"
                   style={styles.forgotText}
-                  colors={["#0076EB", "#0066DD"]}
+                  colors={["#1A6BAE", "#0066DD"]}
                 />
               </Pressable>
 
@@ -387,7 +387,7 @@ export default function LoginScreen() {
                 ]}
               >
                 <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.loginBtnGradient}
@@ -406,7 +406,7 @@ export default function LoginScreen() {
                 <GradientText
                   text="Create account"
                   style={styles.footerLink}
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                 />
               </Pressable>
             </View>
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(0, 118, 235, 0.08)",
+    backgroundColor: "rgba(26,107,174, 0.08)",
     top: -60,
     right: -80,
   },
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: "rgba(38, 179, 36, 0.07)",
+    backgroundColor: "rgba(48,133,91, 0.07)",
     bottom: 60,
     left: -60,
   },
@@ -465,13 +465,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 18,
     elevation: 10,
     borderWidth: 2,
-    borderColor: "rgba(0,118,235,0.12)",
+    borderColor: "rgba(26,107,174,0.12)",
   },
   logo: {
     width: rs(88),
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
   loginBtn: {
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,

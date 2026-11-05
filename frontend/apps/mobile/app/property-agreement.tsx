@@ -696,8 +696,8 @@ export default function PropertyAgreementScreen() {
                   value: "in_person" as const,
                   icon: "home-outline" as const,
                   label: "Yes — visited in person",
-                  color: "#26B324",
-                  bg: "#EAFBE9",
+                  color: "#30855B",
+                  bg: "#E3F1EA",
                   border: "#BBF7D0",
                 },
                 {
@@ -783,7 +783,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#FF7B00", "#E56800"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#257A86", "#E56800"]} style={styles.sectionIcon}>
                   <Ionicons name="document-attach" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Landlord's Offer</Text>
@@ -1002,7 +1002,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#30855B", "#256B49"]} style={styles.sectionIcon}>
                   <Ionicons name="pencil" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Sign the Agreement</Text>
@@ -1061,7 +1061,7 @@ export default function PropertyAgreementScreen() {
           <View>
             {/* Success header */}
             <View style={[styles.successBanner, { backgroundColor: tc.cardBg, borderColor: isDark ? "#1A4A2A" : "#86EFAC" }]}>
-              <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.successIconCircle}>
+              <LinearGradient colors={["#30855B", "#256B49"]} style={styles.successIconCircle}>
                 <Ionicons name="checkmark" size={32} color="#FFF" />
               </LinearGradient>
               <Text style={[styles.successTitle, { color: tc.textPrimary }]}>Agreement Signed!</Text>
@@ -1198,9 +1198,9 @@ export default function PropertyAgreementScreen() {
               <LinearGradient
                 colors={
                   step === 4
-                    ? ["#26B324", "#1a8a18"]
+                    ? ["#30855B", "#256B49"]
                     : step === 2 && offerAccepted === "accepted"
-                    ? ["#26B324", "#1a8a18"]
+                    ? ["#30855B", "#256B49"]
                     : [Colors.brand.blue, "#0054CC"]
                 }
                 start={{ x: 0, y: 0 }}
@@ -1227,7 +1227,7 @@ export default function PropertyAgreementScreen() {
             style={{ flex: 1, borderRadius: rs(14), overflow: "hidden" }}
           >
             <LinearGradient
-              colors={["#26B324", "#1a8a18"]}
+              colors={["#30855B", "#256B49"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGrad}

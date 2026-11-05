@@ -19,8 +19,8 @@ import { useRouter } from "expo-router";
 import { useTheme } from "../src/theme/useTheme";
 import { createThemedStyles } from '../src/theme/themedStyles';
 
-const BRAND_BLUE = "#0076EB";
-const BRAND_GREEN = "#26B324";
+const BRAND_BLUE = "#1A6BAE";
+const BRAND_GREEN = "#30855B";
 
 // ── FAQ Data ──
 const FAQ_SECTIONS = [
@@ -276,7 +276,7 @@ export default function HelpSupportScreen() {
             style={s.tipGrad}
           >
             <View style={[s.tipIconWrap, isDark && { backgroundColor: "#2A1A00" }]}>
-              <Ionicons name="bulb-outline" size={24} color="#FF7B00" />
+              <Ionicons name="bulb-outline" size={24} color="#257A86" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[s.tipTitle, { color: tc.textPrimary }]}>Community Tip</Text>
@@ -310,7 +310,7 @@ const s = createThemedStyles({
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(0,118,235,0.15)",
+    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
   },
@@ -459,7 +459,7 @@ const s = createThemedStyles({
   tipGrad: { flexDirection: "row", alignItems: "center", gap: rs(14), padding: rs(16) },
   tipIconWrap: {
     width: rs(44), height: rs(44), borderRadius: rs(14),
-    backgroundColor: "#FFF3E6", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#E2F0F1", alignItems: "center", justifyContent: "center",
   },
   tipTitle: { fontSize: rs(14), fontWeight: "700", color: "#0A1628", marginBottom: rs(2) },
   tipText: { fontSize: rs(12), color: "#6B7280", lineHeight: rs(18), fontWeight: "500" },

@@ -29,7 +29,7 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   {
     icon: "home-outline",
     color: Colors.brand.green,
-    bg: "#EAFBE9",
+    bg: "#E3F1EA",
     market: null,
     title: "Visit before you commit",
     desc: "Always visit the property in person before paying anything. Refuse to pay anyone who won't let you see the property.",
@@ -102,7 +102,7 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   },
   {
     icon: "alert-circle-outline",
-    color: "#0076EB",
+    color: "#1A6BAE",
     bg: "#EEF5FF",
     market: "UK",
     title: "UK: Know your tenant rights",
@@ -110,8 +110,8 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   },
   {
     icon: "business-outline",
-    color: "#26B324",
-    bg: "#EAFBE9",
+    color: "#30855B",
+    bg: "#E3F1EA",
     market: "UK",
     title: "UK: Check if agent is registered",
     desc: "Lettings agents in England must be registered with an approved redress scheme (Property Ombudsman or PRS) and hold Client Money Protection. Ask to see their certificates.",

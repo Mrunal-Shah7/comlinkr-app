@@ -38,7 +38,7 @@ import { showToast } from '../../src/shared/ui/Toast';
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#0076EB", "#26B324"],
+  colors = ["#1A6BAE", "#30855B"],
   style,
 }: {
   text: string;
@@ -280,7 +280,7 @@ export default function SignupScreen() {
     : password.length < 10 ? 2
     : 3;
 
-  const strengthColors = ["#E5E7EB", "#EF4444", "#FF7B00", "#26B324"];
+  const strengthColors = ["#E5E7EB", "#EF4444", "#257A86", "#30855B"];
   const strengthLabels = ["", "Weak", "Good", "Strong"];
 
   return (
@@ -350,11 +350,11 @@ export default function SignupScreen() {
             </View>
 
             {/* Card */}
-            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(0,118,235,0.06)" }]}>
+            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(26,107,174,0.06)" }]}>
               <GradientText
                 text={step === "form" ? "Create account" : "Verify email"}
                 style={styles.heading}
-                colors={["#0076EB", "#26B324"]}
+                colors={["#1A6BAE", "#30855B"]}
               />
               <Text style={[styles.subheading, { color: tc.textSecondary }]}>
                 {step === "form"
@@ -378,7 +378,7 @@ export default function SignupScreen() {
                     <GradientText
                       text="Continue with Google"
                       style={styles.socialLabel}
-                      colors={["#4285F4", "#0076EB"]}
+                      colors={["#4285F4", "#1A6BAE"]}
                     />
                   </View>
                 </Pressable>
@@ -486,8 +486,8 @@ export default function SignupScreen() {
                   hitSlop={8}
                   style={({ pressed }) => [{ marginBottom: 12, opacity: pressed ? 0.7 : 1, flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start" }]}
                 >
-                  <Ionicons name="arrow-back" size={17} color="#0076EB" />
-                  <Text style={{ color: "#0076EB", fontWeight: "600", fontSize: 15, lineHeight: 20 }}>Edit details</Text>
+                  <Ionicons name="arrow-back" size={17} color="#1A6BAE" />
+                  <Text style={{ color: "#1A6BAE", fontWeight: "600", fontSize: 15, lineHeight: 20 }}>Edit details</Text>
                 </Pressable>
                 <Input
                   ref={codeRef}
@@ -539,7 +539,7 @@ export default function SignupScreen() {
               {/* Username hint */}
               {step === "form" && username.length > 0 && username.length < 3 && (
                 <View style={styles.hintBox}>
-                  <Ionicons name="information-circle-outline" size={rs(14)} color="#0076EB" />
+                  <Ionicons name="information-circle-outline" size={rs(14)} color="#1A6BAE" />
                   <Text style={styles.hintText}>Username needs at least 3 characters</Text>
                 </View>
               )}
@@ -564,8 +564,8 @@ export default function SignupScreen() {
                   <View
                     style={[
                       styles.checkbox,
-                      { borderColor: agreedToTerms ? "#0076EB" : tc.borderLight },
-                      agreedToTerms && { backgroundColor: "#0076EB" },
+                      { borderColor: agreedToTerms ? "#1A6BAE" : tc.borderLight },
+                      agreedToTerms && { backgroundColor: "#1A6BAE" },
                     ]}
                   >
                     {agreedToTerms ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
@@ -595,7 +595,7 @@ export default function SignupScreen() {
                 ]}
               >
                 <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.signupBtnGradient}
@@ -620,7 +620,7 @@ export default function SignupScreen() {
                 <GradientText
                   text="Sign in"
                   style={styles.footerLink}
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                 />
               </Pressable>
             </View>
@@ -653,7 +653,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(0, 118, 235, 0.08)",
+    backgroundColor: "rgba(26,107,174, 0.08)",
     top: -60,
     right: -80,
   },
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: "rgba(38, 179, 36, 0.07)",
+    backgroundColor: "rgba(48,133,91, 0.07)",
     bottom: 80,
     left: -60,
   },
@@ -679,13 +679,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 9,
     borderWidth: 2,
-    borderColor: "rgba(0,118,235,0.12)",
+    borderColor: "rgba(26,107,174,0.12)",
   },
   logo: {
     width: rs(80),
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
     borderRadius: rs(14),
     overflow: "hidden",
     marginTop: rs(10),
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,

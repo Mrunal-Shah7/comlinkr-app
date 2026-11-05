@@ -337,7 +337,7 @@ export const rm = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "rgba(0,118,235,0.08)",
+    backgroundColor: "rgba(26,107,174,0.08)",
     alignItems: "center",
     justifyContent: "center",
   },

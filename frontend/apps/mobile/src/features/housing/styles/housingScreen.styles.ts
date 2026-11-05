@@ -424,7 +424,7 @@ export const s = StyleSheet.create({
     color: "#92400E",
   },
   newBadge: {
-    backgroundColor: "#FF7B00",
+    backgroundColor: "#257A86",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
@@ -681,7 +681,7 @@ export const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#EAFBE9",
+    backgroundColor: "#E3F1EA",
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 5,

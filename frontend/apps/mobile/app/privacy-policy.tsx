@@ -15,8 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../src/theme/useTheme";
 
-const BRAND_BLUE = "#0076EB";
-const BRAND_GREEN = "#26B324";
+const BRAND_BLUE = "#1A6BAE";
+const BRAND_GREEN = "#30855B";
 
 export const PRIVACY_POLICY_VERSION = "2.0";
 const LAST_UPDATED = "July 7, 2026";
@@ -365,7 +365,7 @@ export default function PrivacyPolicyScreen() {
               { icon: "checkmark-circle" as const, text: "We never sell your data", color: BRAND_GREEN },
               { icon: "lock-closed" as const, text: "Encrypted in transit", color: BRAND_GREEN },
               { icon: "person-circle" as const, text: "You control your data", color: BRAND_BLUE },
-              { icon: "trash-outline" as const, text: "Delete anytime", color: "#FF7B00" },
+              { icon: "trash-outline" as const, text: "Delete anytime", color: "#257A86" },
             ].map((item, idx) => (
               <View key={idx} style={s.summaryItem}>
                 <View style={[s.summaryItemIcon, { backgroundColor: item.color + "14" }]}>
@@ -515,7 +515,7 @@ const s = StyleSheet.create({
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(0,118,235,0.15)",
+    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
   },

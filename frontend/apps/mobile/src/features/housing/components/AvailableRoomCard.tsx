@@ -33,7 +33,7 @@ export function AvailableRoomCard({
   const currencyCode = getUserCurrencyCode(user);
   const compat = computeRoomCompatibility(room, buildCurrentUserForMatch(user));
   const compatColor = compat >= 80 ? Colors.brand.green : compat >= 60 ? Colors.brand.blue : Colors.brand.orange;
-  const compatBg = compat >= 80 ? "#DCFCE7" : compat >= 60 ? "#E6F4FE" : "#FFF3E6";
+  const compatBg = compat >= 80 ? "#DCFCE7" : compat >= 60 ? "#E3EDF6" : "#E2F0F1";
 
   return (
     <View style={[ar.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
@@ -107,14 +107,14 @@ export function AvailableRoomCard({
 
         {/* Quick chips */}
         <View style={ar.chipsRow}>
-          <View style={[ar.chip, { backgroundColor: room.furnished ? "#E6F4FE" : "#F3F4F6" }]}>
+          <View style={[ar.chip, { backgroundColor: room.furnished ? "#E3EDF6" : "#F3F4F6" }]}>
             <Ionicons name="cube-outline" size={11} color={room.furnished ? Colors.brand.blue : Colors.text.tertiary} />
             <Text style={[ar.chipText, { color: room.furnished ? Colors.brand.blue : Colors.text.tertiary }]}>
               {room.furnished ? "Furnished" : "Unfurnished"}
             </Text>
           </View>
           {room.petFriendly && (
-            <View style={[ar.chip, { backgroundColor: "#FFF3E6" }]}>
+            <View style={[ar.chip, { backgroundColor: "#E2F0F1" }]}>
               <Ionicons name="paw-outline" size={11} color={Colors.brand.orange} />
               <Text style={[ar.chipText, { color: Colors.brand.orange }]}>Pets OK</Text>
             </View>

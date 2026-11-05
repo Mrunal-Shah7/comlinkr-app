@@ -91,7 +91,7 @@ export const HOUSING_LISTINGS: HousingListing[] = [
       since: "2019",
       rating: 4.9,
       responseTime: "< 1 hour",
-      color: "#0076EB",
+      color: "#1A6BAE",
     },
   },
   {
@@ -136,7 +136,7 @@ export const HOUSING_LISTINGS: HousingListing[] = [
       since: "2021",
       rating: 4.7,
       responseTime: "< 2 hours",
-      color: "#26B324",
+      color: "#30855B",
     },
   },
   {
@@ -182,7 +182,7 @@ export const HOUSING_LISTINGS: HousingListing[] = [
       since: "2018",
       rating: 4.5,
       responseTime: "< 4 hours",
-      color: "#FF7B00",
+      color: "#257A86",
     },
   },
   {
@@ -226,7 +226,7 @@ export const HOUSING_LISTINGS: HousingListing[] = [
       since: "2022",
       rating: 4.8,
       responseTime: "< 30 min",
-      color: "#FF7B00",
+      color: "#257A86",
     },
   },
   {

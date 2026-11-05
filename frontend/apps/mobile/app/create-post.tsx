@@ -183,63 +183,63 @@ const POST_TYPES = [
     icon: "newspaper-outline" as const,
     label: "News Post",
     desc: "Share updates & announcements",
-    color: "#0076EB",
-    bg: "#E6F4FE",
-    gradient: ["#0076EB", "#0054CC"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#0054CC"] as [string, string],
   },
   {
     id: "event",
     icon: "calendar-outline" as const,
     label: "Create Event",
     desc: "Organize a local event or meetup",
-    color: "#FF7B00",
-    bg: "#FFF3E6",
-    gradient: ["#FF7B00", "#E56800"] as [string, string],
+    color: "#257A86",
+    bg: "#E2F0F1",
+    gradient: ["#257A86", "#E56800"] as [string, string],
   },
   {
     id: "listing",
     icon: "home-outline" as const,
     label: "Add Listing",
     desc: "List your property for rent or sale",
-    color: "#0076EB",
-    bg: "#E6F4FE",
-    gradient: ["#0076EB", "#0054CC"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#0054CC"] as [string, string],
   },
   {
     id: "shared_space",
     icon: "people-circle-outline" as const,
     label: "List a Space",
     desc: "Offer a room or shared space for co-living",
-    color: "#FF7B00",
+    color: "#257A86",
     bg: "#FFF3E8",
-    gradient: ["#FF7B00", "#E56800"] as [string, string],
+    gradient: ["#257A86", "#E56800"] as [string, string],
   },
   {
     id: "restaurant",
     icon: "restaurant-outline" as const,
     label: "List My Restaurant",
     desc: "Register your restaurant on ComLinkr",
-    color: "#26B324",
-    bg: "#EAFBE9",
-    gradient: ["#26B324", "#1a8a18"] as [string, string],
+    color: "#30855B",
+    bg: "#E3F1EA",
+    gradient: ["#30855B", "#256B49"] as [string, string],
   },
   {
     id: "story",
     icon: "videocam-outline" as const,
     label: "Add Story",
     desc: "Upload a photo or video",
-    color: "#0076EB",
-    bg: "#E6F4FE",
-    gradient: ["#0076EB", "#26B324"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "challenge",
     icon: "trophy-outline" as const,
     label: "Create Challenge",
     desc: "Start an interactive community challenge",
-    color: "#FF7B00",
-    bg: "#FFF3E6",
-    gradient: ["#FF7B00", "#0076EB"] as [string, string],
+    color: "#257A86",
+    bg: "#E2F0F1",
+    gradient: ["#257A86", "#1A6BAE"] as [string, string],
   },
 ];
 
@@ -880,7 +880,7 @@ function PreviewModal({
             <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFF" }}>Interested</Text>
           </View>
           <View style={{ borderRadius: 18, overflow: "hidden" }}>
-            <LinearGradient colors={["#FF7B00", "#E56800"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.eventRsvp}>
+            <LinearGradient colors={["#257A86", "#E56800"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.eventRsvp}>
               <Text style={{ fontSize: 11, fontWeight: "900", color: "#FFF", letterSpacing: 0.5 }}>RSVP</Text>
             </LinearGradient>
           </View>
@@ -898,7 +898,7 @@ function PreviewModal({
         <View style={pv.challengeHeaderDecor2} />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <View style={pv.challengeTypePill}>
-            <Ionicons name="trophy" size={11} color="#FF7B00" />
+            <Ionicons name="trophy" size={11} color="#257A86" />
             <Text style={pv.challengeTypeText}>{challengeType || "CHALLENGE"}</Text>
           </View>
           {challengeDuration ? (
@@ -938,7 +938,7 @@ function PreviewModal({
         <View style={pv.challengeInfoGrid}>
           {challengeGoal ? (
             <View style={[pv.challengeInfoChip, { backgroundColor: "#FFF7ED" }]}>
-              <Ionicons name="flag" size={12} color="#FF7B00" />
+              <Ionicons name="flag" size={12} color="#257A86" />
               <Text style={[pv.challengeInfoText, { color: "#C2410C" }]}>{challengeGoal}</Text>
             </View>
           ) : null}
@@ -949,8 +949,8 @@ function PreviewModal({
             </View>
           ) : null}
           {challengeMaxParticipants ? (
-            <View style={[pv.challengeInfoChip, { backgroundColor: "#E6F4FE" }]}>
-              <Ionicons name="people" size={12} color="#0076EB" />
+            <View style={[pv.challengeInfoChip, { backgroundColor: "#E3EDF6" }]}>
+              <Ionicons name="people" size={12} color="#1A6BAE" />
               <Text style={[pv.challengeInfoText, { color: "#0054CC" }]}>Max {challengeMaxParticipants}</Text>
             </View>
           ) : null}
@@ -1009,8 +1009,8 @@ function PreviewModal({
     const depositStr = listingDeposit?.trim() ? `Deposit ${currSymbol}${listingDeposit}` : null;
     const availStr = listingAvailable?.trim() || null;
     const walkNum = parseInt(listingWalkScore ?? "", 10);
-    const walkColor = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#16A34A" : walkNum >= 70 ? "#B45309" : "#DC2626") : "#0076EB";
-    const walkBg = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#DCFCE7" : walkNum >= 70 ? "#FEF9C3" : "#FEE2E2") : "#E6F4FE";
+    const walkColor = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#16A34A" : walkNum >= 70 ? "#B45309" : "#DC2626") : "#1A6BAE";
+    const walkBg = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#DCFCE7" : walkNum >= 70 ? "#FEF9C3" : "#FEE2E2") : "#E3EDF6";
 
     return (
       <View style={[pv.listCard, { borderColor: tc.borderLight }]}>
@@ -1073,7 +1073,7 @@ function PreviewModal({
                 <Text style={[pv.listLandlordName, { color: tc.textPrimary }]} numberOfLines={1}>{userName}</Text>
                 {listingIsVerified ? (
                   <View style={pv.listVerifiedBadge}>
-                    <Ionicons name="shield-checkmark" size={10} color="#26B324" />
+                    <Ionicons name="shield-checkmark" size={10} color="#30855B" />
                     <Text style={pv.listVerifiedText}>Verified</Text>
                   </View>
                 ) : null}
@@ -1110,10 +1110,10 @@ function PreviewModal({
           {(bedsVal || bathsVal || sqftVal) ? (
             <View style={[pv.listStatsGrid, { borderColor: tc.borderLight }]}>
               {[
-                { icon: "bed-outline" as const, val: bedsVal || "–", lbl: "Beds", bg: "#EEF5FF", color: "#0076EB" },
-                { icon: "water-outline" as const, val: bathsVal || "–", lbl: "Baths", bg: "#EAFBE9", color: "#26B324" },
-                { icon: "resize-outline" as const, val: sqftVal || "–", lbl: "Sqft", bg: "#FFF3E6", color: "#FF7B00" },
-                { icon: "business-outline" as const, val: propTypeVal || "–", lbl: "Type", bg: "#E6F4FE", color: "#0076EB" },
+                { icon: "bed-outline" as const, val: bedsVal || "–", lbl: "Beds", bg: "#EEF5FF", color: "#1A6BAE" },
+                { icon: "water-outline" as const, val: bathsVal || "–", lbl: "Baths", bg: "#E3F1EA", color: "#30855B" },
+                { icon: "resize-outline" as const, val: sqftVal || "–", lbl: "Sqft", bg: "#E2F0F1", color: "#257A86" },
+                { icon: "business-outline" as const, val: propTypeVal || "–", lbl: "Type", bg: "#E3EDF6", color: "#1A6BAE" },
               ].map((st, idx) => (
                 <View key={st.lbl} style={[pv.listStatCell, idx < 3 && pv.listStatCellBorder, idx < 3 && { borderRightColor: tc.borderLight }]}>
                   <View style={[pv.listStatIconBox, { backgroundColor: st.bg }]}>
@@ -1135,8 +1135,8 @@ function PreviewModal({
                 </View>
               ) : null}
               {listingTransitInfo ? (
-                <View style={[pv.listTransportPill, { backgroundColor: "#E6F4FE" }]}>
-                  <Text style={[pv.listTransportText, { color: "#0076EB" }]}>🚇 {listingTransitInfo}</Text>
+                <View style={[pv.listTransportPill, { backgroundColor: "#E3EDF6" }]}>
+                  <Text style={[pv.listTransportText, { color: "#1A6BAE" }]}>🚇 {listingTransitInfo}</Text>
                 </View>
               ) : null}
             </View>
@@ -1152,7 +1152,7 @@ function PreviewModal({
             <View style={pv.listTagsRow}>
               {listingAmenities.slice(0, 4).map((tag, i) => (
                 <View key={i} style={pv.listTagChip}>
-                  <Ionicons name="checkmark-circle" size={11} color="#26B324" />
+                  <Ionicons name="checkmark-circle" size={11} color="#30855B" />
                   <Text style={pv.listTagChipText}>{tag}</Text>
                 </View>
               ))}
@@ -1254,7 +1254,7 @@ function PreviewModal({
           {/* Description (popular dishes / review body) */}
           {body ? (
             <View style={pv.restDishesRow}>
-              <Ionicons name="flame-outline" size={12} color="#FF7B00" />
+              <Ionicons name="flame-outline" size={12} color="#257A86" />
               <Text style={[pv.restDishesText, { color: tc.textSecondary }]} numberOfLines={1}>{body}</Text>
             </View>
           ) : null}
@@ -1270,11 +1270,11 @@ function PreviewModal({
             </View>
             <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
               <View style={pv.restNavBtn}>
-                <Ionicons name="navigate-outline" size={14} color="#0076EB" />
+                <Ionicons name="navigate-outline" size={14} color="#1A6BAE" />
               </View>
               <View style={{ borderRadius: 10, overflow: "hidden" }}>
                 <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={pv.restReserveBtn}
                 >
@@ -1474,7 +1474,7 @@ const pv = StyleSheet.create({
   storyDurText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
   storyNewBadge: {
     position: "absolute", top: 10, left: 10,
-    backgroundColor: "#0076EB", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: "#1A6BAE", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
   storyNewText: { fontSize: 8, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
   storyBody: { padding: 14 },
@@ -1487,7 +1487,7 @@ const pv = StyleSheet.create({
   storyTitle: { fontSize: 15, fontWeight: "700", lineHeight: 21, marginBottom: 4 },
   storyDesc: { fontSize: 13, fontWeight: "500", color: "#6B7280", lineHeight: 18, marginBottom: 8 },
   storyHashRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 },
-  storyHash: { fontSize: 12, fontWeight: "700", color: "#0076EB" },
+  storyHash: { fontSize: 12, fontWeight: "700", color: "#1A6BAE" },
   storyEngBar: {
     flexDirection: "row", alignItems: "center", gap: 16,
     paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E8EDF5",
@@ -1537,7 +1537,7 @@ const pv = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(255,255,255,0.92)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
   },
-  challengeTypeText: { fontSize: 10, fontWeight: "900", color: "#FF7B00", letterSpacing: 0.8, textTransform: "uppercase" },
+  challengeTypeText: { fontSize: 10, fontWeight: "900", color: "#257A86", letterSpacing: 0.8, textTransform: "uppercase" },
   challengeDurPill: {
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10,
@@ -1577,7 +1577,7 @@ const pv = StyleSheet.create({
     paddingHorizontal: 14, paddingBottom: 14, justifyContent: "flex-end", gap: 4,
   },
   listTypePill: {
-    backgroundColor: "rgba(0,118,235,0.88)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 7,
+    backgroundColor: "rgba(26,107,174,0.88)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 7,
   },
   listTypePillText: { fontSize: 10, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
   listAvailNowPill: {
@@ -1590,7 +1590,7 @@ const pv = StyleSheet.create({
   listImageLocation: { fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: "500" },
   listNewBadge: {
     position: "absolute", top: 12, left: 12,
-    backgroundColor: "#0076EB", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: "#1A6BAE", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
   listNewBadgeText: { fontSize: 9, fontWeight: "900", color: "#FFF", letterSpacing: 0.6 },
   listCardBody: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14 },
@@ -1602,10 +1602,10 @@ const pv = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 3,
     backgroundColor: "#DCFCE7", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
   },
-  listVerifiedText: { fontSize: 10, fontWeight: "700", color: "#26B324" },
+  listVerifiedText: { fontSize: 10, fontWeight: "700", color: "#30855B" },
   listChatBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "#0076EB", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
+    backgroundColor: "#1A6BAE", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
   },
   listChatBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
   listTitle: { fontSize: 16, fontWeight: "800", lineHeight: 22, marginBottom: 8 },
@@ -1637,7 +1637,7 @@ const pv = StyleSheet.create({
   listTagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   listTagChip: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#EAFBE9", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: "#E3F1EA", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
   },
   listTagChipText: { fontSize: 11, fontWeight: "600", color: "#166534" },
 
@@ -1698,7 +1698,7 @@ const pv = StyleSheet.create({
   restCardTagText: { fontSize: 10, fontWeight: "600", color: "#166534" },
   restNavBtn: {
     width: 34, height: 34, borderRadius: 10,
-    backgroundColor: "#E6F4FE",
+    backgroundColor: "#E3EDF6",
     alignItems: "center", justifyContent: "center",
   },
   restReserveBtn: {
@@ -1754,7 +1754,7 @@ function MediaPickerSheet({
           onPress={() => { dismiss(); setTimeout(onLibrary, 220); }}
         >
           <View style={mps.iconBox}>
-            <Ionicons name="images-outline" size={22} color="#0076EB" />
+            <Ionicons name="images-outline" size={22} color="#1A6BAE" />
           </View>
           <Text style={[mps.rowText, { color: tc.textPrimary }]}>Photo Library</Text>
           <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
@@ -1763,8 +1763,8 @@ function MediaPickerSheet({
           style={[mps.row, { borderBottomColor: tc.borderLight }]}
           onPress={() => { dismiss(); setTimeout(onCamera, 220); }}
         >
-          <View style={[mps.iconBox, { backgroundColor: "#FFF3E6" }]}>
-            <Ionicons name="camera-outline" size={22} color="#FF7B00" />
+          <View style={[mps.iconBox, { backgroundColor: "#E2F0F1" }]}>
+            <Ionicons name="camera-outline" size={22} color="#257A86" />
           </View>
           <Text style={[mps.rowText, { color: tc.textPrimary }]}>Camera</Text>
           <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
@@ -1791,7 +1791,7 @@ const mps = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  iconBox: { width: 42, height: 42, borderRadius: 12, backgroundColor: "#E6F4FE", alignItems: "center", justifyContent: "center" },
+  iconBox: { width: 42, height: 42, borderRadius: 12, backgroundColor: "#E3EDF6", alignItems: "center", justifyContent: "center" },
   rowText: { flex: 1, fontSize: 16, fontWeight: "600" },
   cancelBtn: { marginHorizontal: 16, marginTop: 12, borderRadius: 14, backgroundColor: "#F3F4F6", paddingVertical: 14, alignItems: "center" },
   cancelText: { fontSize: 16, fontWeight: "700", color: "#374151" },
@@ -2870,7 +2870,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               !isAdmin &&
               !isVerifiedLandlord &&
               !isVerifiedAgency && (
-              <View style={[s.modeLockedNotice, { borderColor: "#26B324", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
+              <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
                 <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
                 <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
                   {"Anyone can list a property — "}
@@ -3691,7 +3691,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 {canPostRestaurant &&
                   !isAdmin &&
                   !isVerifiedRestaurantOwner && (
-                  <View style={[s.modeLockedNotice, { borderColor: "#26B324", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
+                  <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
                     <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
                     <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
                       {"Anyone can post — "}
@@ -3941,7 +3941,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <>
                 {/* Soft verification boost notice */}
                 {!canPostRestaurantReview && (
-                  <View style={[s.modeLockedNotice, { borderColor: "#26B324", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
+                  <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
                     <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
                     <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
                       {"Anyone can review — "}
@@ -4596,7 +4596,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                   style={[s.mediaBtn, { backgroundColor: tc.cardBg, borderColor: type.color + "55" }]}
                   onPress={() => handleAttachSpecificMedia("Videos")}
                 >
-                  <LinearGradient colors={["#26B324", "#1a8a18"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.mediaIconCircle}>
+                  <LinearGradient colors={["#30855B", "#256B49"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.mediaIconCircle}>
                     <Ionicons name="videocam-outline" size={22} color="#FFF" />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>

@@ -402,7 +402,7 @@ export default function SavedScreen() {
                   onPress={() => void unsave(item, active)}
                   hitSlop={10}
                 >
-                  <Ionicons name="bookmark" size={18} color="#FF7B00" />
+                  <Ionicons name="bookmark" size={18} color="#257A86" />
                 </Pressable>
                 {expired ? (
                   <View style={styles.expiredBadge}>
@@ -476,7 +476,7 @@ export default function SavedScreen() {
                   ) : null}
                 </View>
                 <Pressable onPress={() => void unsave(item, active)} hitSlop={10} style={styles.rowBookmark}>
-                  <Ionicons name="bookmark" size={22} color="#FF7B00" />
+                  <Ionicons name="bookmark" size={22} color="#257A86" />
                 </Pressable>
               </Pressable>
             );

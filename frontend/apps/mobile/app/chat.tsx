@@ -98,7 +98,7 @@ function MessageTick({ isOwn, read }: { isOwn: boolean; read?: boolean }) {
 }
 
 // ── Avatar helpers ────────────────────────────────────────────────────────────
-const AVATAR_COLORS = ["#0060D0","#26B324","#6D28D9","#D97706","#DC2626","#0891B2","#DB2777"];
+const AVATAR_COLORS = ["#0060D0","#30855B","#6D28D9","#D97706","#DC2626","#0891B2","#DB2777"];
 
 function getAvatarColor(name: string): string {
   let h = 0;
@@ -353,7 +353,7 @@ function ConvList({
                   <View style={l.eventAvatar}>
                     <Ionicons name="people" size={22} color="#C45200" />
                     {item.members && (
-                      <View style={{ position: "absolute", bottom: rs(-2), right: rs(-2), backgroundColor: "#FF7B00", borderRadius: rs(8), paddingHorizontal: rs(4), paddingVertical: rs(1), borderWidth: 1.5, borderColor: "#FFF" }}>
+                      <View style={{ position: "absolute", bottom: rs(-2), right: rs(-2), backgroundColor: "#257A86", borderRadius: rs(8), paddingHorizontal: rs(4), paddingVertical: rs(1), borderWidth: 1.5, borderColor: "#FFF" }}>
                         <Text style={{ fontSize: rs(8), fontWeight: "900", color: "#FFF" }}>{item.members}</Text>
                       </View>
                     )}
@@ -397,7 +397,7 @@ function ConvList({
                     <View style={[
                       l.ctxNameTag,
                       item.contextName !== "Listing inquiry" && item.contextName !== "Event inquiry" && !isDark && {
-                        backgroundColor: isEvent ? "#FFF3E6" : "#EEF5FF",
+                        backgroundColor: isEvent ? "#E2F0F1" : "#EEF5FF",
                         borderColor: isEvent ? "#FFD0A8" : "#C5DBFF",
                       },
                       isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight },
@@ -428,7 +428,7 @@ function ConvList({
                   )}
                   {item.host && !isPending && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: rs(3) }}>
-                      <Ionicons name="shield-checkmark" size={9} color="#FF7B00" />
+                      <Ionicons name="shield-checkmark" size={9} color="#257A86" />
                       <Text style={{ fontSize: rs(10), fontWeight: "700", color: tc.textTertiary }}>by {item.host}</Text>
                     </View>
                   )}
@@ -511,7 +511,7 @@ const l = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: rs(3),
     paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(7),
   },
-  ctxEvent: { backgroundColor: "#FFF3E6" },
+  ctxEvent: { backgroundColor: "#E2F0F1" },
   ctxListing: { backgroundColor: "#EEF5FF" },
   ctxText: { fontSize: rs(9), fontWeight: "800", letterSpacing: 0.3 },
   ctxNameTag: {
@@ -555,7 +555,7 @@ const l = StyleSheet.create({
 
   eventAvatar: {
     width: rs(50), height: rs(50), borderRadius: rs(16),
-    backgroundColor: "#FFF3E6", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#E2F0F1", alignItems: "center", justifyContent: "center",
     borderWidth: 1.5, borderColor: "#FFD0A8",
   },
 
@@ -1639,7 +1639,7 @@ const th = StyleSheet.create({
   hdrName: { fontSize: rs(16), fontWeight: "800", color: "#FFF", letterSpacing: -0.2 },
   groupAvatar: {
     width: rs(40), height: rs(40), borderRadius: rs(12),
-    backgroundColor: "#FFF3E6",
+    backgroundColor: "#E2F0F1",
     alignItems: "center", justifyContent: "center",
     borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
   },
@@ -1704,12 +1704,12 @@ const th = StyleSheet.create({
   groupInfoSub: { fontSize: rs(11), color: "#7A90AC", marginTop: rs(1) },
   adminBadge: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
-    backgroundColor: "#FF7B00", borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2),
+    backgroundColor: "#257A86", borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2),
   },
   adminBadgeText: { fontSize: rs(8), fontWeight: "900", color: "#FFF", letterSpacing: 0.5 },
   inlineAdminBadge: {
     flexDirection: "row", alignItems: "center", gap: rs(2),
-    backgroundColor: "#FF7B00", borderRadius: rs(5), paddingHorizontal: rs(5), paddingVertical: rs(2),
+    backgroundColor: "#257A86", borderRadius: rs(5), paddingHorizontal: rs(5), paddingVertical: rs(2),
   },
   inlineAdminText: { fontSize: rs(7), fontWeight: "900", color: "#FFF", letterSpacing: 0.5 },
 
@@ -2200,7 +2200,7 @@ const m = StyleSheet.create({
   title: { fontSize: rs(20), fontWeight: "900", color: Colors.brand.blue, letterSpacing: -0.4 },
   unreadChip: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#EAFBE9", borderWidth: 1, borderColor: "#BBF7D0",
+    backgroundColor: "#E3F1EA", borderWidth: 1, borderColor: "#BBF7D0",
     paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(12),
     alignSelf: "flex-start", marginTop: rs(4),
     

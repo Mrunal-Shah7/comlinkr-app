@@ -118,7 +118,7 @@ export function EventDetailModal({
         // SPRINT-42:
         isOwner: detailApiEvent != null ? !!detailApiEvent.isOwner : !!event.isOwner,
       };
-  const catColor = CATEGORY_COLOR[displayEvent.category] ?? { bg: "#EBF4FF", text: "#0076EB" };
+  const catColor = CATEGORY_COLOR[displayEvent.category] ?? { bg: "#EBF4FF", text: "#1A6BAE" };
   const isFree = displayEvent.price === "Free";
   const heroImages = displayEvent.images?.length ? displayEvent.images : [displayEvent.image];
 
@@ -222,7 +222,7 @@ export function EventDetailModal({
               <View style={[edm.catBadge, { backgroundColor: catColor.bg }]}>
                 <Text style={[edm.catBadgeText, { color: catColor.text }]}>{displayEvent.category}</Text>
               </View>
-              <View style={[edm.priceBadge, { backgroundColor: isFree ? "#16A34A" : "#FF7B00" }]}>
+              <View style={[edm.priceBadge, { backgroundColor: isFree ? "#16A34A" : "#257A86" }]}>
                 <Text style={edm.priceBadgeText}>{displayEvent.price}</Text>
               </View>
             </View>
@@ -256,14 +256,14 @@ export function EventDetailModal({
             </View>
             <View style={[edm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
             <View style={edm.statItem}>
-              <Ionicons name="calendar" size={20} color="#FF7B00" />
+              <Ionicons name="calendar" size={20} color="#257A86" />
               <Text style={[edm.statNum, { color: tc.textPrimary }]}>{displayEvent.date}</Text>
               <Text style={[edm.statLbl, { color: tc.textTertiary }]}>Date</Text>
             </View>
             <View style={[edm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
             <View style={edm.statItem}>
-              <Ionicons name="ticket" size={20} color={isFree ? "#16A34A" : "#FF7B00"} />
-              <Text style={[edm.statNum, { color: isFree ? "#16A34A" : "#FF7B00" }]}>{displayEvent.price}</Text>
+              <Ionicons name="ticket" size={20} color={isFree ? "#16A34A" : "#257A86"} />
+              <Text style={[edm.statNum, { color: isFree ? "#16A34A" : "#257A86" }]}>{displayEvent.price}</Text>
               <Text style={[edm.statLbl, { color: tc.textTertiary }]}>Entry</Text>
             </View>
           </View>
@@ -282,11 +282,11 @@ export function EventDetailModal({
             <Text style={[edm.sectionTitle, { color: tc.textPrimary }]}>Event Details</Text>
             <View style={edm.detailGrid}>
               {[
-                { icon: "calendar-outline" as const, label: "Date", value: displayEvent.date, color: "#FF7B00" },
+                { icon: "calendar-outline" as const, label: "Date", value: displayEvent.date, color: "#257A86" },
                 { icon: "time-outline" as const, label: "Time", value: displayEvent.time, color: Colors.brand.blue },
                 { icon: "location-outline" as const, label: "Venue", value: displayEvent.location, color: "#16A34A" },
                 { icon: "person-outline" as const, label: "Hosted by", value: displayEvent.host, color: "#8B5CF6" },
-                { icon: "ticket-outline" as const, label: "Admission", value: displayEvent.price, color: "#FF7B00" },
+                { icon: "ticket-outline" as const, label: "Admission", value: displayEvent.price, color: "#257A86" },
                 { icon: "people-outline" as const, label: "Attending", value: `${displayEvent.interested} people`, color: Colors.brand.blue },
               ].map((d) => (
                 <View key={d.label} style={[edm.detailRow, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
@@ -329,7 +329,7 @@ export function EventDetailModal({
                   }
                 >
                   <View style={[edm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#FFF7ED" }]}>
-                    <Ionicons name="chatbubbles-outline" size={20} color="#FF7B00" />
+                    <Ionicons name="chatbubbles-outline" size={20} color="#257A86" />
                   </View>
                   <Text style={[edm.quickActionLabel, { color: tc.textSecondary }]}>Event Chat</Text>
                 </TouchableOpacity>
@@ -537,7 +537,7 @@ export function EventDetailModal({
               onPress={onRegister}
             >
               <LinearGradient
-                colors={["#FF7B00", "#E56800"]}
+                colors={["#257A86", "#E56800"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={edm.ctaRSVP}
@@ -642,16 +642,16 @@ export const edm = StyleSheet.create({
     flex: 1, alignItems: "center", paddingVertical: rs(10),
     borderRadius: rs(10), backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#E7EFFA",
   },
-  regTicketChipActive: { borderColor: "#FF7B00", backgroundColor: "#FFF3E6" },
+  regTicketChipActive: { borderColor: "#257A86", backgroundColor: "#E2F0F1" },
   regTicketText: { fontSize: rs(14), fontWeight: "700", color: Colors.text.secondary },
-  regTicketTextActive: { color: "#FF7B00", fontWeight: "900" },
+  regTicketTextActive: { color: "#257A86", fontWeight: "900" },
   regPriceSummary: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    backgroundColor: "#FFF3E6", borderRadius: rs(12), padding: rs(14), marginBottom: rs(16),
+    backgroundColor: "#E2F0F1", borderRadius: rs(12), padding: rs(14), marginBottom: rs(16),
     borderWidth: 1, borderColor: "#FECBA1",
   },
   regPriceLabel: { fontSize: rs(13), fontWeight: "700", color: Colors.text.secondary },
-  regPriceValue: { fontSize: rs(16), fontWeight: "900", color: "#FF7B00" },
+  regPriceValue: { fontSize: rs(16), fontWeight: "900", color: "#257A86" },
   regBtnRow: { flexDirection: "row", gap: rs(10) },
   regCancelBtn: {
     paddingHorizontal: rs(20), paddingVertical: rs(14),

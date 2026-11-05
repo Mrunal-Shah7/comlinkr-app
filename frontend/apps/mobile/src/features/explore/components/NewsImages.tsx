@@ -9,7 +9,7 @@ import { type NewsArticle } from "../news";
 import { getArticleImage } from "../newsImages";
 
 // ── Comlinkr LIVE NEWS card image ─────────────────────────────────────
-// Light-themed branded card using Comlinkr brand colors (blue #0076EB, green #26B324).
+// Light-themed branded card using Comlinkr brand colors (blue #1A6BAE, green #30855B).
 export function ComlinkrNewsImage({ height, featured = false }: { height?: number; featured?: boolean }) {
   const h = height || 180;
   return (
@@ -22,39 +22,39 @@ export function ComlinkrNewsImage({ height, featured = false }: { height?: numbe
       />
       {/* Subtle green accent — bottom-right */}
       <LinearGradient
-        colors={["transparent", "rgba(38,179,36,0.10)"]}
+        colors={["transparent", "rgba(48,133,91,0.10)"]}
         start={{ x: 0.4, y: 0 }} end={{ x: 1, y: 1 }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
 
       {/* ── Decorative node-graph (Comlinkr identity) ── */}
       {/* Top-left cluster */}
-      <View style={{ position: "absolute", top: rs(14), left: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#26B324" }} />
-      <View style={{ position: "absolute", top: rs(28), left: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(38,179,36,0.45)" }} />
-      <View style={{ position: "absolute", top: rs(16), left: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(38,179,36,0.35)", transform: [{ rotate: "38deg" }] }} />
+      <View style={{ position: "absolute", top: rs(14), left: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#30855B" }} />
+      <View style={{ position: "absolute", top: rs(28), left: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(48,133,91,0.45)" }} />
+      <View style={{ position: "absolute", top: rs(16), left: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(48,133,91,0.35)", transform: [{ rotate: "38deg" }] }} />
       {/* Top-right cluster */}
-      <View style={{ position: "absolute", top: rs(14), right: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#0076EB" }} />
-      <View style={{ position: "absolute", top: rs(28), right: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(0,118,235,0.45)" }} />
-      <View style={{ position: "absolute", top: rs(16), right: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(0,118,235,0.35)", transform: [{ rotate: "-38deg" }] }} />
+      <View style={{ position: "absolute", top: rs(14), right: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#1A6BAE" }} />
+      <View style={{ position: "absolute", top: rs(28), right: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(26,107,174,0.45)" }} />
+      <View style={{ position: "absolute", top: rs(16), right: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(26,107,174,0.35)", transform: [{ rotate: "-38deg" }] }} />
       {/* Bottom-left */}
-      <View style={{ position: "absolute", bottom: rs(16), left: rs(20), width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "rgba(0,118,235,0.5)" }} />
-      <View style={{ position: "absolute", bottom: rs(28), left: rs(38), width: rs(4), height: rs(4), borderRadius: rs(2), backgroundColor: "rgba(0,118,235,0.2)" }} />
-      <View style={{ position: "absolute", bottom: rs(22), left: rs(28), width: rs(12), height: rs(1.5), backgroundColor: "rgba(0,118,235,0.25)", transform: [{ rotate: "-30deg" }] }} />
+      <View style={{ position: "absolute", bottom: rs(16), left: rs(20), width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "rgba(26,107,174,0.5)" }} />
+      <View style={{ position: "absolute", bottom: rs(28), left: rs(38), width: rs(4), height: rs(4), borderRadius: rs(2), backgroundColor: "rgba(26,107,174,0.2)" }} />
+      <View style={{ position: "absolute", bottom: rs(22), left: rs(28), width: rs(12), height: rs(1.5), backgroundColor: "rgba(26,107,174,0.25)", transform: [{ rotate: "-30deg" }] }} />
       {/* Bottom-right */}
-      <View style={{ position: "absolute", bottom: rs(16), right: rs(20), width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "rgba(38,179,36,0.5)" }} />
+      <View style={{ position: "absolute", bottom: rs(16), right: rs(20), width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "rgba(48,133,91,0.5)" }} />
 
       {/* Large soft glow behind center */}
-      <View style={{ position: "absolute", alignSelf: "center", top: h * 0.05, width: h * 1.1, height: h * 1.1, borderRadius: h * 0.55, backgroundColor: "rgba(0,118,235,0.06)" }} />
+      <View style={{ position: "absolute", alignSelf: "center", top: h * 0.05, width: h * 1.1, height: h * 1.1, borderRadius: h * 0.55, backgroundColor: "rgba(26,107,174,0.06)" }} />
 
       {/* ── Center content ── */}
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: rs(3) }}>
 
         {/* Logo mark: search circle + magnifying handle */}
         <View style={{ alignItems: "center", justifyContent: "center", marginBottom: rs(1) }}>
-          <View style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "rgba(0,118,235,0.25)", backgroundColor: "rgba(0,118,235,0.12)", alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="search" size={15} color="#0076EB" />
+          <View style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "rgba(26,107,174,0.25)", backgroundColor: "rgba(26,107,174,0.12)", alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="search" size={15} color="#1A6BAE" />
           </View>
-          <View style={{ position: "absolute", bottom: 0, right: rs(-2), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#26B324", borderWidth: 1.5, borderColor: "#E6F4FE" }} />
+          <View style={{ position: "absolute", bottom: 0, right: rs(-2), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#30855B", borderWidth: 1.5, borderColor: "#E3EDF6" }} />
         </View>
 
         {/* LIVE badge */}
@@ -64,13 +64,13 @@ export function ComlinkrNewsImage({ height, featured = false }: { height?: numbe
         </View>
 
         {/* NEWS word */}
-        <Text style={{ color: "#0076EB", fontSize: 15, fontWeight: "900", letterSpacing: 5, marginTop: rs(-1) }}>NEWS</Text>
+        <Text style={{ color: "#1A6BAE", fontSize: 15, fontWeight: "900", letterSpacing: 5, marginTop: rs(-1) }}>NEWS</Text>
 
         {/* COMLINKR brand */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4) }}>
-          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#26B324", borderRadius: rs(1) }} />
-          <Text style={{ color: "#0076EB", fontSize: rs(7), fontWeight: "800", letterSpacing: 3 }}>COMLINKR</Text>
-          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#0076EB", borderRadius: rs(1) }} />
+          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#30855B", borderRadius: rs(1) }} />
+          <Text style={{ color: "#1A6BAE", fontSize: rs(7), fontWeight: "800", letterSpacing: 3 }}>COMLINKR</Text>
+          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#1A6BAE", borderRadius: rs(1) }} />
         </View>
 
       </View>

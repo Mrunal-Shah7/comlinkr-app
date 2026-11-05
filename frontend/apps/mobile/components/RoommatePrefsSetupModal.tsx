@@ -211,7 +211,7 @@ export function RoommatePrefsSetupModal({ visible, userId, onClose, onSkipSessio
                   value={moveInDate}
                   onChange={setMoveInDate}
                   placeholder="Select move-in date"
-                  accentColor="#0076EB"
+                  accentColor="#1A6BAE"
                   dateFormat="iso"
                   minimumDate={new Date()}
                   style={{ borderColor: tc.borderLight, backgroundColor: tc.inputBg }}

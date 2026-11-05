@@ -32,7 +32,7 @@ import { createThemedStyles } from '../src/theme/themedStyles';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const VERIF_CONFIG = {
-  verified:    { label: "Verified",    color: "#0076EB", bg: "#EEF5FF" },
+  verified:    { label: "Verified",    color: "#1A6BAE", bg: "#EEF5FF" },
   unverified:  { label: "Basic",       color: "#6B7280", bg: "#F3F4F6" },
 };
 
@@ -121,7 +121,7 @@ function RestaurantCard({
   return (
     <View style={[styles.restaurantCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
       {/* Colored top bar */}
-      <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.cardTopBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+      <LinearGradient colors={["#30855B", "#256B49"]} style={styles.cardTopBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: rs(10) }}>
           <View style={styles.restaurantIconSmall}>
             <Ionicons name="restaurant" size={16} color="#FFF" />
@@ -188,10 +188,10 @@ function RestaurantCard({
         {/* Analytics grid */}
         <View style={styles.analyticsGrid}>
           {[
-            { icon: "eye-outline" as const,          color: "#0076EB", bg: "#EEF5FF", label: "Views",        value: (restaurant as any).views        ?? 0 },
+            { icon: "eye-outline" as const,          color: "#1A6BAE", bg: "#EEF5FF", label: "Views",        value: (restaurant as any).views        ?? 0 },
             { icon: "heart-outline" as const,         color: "#EF4444", bg: "#FEF2F2", label: "Likes",        value: (restaurant as any).likes        ?? 0 },
-            { icon: "chatbubble-outline" as const,    color: "#26B324", bg: "#EAFBE9", label: "Comments",     value: (restaurant as any).commentsCount ?? restaurant.reviews ?? 0 },
-            { icon: "calendar-outline" as const,      color: "#FF7B00", bg: "#FFF3E6", label: "Reservations", value: (restaurant as any).reservations ?? 0 },
+            { icon: "chatbubble-outline" as const,    color: "#30855B", bg: "#E3F1EA", label: "Comments",     value: (restaurant as any).commentsCount ?? restaurant.reviews ?? 0 },
+            { icon: "calendar-outline" as const,      color: "#257A86", bg: "#E2F0F1", label: "Reservations", value: (restaurant as any).reservations ?? 0 },
           ].map((stat) => (
             <View key={stat.label} style={[styles.analyticsCell, { backgroundColor: stat.bg }]}>
               <View style={[styles.analyticsIconBox, { backgroundColor: stat.color + "22" }]}>
@@ -256,19 +256,19 @@ function RestaurantCard({
 
           <ScrollView contentContainerStyle={{ padding: rs(16), gap: rs(14) }} showsVerticalScrollIndicator={false}>
             {/* Status banner */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: rs(10), padding: rs(12), borderRadius: rs(12), backgroundColor: restaurant.openNow ? "#EAFBE9" : "#FEF2F2", borderWidth: 1, borderColor: restaurant.openNow ? "#86EFAC" : "#FECACA" }}>
-              <View style={{ width: rs(10), height: rs(10), borderRadius: rs(5), backgroundColor: restaurant.openNow ? "#26B324" : "#EF4444" }} />
-              <Text style={{ flex: 1, fontSize: rs(13), fontWeight: "700", color: restaurant.openNow ? "#26B324" : "#EF4444" }}>{restaurant.openNow ? "Currently Open" : "Currently Closed"}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: rs(10), padding: rs(12), borderRadius: rs(12), backgroundColor: restaurant.openNow ? "#E3F1EA" : "#FEF2F2", borderWidth: 1, borderColor: restaurant.openNow ? "#86EFAC" : "#FECACA" }}>
+              <View style={{ width: rs(10), height: rs(10), borderRadius: rs(5), backgroundColor: restaurant.openNow ? "#30855B" : "#EF4444" }} />
+              <Text style={{ flex: 1, fontSize: rs(13), fontWeight: "700", color: restaurant.openNow ? "#30855B" : "#EF4444" }}>{restaurant.openNow ? "Currently Open" : "Currently Closed"}</Text>
               <Text style={{ fontSize: rs(12), color: tc.textTertiary }}>{restaurant.closingTime ? `Closes ${restaurant.closingTime}` : ""}</Text>
             </View>
 
             {/* Analytics */}
             <View style={{ flexDirection: "row", gap: rs(8) }}>
               {[
-                { icon: "eye-outline", color: "#0076EB", bg: "#EEF5FF", label: "Views", value: (restaurant as any).views ?? 0 },
+                { icon: "eye-outline", color: "#1A6BAE", bg: "#EEF5FF", label: "Views", value: (restaurant as any).views ?? 0 },
                 { icon: "heart-outline", color: "#EF4444", bg: "#FEF2F2", label: "Likes", value: (restaurant as any).likes ?? 0 },
-                { icon: "chatbubble-outline", color: "#26B324", bg: "#EAFBE9", label: "Reviews", value: restaurant.reviews ?? 0 },
-                { icon: "calendar-outline", color: "#FF7B00", bg: "#FFF3E6", label: "Reserv.", value: (restaurant as any).reservations ?? 0 },
+                { icon: "chatbubble-outline", color: "#30855B", bg: "#E3F1EA", label: "Reviews", value: restaurant.reviews ?? 0 },
+                { icon: "calendar-outline", color: "#257A86", bg: "#E2F0F1", label: "Reserv.", value: (restaurant as any).reservations ?? 0 },
               ].map((s) => (
                 <View key={s.label} style={{ flex: 1, alignItems: "center", padding: rs(8), borderRadius: rs(10), backgroundColor: s.bg }}>
                   <Ionicons name={s.icon as any} size={rs(16)} color={s.color} />
@@ -351,7 +351,7 @@ function RestaurantCard({
                 <Text style={{ fontSize: rs(11), fontWeight: "700", color: tc.textTertiary, letterSpacing: 0.5 }}>POPULAR DISHES</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap", gap: rs(6) }}>
                   {restaurant.popularDishes.map((d) => (
-                    <View key={d} style={{ backgroundColor: Colors.brand.greenLight ?? "#EAFBE9", borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
+                    <View key={d} style={{ backgroundColor: Colors.brand.greenLight ?? "#E3F1EA", borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
                       <Text style={{ fontSize: rs(11), fontWeight: "600", color: Colors.brand.green }}>{d}</Text>
                     </View>
                   ))}
@@ -422,7 +422,7 @@ export default function MyRestaurantsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const badgeGradient: [string, string] = ["#26B324", "#1a8a18"];
+  const badgeGradient: [string, string] = ["#30855B", "#256B49"];
   const totalReviews  = restaurants.reduce((acc, r) => acc + (r.reviews ?? 0), 0);
   const avgRating     = restaurants.length
     ? (restaurants.reduce((acc, r) => acc + r.rating, 0) / restaurants.length).toFixed(1)
@@ -447,7 +447,7 @@ export default function MyRestaurantsScreen() {
           onPress={() => router.push({ pathname: "/create-post" as any })}
           style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
         >
-          <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.addBtnGrad}>
+          <LinearGradient colors={["#30855B", "#256B49"]} style={styles.addBtnGrad}>
             <Ionicons name="add" size={18} color="#FFF" />
           </LinearGradient>
         </Pressable>
@@ -509,9 +509,9 @@ export default function MyRestaurantsScreen() {
         <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>OVERVIEW</Text>
         <View style={styles.statsRow}>
           {[
-            { icon: "restaurant",        label: "Listed",     value: restaurants.length.toString(),                   color: "#26B324" },
-            { icon: "checkmark-circle",  label: "Verified",   value: restaurants.filter((r) => r.verified).length.toString(), color: "#0076EB" },
-            { icon: "star-outline",      label: "Avg Rating", value: avgRating.toString(),                             color: "#FF7B00" },
+            { icon: "restaurant",        label: "Listed",     value: restaurants.length.toString(),                   color: "#30855B" },
+            { icon: "checkmark-circle",  label: "Verified",   value: restaurants.filter((r) => r.verified).length.toString(), color: "#1A6BAE" },
+            { icon: "star-outline",      label: "Avg Rating", value: avgRating.toString(),                             color: "#257A86" },
             { icon: "chatbubble-outline",label: "Reviews",    value: totalReviews.toString(),                          color: "#16A34A" },
           ].map((s) => (
             <View key={s.label} style={[styles.overviewCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
@@ -545,17 +545,17 @@ export default function MyRestaurantsScreen() {
         <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>COMPLIANCE & FOOD SAFETY</Text>
         <View style={[styles.complianceCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
           <View style={styles.complianceHeader}>
-            <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.complianceIcon}>
+            <LinearGradient colors={["#30855B", "#256B49"]} style={styles.complianceIcon}>
               <Ionicons name="shield-checkmark" size={16} color="#FFF" />
             </LinearGradient>
             <Text style={[styles.complianceTitle, { color: tc.textPrimary }]}>Food Safety Requirements</Text>
           </View>
           {[
-            { icon: "checkmark-circle", text: "UK: Food Hygiene Rating (FHRS) certificate required for all listed restaurants", color: "#26B324" },
-            { icon: "checkmark-circle", text: "UK: FSA registration mandatory; premises must be registered with your local council", color: "#26B324" },
-            { icon: "checkmark-circle", text: "US: Local health department permit required for all food service establishments", color: "#0076EB" },
-            { icon: "checkmark-circle", text: "US: FDA food facility registration required for applicable establishments", color: "#0076EB" },
-            { icon: "alert-circle",     text: "Allergen information must be accurately listed for all menu items", color: "#FF7B00" },
+            { icon: "checkmark-circle", text: "UK: Food Hygiene Rating (FHRS) certificate required for all listed restaurants", color: "#30855B" },
+            { icon: "checkmark-circle", text: "UK: FSA registration mandatory; premises must be registered with your local council", color: "#30855B" },
+            { icon: "checkmark-circle", text: "US: Local health department permit required for all food service establishments", color: "#1A6BAE" },
+            { icon: "checkmark-circle", text: "US: FDA food facility registration required for applicable establishments", color: "#1A6BAE" },
+            { icon: "alert-circle",     text: "Allergen information must be accurately listed for all menu items", color: "#257A86" },
             { icon: "alert-circle",     text: "Fraudulent listings or false health certification claims result in permanent ban", color: "#DC2626" },
           ].map((item, i) => (
             <View key={i} style={styles.complianceRow}>
@@ -915,7 +915,7 @@ const styles = createThemedStyles({
     width: rs(34),
     height: rs(34),
     borderRadius: rs(17),
-    backgroundColor: "#26B324",
+    backgroundColor: "#30855B",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -930,7 +930,7 @@ const styles = createThemedStyles({
     gap: rs(4),
     alignSelf: "flex-start",
   },
-  replyBtnText: { fontSize: rs(12), color: "#0076EB", fontWeight: "600" },
+  replyBtnText: { fontSize: rs(12), color: "#1A6BAE", fontWeight: "600" },
 
   // ── Compliance ────
   complianceCard: {

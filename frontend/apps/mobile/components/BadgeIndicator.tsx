@@ -14,16 +14,16 @@ interface BadgeIndicatorProps {
 }
 
 const BADGE_META: Record<UserBadge, { icon: string; label: string; gradient: [string, string] }> = {
-  landlord:         { icon: "home",        label: "Verified Landlord",    gradient: ["#0076EB", "#0054CC"] },
-  restaurant_owner: { icon: "restaurant",  label: "Verified Business",    gradient: ["#26B324", "#1a8a18"] },
-  agency:           { icon: "business",    label: "Verified Agency",      gradient: ["#FF7B00", "#E56800"] },
+  landlord:         { icon: "home",        label: "Verified Landlord",    gradient: ["#1A6BAE", "#0054CC"] },
+  restaurant_owner: { icon: "restaurant",  label: "Verified Business",    gradient: ["#30855B", "#256B49"] },
+  agency:           { icon: "business",    label: "Verified Agency",      gradient: ["#257A86", "#E56800"] },
   local_reviewer:   { icon: "star",        label: "Local Reviewer",       gradient: ["#8B5CF6", "#6D28D9"] },
 };
 
 const STATUS_META: Record<VerificationStatus, { icon: string; color: string; bg: string; label: string }> = {
   none:     { icon: "ellipse-outline",  color: "#9CA3AF", bg: "#F3F4F6", label: "Not Applied" },
   pending:  { icon: "time",             color: "#F59E0B", bg: "#FFFBEB", label: "Pending Review" },
-  verified: { icon: "checkmark-circle", color: "#26B324", bg: "#EAFBE9", label: "Verified" },
+  verified: { icon: "checkmark-circle", color: "#30855B", bg: "#E3F1EA", label: "Verified" },
   rejected: { icon: "close-circle",     color: "#EF4444", bg: "#FEF2F2", label: "Not Approved" },
 };
 

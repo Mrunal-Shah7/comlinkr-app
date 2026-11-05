@@ -80,7 +80,7 @@ export function ReviewComposer({
         onPress={handleSubmit}
         disabled={!content.trim() || rating < 1 || submitting}
       >
-        <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} style={styles.submitGrad}>
+        <LinearGradient colors={[Colors.brand.green, "#256B49"]} style={styles.submitGrad}>
           {submitting ? (
             <ActivityIndicator color="#FFF" size="small" />
           ) : (

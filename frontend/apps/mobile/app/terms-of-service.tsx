@@ -14,8 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../src/theme/useTheme";
 
-const BRAND_BLUE = "#0076EB";
-const BRAND_GREEN = "#26B324";
+const BRAND_BLUE = "#1A6BAE";
+const BRAND_GREEN = "#30855B";
 
 export const TERMS_VERSION = "1.1";
 const LAST_UPDATED = "July 7, 2026";
@@ -447,7 +447,7 @@ const s = StyleSheet.create({
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(0,118,235,0.15)",
+    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
   },

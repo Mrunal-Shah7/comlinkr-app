@@ -135,7 +135,7 @@ ${link}`,
           pointerEvents="none"
         >
           <View style={s.scrimBadgeRow}>
-            <View style={[s.typePill, { backgroundColor: "rgba(0,118,235,0.88)" }]}>
+            <View style={[s.typePill, { backgroundColor: "rgba(26,107,174,0.88)" }]}>
               <Text style={s.typePillText}>{listing.type.toUpperCase()}</Text>
             </View>
             {listing.available === "Immediate" && (
@@ -192,7 +192,7 @@ ${link}`,
               <Ionicons
                 name={saved ? "bookmark" : "bookmark-outline"}
                 size={19}
-                color={saved ? "#FF7B00" : "#FFF"}
+                color={saved ? "#257A86" : "#FFF"}
               />
             </Animated.View>
           </Pressable>
@@ -301,8 +301,8 @@ ${link}`,
         <View style={[s.statsGrid, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
           {[
             { icon: "bed-outline" as const,      val: listing.beds === 0 ? "Studio" : String(listing.beds), lbl: "Beds",  bg: "#EEF5FF", color: Colors.brand.blue },
-            { icon: "water-outline" as const,     val: String(listing.baths),                                lbl: "Baths", bg: "#EAFBE9", color: Colors.brand.green },
-            { icon: "resize-outline" as const,    val: listing.sqft,                                         lbl: "Sqft",  bg: "#FFF3E6", color: "#FF7B00" },
+            { icon: "water-outline" as const,     val: String(listing.baths),                                lbl: "Baths", bg: "#E3F1EA", color: Colors.brand.green },
+            { icon: "resize-outline" as const,    val: listing.sqft,                                         lbl: "Sqft",  bg: "#E2F0F1", color: "#257A86" },
             { icon: "business-outline" as const,  val: listing.floor === "Ground Floor" ? "G" : listing.floor.split(" ")[0],                         lbl: "Floor", bg: Colors.brand.blueLight, color: Colors.brand.blue },
           ].map((st, idx) => (
             <View key={st.lbl} style={[s.statCell, idx < 3 && s.statCellBorder, idx < 3 && isDark && { borderRightColor: tc.borderLight }]}>

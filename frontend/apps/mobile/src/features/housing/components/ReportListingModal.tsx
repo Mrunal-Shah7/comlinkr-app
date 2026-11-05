@@ -92,7 +92,7 @@ export function ReportListingModal({
           {submitted ? (
             <View style={rp.successBody}>
               <LinearGradient
-                colors={["#26B324", "#16A34A"]}
+                colors={["#30855B", "#16A34A"]}
                 style={rp.successIcon}
               >
                 <Ionicons name="shield-checkmark" size={28} color="#FFF" />
@@ -111,7 +111,7 @@ export function ReportListingModal({
                 }}
               >
                 <LinearGradient
-                  colors={["#26B324", "#16A34A"]}
+                  colors={["#30855B", "#16A34A"]}
                   style={rp.doneBtn}
                 >
                   <Text style={rp.doneBtnText}>Done</Text>

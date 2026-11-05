@@ -21,7 +21,7 @@ import { rs } from "../../src/utils/responsive";
 
 function GradientText({
   text,
-  colors = ["#0076EB", "#005BE0", "#26B324"],
+  colors = ["#1A6BAE", "#005BE0", "#30855B"],
   style,
 }: {
   text: string;
@@ -128,7 +128,7 @@ export default function ForgotPasswordScreen() {
   return (
     <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
       <LinearGradient
-        colors={isDark ? ["#080F1E", "#0D1526", "#091408"] : ["#EBF5FF", "#F4F9FF", "#EAFBE9"]}
+        colors={isDark ? ["#080F1E", "#0D1526", "#091408"] : ["#EBF5FF", "#F4F9FF", "#E3F1EA"]}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -151,13 +151,13 @@ export default function ForgotPasswordScreen() {
             <View
               style={[
                 styles.card,
-                { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(0,118,235,0.06)" },
+                { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(26,107,174,0.06)" },
               ]}
             >
               {/* Icon */}
               <View style={styles.iconWrap}>
                 <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGrad}
@@ -169,7 +169,7 @@ export default function ForgotPasswordScreen() {
               <GradientText
                 text={step === "email" ? "Forgot Password?" : "Verify & Reset"}
                 style={styles.heading}
-                colors={["#0076EB", "#005BE0", "#26B324"]}
+                colors={["#1A6BAE", "#005BE0", "#30855B"]}
               />
               <Text style={[styles.subheading, { color: tc.textSecondary }]}>
                 {step === "email"
@@ -210,7 +210,7 @@ export default function ForgotPasswordScreen() {
                     ]}
                   >
                     <LinearGradient
-                      colors={["#0076EB", "#005BE0", "#26B324"]}
+                      colors={["#1A6BAE", "#005BE0", "#30855B"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.actionBtnGrad}
@@ -293,7 +293,7 @@ export default function ForgotPasswordScreen() {
                     ]}
                   >
                     <LinearGradient
-                      colors={["#0076EB", "#005BE0", "#26B324"]}
+                      colors={["#1A6BAE", "#005BE0", "#30855B"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.actionBtnGrad}
@@ -315,7 +315,7 @@ export default function ForgotPasswordScreen() {
                     <GradientText
                       text={emailLoading ? "Sending..." : "Resend Code"}
                       style={styles.resendLink}
-                      colors={["#0076EB", "#26B324"]}
+                      colors={["#1A6BAE", "#30855B"]}
                     />
                   </Pressable>
                 </>
@@ -329,7 +329,7 @@ export default function ForgotPasswordScreen() {
                 <GradientText
                   text="Sign in"
                   style={styles.footerLink}
-                  colors={["#0076EB", "#26B324"]}
+                  colors={["#1A6BAE", "#30855B"]}
                 />
               </Pressable>
             </View>
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(0, 118, 235, 0.08)",
+    backgroundColor: "rgba(26,107,174, 0.08)",
     top: -60,
     right: -80,
   },
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: "rgba(38, 179, 36, 0.07)",
+    backgroundColor: "rgba(48,133,91, 0.07)",
     bottom: 60,
     left: -60,
   },
@@ -385,13 +385,13 @@ const styles = StyleSheet.create({
     padding: rs(22),
     width: "100%",
     maxWidth: 420,
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 28,
     elevation: 8,
     borderWidth: 1,
-    borderColor: "rgba(0,118,235,0.06)",
+    borderColor: "rgba(26,107,174,0.06)",
   },
 
   iconWrap: { alignItems: "center", marginBottom: rs(14) },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     marginTop: rs(16),
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,

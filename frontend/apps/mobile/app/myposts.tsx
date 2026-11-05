@@ -1001,7 +1001,7 @@ const s = createThemedStyles({
     borderRadius: rs(20),
     backgroundColor: "rgba(255,255,255,0.95)",
     borderWidth: 1,
-    borderColor: "rgba(0,118,235,0.15)",
+    borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

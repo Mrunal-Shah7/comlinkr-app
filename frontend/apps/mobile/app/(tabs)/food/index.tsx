@@ -1768,9 +1768,9 @@ const s = StyleSheet.create({
   metaText: { fontSize: rs(11), fontWeight: "600", color: Colors.text.secondary },
   waitChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    backgroundColor: "#FFF3E6", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
+    backgroundColor: "#E2F0F1", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
-  waitText: { fontSize: rs(11), fontWeight: "600", color: "#FF7B00" },
+  waitText: { fontSize: rs(11), fontWeight: "600", color: "#257A86" },
   priceChip: {
     borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
     backgroundColor: "#F0FDF4",
@@ -1788,7 +1788,7 @@ const s = StyleSheet.create({
 
   // Popular dishes
   dishesRow: { flexDirection: "row", alignItems: "center", gap: rs(4), marginBottom: rs(10) },
-  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: "#FF7B00" },
+  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: "#257A86" },
   dishesText: { fontSize: rs(11), color: Colors.text.secondary, flex: 1 },
 
   // Bottom row: tags + actions
@@ -1886,7 +1886,7 @@ const rdm = StyleSheet.create({
     backgroundColor: "#FFFBF5", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
   },
   dishNum: {
-    width: 24, height: 24, borderRadius: 8, backgroundColor: "#FF7B00",
+    width: 24, height: 24, borderRadius: 8, backgroundColor: "#257A86",
     alignItems: "center", justifyContent: "center",
   },
   dishNumText: { fontSize: 12, fontWeight: "700", color: "#FFF" },

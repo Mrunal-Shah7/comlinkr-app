@@ -61,9 +61,9 @@ function mediaUri(url: string | null | undefined): string {
 
 function categoryUi(cat: string): { label: string; color: string; bg: string } {
   const c = (cat || "").toUpperCase();
-  if (c === "EVENTS")     return { label: "Events",     color: "#FF7B00", bg: "rgba(255,123,0,0.2)" };
-  if (c === "FOOD")       return { label: "Food",       color: "#26B324", bg: "rgba(38,179,36,0.2)" };
-  if (c === "HOUSING")    return { label: "Housing",    color: "#0076EB", bg: "rgba(0,118,235,0.2)" };
+  if (c === "EVENTS")     return { label: "Events",     color: "#257A86", bg: "rgba(37,122,134,0.2)" };
+  if (c === "FOOD")       return { label: "Food",       color: "#30855B", bg: "rgba(48,133,91,0.2)" };
+  if (c === "HOUSING")    return { label: "Housing",    color: "#1A6BAE", bg: "rgba(26,107,174,0.2)" };
   if (c === "CULTURE")    return { label: "Culture",    color: "#A78BFA", bg: "rgba(167,139,250,0.2)" };
   if (c === "LOCAL_NEWS") return { label: "Local News", color: "#F87171", bg: "rgba(248,113,113,0.2)" };
   return { label: cat, color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
@@ -570,7 +570,7 @@ export default function StoryViewerScreen() {
         />
       ) : (
         <LinearGradient
-          colors={["#0C1A2E", "#0076EB", "#001A40"]}
+          colors={["#0C1A2E", "#1A6BAE", "#001A40"]}
           style={StyleSheet.absoluteFill}
         />
       )}

@@ -683,7 +683,7 @@ export default function ProfileScreen() {
         <View style={s.heroWrap}>
           {/* Background gradient — purely visual, no touch handling */}
           <LinearGradient
-            colors={isDark ? ["#0D1B2A", "#0A1628"] : ["#EBF5FF", "#EAFBE9"]}
+            colors={isDark ? ["#0D1B2A", "#0A1628"] : ["#EBF5FF", "#E3F1EA"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={s.heroCover}
@@ -936,7 +936,7 @@ export default function ProfileScreen() {
                 const iconName = CULTURE_MAP[v.id]?.icon ?? "musical-notes-outline";
                 return (
                   <View key={`${v.id}-${idx}`} style={s.tagOrange}>
-                    <Ionicons name={iconName as any} size={11} color="#FF7B00" />
+                    <Ionicons name={iconName as any} size={11} color="#257A86" />
                     <Text style={[s.tagText, { color: tc.textSecondary }]}>{v.name}</Text>
                   </View>
                 );
@@ -1335,9 +1335,9 @@ export default function ProfileScreen() {
             }
           />
           {([
-            { badge: "landlord"        as const, label: "Verified Property Host",     icon: "home"       as const, gradient: ["#0076EB", "#0054CC"] as [string, string] },
-            { badge: "restaurant_owner" as const, label: "Verified Restaurant Owner", icon: "restaurant" as const, gradient: ["#26B324", "#1a8a18"] as [string, string] },
-            { badge: "agency"          as const, label: "Verified Agency",            icon: "business"   as const, gradient: ["#FF7B00", "#E56800"] as [string, string] },
+            { badge: "landlord"        as const, label: "Verified Property Host",     icon: "home"       as const, gradient: ["#1A6BAE", "#0054CC"] as [string, string] },
+            { badge: "restaurant_owner" as const, label: "Verified Restaurant Owner", icon: "restaurant" as const, gradient: ["#30855B", "#256B49"] as [string, string] },
+            { badge: "agency"          as const, label: "Verified Agency",            icon: "business"   as const, gradient: ["#257A86", "#E56800"] as [string, string] },
             { badge: "local_reviewer"  as const, label: "Local Reviewer",             icon: "star"       as const, gradient: ["#F59E0B", "#D97706"] as [string, string] },
           ]).map(({ badge, label, icon, gradient }) => {
             const status = getBadgeStatus(badge);
@@ -1794,15 +1794,15 @@ const s = createThemedStyles({
   // Hero
   heroWrap: { position: "relative" },
   heroCover: { height: rs(180), overflow: "hidden", paddingTop: rs(50) },
-  decor1: { position: "absolute", top: rs(-50), right: rs(-50), width: rs(180), height: rs(180), borderRadius: rs(90), backgroundColor: "rgba(0,118,235,0.10)" },
-  decor2: { position: "absolute", bottom: rs(-40), left: rs(-30), width: rs(140), height: rs(140), borderRadius: rs(70), backgroundColor: "rgba(38,179,36,0.09)" },
-  decor3: { position: "absolute", top: rs(20), left: "42%", width: rs(80), height: rs(80), borderRadius: rs(40), backgroundColor: "rgba(255,123,0,0.07)" },
+  decor1: { position: "absolute", top: rs(-50), right: rs(-50), width: rs(180), height: rs(180), borderRadius: rs(90), backgroundColor: "rgba(26,107,174,0.10)" },
+  decor2: { position: "absolute", bottom: rs(-40), left: rs(-30), width: rs(140), height: rs(140), borderRadius: rs(70), backgroundColor: "rgba(48,133,91,0.09)" },
+  decor3: { position: "absolute", top: rs(20), left: "42%", width: rs(80), height: rs(80), borderRadius: rs(40), backgroundColor: "rgba(37,122,134,0.07)" },
   heroTopBar: { position: "absolute", top: rs(48), left: rs(12), right: rs(16), flexDirection: "row", alignItems: "center", justifyContent: "space-between", zIndex: 100, elevation: 100 },
   heroActions: { flexDirection: "row", alignItems: "center", gap: rs(10) },
   heroBackBtn: {},
-  heroBackCircle: { width: rs(40), height: rs(40), borderRadius: rs(20), backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(0,118,235,0.15)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(2) }, elevation: 8 },
-  heroIconBtn: { width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(0,118,235,0.18)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
-  heroEditBtn: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(0,118,235,0.18)", paddingHorizontal: rs(14), height: rs(36), borderRadius: rs(999), shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
+  heroBackCircle: { width: rs(40), height: rs(40), borderRadius: rs(20), backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(2) }, elevation: 8 },
+  heroIconBtn: { width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
+  heroEditBtn: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", paddingHorizontal: rs(14), height: rs(36), borderRadius: rs(999), shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
   heroEditText: { fontSize: rs(12), fontWeight: "900", color: Colors.brand.blue },
 
   // Avatar

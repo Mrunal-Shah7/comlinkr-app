@@ -78,7 +78,7 @@ export function RemoteViewingPanel({
           {/* Request video tour button */}
           {!showRequestButton ? null : videoTourRequested ? (
             <View style={rvp.requestedBadge}>
-              <Ionicons name="checkmark-circle" size={16} color="#26B324" />
+              <Ionicons name="checkmark-circle" size={16} color="#30855B" />
               <Text style={rvp.requestedText}>
                 Video Tour Requested — awaiting landlord confirmation
               </Text>
@@ -156,7 +156,7 @@ export function RemoteViewingPanel({
                     <Ionicons
                       name={item.icon}
                       size={12}
-                      color={checked[i] ? "#26B324" : "#7C3AED"}
+                      color={checked[i] ? "#30855B" : "#7C3AED"}
                     />
                   </View>
                   <Text
@@ -173,7 +173,7 @@ export function RemoteViewingPanel({
               ))}
               {checkedCount === REMOTE_VIEWING_CHECKLIST.length && (
                 <View style={rvp.allDoneBanner}>
-                  <Ionicons name="shield-checkmark" size={14} color="#26B324" />
+                  <Ionicons name="shield-checkmark" size={14} color="#30855B" />
                   <Text style={rvp.allDoneText}>
                     All checks complete — you're ready to apply safely!
                   </Text>
@@ -332,8 +332,8 @@ export const rvp = StyleSheet.create({
     justifyContent: "center",
   },
   checkBoxDone: {
-    backgroundColor: "#26B324",
-    borderColor: "#26B324",
+    backgroundColor: "#30855B",
+    borderColor: "#30855B",
   },
   checkIconBox: {
     width: 24,

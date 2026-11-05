@@ -27,7 +27,7 @@ const LOCK_COPY: Record<LockStatus, { headline: string; sub: string; btnLabel: s
     headline: "Verification Required",
     sub: "Apply for badge to unlock",
     btnLabel: "Apply Now",
-    btnColor: "#0076EB",
+    btnColor: "#1A6BAE",
   },
   pending: {
     headline: "Under Review",
