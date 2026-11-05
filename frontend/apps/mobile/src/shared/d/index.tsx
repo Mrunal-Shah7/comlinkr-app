@@ -333,3 +333,22 @@ export function VoteButton({ on, count, onPress, small }: { on: boolean; count: 
     </Pressable>
   );
 }
+
+/* ---------- pop on choose ---------- */
+const APressable = Animated.createAnimatedComponent(Pressable);
+/** A Pressable that pops (0.92 → 1 on a springy curve) each time it is pressed, for choosable cards and tiles
+ *  (`.chip[data-toggle]`: scale .92 → 1, 220 ms). */
+export function PopPressable({ style, onPress, children, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children?: ReactNode }) {
+  const reduce = useReducedMotion();
+  const sc = useSharedValue(1);
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  return (
+    <APressable
+      {...rest}
+      onPress={(e) => { if (!reduce) sc.value = withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.sheet)); onPress?.(e); }}
+      style={[style, a]}
+    >
+      {children}
+    </APressable>
+  );
+}
