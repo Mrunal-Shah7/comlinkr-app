@@ -3,7 +3,7 @@ import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { BentoTile, Chip, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
-import { TYPE } from "../../../src/theme/d";
+import { GRADIENT, TYPE } from "../../../src/theme/d";
 import { DatePickerField, TimePickerField } from "../../../components/DateTimePickerField";
 import {
   View,
@@ -1133,221 +1133,116 @@ export default function FoodScreen() {
           onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); }}
           statusBarTranslucent
         >
-          <DismissibleSheet onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ backgroundColor: tc.cardBg }}>
-            {/* Hero */}
-            <SheetDragArea style={{ height: 280, position: "relative" }}>
+          <DismissibleSheet onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ backgroundColor: tc.pageBg }}>
+            {/* ── Photos with glass buttons (design D, plan 01) ── */}
+            <SheetDragArea style={{ height: 350, position: "relative" }}>
               <ImageCarousel
                 images={selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]}
-                height={280}
+                height={350}
                 itemWidth={SCREEN_WIDTH}
                 onImagePress={(idx) => { const imgs = selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]; setFsImages(imgs); setFsStartIdx(idx); setFsVisible(true); }}
               />
-              <LinearGradient colors={["rgba(0,0,0,0.5)", "transparent", "rgba(0,0,0,0.75)"]} style={StyleSheet.absoluteFill} />
-              <Pressable style={rdm.backBtn} onPress={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); }}>
-                <Ionicons name="chevron-back" size={22} color="#FFF" />
-              </Pressable>
-              <View style={rdm.heroTopRight}>
-                {restaurantIsMine(selectedRestaurant, user?.id) ? (
-                  <Pressable
-                    style={rdm.heroActionBtn}
-                    onPress={() => confirmDeleteRestaurant(selectedRestaurant.id)}
-                    accessibilityLabel="Delete restaurant"
-                  >
-                    <Ionicons name="trash-outline" size={18} color="#FCA5A5" />
+              {(() => {
+                const r = selectedRestaurant;
+                const saved = bookmarkedIds.has(r.id) || !!r.isSaved;
+                const mine = restaurantIsMine(r, user?.id);
+                const btn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color: string = tc.textPrimary) => (
+                  <Pressable key={label} onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
+                    style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.glass, borderWidth: 1, borderColor: tc.glassLine }}>
+                    <Ionicons name={icon} size={19} color={color} />
                   </Pressable>
-                ) : null}
-                <Pressable style={rdm.heroActionBtn} onPress={() => handleShare(selectedRestaurant)}>
-                  <Ionicons name="share-outline" size={18} color="#FFF" />
-                </Pressable>
-                <Pressable style={rdm.heroActionBtn} onPress={() => void toggleBookmark(selectedRestaurant.id)}>
-                  <Ionicons
-                    name={bookmarkedIds.has(selectedRestaurant.id) || selectedRestaurant.isSaved ? "bookmark" : "bookmark-outline"}
-                    size={18}
-                    color={bookmarkedIds.has(selectedRestaurant.id) || selectedRestaurant.isSaved ? "#FF7B00" : "#FFF"}
-                  />
-                </Pressable>
-                <Pressable style={rdm.heroActionBtn} onPress={() => void toggleFav(selectedRestaurant.id)}>
-                  <Ionicons name={favorites.has(selectedRestaurant.id) ? "heart" : "heart-outline"} size={18} color={favorites.has(selectedRestaurant.id) ? "#EF4444" : "#FFF"} />
-                </Pressable>
-                {!restaurantIsMine(selectedRestaurant, user?.id) ? (
-                  <Pressable
-                    style={rdm.heroActionBtn}
-                    onPress={() => setReportSheetId(selectedRestaurant.id)}
-                  >
-                    <Ionicons name="flag-outline" size={18} color="#FCA5A5" />
-                  </Pressable>
-                ) : null}
-              </View>
-              <View style={rdm.heroBottom}>
-                <View style={{ flexDirection: "row", gap: 7, marginBottom: 8 }}>
-                  {(() => {
-                    const av = getAvailability(selectedRestaurant);
-                    if (av.state === "unknown") return null;
-                    const bg = av.state === "open" ? "rgba(22,163,74,0.9)" : av.state === "closed" ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.5)";
-                    const txt = av.state === "open" ? "Open Now" : av.state === "closed" ? "Closed" : av.label;
-                    return (
-                      <View style={[rdm.badge, { backgroundColor: bg }]}>
-                        <Text style={rdm.badgeText}>{txt}</Text>
-                      </View>
-                    );
-                  })()}
-                  <View style={[rdm.badge, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
-                    <Text style={rdm.badgeText}>{selectedRestaurant.price}</Text>
+                );
+                const close = () => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); };
+                return (
+                  <View style={{ position: "absolute", top: insets.top + 10, left: 14, right: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    {btn("chevron-back", "Back", close)}
+                    <View style={{ flex: 1 }} />
+                    {mine ? btn("trash-outline", "Delete restaurant", () => confirmDeleteRestaurant(r.id), tc.dangerText) : null}
+                    {btn(saved ? "bookmark" : "bookmark-outline", saved ? "Remove from saved" : "Save restaurant", () => void toggleBookmark(r.id), saved ? tc.accentText : tc.textPrimary)}
+                    {btn(favorites.has(r.id) ? "heart" : "heart-outline", favorites.has(r.id) ? "Remove from favourites" : "Add to favourites", () => void toggleFav(r.id), favorites.has(r.id) ? "#F0457E" : tc.textPrimary)}
+                    {btn("ellipsis-horizontal", "More options", () => appAlert(r.name, undefined, [
+                      { text: "Share", onPress: () => handleShare(r) },
+                      ...(!mine ? [{ text: "Report", style: "destructive" as const, onPress: () => setReportSheetId(r.id) }] : []),
+                      { text: "Cancel", style: "cancel" },
+                    ]))}
                   </View>
-                  {selectedRestaurant.verified && (
-                    <View style={[rdm.badge, { backgroundColor: "rgba(22,163,74,0.9)" }]}>
-                      <Ionicons name="shield-checkmark" size={10} color="#FFF" />
-                      <Text style={rdm.badgeText}>Verified</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={rdm.heroTitle}>{selectedRestaurant.name}</Text>
-                <Text style={rdm.heroCuisine}>{selectedRestaurant.cuisine} Cuisine{hasDistance(selectedRestaurant) ? ` · ${selectedRestaurant.distance}` : ""}</Text>
-              </View>
+                );
+              })()}
             </SheetDragArea>
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 80 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              {/* Stats row */}
-              <View style={[rdm.statsRow, { backgroundColor: isDark ? tc.inputBg : "#F9FAFB" }]}>
-                <View style={rdm.statItem}>
-                  <Ionicons name="star" size={20} color="#F59E0B" />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{(selectedRestaurant.reviews ?? 0) > 0 ? selectedRestaurant.rating : "—"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>{(selectedRestaurant.reviews ?? 0) > 0 ? `${selectedRestaurant.reviews} reviews` : "No reviews yet"}</Text>
-                </View>
-                <View style={[rdm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
-                <View style={rdm.statItem}>
-                  <Ionicons name="location" size={20} color={Colors.brand.blue} />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{hasDistance(selectedRestaurant) ? selectedRestaurant.distance : "—"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>{hasDistance(selectedRestaurant) ? "Distance" : "Distance unavailable"}</Text>
-                </View>
-                <View style={[rdm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
-                <View style={rdm.statItem}>
-                  <Ionicons name="time" size={20} color="#FF7B00" />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{selectedRestaurant.waitTime || "N/A"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>Wait Time</Text>
-                </View>
-              </View>
-
-              {/* Quick Actions */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Quick Actions</Text>
-                <View style={rdm.quickActionsRow}>
-                  <Pressable style={rdm.quickAction} onPress={() => handleDirections(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#EBF5FF" }]}>
-                      <Ionicons name="navigate-outline" size={20} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Directions</Text>
-                  </Pressable>
-                  <Pressable style={rdm.quickAction} onPress={() => handleCall(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#F0FDF4" }]}>
-                      <Ionicons name="call-outline" size={20} color="#16A34A" />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Call</Text>
-                  </Pressable>
-                  <Pressable style={rdm.quickAction} onPress={() => handleShare(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#FFF7ED" }]}>
-                      <Ionicons name="share-social-outline" size={20} color="#FF7B00" />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Share</Text>
-                  </Pressable>
-                  {hasReservations(selectedRestaurant) && !reservationRestaurant && (
-                    <Pressable style={rdm.quickAction} onPress={() => handleReserve(selectedRestaurant)}>
-                      <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#F3E8FF" }]}>
-                        <Ionicons name="calendar-outline" size={20} color="#8B5CF6" />
+          <ScrollView style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }} contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 80 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {(() => {
+                const r = selectedRestaurant;
+                const av = getAvailability(r);
+                const meta = [(r.reviews ?? 0) > 0 ? `★ ${r.rating} (${r.reviews})` : "", r.cuisine, r.price ? getDisplayPrice(r, countryCode) : "", hasDistance(r) ? r.distance : ""].filter(Boolean).join(" · ");
+                const details = [
+                  av.state !== "unknown" ? ["Hours", av.label] : null,
+                  r.waitTime ? ["Typical wait", String(r.waitTime)] : null,
+                  safeList(r.services).length ? ["Services", safeList(r.services).map(itemLabel).join(" · ")] : null,
+                ].filter(Boolean) as [string, string][];
+                const actions: [keyof typeof Ionicons.glyphMap, string, () => void][] = [
+                  ["navigate-outline", "Directions", () => handleDirections(r)],
+                  ["call-outline", "Call", () => handleCall(r)],
+                  ["share-social-outline", "Share", () => handleShare(r)],
+                  ...(hasReservations(r) && !reservationRestaurant ? [["calendar-outline", "Reserve", () => handleReserve(r)] as [keyof typeof Ionicons.glyphMap, string, () => void]] : []),
+                ];
+                return (
+                  <>
+                    <Reveal i={0}>
+                      <Text style={[TYPE.pageTitle, { fontSize: 26, color: tc.textPrimary }]}>{r.name}</Text>
+                      {meta ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 4 }]}>{meta}</Text> : null}
+                      {av.state === "open" ? <Text style={[TYPE.bodyStrong, { color: tc.mint, marginTop: 6 }]}>{av.label}</Text> : av.state === "closed" ? <Text style={[TYPE.bodyStrong, { color: tc.dangerText, marginTop: 6 }]}>{av.label}</Text> : null}
+                      {r.verified ? <View style={{ marginTop: 8, alignSelf: "flex-start", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.mintSoft }}><Text style={[TYPE.label, { color: tc.successText }]}>Verified owner</Text></View> : null}
+                    </Reveal>
+                    <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
+                      {actions.map(([icon, label, onPress]) => (
+                        <PressableScale key={label} onPress={onPress} outerStyle={{ flex: 1 }} style={{ height: 64, borderRadius: 18, alignItems: "center", justifyContent: "center", gap: 3, backgroundColor: tc.accentSoft }} accessibilityRole="button" accessibilityLabel={label}>
+                          <Ionicons name={icon} size={20} color={tc.accentText} />
+                          <Text style={[TYPE.label, { color: tc.accentText }]}>{label}</Text>
+                        </PressableScale>
+                      ))}
+                    </Reveal>
+                    {safeList(r.popularDishes).length ? (
+                      <Reveal i={2}>
+                        <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Popular here</Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                          {safeList(r.popularDishes).map((dish, i) => (
+                            <View key={`${r.id}-dish-${i}`} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.borderMedium }}>
+                              <Text style={[TYPE.label, { color: tc.accentText }]}>{i + 1}</Text>
+                              <Text style={[TYPE.bodyStrong, { fontSize: 14, color: tc.textPrimary }]}>{itemLabel(dish)}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </Reveal>
+                    ) : null}
+                    {details.length ? (
+                      <Reveal i={3}>
+                        <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Details</Text>
+                        <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, paddingHorizontal: 14 }}>
+                          {details.map(([k, v], i) => (
+                            <View key={k} style={{ flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 12, borderTopWidth: i ? StyleSheet.hairlineWidth : 0, borderTopColor: tc.borderLight }}>
+                              <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </Reveal>
+                    ) : null}
+                    {safeList(r.tags).length ? (
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+                        {safeList(r.tags).map((t, i) => (
+                          <View key={`${r.id}-tag-${i}`} style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.accentSoft }}><Text style={[TYPE.label, { color: tc.accentText }]}>{itemLabel(t)}</Text></View>
+                        ))}
                       </View>
-                      <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Reserve</Text>
-                    </Pressable>
-                  )}
-                </View>
-              </View>
-
-              {/* Details */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Restaurant Details</Text>
-                <View style={rdm.detailGrid}>
-                  {[
-                    {
-                      icon: "time-outline" as const,
-                      label: "Hours",
-                      value: getAvailability(selectedRestaurant).label,
-                      color: getAvailability(selectedRestaurant).state === "open" ? "#16A34A" : getAvailability(selectedRestaurant).state === "closed" ? "#DC2626" : "#6B7280",
-                    },
-                    {
-                      icon: "pricetag-outline" as const,
-                      label: typeof selectedRestaurant.avgPricePerPerson === "number" && selectedRestaurant.avgPricePerPerson > 0 ? "Avg Price / Person" : "Price range",
-                      value: getDisplayPrice(selectedRestaurant, countryCode),
-                      color: Colors.brand.blue,
-                    },
-                    ...(hasDistance(selectedRestaurant) ? [{ icon: "location-outline" as const, label: "Distance", value: selectedRestaurant.distance, color: "#16A34A" }] : []),
-                    { icon: "restaurant-outline" as const, label: "Cuisine", value: selectedRestaurant.cuisine, color: "#8B5CF6" },
-                  ].map((d) => (
-                    <View key={d.label} style={rdm.detailRow}>
-                      <View style={[rdm.detailIconBox, { backgroundColor: `${d.color}15` }]}>
-                        <Ionicons name={d.icon} size={16} color={d.color} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[rdm.detailLabel, { color: tc.textTertiary }]}>{d.label}</Text>
-                        <Text style={[rdm.detailValue, { color: tc.textPrimary }]}>{d.value}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Services */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Available Services</Text>
-                {safeList(selectedRestaurant.services).length === 0 ? (
-                  <Text style={{ fontSize: 13, color: tc.textTertiary }}>No services listed.</Text>
-                ) : (
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    {safeList(selectedRestaurant.services).map((sv, i) => {
-                      const label = itemLabel(sv);
-                      const iconName = label === "Dine-in" ? "restaurant-outline" : label === "Takeout" ? "bag-handle-outline" : label === "Delivery" ? "bicycle-outline" : "checkmark-circle-outline";
-                      const isReserve = label.toLowerCase().includes("reserv");
-                      return (
-                        <Pressable
-                          key={`${selectedRestaurant.id}-service-${i}-${label}`}
-                          style={({ pressed }) => [rdm.serviceChip, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, pressed && { opacity: 0.7 }]}
-                          onPress={isReserve ? () => handleReserve(selectedRestaurant) : undefined}
-                        >
-                          <Ionicons name={iconName as any} size={14} color={Colors.brand.green} />
-                          <Text style={[rdm.serviceChipText, isDark && { color: Colors.brand.green }]}>{label}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-
-              {/* Popular Dishes */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Popular Dishes</Text>
-                <View style={{ gap: 8 }}>
-                  {safeList(selectedRestaurant.popularDishes).map((dish, i) => (
-                    <View key={`${selectedRestaurant.id}-dish-${i}-${itemLabel(dish)}`} style={[rdm.dishRow, { backgroundColor: isDark ? tc.inputBg : "#FFFBF5" }]}>
-                      <View style={rdm.dishNum}><Text style={rdm.dishNumText}>{i + 1}</Text></View>
-                      <Text style={[rdm.dishName, { color: tc.textPrimary }]}>{itemLabel(dish)}</Text>
-                      <Ionicons name="flame" size={14} color="#FF7B00" />
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Tags */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Tags</Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  {safeList(selectedRestaurant.tags).map((t, i) => (
-                    <View key={`${selectedRestaurant.id}-tag-${i}-${itemLabel(t)}`} style={[rdm.tagChip, isDark && { backgroundColor: tc.inputBg }]}><Text style={[rdm.tagChipText, isDark && { color: tc.textSecondary }]}>{itemLabel(t)}</Text></View>
-                  ))}
-                </View>
-              </View>
+                    ) : null}
+                  </>
+                );
+              })()}
 
               {/* Rate & Review */}
               <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Rate & Review</Text>
+                <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Rate and review</Text>
                 {!restaurantIsMine(selectedRestaurant, user?.id) ? (
                   <>
                     {(() => {
@@ -1405,7 +1300,7 @@ export default function FoodScreen() {
                               />
                             </View>
                             <Pressable style={rdm.reviewSubmitBtn} onPress={() => void saveReviewEdits(selectedRestaurant)}>
-                              <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} style={rdm.reviewSubmitGrad}>
+                              <LinearGradient colors={[...GRADIENT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={rdm.reviewSubmitGrad}>
                                 <Ionicons name="save-outline" size={14} color="#FFF" />
                                 <Text style={rdm.reviewSubmitText}>Save Changes</Text>
                               </LinearGradient>
@@ -1443,7 +1338,7 @@ export default function FoodScreen() {
                             style={[rdm.reviewSubmitBtn, !reviewText.trim() && { opacity: 0.5 }]}
                             onPress={() => void submitReviewForRestaurant(selectedRestaurant)}
                           >
-                            <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} style={rdm.reviewSubmitGrad}>
+                            <LinearGradient colors={[...GRADIENT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={rdm.reviewSubmitGrad}>
                               <Ionicons name="send" size={14} color="#FFF" />
                               <Text style={rdm.reviewSubmitText}>Submit Review</Text>
                             </LinearGradient>
