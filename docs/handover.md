@@ -10,7 +10,7 @@ else. Keep old entries short: what was done and where it is written._
 - **Done:** see [the build note](build/2026-11-06-design-d-full-match.md) and the tracker in
   [plan 01](plan/01-design-d.md). Two optional API fields and migration `20261105000000_story_general_category`
   (applied to the local databases only). One commit per screen; nothing pushed, no pull request.
-- **Not built:** card-to-detail expand; the guest city picker.
+- **Partly built:** card-to-detail expand on Explore event tiles only; the guest city picker is rebuilt but not walked.
 - **Not walked:** listed in the build note (onboarding, badges, most composers, landlord, My posts Undo, gallery,
   story viewer, scanning, Ask, upvotes, All events). Light mode not checked on anything new. No screen-by-screen
   comparison with the prototype.

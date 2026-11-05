@@ -70,8 +70,10 @@ that were never sent.
 
 ## Not built, or not as the design
 
-- **Card to detail expand** (the card's photo growing into the detail's hero) and the **guest city picker** were
-  not built in this pass.
+- **Card to detail expand** is built for Explore's event tiles only (`src/shared/d/Hero.tsx`): the photo flies
+  from the tile to the hero on the prototype's EASE_SHEET, then the page fades in under it (seen frame by frame
+  on the phone). Listing, restaurant and bento cards still open with the slide.
+- **Guest city picker** rebuilt as the "Your city" sheet; not walked (guests only).
 - **Event detail map pin:** not applicable; the event detail has no map.
 - **Archive** a conversation: the server has none, so the swipe removes (hides) it, with Undo.
 - **The apply step is part of the agreement page**, not a sheet over the listing.

@@ -1,6 +1,6 @@
 # 01. Build design D (Night Market in the brand gradient)
 
-**Status: phase 1 and most of phase 2 built (2026-11-06) on the branch, not pushed.** Owner, 2026-11-05: include the phase 2 behaviour changes now. [Phase 1 build note](../build/2026-11-05-design-d-phase-1.md), [full-match build note](../build/2026-11-06-design-d-full-match.md). Not built: card-to-detail expand, guest city picker.
+**Status: phase 1 and most of phase 2 built (2026-11-06) on the branch, not pushed.** Owner, 2026-11-05: include the phase 2 behaviour changes now. [Phase 1 build note](../build/2026-11-05-design-d-phase-1.md), [full-match build note](../build/2026-11-06-design-d-full-match.md). Card-to-detail expand built for Explore event tiles only; guest city picker rebuilt, not walked.
 [2026-11-05 design review](../review/2026-11-05-design-audit.md). Design:
 [`d-night-market-gradient.html`](../design/2026-11-05-redesign/d-night-market-gradient.html), built from
 `docs/design/2026-11-05-redesign/src/` (`c1.js`, `a2.js`, `a3.js`, `a4.js`, `c3.js`, `a.css` + `c.css` + `d.css`).
@@ -164,7 +164,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | messages | `app/chat.tsx` (list) | swipe to remove with Undo 2026-11-06; phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | pinned subject, messages pop from their side, D sheets 2026-11-06; phone-checked |
 | my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | Undo instead of confirm, D sheets 2026-11-06; not walked |
-| city | city picker | base coat; not rebuilt (guest-only sheet) |
+| city | city picker | rebuilt 2026-11-06 (Your city sheet); not walked (guests only) |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | errors under the field 2026-11-06; phone-checked |
 | signup | `app/(auth)/signup.tsx` | live password rules, resend countdown 2026-11-06; rules phone-checked |
