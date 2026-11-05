@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { StoryCategory } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateStoryDto } from './dto/create-story.dto';
@@ -114,9 +115,9 @@ export class StoriesService {
     const created = await this.prisma.story.create({
       data: {
         authorId: userId,
-        title: dto.title,
+        title: dto.title?.trim() ?? '',
         mediaType: dto.mediaType,
-        category: dto.category,
+        category: dto.category ?? StoryCategory.GENERAL,
         details: dto.details,
         hashtags: dto.hashtags ?? [],
         durationSeconds: dto.durationSeconds,

@@ -29,7 +29,7 @@ export type FeedTab = typeof FEED_TABS[number];
 export const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 // ── Community Stories Data ─────────────────────────────
-export const STORY_CATEGORIES = ["All", "Events", "Food", "Housing", "Culture", "Local News"] as const;
+export const STORY_CATEGORIES = ["All", "Events", "Food", "Housing", "Culture", "Local News", "General"] as const;
 export type StoryCategory = typeof STORY_CATEGORIES[number];
 
 export interface CommunityStory {
@@ -279,6 +279,7 @@ export const STORY_CATEGORY_META: Record<Exclude<StoryCategory, "All">, { icon: 
   Housing:      { icon: "home-outline",           color: Colors.brand.blue, bg: Colors.brand.blueLight, darkBg: "rgba(26,107,174,0.18)" },
   Culture:      { icon: "color-palette-outline",  color: "#8B5CF6", bg: "#F3F0FF", darkBg: "rgba(139,92,246,0.18)" },
   "Local News": { icon: "newspaper-outline",     color: Colors.brand.green, bg: Colors.brand.greenLight, darkBg: "rgba(48,133,91,0.18)" },
+  General:      { icon: "images-outline",        color: "#4F6470", bg: "#E7EEF1", darkBg: "rgba(138,157,168,0.18)" },
 };
 
 // ── My Area Live Data ──────────────────────────────────

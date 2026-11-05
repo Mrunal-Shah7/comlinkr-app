@@ -926,7 +926,7 @@ export default function FeedScreen() {
       if (c === "HOUSING") return "Housing";
       if (c === "CULTURE") return "Culture";
       if (c === "LOCAL_NEWS") return "Local News";
-      return "Local News";
+      return "General"; // GENERAL: posted without a category (design D)
     };
     let list = [...storiesFromApi];
     if (storyFilter !== "All") {

@@ -218,6 +218,7 @@ enum StoryCategory {
   HOUSING
   CULTURE
   LOCAL_NEWS
+  GENERAL // design D: a story posted without picking a category
 }
 
 enum ChallengeType {

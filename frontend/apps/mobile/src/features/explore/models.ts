@@ -334,6 +334,7 @@ export function mapApiStoryToCommunityStory(s: ApiStory): CommunityStory {
   else if (catRaw === "HOUSING") uiCat = "Housing";
   else if (catRaw === "CULTURE") uiCat = "Culture";
   else if (catRaw === "LOCAL_NEWS") uiCat = "Local News";
+  else if (catRaw === "GENERAL") uiCat = "General";
 
   const mediaUrl = resolveApiAssetUrl(s.mediaUrl);
   const thumb =

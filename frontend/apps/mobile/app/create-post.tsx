@@ -43,6 +43,7 @@ import { getBusinessCurrency } from "../src/utils/currency";
 import { createRestaurant, submitReview, uploadRestaurantImages, type Restaurant } from "../src/api/food.api";
 import { ReviewPicker } from "../src/features/food/components/ReviewPicker";
 import { ListingQuestions, clearListingDraft } from "../src/features/housing/components/ListingQuestions";
+import { StoryComposer } from "../src/features/explore/components/StoryComposer";
 import { createStory, type StoryMediaTypeApi, type StoryCategoryApi } from "../src/api/stories.api";
 import { createChallenge, type ChallengeDurationApi, type ChallengeTypeApi } from "../src/api/challenges.api";
 import { ApiError } from "../src/api/client";
@@ -250,6 +251,13 @@ const POST_TYPES = [
 ];
 
 type PostType = typeof POST_TYPES[0];
+
+/** Quest templates (design D `compose-quest`); rewards are things the host gives, not app features. */
+const QUEST_TEMPLATES: { key: string; icon: "camera-outline" | "location-outline" | "people-outline"; name: string; sub: string; title: string; goal: string; reward: string; kind: string }[] = [
+  { key: "photo", icon: "camera-outline", name: "Photo challenge", sub: "Best shot of a theme wins", title: "Golden hour shot", goal: "Post a photo of golden hour in your neighbourhood.", reward: "A shout-out from the host", kind: "Creative" },
+  { key: "visit", icon: "location-outline", name: "Visit places", sub: "Check in at a list of places", title: "Taco trail", goal: "Visit 5 taquerias and post one photo at each.", reward: "Bragging rights", kind: "Food" },
+  { key: "meet", icon: "people-outline", name: "Meet people", sub: "Small social goals", title: "Say hi week", goal: "Say hi to 3 neighbours this week.", reward: "New friends nearby", kind: "Social" },
+];
 
 const ALL_CATEGORIES = [
   "Community", "Events", "Food", "Housing", "Culture", "Local News", "Announcement",
@@ -2017,6 +2025,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
   // ── Challenge fields ──
   const [challengeType, setChallengeType] = useState("");
+  const [questTemplate, setQuestTemplate] = useState<string | null>(null);
   const [challengeDuration, setChallengeDuration] = useState("");
   const [challengeGoal, setChallengeGoal] = useState("");
   const [challengeReward, setChallengeReward] = useState("");
@@ -2194,7 +2203,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
       : type.id === "shared_space"
       ? sharedSpaceValid
       : type.id === "story"
-      ? storyHasRequiredMedia && title.trim().length > 0 && !!storyCatPick
+      ? storyHasRequiredMedia
       : type.id === "challenge"
       ? challengeValid
       : type.id === "event"
@@ -2697,9 +2706,9 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             ? storyTagsInput.split(",").map((t) => t.trim().replace(/^#/, "")).filter(Boolean)
             : undefined;
           await createStory({
-            title: title.trim(),
+            title: title.trim() || undefined,
             mediaType: mapStoryMediaUi(isPhoto ? "photo" : "video"),
-            category: mapStoryCategoryLabel(storyCatPick),
+            category: storyCatPick ? mapStoryCategoryLabel(storyCatPick) : undefined,
             details: body.trim() || undefined,
             hashtags: storyHashTagsParsed,
             location: location.trim() || undefined,
@@ -2828,6 +2837,21 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
     : "ME";
 
   if (editLoading) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: tc.pageBg }}><ActivityIndicator color={type.color} /><Text style={{ color: tc.textSecondary, marginTop: 10 }}>Loading editor…</Text></View>; // SPRINT-42: prevent editing stale defaults while detail data loads.
+
+  if (type.id === "story" && !isEditing) {
+    const m = attachedFiles[0];
+    return (
+      <StoryComposer
+        media={m ? { uri: m.uri, mediaType: m.mediaType === "video" ? "video" : "photo" } : null}
+        onPick={handleAttachFile}
+        caption={title} onCaption={setTitle}
+        topics={STORY_CATEGORY_OPTIONS} topic={storyCatPick} onTopic={setStoryCatPick}
+        onShare={() => void handlePost()}
+        submitting={submitting}
+        onClose={onBack}
+      />
+    );
+  }
 
   if (type.id === "listing" && !isEditing) {
     const place = [listingCityEff, listingState.trim() || user?.stateProvince?.trim(), listingCountryEff].filter(Boolean).join(", ");
@@ -4104,6 +4128,30 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
         {/* ── CHALLENGE FORM ── */}
         {type.id === "challenge" && (
           <>
+            {/* Start from a template (design D `compose-quest`): fills the goal and the reward. */}
+            <Text style={[TYPE.label, { color: tc.textSecondary, marginTop: 12, marginBottom: 8 }]}>Start from</Text>
+            <View style={{ gap: 8, marginBottom: 6 }}>
+              {QUEST_TEMPLATES.map((t) => {
+                const on = questTemplate === t.key;
+                return (
+                  <PressableScale key={t.key} accessibilityRole="button" accessibilityState={{ selected: on }}
+                    onPress={() => {
+                      setQuestTemplate(t.key);
+                      setTitle(t.title); setBody(t.goal); setChallengeReward(t.reward); setChallengeType(t.kind);
+                      if (!challengeDuration) setChallengeDuration("1 Week");
+                    }}
+                    style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 20, backgroundColor: tc.cardBg, borderWidth: on ? 2 : 1, borderColor: on ? tc.accent : tc.glassLine }}>
+                    <View style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: on ? tc.accent : tc.accentSoft }}>
+                      <Ionicons name={t.icon} size={20} color={on ? "#fff" : tc.accentText} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{t.name}</Text>
+                      <Text style={[TYPE.small, { color: tc.textSecondary }]}>{t.sub}</Text>
+                    </View>
+                  </PressableScale>
+                );
+              })}
+            </View>
             {/* Challenge Title */}
             <View style={s.sectionLabelRow}>
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />

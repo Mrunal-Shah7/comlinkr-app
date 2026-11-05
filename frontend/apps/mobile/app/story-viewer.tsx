@@ -72,6 +72,7 @@ function categoryUi(cat: string): { label: string; color: string; bg: string } {
   if (c === "HOUSING")    return { label: "Housing",    color: "#1A6BAE", bg: "rgba(26,107,174,0.2)" };
   if (c === "CULTURE")    return { label: "Culture",    color: "#A78BFA", bg: "rgba(167,139,250,0.2)" };
   if (c === "LOCAL_NEWS") return { label: "Local News", color: "#F87171", bg: "rgba(248,113,113,0.2)" };
+  if (c === "GENERAL" || !c) return { label: "Story", color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
   return { label: cat, color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
 }
 
