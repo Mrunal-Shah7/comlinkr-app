@@ -182,6 +182,11 @@ const s = StyleSheet.create({
   segInd: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 14, overflow: 'hidden', shadowColor: '#1A6BAE', shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   segBtn: { flex: 1, paddingVertical: 8, paddingHorizontal: 3, alignItems: 'center', borderRadius: 14 },
   tile: { borderRadius: RADIUS.tile, padding: 14, overflow: 'hidden', minHeight: 118 },
+  stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
+  stepCtl: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  stepBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', shadowColor: '#0F283C', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  prefill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, alignSelf: 'flex-start' },
   tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });
 
@@ -201,4 +206,106 @@ export function EmptyState({ icon, title, sub, actionLabel, onAction }: {
       {actionLabel && onAction ? <View style={{ marginTop: 16 }}><GradientButton small label={actionLabel} onPress={onAction} /></View> : null}
     </View>
   );
+}
+
+/* ---------- stepper ---------- */
+/** `.stepper`: label on the left, − value + on the right. The number rolls in from the side it moved
+ *  (translateY ±60 %, 240 ms); pressing past a limit shakes the row. */
+export function Stepper({ label, value, onChange, min = 0, max = 99, style }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; style?: StyleProp<ViewStyle>;
+}) {
+  const { tc } = useTheme();
+  const reduce = useReducedMotion();
+  const { style: shakeStyle, shake } = useShake();
+  const y = useSharedValue(0);
+  const o = useSharedValue(1);
+  const num = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }] }));
+  const step = (d: number) => {
+    const v = Math.min(max, Math.max(min, value + d));
+    if (v === value) return shake();
+    void Haptics.selectionAsync();
+    onChange(v);
+    if (reduce) return;
+    y.value = d > 0 ? 12 : -12; o.value = 0;
+    y.value = withTiming(0, { duration: 240 }); o.value = withTiming(1, { duration: 240 });
+  };
+  const btn = (d: number, icon: 'remove' | 'add') => (
+    <PressableScale onPress={() => step(d)} scaleTo={0.88} accessibilityLabel={d > 0 ? 'More' : 'Less'}
+      style={[s.stepBtn, { backgroundColor: tc.cardBg }]}>
+      <Ionicons name={icon} size={20} color={tc.textPrimary} />
+    </PressableScale>
+  );
+  return (
+    <Animated.View style={[s.stepper, { backgroundColor: tc.inputBg }, shakeStyle, style]}>
+      <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>{label}</Text>
+      <View style={s.stepCtl}>
+        {btn(-1, 'remove')}
+        <View style={{ minWidth: 22, alignItems: 'center', overflow: 'hidden' }}>
+          <Animated.Text style={[body(700), { fontSize: 17, color: tc.textPrimary }, num]}>{value}</Animated.Text>
+        </View>
+        {btn(1, 'add')}
+      </View>
+    </Animated.View>
+  );
+}
+
+/* ---------- prefill and tag ---------- */
+/** `.prefill`: a green-tinted card with a check, for values taken from the profile. */
+export function Prefill({ children, right, style }: { children: ReactNode; right?: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const { tc } = useTheme();
+  return (
+    <View style={[s.prefill, { backgroundColor: tc.mintSoft }, style]}>
+      <Ionicons name="checkmark" size={20} color={tc.mint} />
+      <View style={{ flex: 1 }}>{children}</View>
+      {right}
+    </View>
+  );
+}
+/** `.tag` (accent) and `.tag.ok` (green). */
+export function Tag({ label, ok, icon, style }: { label: string; ok?: boolean; icon?: keyof typeof Ionicons.glyphMap; style?: StyleProp<ViewStyle> }) {
+  const { tc } = useTheme();
+  const color = ok ? tc.mint : tc.accentText;
+  return (
+    <View style={[s.tag, { backgroundColor: ok ? tc.mintSoft : tc.accentSoft }, style]}>
+      {icon ? <Ionicons name={icon} size={13} color={color} /> : null}
+      <Text style={[body(700), { fontSize: 11.5, color }]}>{label}</Text>
+    </View>
+  );
+}
+
+/* ---------- person avatar ---------- */
+/** The prototype's `PERSON`: initials on a two-tone gradient whose hue comes from the name. */
+export function hueOf(name: string): number {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+  return h;
+}
+export function PersonAvatar({ name, size = 40, hue }: { name: string; size?: number; hue?: number }) {
+  const h = hue ?? hueOf(name || '?');
+  const ini = (name || '?').split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  return (
+    <LinearGradient colors={[`hsl(${h}, 70%, 58%)`, `hsl(${(h + 30) % 360}, 65%, 44%)`]} start={{ x: 0, y: 0 }} end={{ x: 0.8, y: 1 }}
+      style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={[body(700), { color: '#fff', fontSize: Math.round(size * 0.38) }]}>{ini}</Text>
+    </LinearGradient>
+  );
+}
+
+/* ---------- rolling number ---------- */
+/** A number that rolls in from below when it goes up and from above when it goes down (260 ms). */
+export function RollNumber({ value, style }: { value: number | string; style?: StyleProp<TextStyle> }) {
+  const reduce = useReducedMotion();
+  const y = useSharedValue(0);
+  const o = useSharedValue(1);
+  const [prev, setPrev] = useState(value);
+  useEffect(() => {
+    if (prev === value) return;
+    const up = Number(value) >= Number(prev);
+    setPrev(value);
+    if (reduce) return;
+    y.value = up ? 10 : -10; o.value = 0;
+    y.value = withTiming(0, { duration: 260 }); o.value = withTiming(1, { duration: 260 });
+  }, [value, prev, reduce, y, o]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }] }));
+  return <View style={{ overflow: 'hidden' }}><Animated.Text style={[style, a]}>{value}</Animated.Text></View>;
 }
