@@ -99,3 +99,70 @@ a backend change with its own migration-free DTO change and e2e test).
 - **Fonts on Android:** each weight is its own family (`Manrope_700Bold`, …); screens use `body()` /
   `display()` from `src/theme/d.ts` instead of `fontWeight`. Screens not yet restyled keep the system font
   until their turn.
+
+## Screen tracker (phase 1)
+
+The 55 screens of `d-night-market-gradient.html` (52 plus three small sheets: city, more, listing menu). Status is one
+of: **not started**; **base coat** (fonts and colours only, through the shared style layer, old layout); **rebuilt**
+(the screen's own layout follows the design, not yet seen on the phone); **phone-checked** (rebuilt and walked on
+the phone against the local backend). Only "phone-checked" counts as done.
+
+| Design screen | File | Status |
+| --- | --- | --- |
+| explore | `app/(tabs)/feed/index.tsx`, `ExploreBento.tsx` | phone-checked |
+| listings | `app/(tabs)/housing/index.tsx`, `DListingCards.tsx`, `RoommateCard.tsx` | phone-checked |
+| food | `app/(tabs)/food/index.tsx` | phone-checked |
+| community | `app/(tabs)/community/index.tsx` | phone-checked |
+| compose (+ sheet) | `src/shared/navigation/ComposeSheet.tsx` | phone-checked |
+| menu (You sheet) | `components/HamburgerMenu.tsx` | phone-checked |
+| listing-detail | `PropertyDetailModal.tsx` | phone-checked |
+| restaurant-detail | restaurant modal in `app/(tabs)/food/index.tsx` | phone-checked |
+| roommate-detail | `RoommateDetailModal.tsx`, `MatchRing.tsx` | phone-checked |
+| notifications | `app/notifications.tsx` | phone-checked |
+| room-detail | `AvailableRoomDetailModal.tsx` | not started |
+| gallery | `ImageViewer` | not started |
+| apply (sheet) | apply flow in `PropertyDetailModal.tsx` | not started |
+| agreement | `app/property-agreement.tsx` | not started |
+| landlord | `app/landlord-dashboard.tsx` | not started |
+| my-listings | `app/my-listings.tsx` | not started |
+| filters | filter sheet in `app/(tabs)/housing/index.tsx` | not started |
+| safety | `SafeRentingGuide` | not started |
+| listmenu | listing ··· menu | not started |
+| my-restaurants | `app/my-restaurants.tsx` | not started |
+| review (sheet) | rate and review in the restaurant modal | not started |
+| ask (sheet) | ask sheet in `app/(tabs)/community/index.tsx` | not started |
+| question-detail | answers in `app/(tabs)/community/index.tsx` | not started |
+| post-detail | post comments modal | not started |
+| event-detail | `EventDetailModal` | not started |
+| event-register | `EventRegistrationModal` | not started |
+| event-ticket | ticket in `EventRegistrationModal` | not started |
+| events-all | `app/events.tsx` | not started |
+| check-in | `app/events/[id]/check-in.tsx` | not started |
+| story-viewer | `app/story-viewer.tsx` | not started |
+| profile | `app/profile.tsx` | not started |
+| public-profile | `app/public-profile.tsx` | not started |
+| edit-profile | `app/edit-profile.tsx` | not started |
+| saved | `app/saved.tsx`, `app/interested.tsx`, `app/favorites.tsx` | not started |
+| settings | `app/settings.tsx` | not started |
+| help | `app/help-support.tsx` | not started |
+| legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` | not started |
+| badges | `app/apply-badge.tsx` | not started |
+| verification | `app/verification-status.tsx` | not started |
+| messages | `app/chat.tsx` (list) | not started |
+| chat | `app/chat.tsx` (conversation) | not started |
+| my-posts | `app/myposts.tsx` | not started |
+| city | city picker | not started |
+| more | ··· sheets (share, report, block) | not started |
+| login | `app/(auth)/login.tsx` | not started |
+| signup | `app/(auth)/signup.tsx` | not started |
+| otp | OTP step in sign-up | not started |
+| forgot | `app/(auth)/forgot-password.tsx` | not started |
+| onboarding | onboarding screens | not started (look only in phase 1) |
+| compose-listing | `app/create-post.tsx` | not started |
+| compose-room | `app/create-post.tsx` | not started |
+| compose-news | `app/create-post.tsx` | not started |
+| compose-event | `app/create-post.tsx` | not started |
+| compose-story | `app/create-post.tsx` | not started |
+| compose-restaurant | `app/create-post.tsx` | not started |
+| compose-review | `app/create-post.tsx` | not started |
+| compose-quest | `app/create-post.tsx` | not started |
