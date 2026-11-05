@@ -1,4 +1,4 @@
-| agreement |undefined| rebuilt: glass header, sentence case, accent pill, one gradient; step bodies on the base coat; step 1 and cancel phone-checked || apply (sheet) |undefined (Apply leads to the agreement's step 1) | phone-checked (Apply opens the agreement, Cancel returns) || city |undefined| base coat (`GuestCityPickerModal`, guests only); not walked while signed in || post-detail |undefined (comments modal in `app/(tabs)/feed/index.tsx`) | phone-checked (opened a seeded post; no comment posted) || story-viewer |undefined (createDTypeStyles) | rebuilt (fonts only on purpose: stays black); not walked, no stories in the seed || gallery |undefined (createDTypeStyles) | phone-checked (fonts only on purpose: stays black) || room-detail |undefined| phone-checked (with a temporary uit_ room, removed after) || event-ticket |undefined| rebuilt with the sign-up sheet (mint success, brand gradients); not walked || event-register |undefined| rebuilt (base coat + brand gradients, createThemedStyles); sheet opened on the phone, sign-up not completed || event-detail |undefined| phone-checked (with a temporary uit_ event) || question-detail |undefined| rebuilt with Community (inline answers restyled); answers view not walked || review (sheet) |undefined| rebuilt with the restaurant detail (section heading, gradient submit); not walked || listmenu |undefined| phone-checked through the dialogs (every ··· menu is an appAlert action sheet) || filters |undefined| phone-checked (chips, clear) || safety |undefined| phone-checked (collapsed and open) |# 01. Build design D (Night Market in the brand gradient)
+# 01. Build design D (Night Market in the brand gradient)
 
 **Status: Building (phase 1).** Triage [TR-005](../triage.md). Review:
 [2026-11-05 design review](../review/2026-11-05-design-audit.md). Design:
@@ -119,26 +119,26 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | restaurant-detail | restaurant modal in `app/(tabs)/food/index.tsx` | phone-checked |
 | roommate-detail | `RoommateDetailModal.tsx`, `MatchRing.tsx` | phone-checked |
 | notifications | `app/notifications.tsx` | phone-checked |
-| room-detail | `AvailableRoomDetailModal.tsx` | not started |
-| gallery | `ImageViewer` | not started |
-| apply (sheet) | apply flow in `PropertyDetailModal.tsx` | not started |
-| agreement | `app/property-agreement.tsx` | not started |
+| room-detail | `AvailableRoomDetailModal.tsx` | phone-checked (with a temporary uit_ room, removed after) |
+| gallery | `ImageViewer` (createDTypeStyles) | phone-checked (fonts only on purpose: stays black) |
+| apply (sheet) | apply flow in `PropertyDetailModal.tsx` (Apply leads to the agreement's step 1) | phone-checked (Apply opens the agreement, Cancel returns) |
+| agreement | `app/property-agreement.tsx` | rebuilt: glass header, sentence case, accent pill, one gradient; step bodies on the base coat; step 1 and cancel phone-checked |
 | landlord | `app/landlord-dashboard.tsx` | rebuilt; empty state phone-checked, cards need an application |
 | my-listings | `app/my-listings.tsx` | rebuilt; empty state phone-checked, rows to check after a listing is made |
-| filters | filter sheet in `app/(tabs)/housing/index.tsx` | not started |
-| safety | `SafeRentingGuide` | not started |
-| listmenu | listing ··· menu | not started |
+| filters | filter sheet in `app/(tabs)/housing/index.tsx` | phone-checked (chips, clear) |
+| safety | `SafeRentingGuide` | phone-checked (collapsed and open) |
+| listmenu | listing ··· menu | phone-checked through the dialogs (every ··· menu is an appAlert action sheet) |
 | my-restaurants | `app/my-restaurants.tsx` (manage sheet still base coat) | rebuilt; empty state phone-checked, cards to check after a restaurant is made |
-| review (sheet) | rate and review in the restaurant modal | not started |
+| review (sheet) | rate and review in the restaurant modal | rebuilt with the restaurant detail (section heading, gradient submit); not walked |
 | ask (sheet) | ask sheet in `app/(tabs)/community/index.tsx` | phone-checked (open, cancel; nothing posted) |
-| question-detail | answers in `app/(tabs)/community/index.tsx` | not started |
-| post-detail | post comments modal | not started |
-| event-detail | `EventDetailModal` | not started |
-| event-register | `EventRegistrationModal` | not started |
-| event-ticket | ticket in `EventRegistrationModal` | not started |
+| question-detail | answers in `app/(tabs)/community/index.tsx` | rebuilt with Community (inline answers restyled); answers view not walked |
+| post-detail | post comments modal (comments modal in `app/(tabs)/feed/index.tsx`) | phone-checked (opened a seeded post; no comment posted) |
+| event-detail | `EventDetailModal` | phone-checked (with a temporary uit_ event, removed after) |
+| event-register | `EventRegistrationModal` | rebuilt (createThemedStyles, brand gradients); sheet opened on the phone, sign-up not completed |
+| event-ticket | ticket in `EventRegistrationModal` | rebuilt with the sign-up sheet (mint success, brand gradients); not walked |
 | events-all | `app/events.tsx` (its own detail sheet keeps the base coat) | phone-checked (list, save, unsave) |
 | check-in | `app/events/[id]/check-in.tsx` (stays dark on purpose: D fonts, the D dark background, a mint filter chip) | permission screen phone-checked; scanner not opened (camera not granted) |
-| story-viewer | `app/story-viewer.tsx` | not started |
+| story-viewer | `app/story-viewer.tsx` (createDTypeStyles) | rebuilt (fonts only on purpose: stays black); not walked, no stories in the seed |
 | profile | `app/profile.tsx` (roommate-preferences sheet still base coat) | phone-checked |
 | public-profile | `app/public-profile.tsx` | phone-checked (Follow fails on the backend: TR-006) |
 | edit-profile | `app/edit-profile.tsx` | phone-checked (save and undo walked) |
@@ -151,7 +151,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | messages | `app/chat.tsx` (list) | phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |
 | my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | phone-checked (a post made, its row, delete) |
-| city | city picker | not started |
+| city | city picker | base coat (`GuestCityPickerModal`, guests only); not walked while signed in |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | phone-checked (opened while signed in; signing in again not walked) |
 | signup | `app/(auth)/signup.tsx` | phone-checked (form; no code sent) |
