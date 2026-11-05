@@ -40,7 +40,8 @@ import { createListing, getListing, removeListingImage, reorderListingImages, up
 import { formatPrice, getCurrencyForCountry } from "../src/utils/currency";
 import { createSharedSpace, uploadSharedSpaceImages } from "../src/api/roommates.api";
 import { getBusinessCurrency } from "../src/utils/currency";
-import { createRestaurant, getRestaurants, submitReview, uploadRestaurantImages } from "../src/api/food.api";
+import { createRestaurant, submitReview, uploadRestaurantImages, type Restaurant } from "../src/api/food.api";
+import { ReviewPicker } from "../src/features/food/components/ReviewPicker";
 import { createStory, type StoryMediaTypeApi, type StoryCategoryApi } from "../src/api/stories.api";
 import { createChallenge, type ChallengeDurationApi, type ChallengeTypeApi } from "../src/api/challenges.api";
 import { ApiError } from "../src/api/client";
@@ -1987,9 +1988,9 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
   const [restWaitTime, setRestWaitTime] = useState("");
 
   // ── Local-review fields ──
-  const [reviewRating, setReviewRating] = useState("");
-  const [reviewDishes, setReviewDishes] = useState<string[]>([]);
-  const [reviewVisitType, setReviewVisitType] = useState("");
+  // Review: the restaurant picked from the list and the stars (design D `compose-review`).
+  const [reviewTarget, setReviewTarget] = useState<Restaurant | null>(null);
+  const [reviewN, setReviewN] = useState(0);
 
   // ── Event fields ──
   const [eventCategory, setEventCategory] = useState("");
@@ -2172,12 +2173,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
     restCity.trim().length > 0 &&
     restCountry.trim().length > 0;
 
-  const reviewStars = parseReviewStars(reviewRating);
-  const restaurantReviewValid =
-    restName.trim().length > 0 &&
-    body.trim().length > 0 &&
-    reviewRating.length > 0 &&
-    reviewStars != null;
+  const restaurantReviewValid = !!reviewTarget && reviewN > 0;
 
   const canPost =
     type.id === "restaurant"
@@ -2634,21 +2630,8 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             }
           }
           if (restaurantPostMode === "review") {
-            const rating = reviewStars!;
-            const { data } = await getRestaurants({ search: restName.trim(), pageSize: 30 });
-            const ql = restName.trim().toLowerCase();
-            const exact = data.filter((r) => r.name.toLowerCase() === ql);
-            const target = exact[0] ?? (data.length === 1 ? data[0] : undefined);
-            if (!target) {
-              appAlert(
-                "Restaurant not found",
-                exact.length > 1
-                  ? "Multiple venues share that name. Open the restaurant in the Food tab and leave your review there."
-                  : "We could not find a match. Check spelling or review from the restaurant page.",
-              );
-              return;
-            }
-            await submitReview(target.id, { rating, content: body.trim() });
+            if (!reviewTarget || !reviewN) return;
+            await submitReview(reviewTarget.id, { rating: reviewN, content: body.trim() || undefined });
           } else {
             const services = features.length > 0 ? features : ["Dine-in"];
             const tags = [businessType, cuisine].filter((x) => (x || "").trim().length > 0) as string[];
@@ -3935,108 +3918,15 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             {/* ── COMMUNITY / LOCAL REVIEWER FORM ── */}
             {restaurantPostMode === "review" && (
-              <>
-                {/* Soft verification boost notice */}
-                {!canPostRestaurantReview && (
-                  <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
-                    <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
-                    <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
-                      {"Anyone can review — "}
-                      <Text style={{ fontWeight: "800" }}>Local Reviewer</Text>
-                      {" badge holders get a trust indicator and priority in search. "}
-                      <Text
-                        style={{ fontWeight: "800", color: "#15803D", textDecorationLine: "underline" }}
-                        onPress={() => router.push({ pathname: "/apply-badge" as any, params: { badgeType: "local_reviewer" } })}
-                      >Get verified</Text>
-                    </Text>
-                  </View>
-                )}
-
-                <SectionLabel label="RESTAURANT NAME *" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[s.titleInput, { color: tc.textPrimary }]}
-                    placeholder="Name of the restaurant you visited"
-                    placeholderTextColor={tc.textTertiary}
-                    value={restName}
-                    onChangeText={setRestName}
-                    maxLength={100}
-                  />
-                  <Text style={s.charCount}>{restName.length}/100</Text>
-                </View>
-
-                <SectionLabel label="CUISINE TYPE (OPTIONAL)" color={type.color} />
-                <ChipSelect
-                  options={["Italian", "Mexican", "Japanese", "Thai", "Indian", "Chinese", "American", "Mediterranean", "Other"]}
-                  value={cuisine}
-                  onChange={setCuisine}
-                  color={type.color}
-                  bg={type.bg}
-                />
-
-                <SectionLabel label="PRICE RANGE (OPTIONAL)" color={type.color} />
-                <ChipSelect
-                  options={["$ Budget", "$$ Mid-range", "$$$ Upscale", "$$$$ Fine Dining"]}
-                  value={priceRange}
-                  onChange={setPriceRange}
-                  color={type.color}
-                  bg={type.bg}
-                />
-
-                <SectionLabel label="YOUR RATING *" color={type.color} />
-                <ChipSelect
-                  options={["★★★★★ Excellent", "★★★★ Great", "★★★ Good", "★★ Fair", "★ Poor"]}
-                  value={reviewRating}
-                  onChange={setReviewRating}
-                  color={type.color}
-                  bg={type.bg}
-                />
-
-                <SectionLabel label="TYPE OF VISIT" color={type.color} />
-                <ChipSelect
-                  options={["Dine-in", "Takeout", "Delivery", "First visit", "Regular"]}
-                  value={reviewVisitType}
-                  onChange={setReviewVisitType}
-                  color={type.color}
-                  bg={type.bg}
-                />
-
-                <SectionLabel label="DISHES YOU TRIED" color={type.color} />
-                <ChipMulti
-                  options={["Pizza", "Pasta", "Sushi", "Tacos", "Burgers", "Curry", "Ramen", "Salads", "Cocktails", "Desserts", "Seafood", "Steak", "Brunch"]}
-                  value={reviewDishes}
-                  onChange={setReviewDishes}
-                  color={type.color}
-                  bg={type.bg}
-                />
-
-                <SectionLabel label="YOUR REVIEW" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
-                    placeholder="Share your experience — what you loved, the ambiance, must-try dishes, and who you'd recommend it to..."
-                    placeholderTextColor={tc.textTertiary}
-                    value={body}
-                    onChangeText={setBody}
-                    multiline
-                    textAlignVertical="top"
-                    maxLength={1000}
-                  />
-                  <Text style={s.charCount}>{body.length}/1000</Text>
-                </View>
-
-                <SectionLabel label="RESTAURANT LOCATION" color={type.color} />
-                <View style={[s.locationField, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                  <Ionicons name="location-outline" size={17} color={type.color} />
-                  <TextInput
-                    style={[s.locationInput, { color: tc.textPrimary }]}
-                    placeholder="Neighborhood or address (e.g. Downtown Manhattan)"
-                    placeholderTextColor={tc.textTertiary}
-                    value={location}
-                    onChangeText={setLocation}
-                  />
-                </View>
-              </>
+              <ReviewPicker
+                city={user?.city}
+                picked={reviewTarget}
+                onPick={(r) => { setReviewTarget(r); if (!r) setReviewN(0); }}
+                rating={reviewN}
+                onRating={setReviewN}
+                text={body}
+                onText={setBody}
+              />
             )}
           </>
         )}
