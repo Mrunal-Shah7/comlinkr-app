@@ -29,7 +29,8 @@ import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { Image } from 'expo-image';
 import { TYPE } from '../src/theme/d';
-import { EmptyState, GradientFill, Reveal, SoftButton } from '../src/shared/d';
+import { EmptyState, GradientButton, GradientFill, Reveal, SoftButton, Tag } from '../src/shared/d';
+import { DSheet } from '../src/shared/d/Sheet';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
 
@@ -169,145 +170,97 @@ function RestaurantCard({
         </View>
       </View>
 
-      {/* ── Manage Modal ── */}
-      <Modal visible={manageOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setManageOpen(false)}>
-        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-          {/* Modal header */}
-          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: rs(16), paddingTop: rs(16), paddingBottom: rs(12), borderBottomWidth: 1, borderBottomColor: tc.borderLight, backgroundColor: tc.cardBg }}>
-            <Pressable onPress={() => setManageOpen(false)} style={{ width: rs(36), height: rs(36), borderRadius: rs(10), backgroundColor: tc.sectionBg, alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="close" size={20} color={tc.textSecondary} />
-            </Pressable>
-            <View style={{ flex: 1, marginLeft: rs(10) }}>
-              <Text style={{ fontSize: rs(16), fontWeight: "800", color: tc.textPrimary }} numberOfLines={1}>{restaurant.name}</Text>
-              <Text style={{ fontSize: rs(12), color: tc.textTertiary }}>{restaurant.cuisine}{restaurant.city ? ` · ${restaurant.city}` : ""}</Text>
-            </View>
-            <Pressable
-              onPress={() => editMode ? void saveEdits() : setEditMode(true)}
-              style={{ paddingHorizontal: rs(14), paddingVertical: rs(8), borderRadius: rs(10), backgroundColor: editMode ? Colors.brand.green : Colors.brand.blue, opacity: saving ? 0.7 : 1 }}
-            >
-              {saving
-                ? <ActivityIndicator size="small" color="#FFF" />
-                : <Text style={{ fontSize: rs(13), fontWeight: "700", color: "#FFF" }}>{editMode ? "Save" : "Edit"}</Text>}
-            </Pressable>
-          </View>
-
-          <ScrollView contentContainerStyle={{ padding: rs(16), gap: rs(14) }} showsVerticalScrollIndicator={false}>
-            {/* Status banner */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: rs(10), padding: rs(12), borderRadius: rs(12), backgroundColor: restaurant.openNow ? "#E3F1EA" : "#FEF2F2", borderWidth: 1, borderColor: restaurant.openNow ? "#86EFAC" : "#FECACA" }}>
-              <View style={{ width: rs(10), height: rs(10), borderRadius: rs(5), backgroundColor: restaurant.openNow ? "#30855B" : "#EF4444" }} />
-              <Text style={{ flex: 1, fontSize: rs(13), fontWeight: "700", color: restaurant.openNow ? "#30855B" : "#EF4444" }}>{restaurant.openNow ? "Currently Open" : "Currently Closed"}</Text>
-              <Text style={{ fontSize: rs(12), color: tc.textTertiary }}>{restaurant.closingTime ? `Closes ${restaurant.closingTime}` : ""}</Text>
+      {/* ── Manage sheet ── */}
+      <DSheet visible={manageOpen} onClose={() => { if (!saving) setManageOpen(false); }} title={restaurant.name} full>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24, gap: 14 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <Text style={[TYPE.small, { color: tc.textSecondary }]}>{[restaurant.cuisine, restaurant.city].filter(Boolean).join(" · ")}</Text>
+              <View style={{ flex: 1 }} />
+              <Tag label={restaurant.openNow ? "Open now" : "Closed"} ok={restaurant.openNow} />
+              <Tag label={verifCfg.label} ok={verifCfg.label === "Verified"} />
             </View>
 
-            {/* Analytics */}
-            <View style={{ flexDirection: "row", gap: rs(8) }}>
-              {[
-                { icon: "eye-outline", color: "#1A6BAE", bg: "#EEF5FF", label: "Views", value: (restaurant as any).views ?? 0 },
-                { icon: "heart-outline", color: "#EF4444", bg: "#FEF2F2", label: "Likes", value: (restaurant as any).likes ?? 0 },
-                { icon: "chatbubble-outline", color: "#30855B", bg: "#E3F1EA", label: "Reviews", value: restaurant.reviews ?? 0 },
-                { icon: "calendar-outline", color: "#257A86", bg: "#E2F0F1", label: "Reserv.", value: (restaurant as any).reservations ?? 0 },
-              ].map((s) => (
-                <View key={s.label} style={{ flex: 1, alignItems: "center", padding: rs(8), borderRadius: rs(10), backgroundColor: s.bg }}>
-                  <Ionicons name={s.icon as any} size={rs(16)} color={s.color} />
-                  <Text style={{ fontSize: rs(14), fontWeight: "800", color: s.color, marginTop: rs(3) }}>{s.value}</Text>
-                  <Text style={{ fontSize: rs(10), color: tc.textTertiary, fontWeight: "600" }}>{s.label}</Text>
-                </View>
-              ))}
-            </View>
-
-            {/* Info / edit fields */}
-            <Text style={{ fontSize: rs(11), fontWeight: "700", color: tc.textTertiary, letterSpacing: 0.5 }}>RESTAURANT DETAILS</Text>
-
-            {[
-              { label: "Name", value: editName, onChange: setEditName, placeholder: "Restaurant name" },
-              { label: "Address", value: editAddress, onChange: setEditAddress, placeholder: "Full address" },
-              { label: "Phone", value: editPhone, onChange: setEditPhone, placeholder: "Phone number" },
-              { label: "Website", value: editWebsite, onChange: setEditWebsite, placeholder: "https://..." },
-              { label: "Opening Time", value: editOpeningTime, onChange: setEditOpeningTime, placeholder: "e.g. 09:00" },
-              { label: "Closing Time", value: editClosingTime, onChange: setEditClosingTime, placeholder: "e.g. 22:00" },
-            ].map((field) => (
-              <View key={field.label} style={{ gap: rs(4) }}>
-                <Text style={{ fontSize: rs(12), fontWeight: "600", color: tc.textSecondary }}>{field.label}</Text>
-                {editMode ? (
-                  <TextInput
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    placeholder={field.placeholder}
-                    placeholderTextColor={tc.textTertiary}
-                    style={{ fontSize: rs(14), color: tc.textPrimary, backgroundColor: tc.inputBg, borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), paddingHorizontal: rs(12), paddingVertical: rs(10) }}
-                  />
-                ) : (
-                  <Text style={{ fontSize: rs(14), color: field.value ? tc.textPrimary : tc.textTertiary, paddingVertical: rs(2) }}>{field.value || "Not set"}</Text>
-                )}
+            {restaurant.reviews > 0 ? (
+              <View style={{ flexDirection: "row", borderRadius: 20, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                {[
+                  { v: restaurant.rating ? restaurant.rating.toFixed(1) : "", k: "Rating" },
+                  { v: String(restaurant.reviews), k: restaurant.reviews === 1 ? "Review" : "Reviews" },
+                ].filter((x) => x.v).map((x, i) => (
+                  <View key={x.k} style={[{ flex: 1, alignItems: "center", paddingVertical: 12 }, i > 0 && { borderLeftWidth: 1, borderLeftColor: tc.borderLight }]}>
+                    <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{x.v}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary }]}>{x.k}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
+            ) : null}
 
-            {/* Description */}
-            <View style={{ gap: rs(4) }}>
-              <Text style={{ fontSize: rs(12), fontWeight: "600", color: tc.textSecondary }}>Description</Text>
-              {editMode ? (
-                <TextInput
-                  value={editDescription}
-                  onChangeText={setEditDescription}
-                  placeholder="Describe your restaurant..."
-                  placeholderTextColor={tc.textTertiary}
-                  multiline
-                  numberOfLines={4}
-                  style={{ fontSize: rs(14), color: tc.textPrimary, backgroundColor: tc.inputBg, borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), paddingHorizontal: rs(12), paddingVertical: rs(10), minHeight: rs(90), textAlignVertical: "top" }}
-                />
-              ) : (
-                <Text style={{ fontSize: rs(14), color: editDescription ? tc.textPrimary : tc.textTertiary, lineHeight: rs(20) }}>{editDescription || "No description"}</Text>
-              )}
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={[TYPE.overline, { color: tc.textTertiary, flex: 1 }]}>Details</Text>
+              {editMode ? null : <SoftButton small label="Edit" onPress={() => setEditMode(true)} />}
             </View>
 
-            {/* Open now toggle (edit mode only) */}
-            {editMode && (
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: rs(12), borderRadius: rs(10), backgroundColor: tc.sectionBg }}>
-                <Text style={{ fontSize: rs(14), fontWeight: "600", color: tc.textPrimary }}>Mark as Open Now</Text>
-                <Switch value={editOpenNow} onValueChange={setEditOpenNow} trackColor={{ false: tc.borderLight, true: Colors.brand.green }} thumbColor="#FFF" />
-              </View>
-            )}
-
-            {/* Tags & services (read only) */}
-            {restaurant.tags && restaurant.tags.length > 0 && (
+            {editMode ? (
               <>
-                <Text style={{ fontSize: rs(11), fontWeight: "700", color: tc.textTertiary, letterSpacing: 0.5 }}>TAGS</Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: rs(6) }}>
-                  {restaurant.tags.map((t) => (
-                    <View key={t} style={{ backgroundColor: "#EEF5FF", borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
-                      <Text style={{ fontSize: rs(11), fontWeight: "600", color: Colors.brand.blue }}>{t}</Text>
-                    </View>
-                  ))}
+                {[
+                  { label: "Name", value: editName, onChange: setEditName, placeholder: "Restaurant name" },
+                  { label: "Address", value: editAddress, onChange: setEditAddress, placeholder: "Full address" },
+                  { label: "Phone", value: editPhone, onChange: setEditPhone, placeholder: "Phone number" },
+                  { label: "Website", value: editWebsite, onChange: setEditWebsite, placeholder: "https://..." },
+                  { label: "Opens", value: editOpeningTime, onChange: setEditOpeningTime, placeholder: "e.g. 09:00" },
+                  { label: "Closes", value: editClosingTime, onChange: setEditClosingTime, placeholder: "e.g. 22:00" },
+                ].map((field) => (
+                  <View key={field.label}>
+                    <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>{field.label}</Text>
+                    <TextInput value={field.value} onChangeText={field.onChange} placeholder={field.placeholder} placeholderTextColor={tc.textTertiary}
+                      style={[TYPE.body, { minHeight: 50, borderRadius: 16, paddingHorizontal: 14, backgroundColor: tc.inputBg, color: tc.textPrimary }]} />
+                  </View>
+                ))}
+                <View>
+                  <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>About</Text>
+                  <TextInput value={editDescription} onChangeText={setEditDescription} placeholder="Describe your restaurant" placeholderTextColor={tc.textTertiary} multiline
+                    style={[TYPE.body, { minHeight: 100, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]} />
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
+                  <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Open now</Text>
+                  <Switch value={editOpenNow} onValueChange={setEditOpenNow} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor="#FFF" />
+                </View>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  <SoftButton block ghost label="Cancel" outerStyle={{ flex: 1 }} disabled={saving} onPress={() => setEditMode(false)} />
+                  <GradientButton block label="Save" outerStyle={{ flex: 1.4 }} loading={saving} onPress={() => void saveEdits()} />
                 </View>
               </>
-            )}
-
-            {/* Popular dishes (read only) */}
-            {restaurant.popularDishes && restaurant.popularDishes.length > 0 && (
-              <>
-                <Text style={{ fontSize: rs(11), fontWeight: "700", color: tc.textTertiary, letterSpacing: 0.5 }}>POPULAR DISHES</Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: rs(6) }}>
-                  {restaurant.popularDishes.map((d) => (
-                    <View key={d} style={{ backgroundColor: Colors.brand.greenLight ?? "#E3F1EA", borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
-                      <Text style={{ fontSize: rs(11), fontWeight: "600", color: Colors.brand.green }}>{d}</Text>
-                    </View>
-                  ))}
-                </View>
-              </>
-            )}
-
-            {/* Listed info */}
-            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: rs(8), borderTopWidth: 1, borderTopColor: tc.borderLight }}>
-              <Text style={{ fontSize: rs(12), color: tc.textTertiary }}>Listed {listedDate}</Text>
-              <View style={[{ paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(6) }, { backgroundColor: verifCfg.bg }]}>
-                <Text style={{ fontSize: rs(11), fontWeight: "700", color: verifCfg.color }}>{verifCfg.label}</Text>
+            ) : (
+              <View style={{ borderRadius: 20, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                {([
+                  ["Address", editAddress], ["Phone", editPhone], ["Website", editWebsite],
+                  ["Hours", editOpeningTime && editClosingTime ? `${editOpeningTime}–${editClosingTime}` : ""],
+                  ["About", editDescription],
+                ] as [string, string][]).filter(([, v]) => !!v).map(([k, v], i) => (
+                  <View key={k} style={[{ flexDirection: "row", gap: 12, paddingVertical: 12, paddingHorizontal: 14 }, i > 0 && { borderTopWidth: 1, borderTopColor: tc.borderLight }]}>
+                    <Text style={[TYPE.body, { fontSize: 14.5, color: tc.textSecondary, width: 74 }]}>{k}</Text>
+                    <Text style={[TYPE.bodyStrong, { fontSize: 14.5, color: tc.textPrimary, flex: 1, textAlign: "right" }]}>{v}</Text>
+                  </View>
+                ))}
               </View>
-            </View>
+            )}
 
-            <View style={{ height: rs(24) }} />
+            {restaurant.tags && restaurant.tags.length > 0 ? (
+              <>
+                <Text style={[TYPE.overline, { color: tc.textTertiary }]}>Tags</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{restaurant.tags.map((t) => <Tag key={t} label={t} />)}</View>
+              </>
+            ) : null}
+            {restaurant.popularDishes && restaurant.popularDishes.length > 0 ? (
+              <>
+                <Text style={[TYPE.overline, { color: tc.textTertiary }]}>Popular dishes</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{restaurant.popularDishes.map((d) => <Tag key={d} label={d} ok />)}</View>
+              </>
+            ) : null}
+            <Text style={[TYPE.small, { color: tc.textTertiary }]}>Listed {listedDate}</Text>
           </ScrollView>
         </KeyboardAvoidingView>
-      </Modal>
+      </DSheet>
     </Reveal>
   );
 }
