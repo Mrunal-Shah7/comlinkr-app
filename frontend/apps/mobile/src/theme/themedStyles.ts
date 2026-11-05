@@ -51,6 +51,10 @@ const SURFACE: Record<string, string> = {
 
 const TEXT: Record<string, string> = {
   '#111827': DARK_THEME.textPrimary,
+  // Design D's light text colours (Colors.text.*, plan 01).
+  '#0f1a21': DARK_THEME.textPrimary,
+  '#4f6470': DARK_THEME.textSecondary,
+  '#8a9da8': DARK_THEME.textTertiary,
   '#111': DARK_THEME.textPrimary,
   '#1f2937': DARK_THEME.textPrimary,
   '#0a2540': DARK_THEME.textPrimary,
@@ -65,7 +69,7 @@ const TEXT: Record<string, string> = {
   '#b45309': DARK_THEME.warningText,
 };
 
-const BORDER = new Set(['#e5e7eb', '#f0f2f5', '#f3f4f6', '#e8edf4', '#f0f3f8', '#e2e8f0', '#f1f5f9']);
+const BORDER = new Set(['#e1e9ed', '#cfdbe1', '#e5e7eb', '#f0f2f5', '#f3f4f6', '#e8edf4', '#f0f3f8', '#e2e8f0', '#f1f5f9']);
 
 function mapValue(prop: string, value: unknown): unknown {
   if (typeof value !== 'string') return value;

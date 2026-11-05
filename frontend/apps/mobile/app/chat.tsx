@@ -79,6 +79,11 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
+import Reanimated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import { TYPE, display } from '../src/theme/d';
+import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton } from '../src/shared/d';
+const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
+import { DPage, goBackOr, type DPageList } from '../src/shared/d/Page';
 
 // SPRINT-39: typing emit debounce / remote expiry intervals
 const TYPING_STOP_IDLE_MS = 2000;
@@ -90,15 +95,15 @@ function MessageTick({ isOwn, read }: { isOwn: boolean; read?: boolean }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", marginLeft: rs(3) }}>
       {/* first tick */}
-      <Ionicons name="checkmark" size={rs(12)} color={read ? Colors.brand.blue : "#9CA3AF"} />
+      <Ionicons name="checkmark" size={rs(12)} color={read ? "#30855B" : "#8A9DA8"} />
       {/* second tick offset left to overlap = double tick look */}
-      <Ionicons name="checkmark" size={rs(12)} color={read ? Colors.brand.blue : "#9CA3AF"} style={{ marginLeft: rs(-5) }} />
+      <Ionicons name="checkmark" size={rs(12)} color={read ? "#30855B" : "#8A9DA8"} style={{ marginLeft: rs(-5) }} />
     </View>
   );
 }
 
 // ── Avatar helpers ────────────────────────────────────────────────────────────
-const AVATAR_COLORS = ["#0060D0","#30855B","#6D28D9","#D97706","#DC2626","#0891B2","#DB2777"];
+const AVATAR_COLORS = ["#1A6BAE", "#257A86", "#30855B", "#155A93", "#256B49"];
 
 function getAvatarColor(name: string): string {
   let h = 0;
@@ -134,7 +139,7 @@ function Avatar({
             transition={200}
           />
         ) : (
-          <Text style={{ fontSize: size * 0.34, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 }}>
+          <Text style={[display(800), { fontSize: size * 0.34, color: "#FFF", letterSpacing: 0.5 }]}>
             {initials}
           </Text>
         )}
@@ -228,10 +233,10 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
   };
 }
 
-// ── Conversation list ─────────────────────────────────────────────────────────
+// ── Conversation list (design D, plan 01: design screen "messages") ─────────
 function ConvList({
   onSelect,
-  bottomInset,
+  page,
   conversations,
   loading,
   refreshing,
@@ -240,7 +245,7 @@ function ConvList({
   setTab,
 }: {
   onSelect: (id: string) => void;
-  bottomInset: number;
+  page: DPageList;
   conversations: ChatListRow[];
   loading: boolean;
   refreshing: boolean;
@@ -248,7 +253,7 @@ function ConvList({
   tab: Tab;
   setTab: (t: Tab) => void;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc } = useTheme();
   const [search, setSearch] = useState("");
 
   const data = conversations.filter((c) => {
@@ -259,217 +264,102 @@ function ConvList({
   const count = (t: Tab) =>
     t === "All" ? conversations.length : conversations.filter((c) => c.ctx === t).length;
 
-  return (
-    <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
-      {/* Search bar */}
-      <View style={{ paddingHorizontal: rs(16), paddingTop: rs(14), paddingBottom: rs(10) }}>
-        <View style={[l.searchBar, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <Ionicons name="search-outline" size={17} color={tc.textTertiary} />
-          <TextInput
-            style={[l.searchInput, { color: tc.textPrimary }]}
-            placeholder="Search conversations..."
-            placeholderTextColor={tc.textTertiary}
-            value={search}
-            onChangeText={setSearch}
-          />
-          {!!search && (
-            <TouchableOpacity onPress={() => setSearch("")} hitSlop={{ top: rs(8), bottom: rs(8), left: rs(8), right: rs(8) }}>
-              <Ionicons name="close-circle" size={17} color={tc.textTertiary} />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Filter tabs */}
-      <View style={{ flexDirection: "row", paddingHorizontal: rs(16), paddingBottom: rs(12), gap: rs(8) }}>
-        {TABS.map((t) => (
-          <TouchableOpacity
-            key={t}
-            activeOpacity={0.8}
-            onPress={() => setTab(t)}
-            style={[l.tab, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, tab === t && l.tabActive]}
-          >
-            <Text style={[l.tabText, { color: tc.textSecondary }, tab === t && l.tabTextActive]}>{t}</Text>
-            <View style={[l.tabBadge, tab === t && l.tabBadgeActive]}>
-              <Text style={[l.tabBadgeText, tab === t && l.tabBadgeTextActive]}>{count(t)}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Conversation rows */}
-      <FlatList
-        data={data}
-        keyExtractor={(item) => item.id}
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: bottomInset + 36 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.brand.blue} />
-        }
-        ListHeaderComponent={
-          loading && conversations.length === 0 ? (
-            <View style={{ paddingVertical: rs(32), alignItems: "center" }}>
-              <ActivityIndicator color={Colors.brand.blue} />
-            </View>
-          ) : null
-        }
-        ItemSeparatorComponent={() => (
-          <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: tc.borderLight, marginLeft: rs(82) }} />
+  const header = (
+    <>
+      {page.header}
+      <View style={{ marginHorizontal: 16, marginBottom: 12, flexDirection: "row", alignItems: "center", gap: 10, height: 46, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tc.inputBg }}>
+        <Ionicons name="search" size={17} color={tc.textTertiary} />
+        <TextInput
+          style={[TYPE.body, { flex: 1, color: tc.textPrimary, padding: 0 }]}
+          placeholder="Search messages"
+          placeholderTextColor={tc.textTertiary}
+          value={search}
+          onChangeText={setSearch}
+          accessibilityLabel="Search messages"
+        />
+        {!!search && (
+          <Pressable onPress={() => setSearch("")} hitSlop={8} accessibilityLabel="Clear search">
+            <Ionicons name="close-circle" size={17} color={tc.textTertiary} />
+          </Pressable>
         )}
-        renderItem={({ item }) => {
-          const isEvent = item.ctx === "Events";
-          const isPending = item.status === "pending";
-          return (
-            <TouchableOpacity
-              activeOpacity={0.75}
+      </View>
+      <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}>
+        {TABS.map((t) => <Chip key={t} label={count(t) > 0 ? `${t} · ${count(t)}` : t} on={tab === t} onPress={() => setTab(t)} />)}
+      </View>
+      {loading && conversations.length === 0 ? <ActivityIndicator color={tc.accent} style={{ marginTop: 32 }} /> : null}
+    </>
+  );
+
+  return (
+    <Reanimated.FlatList
+      data={data}
+      keyExtractor={(item: ChatListRow) => item.id}
+      style={{ flex: 1 }}
+      onScroll={page.onScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={{ paddingBottom: page.bottom }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
+      ListHeaderComponent={header}
+      renderItem={({ item, index }: { item: ChatListRow; index: number }) => {
+        const isEvent = item.ctx === "Events";
+        const isPending = item.status === "pending";
+        const unread = item.unread > 0;
+        return (
+          <Reveal i={index}>
+            <Pressable
               onPress={() => onSelect(item.id)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: rs(16),
-                paddingVertical: rs(13),
-                backgroundColor: isPending
-                  ? (isDark ? "#1A1200" : "#FFFBF5")
-                  : item.unread > 0
-                  ? (isDark ? "#0A1628" : "#FAFCFF")
-                  : tc.cardBg,
-                overflow: "hidden",
-              }}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.name}${unread ? `, ${item.unread} unread` : ""}${isPending ? ", pending" : ""}`}
+              style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10 }, pressed && { backgroundColor: tc.inputBg }]}
             >
-              {/* Left accent bar — orange for pending, blue for unread */}
-              {(item.unread > 0 || isPending) && (
-                <View style={{
-                  position: "absolute", left: 0, top: 0, bottom: 0,
-                  width: rs(4),
-                  backgroundColor: isPending ? Colors.brand.orange : Colors.brand.blue,
-                }} />
+              {isEvent ? (
+                <GradientFill style={{ width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" }}>
+                  <Ionicons name="people" size={22} color="#fff" />
+                </GradientFill>
+              ) : (
+                <Avatar name={item.name} size={52} online={item.online} uri={item.avatarUrl} />
               )}
-
-              {/* Avatar */}
-              <View style={{ marginRight: rs(12), flexShrink: 0 }}>
-                {isEvent ? (
-                  <View style={l.eventAvatar}>
-                    <Ionicons name="people" size={22} color="#C45200" />
-                    {item.members && (
-                      <View style={{ position: "absolute", bottom: rs(-2), right: rs(-2), backgroundColor: "#257A86", borderRadius: rs(8), paddingHorizontal: rs(4), paddingVertical: rs(1), borderWidth: 1.5, borderColor: "#FFF" }}>
-                        <Text style={{ fontSize: rs(8), fontWeight: "900", color: "#FFF" }}>{item.members}</Text>
-                      </View>
-                    )}
-                  </View>
-                ) : (
-                  <Avatar name={item.name} size={50} online={item.online} uri={item.avatarUrl} />
-                )}
-              </View>
-
-              {/* Content */}
-              <View style={{ flex: 1 }}>
-                {/* Name + time */}
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: rs(4) }}>
-                  <Text style={[l.convName, { color: tc.textPrimary }, (item.unread > 0 || isPending) && [l.convNameBold, isDark && { color: "#FFF" }]]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  {item.verified && (
-                    <Ionicons name="checkmark-circle" size={13} color={Colors.brand.blue} style={{ marginLeft: rs(4) }} />
-                  )}
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Text style={[unread || isPending ? TYPE.bodyStrong : TYPE.body, { flexShrink: 1, color: tc.textPrimary, fontFamily: unread || isPending ? "Manrope_700Bold" : "Manrope_600SemiBold" }]} numberOfLines={1}>{item.name}</Text>
+                  {item.verified ? <Ionicons name="checkmark-circle" size={14} color={tc.mint} /> : null}
+                  {item.isGroup ? <Text style={[TYPE.label, { color: tc.textTertiary, fontSize: 10.5 }]}>· GROUP</Text> : null}
                   <View style={{ flex: 1 }} />
-                  <Text style={[l.convTime, { color: tc.textTertiary }, (item.unread > 0 || isPending) && l.convTimeBold]}>{item.time}</Text>
+                  <Text style={[TYPE.small, { color: unread ? tc.accentText : tc.textTertiary, fontSize: 12 }]}>{item.time}</Text>
                 </View>
-
-                {/* Tags */}
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: rs(5), flexWrap: "wrap", gap: rs(4) }}>
-                  <View style={[l.ctxTag,
-                    isEvent
-                      ? [l.ctxEvent, isDark && { backgroundColor: "#2A1200" }]
-                      : item.ctx === "Listings"
-                      ? [l.ctxListing, isDark && { backgroundColor: "#0A1628" }]
-                      : [{ backgroundColor: isDark ? "#1A1A2E" : "#F3F4F6" }]
-                  ]}>
-                    <Ionicons
-                      name={isEvent ? "calendar-outline" : item.ctx === "Listings" ? "home-outline" : "chatbubble-outline"}
-                      size={11}
-                      color={isEvent ? "#C45200" : item.ctx === "Listings" ? Colors.brand.blue : tc.textSecondary}
-                    />
-                  </View>
-                  {/* Property / event name tag */}
-                  {item.contextName ? (
-                    <View style={[
-                      l.ctxNameTag,
-                      item.contextName !== "Listing inquiry" && item.contextName !== "Event inquiry" && !isDark && {
-                        backgroundColor: isEvent ? "#E2F0F1" : "#EEF5FF",
-                        borderColor: isEvent ? "#FFD0A8" : "#C5DBFF",
-                      },
-                      isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight },
-                    ]}>
-                      <Ionicons
-                        name={isEvent ? "calendar-outline" : "home-outline"}
-                        size={9}
-                        color={isEvent ? "#C45200" : Colors.brand.blue}
-                      />
-                      <Text style={[l.ctxNameText, {
-                        color: item.contextName !== "Listing inquiry" && item.contextName !== "Event inquiry"
-                          ? (isEvent ? "#C45200" : Colors.brand.blue)
-                          : tc.textSecondary
-                      }]} numberOfLines={1}>{item.contextName}</Text>
+                {item.contextName && item.contextName !== "Listing inquiry" && item.contextName !== "Event inquiry" ? (
+                  <Text style={[TYPE.small, { color: tc.accentText, fontSize: 12.5 }]} numberOfLines={1}>{item.contextName}</Text>
+                ) : null}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 1 }}>
+                  <Text numberOfLines={1} style={[TYPE.small, { flex: 1, color: unread ? tc.textPrimary : tc.textTertiary, fontSize: 13.5 }]}>
+                    {item.lastFromMe && !isPending && !item.isGroup ? <Text style={{ color: tc.accentText }}>You: </Text> : null}
+                    {item.lastMsg}
+                  </Text>
+                  {isPending ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9, backgroundColor: tc.warningBg }}>
+                      <Ionicons name="time-outline" size={12} color={tc.warningText} />
+                      <Text style={[TYPE.label, { color: tc.warningText, fontSize: 11 }]}>Pending</Text>
                     </View>
+                  ) : unread ? (
+                    <Reanimated.View entering={ZoomIn.springify().damping(14)} style={{ minWidth: 22, height: 22, paddingHorizontal: 7, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent }}>
+                      <Text style={[TYPE.label, { color: "#fff", fontSize: 11.5 }]}>{item.unread > 99 ? "99+" : item.unread}</Text>
+                    </Reanimated.View>
                   ) : null}
-                  {item.isGroup && (
-                    <View style={[l.groupTag, isDark && { backgroundColor: tc.inputBg }]}>
-                      <Text style={[l.groupTagText, isDark && { color: tc.textTertiary }]}>GROUP</Text>
-                    </View>
-                  )}
-                  {/* Pending chip */}
-                  {isPending && (
-                    <View style={l.pendingChip}>
-                      <View style={{ width: rs(5), height: rs(5), borderRadius: rs(3), backgroundColor: Colors.brand.orange }} />
-                      <Text style={l.pendingChipText}>Pending</Text>
-                    </View>
-                  )}
-                  {item.host && !isPending && (
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: rs(3) }}>
-                      <Ionicons name="shield-checkmark" size={9} color="#257A86" />
-                      <Text style={{ fontSize: rs(10), fontWeight: "700", color: tc.textTertiary }}>by {item.host}</Text>
-                    </View>
-                  )}
                 </View>
-
-                {/* Last message */}
-                <Text numberOfLines={1} style={[l.convMsg, { color: tc.textTertiary }, (item.unread > 0) && [l.convMsgBold, { color: tc.textPrimary }]]}>
-                  {item.lastFromMe && !isPending && !item.isGroup && (
-                    <Text style={{ color: Colors.brand.blue }}>✓✓ </Text>
-                  )}
-                  {item.lastMsg}
-                </Text>
               </View>
-
-              {/* Right badge — orange clock for pending, blue unread count */}
-              {isPending ? (
-                <View style={l.pendingBadge}>
-                  <Ionicons name="time-outline" size={14} color={Colors.brand.orange} />
-                </View>
-              ) : item.unread > 0 ? (
-                <View style={l.unreadBadge}>
-                  <Text style={{ fontSize: rs(12), fontWeight: "900", color: "#FFF" }}>{item.unread}</Text>
-                </View>
-              ) : null}
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={
-          // While the first load is in flight the header spinner shows; don't claim "no conversations" under it.
-          loading ? null : (
-          <View style={{ alignItems: "center", marginTop: rs(80) }}>
-            <View style={[l.emptyIcon, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF" }]}>
-              <Ionicons name="chatbubbles-outline" size={36} color={Colors.brand.blue} />
-            </View>
-            <Text style={[l.emptyTitle, { color: tc.textPrimary }]}>No conversations yet</Text>
-            <Text style={[l.emptyDesc, { color: tc.textSecondary }]}>Connect with your community to start chatting</Text>
-          </View>
-          )
-        }
-      />
-    </View>
+            </Pressable>
+          </Reveal>
+        );
+      }}
+      ListEmptyComponent={
+        // While the first load is in flight the header spinner shows; don't claim "no conversations" under it.
+        loading ? null : (
+          <EmptyState icon="chatbubbles-outline" title={conversations.length === 0 ? "No conversations yet" : "No matches"} sub={conversations.length === 0 ? "Message someone about a home, an event or a roommate match and it shows up here." : "Try another name or filter."} />
+        )
+      }
+    />
   );
 }
 
@@ -1072,95 +962,59 @@ function Thread({
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      {/* Header */}
-      <LinearGradient
-        colors={isGroupChat ? [Colors.brand.orange, "#E56800"] : isPending ? [Colors.brand.orange, "#CC5000"] : [Colors.brand.blue, Colors.brand.blueDark]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={[th.hdr, { paddingTop: insets.top + 8 }]}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: rs(14), paddingTop: rs(6), gap: rs(10) }}>
-          <TouchableOpacity onPress={onBack} style={th.hdrBtn} hitSlop={{ top: rs(10), bottom: rs(10), left: rs(10), right: rs(10) }}>
-            <Ionicons name="chevron-back" size={22} color="#FFF" />
-          </TouchableOpacity>
-          {isGroupChat ? (
-            <View style={th.groupAvatar}>
-              <Ionicons name="people" size={20} color="#C45200" />
+      {/* Bar (design D): back, the person, ··· */}
+      <View style={{ paddingTop: insets.top, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
+        <View style={{ height: 58, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, gap: 8 }}>
+          <Pressable onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+            style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+            <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
+          </Pressable>
+          <Pressable style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }} onPress={() => isGroupChat && setShowGroupInfo(!showGroupInfo)} disabled={!isGroupChat}
+            accessibilityRole={isGroupChat ? "button" : undefined} accessibilityLabel={isGroupChat ? "Group info" : conv.name}>
+            {isGroupChat ? (
+              <GradientFill style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}><Ionicons name="people" size={17} color="#fff" /></GradientFill>
+            ) : (
+              <Avatar name={conv.name} size={36} online={conv.online && !isPending} uri={conv.avatarUrl} />
+            )}
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>{conv.name}</Text>
+              {(() => {
+                const sub = isGroupChat
+                  ? `${conv.members || 10} members · tap for info`
+                  : isPending
+                  ? "Request waiting to be accepted"
+                  : conv.contextName ?? (conv.ctx === "Listings" ? "Listing inquiry" : conv.ctx === "Events" ? "Event inquiry" : typingUsers.size > 0 ? "typing…" : "");
+                return sub ? <Text style={[TYPE.small, { fontSize: 12, color: isPending ? tc.warningText : tc.textTertiary }]} numberOfLines={1}>{sub}</Text> : null;
+              })()}
             </View>
-          ) : (
-            <Avatar name={conv.name} size={40} online={conv.online && !isPending} uri={conv.avatarUrl} />
-          )}
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            onPress={() => isGroupChat && setShowGroupInfo(!showGroupInfo)}
-            activeOpacity={isGroupChat ? 0.7 : 1}
-          >
-            <Text style={th.hdrName} numberOfLines={1}>{conv.name}</Text>
-            {isGroupChat ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4), marginTop: rs(2) }}>
-                <Ionicons name="people-outline" size={11} color="rgba(255,255,255,0.7)" />
-                <Text style={{ fontSize: rs(11), fontWeight: "600", color: "rgba(255,255,255,0.7)" }}>
-                  {conv.members || 10} members · Tap for info
-                </Text>
-              </View>
-            ) : isPending ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), marginTop: rs(2) }}>
-                <Ionicons name="time-outline" size={11} color="rgba(255,255,255,0.8)" />
-                <Text style={{ fontSize: rs(11), fontWeight: "600", color: "rgba(255,255,255,0.8)" }}>
-                  Request pending acceptance
-                </Text>
-              </View>
-            ) : conv.contextName || conv.ctx !== "All" ? (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4), marginTop: rs(2) }}>
-                <Ionicons
-                  name={conv.ctx === "Events" ? "calendar-outline" : conv.ctx === "Listings" ? "home-outline" : "pricetag-outline"}
-                  size={11}
-                  color="rgba(255,255,255,0.75)"
-                />
-                <Text style={{ fontSize: rs(11), fontWeight: "600", color: "rgba(255,255,255,0.8)" }} numberOfLines={1}>
-                  {conv.contextName ?? (conv.ctx === "Listings" ? "Listing inquiry" : conv.ctx === "Events" ? "Event inquiry" : "")}
-                </Text>
-              </View>
-            ) : null}
-          </TouchableOpacity>
-          <View style={{ flexDirection: "row", gap: rs(6) }}>
-            {isGroupChat ? (
-              <TouchableOpacity style={th.hdrBtn} onPress={() => setShowGroupInfo(!showGroupInfo)}>
-                <Ionicons name="information-circle-outline" size={20} color="rgba(255,255,255,0.9)" />
-              </TouchableOpacity>
-            ) : !isPending ? (<>
-              <TouchableOpacity style={th.hdrBtn} onPress={() => setShowMenu(true)}>
-                <Ionicons name="ellipsis-vertical" size={18} color="rgba(255,255,255,0.9)" />
-              </TouchableOpacity>
-            </>) : null}
-          </View>
+          </Pressable>
+          {isGroupChat ? (
+            <Pressable onPress={() => setShowGroupInfo(!showGroupInfo)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Group info" style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="information-circle-outline" size={22} color={tc.textPrimary} />
+            </Pressable>
+          ) : !isPending ? (
+            <Pressable onPress={() => setShowMenu(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="More options" style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="ellipsis-horizontal" size={22} color={tc.textPrimary} />
+            </Pressable>
+          ) : null}
         </View>
-      </LinearGradient>
+      </View>
 
       {/* ── Message Request Banner ── */}
       {isPending && (
-        <View style={[th.requestBanner, { backgroundColor: tc.cardBg, borderBottomColor: Colors.brand.orange + "25" }]}>
-          <View style={th.requestBannerTop}>
-            <View style={th.requestIconBox}>
-              <Ionicons name="lock-closed" size={18} color={Colors.brand.orange} />
-            </View>
+        <Reveal style={{ margin: 12, padding: 14, borderRadius: 22, backgroundColor: tc.warningBg }}>
+          <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+            <Ionicons name="lock-closed" size={18} color={tc.warningText} />
             <View style={{ flex: 1 }}>
-              <Text style={[th.requestTitle, { color: tc.textPrimary }]}>New message request</Text>
-              <Text style={[th.requestSubtitle, { color: tc.textSecondary }]}>
-                <Text style={{ fontWeight: "800", color: tc.textPrimary }}>{conv.name}</Text> wants to connect. Accept to start chatting.
-              </Text>
+              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>New message request</Text>
+              <Text style={[TYPE.small, { color: tc.textSecondary }]}>{conv.name} wants to connect. Accept to start chatting.</Text>
             </View>
           </View>
-          <View style={th.requestActions}>
-            <Pressable style={[th.requestAcceptBtn, { flex: 1, backgroundColor: Colors.brand.green }]} onPress={() => void handleAccept()}>
-              <Ionicons name="checkmark-circle" size={16} color="#FFF" />
-              <Text style={th.requestAcceptText}>Accept</Text>
-            </Pressable>
-            <Pressable style={[th.requestDeclineBtn, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]} onPress={() => void handleDecline()}>
-              <Ionicons name="close-circle-outline" size={16} color={Colors.text.secondary} />
-              <Text style={[th.requestDeclineText, { color: tc.textSecondary }]}>Decline</Text>
-            </Pressable>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+            <GradientButton block label="Accept" outerStyle={{ flex: 1 }} onPress={() => void handleAccept()} />
+            <SoftButton block ghost label="Decline" outerStyle={{ flex: 1 }} onPress={() => void handleDecline()} />
           </View>
-        </View>
+        </Reveal>
       )}
 
       {/* Group info panel (collapsible) */}
@@ -1231,18 +1085,14 @@ function Thread({
       )}
 
       {/* Day separator */}
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: rs(20), paddingVertical: rs(10), gap: rs(10), backgroundColor: tc.sectionBg }}>
-        <View style={{ flex: 1, height: rs(1), backgroundColor: tc.borderLight }} />
-        <Text style={{ fontSize: rs(11), fontWeight: "600", color: tc.textTertiary }}>Today</Text>
-        <View style={{ flex: 1, height: rs(1), backgroundColor: tc.borderLight }} />
-      </View>
+      <Text style={[TYPE.small, { textAlign: "center", color: tc.textTertiary, paddingTop: 10, fontSize: 12 }]}>Today</Text>
 
       {/* Messages — SPRINT-39: wrap so typing overlay does not change ScrollView layout height */}
-      <View style={{ flex: 1, backgroundColor: tc.sectionBg }}>
+      <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
       <ScrollView
         ref={scrollRef}
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: rs(16), gap: rs(10) }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 12, gap: 6 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -1344,7 +1194,7 @@ function Thread({
           const isHost = msg.isHost;
 
           return (
-            <Pressable key={msg.id} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}>
+            <AnimatedPressable key={msg.id} entering={FadeInDown.springify().damping(20).stiffness(220)} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: 8 }}>
               {!isMe && <Avatar name={msg.senderName} size={28} />}
               <View style={{ maxWidth: "74%", gap: rs(3) }}>
                 {isGroupChat && !isMe && (
@@ -1361,24 +1211,24 @@ function Thread({
                   </View>
                 )}
                 {isMe ? (
-                  <View style={[th.bubble, { borderBottomRightRadius: rs(5), backgroundColor: Colors.brand.blue, shadowColor: Colors.brand.blue, shadowOpacity: 0.18, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(3) }, elevation: 4 }]}>
-                    <LinkifiedText text={msg.text} style={{ fontSize: rs(14), lineHeight: rs(21), color: "#FFF", fontWeight: "500" }} linkStyle={{ color: "#FFF", fontWeight: "700", textDecorationLine: "underline" }} />
-                  </View>
+                  <GradientFill style={[th.bubble, { borderRadius: 20, borderBottomRightRadius: 6 }]}>
+                    <LinkifiedText text={msg.text} style={[TYPE.body, { color: "#FFF" }]} linkStyle={{ color: "#FFF", fontFamily: "Manrope_700Bold", textDecorationLine: "underline" }} />
+                  </GradientFill>
                 ) : isHost ? (
-                  <View style={[th.bubble, { borderBottomLeftRadius: rs(5), backgroundColor: Colors.brand.orange, shadowColor: Colors.brand.orange, shadowOpacity: 0.13, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 }]}>
-                    <LinkifiedText text={msg.text} style={{ fontSize: rs(14), lineHeight: rs(21), color: "#FFF", fontWeight: "500" }} linkStyle={{ color: "#FFF", fontWeight: "700", textDecorationLine: "underline" }} />
+                  <View style={[th.bubble, { borderRadius: 20, borderBottomLeftRadius: 6, backgroundColor: tc.accentSoft }]}>
+                    <LinkifiedText text={msg.text} style={[TYPE.body, { color: tc.textPrimary }]} linkStyle={{ color: tc.accentText, fontFamily: "Manrope_700Bold", textDecorationLine: "underline" }} />
                   </View>
                 ) : (
-                  <View style={[th.bubble, { backgroundColor: tc.cardBg, borderBottomLeftRadius: rs(5), shadowColor: "#0A2540", shadowOpacity: 0.06, shadowRadius: rs(5), shadowOffset: { width: 0, height: rs(2) }, elevation: 2 }]}>
-                    <LinkifiedText text={msg.text} style={{ fontSize: rs(14), lineHeight: rs(21), color: tc.textPrimary, fontWeight: "500" }} />
+                  <View style={[th.bubble, { borderRadius: 20, borderBottomLeftRadius: 6, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }]}>
+                    <LinkifiedText text={msg.text} style={[TYPE.body, { color: tc.textPrimary }]} />
                   </View>
                 )}
-                <View style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "center", gap: rs(3), marginHorizontal: rs(4) }}>
-                  <Text style={{ fontSize: rs(10), color: tc.textTertiary }}>{msg.time}</Text>
+                <View style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "center", gap: 3, marginHorizontal: 6 }}>
+                  <Text style={[TYPE.small, { fontSize: 11, color: tc.textTertiary }]}>{msg.time}</Text>
                   <MessageTick isOwn={isMe} read={(msg as any).read} />
                 </View>
               </View>
-            </Pressable>
+            </AnimatedPressable>
           );
         })}
         <View style={{ height: rs(8) }} />
@@ -1413,28 +1263,28 @@ function Thread({
       {/* SPRINT-40: text and tap-to-record controls share the existing composer */}
       <View style={{
         flexDirection: "row", alignItems: "flex-end",
-        paddingHorizontal: rs(12), paddingTop: rs(10),
-        borderTopWidth: 1, borderTopColor: tc.borderLight,
-        backgroundColor: tc.cardBg, gap: rs(8),
+        paddingHorizontal: 10, paddingTop: 8,
+        borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.glassLine,
+        backgroundColor: tc.glass, gap: 8,
         paddingBottom: (keyboardVisible ? 0 : insets.bottom) + (Platform.OS === "ios" ? 10 : rs(10)),
       }}>
-        <View style={{ display: voiceComposerActive ? "none" : "flex", flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: tc.inputBg, borderRadius: rs(22), borderWidth: 1.5, borderColor: tc.borderLight, paddingLeft: rs(16), paddingRight: rs(6), paddingVertical: rs(6), minHeight: 44, maxHeight: 120 }}>
+        <View style={{ display: voiceComposerActive ? "none" : "flex", flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: tc.inputBg, borderRadius: 22, paddingLeft: 16, paddingRight: 8, paddingVertical: 6, minHeight: 44, maxHeight: 120 }}>
           {/* SPRINT-40: hide text controls without unmounting recorder */}
           <TextInput
-            style={{ flex: 1, fontSize: rs(14), color: tc.textPrimary, paddingVertical: 0, maxHeight: 100, fontWeight: "500", includeFontPadding: false, textAlignVertical: "center" }}
+            style={[TYPE.body, { flex: 1, color: tc.textPrimary, paddingVertical: 0, maxHeight: 100, includeFontPadding: false, textAlignVertical: "center" }]}
             placeholder={
               isPending
                 ? "Accept the request to reply…"
                 : isGroupChat
                 ? "Message the group..."
-                : "Type a message..."
+                : "Message"
             }
             placeholderTextColor={tc.textTertiary}
             value={text}
             onChangeText={handleComposerTextChange} // SPRINT-39:
             multiline
             editable={!isPending}
-            selectionColor={Colors.brand.blue}
+            selectionColor={tc.accent}
           />
           <TouchableOpacity
             style={{ paddingBottom: rs(4), paddingLeft: rs(4) }}
@@ -1443,7 +1293,7 @@ function Thread({
               setShowEmoji((p) => !p);
             }}
           >
-            <Ionicons name={showEmoji ? "happy" : "happy-outline"} size={19} color={showEmoji ? Colors.brand.blue : "#8A9DB5"} />
+            <Ionicons name={showEmoji ? "happy" : "happy-outline"} size={21} color={showEmoji ? tc.accentText : tc.textTertiary} />
           </TouchableOpacity>
         </View>
         <View style={{ display: text.trim() && !voiceComposerActive ? "none" : "flex", flex: voiceComposerActive ? 1 : undefined }}>
@@ -1459,9 +1309,11 @@ function Thread({
           <TouchableOpacity
             disabled={!text.trim()}
             onPress={() => void send()}
-            style={{ width: rs(44), height: rs(44), borderRadius: rs(22), backgroundColor: text.trim() ? Colors.brand.blue : tc.inputBg, alignItems: "center", justifyContent: "center", marginBottom: rs(1), borderWidth: text.trim() ? 0 : 1.5, borderColor: tc.borderLight, shadowColor: Colors.brand.blue, shadowOpacity: text.trim() ? 0.28 : 0, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(3) }, elevation: text.trim() ? 5 : 0 }}
+            style={{ width: 44, height: 44, borderRadius: 22, overflow: "hidden", alignItems: "center", justifyContent: "center", marginBottom: 1 }}
+            accessibilityRole="button" accessibilityLabel="Send"
           >
-            <Ionicons name="send" size={16} color={text.trim() ? "#FFF" : tc.textSecondary} />
+            <GradientFill style={StyleSheet.absoluteFill} />
+            <Ionicons name="send" size={17} color="#FFF" />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -1510,7 +1362,7 @@ function Thread({
         <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }} onPress={() => setShowMenu(false)}>
           {/* onStartShouldSetResponder stops touches on this sheet from bubbling to the backdrop Pressable */}
           <View
-            style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tc.cardBg, borderTopLeftRadius: rs(20), borderTopRightRadius: rs(20), paddingBottom: insets.bottom + 12, paddingTop: rs(8) }}
+            style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tc.sheetBg, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingBottom: insets.bottom + 12, paddingTop: 8 }}
             onStartShouldSetResponder={() => true}
           >
             <View style={{ width: rs(36), height: rs(4), borderRadius: rs(2), backgroundColor: tc.borderLight, alignSelf: "center", marginBottom: rs(12) }} />
@@ -1615,11 +1467,11 @@ function Thread({
               >
                 <View style={{
                   width: rs(40), height: rs(40), borderRadius: rs(12), alignItems: "center", justifyContent: "center",
-                  backgroundColor: (item.label === "Delete Chat" || item.label === "Block User") ? "#FEF2F2" : (tc.inputBg),
+                  backgroundColor: (item.label === "Delete Chat" || item.label === "Block User") ? "rgba(239,68,68,0.12)" : tc.accentSoft,
                 }}>
-                  <Ionicons name={item.icon as any} size={20} color={(item.label === "Delete Chat" || item.label === "Block User") ? "#EF4444" : Colors.brand.blue} />
+                  <Ionicons name={item.icon as any} size={19} color={(item.label === "Delete Chat" || item.label === "Block User") ? tc.dangerText : tc.accentText} />
                 </View>
-                <Text style={{ fontSize: rs(15), fontWeight: "600", color: (item.label === "Delete Chat" || item.label === "Block User") ? "#EF4444" : tc.textPrimary }}>{item.label}</Text>
+                <Text style={[TYPE.body, { fontFamily: "Manrope_600SemiBold", color: (item.label === "Delete Chat" || item.label === "Block User") ? tc.dangerText : tc.textPrimary }]}>{item.label.charAt(0) + item.label.slice(1).toLowerCase()}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -2120,63 +1972,43 @@ export default function ChatScreen() {
   return (
     <>
       <Stack.Screen options={{ gestureEnabled: true }} />
-      <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
-      {/* Header */}
-      <View style={[m.headerWhite, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight, paddingTop: insets.top }]}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: rs(14), paddingTop: rs(10), paddingBottom: rs(12), gap: rs(10) }}>
-          <TouchableOpacity onPress={() => {
-            if (listBackInFlightRef.current) return;
-            listBackInFlightRef.current = true;
-            if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any);
-            setTimeout(() => { listBackInFlightRef.current = false; }, 500);
-          }} style={[m.iconBtnWhite, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF" }]} hitSlop={{ top: rs(10), bottom: rs(10), left: rs(10), right: rs(10) }}>
-            <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Svg height={28} width={160}>
-              <Defs>
-                <SvgGradient id="chatTitleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <Stop offset="0%" stopColor={Colors.brand.blue} />
-                  <Stop offset="100%" stopColor={Colors.brand.green} />
-                </SvgGradient>
-              </Defs>
-              <SvgText fill="url(#chatTitleGrad)" fontSize={20} fontWeight="900" x="0" y={22} letterSpacing="-0.4">
-                Messages
-              </SvgText>
-            </Svg>
-            {headerUnread > 0 && (
-              <View style={m.unreadChip}>
-                <View style={m.unreadDot} />
-                <Text style={m.unreadChipText}>{headerUnread} unread</Text>
-              </View>
-            )}
-          </View>
-          <TouchableOpacity style={[m.iconBtnWhite, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF" }]} onPress={() => appAlert("New Chat", "Select a contact to start a new conversation.")}>
-            <Ionicons name="create-outline" size={19} color={Colors.brand.blue} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ConvList
-        onSelect={(cid) => {
-          const row = conversations.find((c) => c.id === cid);
-          if (row) {
-            // Clear any stale returnTo from a prior housing/food deep link so
-            // the back button doesn't hijack navigation for this conversation.
-            if (params.returnTo) router.setParams({ returnTo: "" });
-            setSelectedRow(row);
-            setSelectedId(cid);
-          }
+      <DPage
+        title="Messages"
+        sub={headerUnread > 0 ? `${headerUnread} unread` : undefined}
+        onBack={() => {
+          if (listBackInFlightRef.current) return;
+          listBackInFlightRef.current = true;
+          goBackOr("/(tabs)/feed");
+          setTimeout(() => { listBackInFlightRef.current = false; }, 500);
         }}
-        bottomInset={insets.bottom}
-        conversations={conversations}
-        loading={listLoading}
-        refreshing={refreshing}
-        onRefresh={onRefreshList}
-        tab={listTab}
-        setTab={setListTab}
+        right={
+          <Pressable onPress={() => appAlert("New chat", "Open a listing, an event or a roommate profile and tap Message to start a conversation.")} hitSlop={8} accessibilityRole="button" accessibilityLabel="New chat"
+            style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+            <Ionicons name="create-outline" size={22} color={tc.textPrimary} />
+          </Pressable>
+        }
+        renderList={(page) => (
+          <ConvList
+            page={page}
+            onSelect={(cid) => {
+              const row = conversations.find((c) => c.id === cid);
+              if (row) {
+                // Clear any stale returnTo from a prior housing/food deep link so
+                // the back button doesn't hijack navigation for this conversation.
+                if (params.returnTo) router.setParams({ returnTo: "" });
+                setSelectedRow(row);
+                setSelectedId(cid);
+              }
+            }}
+            conversations={conversations}
+            loading={listLoading}
+            refreshing={refreshing}
+            onRefresh={onRefreshList}
+            tab={listTab}
+            setTab={setListTab}
+          />
+        )}
       />
-    </View>
     </>
   );
 }

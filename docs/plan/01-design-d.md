@@ -148,8 +148,8 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` (shared `LegalDoc.tsx`) | phone-checked (privacy walked; terms uses the same component) |
 | badges | `app/apply-badge.tsx` | not started |
 | verification | `app/verification-status.tsx` | not started |
-| messages | `app/chat.tsx` (list) | not started |
-| chat | `app/chat.tsx` (conversation) | not started |
+| messages | `app/chat.tsx` (list) | phone-checked |
+| chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |
 | my-posts | `app/myposts.tsx` | not started |
 | city | city picker | not started |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
