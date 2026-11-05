@@ -18,6 +18,10 @@ import authService from "../../src/services/http/authService";
 import Input from "../../src/shared/ui/Input";
 import { useTheme } from "../../src/theme/useTheme";
 import { rs } from "../../src/utils/responsive";
+import { TYPE } from '../../src/theme/d';
+import { GradientButton, Reveal } from '../../src/shared/d';
+import { OtpBoxes, type OtpHandle } from '../../src/shared/d/Otp';
+import { DPage, goBackOr } from '../../src/shared/d/Page';
 
 function GradientText({
   text,
@@ -65,6 +69,7 @@ export default function ForgotPasswordScreen() {
 
   const newPassRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
+  const otpRef = useRef<OtpHandle>(null);
 
   async function handleSendOtp() {
     const trimmed = email.trim();
@@ -94,7 +99,8 @@ export default function ForgotPasswordScreen() {
 
   async function handleResetPassword() {
     if (!otp.trim()) {
-      setResetError("Please enter the OTP sent to your email");
+      setResetError("Enter the 6-digit code from your email");
+      otpRef.current?.shake();
       return;
     }
     if (!newPassword) {
@@ -119,224 +125,102 @@ export default function ForgotPasswordScreen() {
       const msg =
         e && typeof e === "object" && "message" in e ? String((e as Error).message) : String(e);
       setResetError(msg || "Invalid or expired code. Please try again.");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      otpRef.current?.shake();
     } finally {
       setResetLoading(false);
     }
   }
 
+  const errorBox = (msg: string) => (
+    <Reveal style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.12)" }}>
+      <Ionicons name="alert-circle" size={17} color={tc.dangerText} />
+      <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{msg}</Text>
+    </Reveal>
+  );
+
   return (
-    <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
-      <LinearGradient
-        colors={isDark ? ["#080F1E", "#0D1526", "#091408"] : ["#EBF5FF", "#F4F9FF", "#E3F1EA"]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={styles.decorCircle1} />
-      <View style={styles.decorCircle2} />
-
-      <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView style={styles.flex} behavior="padding">
-          <ScrollView
-            contentContainerStyle={styles.scroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Back button */}
-            <Pressable onPress={() => (step === "otp" ? setStep("email") : router.back())} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={rs(22)} color={tc.textPrimary} />
-            </Pressable>
-
-            {/* Card */}
-            <View
-              style={[
-                styles.card,
-                { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(26,107,174,0.06)" },
-              ]}
-            >
-              {/* Icon */}
-              <View style={styles.iconWrap}>
-                <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.iconGrad}
-                >
-                  <Ionicons name={step === "email" ? "lock-open-outline" : "shield-checkmark-outline"} size={rs(28)} color="#fff" />
-                </LinearGradient>
-              </View>
-
-              <GradientText
-                text={step === "email" ? "Forgot Password?" : "Verify & Reset"}
-                style={styles.heading}
-                colors={["#1A6BAE", "#005BE0", "#30855B"]}
+    <DPage
+      title="Reset password"
+      sub={step === "email" ? "We email you a 6-digit code." : `Code sent to ${email.trim()}`}
+      onBack={() => (step === "otp" ? setStep("email") : goBackOr("/(auth)/login"))}
+    >
+      <KeyboardAvoidingView behavior="padding">
+        <View style={{ paddingHorizontal: 18 }}>
+          {step === "email" ? (
+            <Reveal key="email">
+              <Input
+                label="Email"
+                placeholder="you@example.com"
+                value={email}
+                onChangeText={(t) => { setEmail(t); setEmailError(""); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                returnKeyType="send"
+                onSubmitEditing={handleSendOtp}
+                icon={<Ionicons name="mail-outline" size={19} color={tc.textTertiary} />}
               />
-              <Text style={[styles.subheading, { color: tc.textSecondary }]}>
-                {step === "email"
-                  ? "Enter your email and we'll send you a reset code"
-                  : `Enter the code sent to ${email} and choose a new password`}
-              </Text>
-
-              {step === "email" ? (
-                <>
-                  <View style={styles.form}>
-                    <Input
-                      label="Email address"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChangeText={(t) => { setEmail(t); setEmailError(""); }}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      returnKeyType="send"
-                      onSubmitEditing={handleSendOtp}
-                    />
-                  </View>
-
-                  {emailError ? (
-                    <View style={[styles.errorBox, { backgroundColor: isDark ? "#2D0F0F" : "#FEF2F2" }]}>
-                      <Ionicons name="alert-circle" size={rs(16)} color="#EF4444" />
-                      <Text style={styles.errorText}>{emailError}</Text>
-                    </View>
-                  ) : null}
-
-                  <Pressable
-                    onPress={handleSendOtp}
-                    disabled={emailLoading}
-                    style={({ pressed }) => [
-                      styles.actionBtn,
-                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                      emailLoading && { opacity: 0.7 },
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={["#1A6BAE", "#005BE0", "#30855B"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.actionBtnGrad}
-                    >
-                      <Text style={styles.actionBtnText}>
-                        {emailLoading ? "Sending..." : "Send Reset Code"}
-                      </Text>
-                    </LinearGradient>
-                  </Pressable>
-                </>
-              ) : (
-                <>
-                  <View style={styles.form}>
-                    <Input
-                      label="OTP Code"
-                      placeholder="Enter 6-digit code"
-                      value={otp}
-                      onChangeText={(t) => { setOtp(t); setResetError(""); }}
-                      keyboardType="number-pad"
-                      autoCapitalize="none"
-                      returnKeyType="next"
-                      onSubmitEditing={() => newPassRef.current?.focus()}
-                    />
-                    <Input
-                      ref={newPassRef}
-                      label="New Password"
-                      placeholder="At least 6 characters"
-                      value={newPassword}
-                      onChangeText={(t) => { setNewPassword(t); setResetError(""); }}
-                      secureTextEntry={!showNew}
-                      autoCapitalize="none"
-                      returnKeyType="next"
-                      onSubmitEditing={() => confirmRef.current?.focus()}
-                      rightIcon={
-                        <Pressable onPress={() => setShowNew(!showNew)} hitSlop={8}>
-                          <Ionicons
-                            name={showNew ? "eye-off-outline" : "eye-outline"}
-                            size={20}
-                            color={tc.textTertiary}
-                          />
-                        </Pressable>
-                      }
-                    />
-                    <Input
-                      ref={confirmRef}
-                      label="Confirm New Password"
-                      placeholder="Re-enter your password"
-                      value={confirmPassword}
-                      onChangeText={(t) => { setConfirmPassword(t); setResetError(""); }}
-                      secureTextEntry={!showConfirm}
-                      autoCapitalize="none"
-                      returnKeyType="go"
-                      onSubmitEditing={handleResetPassword}
-                      rightIcon={
-                        <Pressable onPress={() => setShowConfirm(!showConfirm)} hitSlop={8}>
-                          <Ionicons
-                            name={showConfirm ? "eye-off-outline" : "eye-outline"}
-                            size={20}
-                            color={tc.textTertiary}
-                          />
-                        </Pressable>
-                      }
-                    />
-                  </View>
-
-                  {resetError ? (
-                    <View style={[styles.errorBox, { backgroundColor: isDark ? "#2D0F0F" : "#FEF2F2" }]}>
-                      <Ionicons name="alert-circle" size={rs(16)} color="#EF4444" />
-                      <Text style={styles.errorText}>{resetError}</Text>
-                    </View>
-                  ) : null}
-
-                  <Pressable
-                    onPress={handleResetPassword}
-                    disabled={resetLoading}
-                    style={({ pressed }) => [
-                      styles.actionBtn,
-                      pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                      resetLoading && { opacity: 0.7 },
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={["#1A6BAE", "#005BE0", "#30855B"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.actionBtnGrad}
-                    >
-                      <Text style={styles.actionBtnText}>
-                        {resetLoading ? "Resetting..." : "Reset Password"}
-                      </Text>
-                    </LinearGradient>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={handleSendOtp}
-                    disabled={emailLoading}
-                    style={styles.resendRow}
-                  >
-                    <Text style={[styles.resendText, { color: tc.textSecondary }]}>
-                      Didn't receive it?{" "}
-                    </Text>
-                    <GradientText
-                      text={emailLoading ? "Sending..." : "Resend Code"}
-                      style={styles.resendLink}
-                      colors={["#1A6BAE", "#30855B"]}
-                    />
-                  </Pressable>
-                </>
-              )}
-            </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: tc.textSecondary }]}>Remember your password? </Text>
-              <Pressable onPress={() => router.replace("/(auth)/login" as any)}>
-                <GradientText
-                  text="Sign in"
-                  style={styles.footerLink}
-                  colors={["#1A6BAE", "#30855B"]}
+              {emailError ? errorBox(emailError) : null}
+              <GradientButton block label={emailLoading ? "Sending…" : "Email me a code"} loading={emailLoading} onPress={handleSendOtp} style={{ marginTop: 18 }} />
+            </Reveal>
+          ) : (
+            <Reveal key="otp">
+              <View style={{ marginTop: 6, marginBottom: 18 }}>
+                <OtpBoxes ref={otpRef} value={otp} onChange={(v) => { setOtp(v); setResetError(""); }} onComplete={() => newPassRef.current?.focus()} autoFocus />
+              </View>
+              <View style={{ gap: 14 }}>
+                <Input
+                  ref={newPassRef}
+                  label="New password"
+                  placeholder="At least 6 characters"
+                  value={newPassword}
+                  onChangeText={(t) => { setNewPassword(t); setResetError(""); }}
+                  secureTextEntry={!showNew}
+                  autoCapitalize="none"
+                  returnKeyType="next"
+                  onSubmitEditing={() => confirmRef.current?.focus()}
+                  icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
+                  rightIcon={
+                    <Pressable onPress={() => setShowNew(!showNew)} hitSlop={8} accessibilityLabel={showNew ? "Hide password" : "Show password"}>
+                      <Ionicons name={showNew ? "eye-off-outline" : "eye-outline"} size={20} color={tc.textTertiary} />
+                    </Pressable>
+                  }
                 />
+                <Input
+                  ref={confirmRef}
+                  label="Type it again"
+                  placeholder="The same password"
+                  value={confirmPassword}
+                  onChangeText={(t) => { setConfirmPassword(t); setResetError(""); }}
+                  secureTextEntry={!showConfirm}
+                  autoCapitalize="none"
+                  returnKeyType="go"
+                  onSubmitEditing={handleResetPassword}
+                  icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
+                  rightIcon={
+                    <Pressable onPress={() => setShowConfirm(!showConfirm)} hitSlop={8} accessibilityLabel={showConfirm ? "Hide password" : "Show password"}>
+                      <Ionicons name={showConfirm ? "eye-off-outline" : "eye-outline"} size={20} color={tc.textTertiary} />
+                    </Pressable>
+                  }
+                />
+              </View>
+              {resetError ? errorBox(resetError) : null}
+              <GradientButton block label={resetLoading ? "Saving…" : "Save new password"} loading={resetLoading} onPress={handleResetPassword} style={{ marginTop: 18 }} />
+              <Pressable onPress={handleSendOtp} disabled={emailLoading} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
+                <Text style={[TYPE.small, { color: tc.textSecondary }]}>No email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>{emailLoading ? "Sending…" : "Send it again"}</Text></Text>
               </Pressable>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+            </Reveal>
+          )}
+
+          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 28 }}>
+            <Text style={[TYPE.body, { color: tc.textSecondary }]}>Remember it? </Text>
+            <Pressable onPress={() => router.replace("/(auth)/login" as any)} hitSlop={8} accessibilityRole="button">
+              <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Sign in</Text>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </DPage>
   );
 }
 

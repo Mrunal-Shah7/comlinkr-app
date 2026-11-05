@@ -153,10 +153,10 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | rebuilt; empty state phone-checked, rows to check after a post is made |
 | city | city picker | not started |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
-| login | `app/(auth)/login.tsx` | not started |
+| login | `app/(auth)/login.tsx` | phone-checked (opened while signed in; signing in again not walked) |
 | signup | `app/(auth)/signup.tsx` | not started |
 | otp | OTP step in sign-up | not started |
-| forgot | `app/(auth)/forgot-password.tsx` | not started |
+| forgot | `app/(auth)/forgot-password.tsx`, `src/shared/d/Otp.tsx` | phone-checked (code sent, wrong code shakes; password not changed) |
 | onboarding | onboarding screens | not started (look only in phase 1) |
 | compose-listing | `app/create-post.tsx` | not started |
 | compose-room | `app/create-post.tsx` | not started |

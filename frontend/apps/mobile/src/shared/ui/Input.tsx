@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Colors } from "../../theme/colors";
 import { useTheme } from "../../theme/useTheme";
+import { TYPE } from "../../theme/d";
 
 interface InputProps extends TextInputProps {
   label: string;
@@ -28,9 +29,9 @@ const Input = forwardRef<TextInput, InputProps>(
         <View
           style={[
             styles.inputWrapper,
-            { backgroundColor: tc.inputBg, borderColor: tc.borderLight },
-            focused && { borderColor: Colors.brand.blue, backgroundColor: isDark ? tc.pillBg : Colors.brand.blueLight },
-            error ? { borderColor: Colors.text.error, backgroundColor: isDark ? tc.warningBg : "#FEF2F2" } : null,
+            { backgroundColor: tc.inputBg, borderColor: "transparent" },
+            focused && { borderColor: tc.accent, backgroundColor: tc.inputBg },
+            error ? { borderColor: tc.dangerText } : null,
           ]}
         >
           {icon && <View style={styles.iconLeft}>{icon}</View>}
@@ -51,7 +52,7 @@ const Input = forwardRef<TextInput, InputProps>(
           />
           {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
         </View>
-        {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
+        {error ? <Text style={[styles.error, { color: tc.dangerText }]} accessibilityLiveRegion="polite">{error}</Text> : null}
       </View>
     );
   }
@@ -65,16 +66,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.text.secondary,
+    ...TYPE.label,
     marginLeft: 2,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.bg.secondary,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: Colors.border.light,
     paddingHorizontal: 14,
@@ -96,11 +95,13 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    ...TYPE.body,
+    fontSize: 15.5,
     color: Colors.text.primary,
     paddingVertical: 0,
   },
   error: {
+    ...TYPE.small,
     fontSize: 12,
     color: Colors.text.error,
     marginLeft: 2,
