@@ -28,7 +28,9 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
   refreshControl?: ReactElement<RefreshControlProps>;
   contentStyle?: StyleProp<ViewStyle>;
   onBack?: () => void;
-  largeTitle?: boolean;
+  /** false: no large title, the bar title shows at once. "hidden": no large title, but the bar title still fades in
+   *  as the page scrolls (a profile head stands in for the title). */
+  largeTitle?: boolean | "hidden";
   /** false: children fill the space under the bar (a list that scrolls itself). */
   scroll?: boolean;
   /** A virtualised list instead of the ScrollView: render an Animated.FlatList with these. */
@@ -39,7 +41,8 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
 }) {
   const { tc } = useTheme();
   const insets = useSafeAreaInsets();
-  const y = useSharedValue(largeTitle ? 0 : 64);
+  const y = useSharedValue(largeTitle === false ? 64 : 0);
+  const showTitle = largeTitle === true;
   const onScroll = useAnimatedScrollHandler((e) => { y.value = e.contentOffset.y; });
   const bar = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 64], [0, 1], "clamp") }));
   const t = useAnimatedStyle(() => {
@@ -59,7 +62,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
         </Animated.View>
         <View style={s.right}>{right}</View>
       </View>
-      {renderList ? renderList({ onScroll, header: largeTitle ? (
+      {renderList ? renderList({ onScroll, header: showTitle ? (
         <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>
           <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{title}</Text>
           {sub ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>{sub}</Text> : null}
@@ -67,7 +70,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
       ) : null, bottom: footer ? 16 : 40 + insets.bottom }) : scroll ? (
         <Animated.ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={[{ paddingBottom: (footer ? 16 : 40 + insets.bottom) }, contentStyle]}>
-          {largeTitle ? (
+          {showTitle ? (
             <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>
               <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{title}</Text>
               {sub ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>{sub}</Text> : null}
