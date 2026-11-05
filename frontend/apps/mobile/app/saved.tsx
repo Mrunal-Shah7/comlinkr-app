@@ -15,19 +15,20 @@ import {
 } from "react-native";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: use the shared image renderer for every saved-item image.
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect } from "expo-router";
+import { router, Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ListState } from "../src/shared/ui/ListState";
 import * as Haptics from "expo-haptics";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
 import { useAuthStore } from "../src/store/auth.store";
-import { getSavesByType, type SaveTypeQuery } from "../src/api/saves.api";
+import { getSaveCounts, getSavesByType, totalSaveCount, type SaveTypeQuery } from "../src/api/saves.api";
+import { getInterestedItems, removeInterested } from "../src/api/favorites.api";
 import { subscribeToPostUpdates, toggleSave as toggleFeedSave } from "../src/api/feed.api"; // SPRINT-42: patch saved feed rows immediately after edit.
 import { toggleSaveEvent } from "../src/api/events.api";
 import { RatingSummary } from "../components/events"; // SPRINT-42:
 import { toggleListingSave } from "../src/api/housing.api";
-import { toggleRestaurantSave } from "../src/api/food.api";
+import { getFavoriteRestaurants, toggleFavoriteRestaurant, toggleRestaurantSave } from "../src/api/food.api";
 import { bookmarkQuestion } from "../src/api/community-qa.api";
 import { toggleStorySave } from "../src/api/stories.api";
 import { toggleRoommateSave } from "../src/api/roommates.api";
@@ -39,7 +40,7 @@ import Animated, { FadeInDown, FadeOut, LinearTransition } from "react-native-re
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { TYPE } from "../src/theme/d";
-import { Chip, EmptyState, PressableScale } from "../src/shared/d";
+import { Chip, EmptyState, PressableScale, Segmented } from "../src/shared/d";
 import { DPage, goBackOr } from "../src/shared/d/Page";
 
 const TABS: { type: SaveTypeQuery; label: string; empty: string }[] = [
@@ -132,10 +133,45 @@ function subtitleLine(item: Row, tab: SaveTypeQuery): string {
   return "";
 }
 
+type Seg = "saved" | "int" | "fav";
+type ExtraRow = { id: string; title: string; sub?: string; image?: string; open: () => void; remove: () => Promise<void> };
+
 export default function SavedScreen() {
   const { tc, isDark } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
+  const params = useLocalSearchParams<{ seg?: string }>();
+  const [seg, setSeg] = useState<Seg>(params.seg === "int" || params.seg === "fav" ? params.seg : "saved");
   const [active, setActive] = useState<SaveTypeQuery>("news");
+  const [savedTotal, setSavedTotal] = useState<number | null>(null);
+  const [extra, setExtra] = useState<{ int: ExtraRow[] | null; fav: ExtraRow[] | null }>({ int: null, fav: null });
+  const [extraLoading, setExtraLoading] = useState(false);
+  const loadExtra = useCallback(async (which: "int" | "fav") => {
+    setExtraLoading(true);
+    try {
+      if (which === "int") {
+        const res = await getInterestedItems({ pageSize: 50 });
+        setExtra((x) => ({ ...x, int: res.data.map((it) => ({
+          id: it.id, title: it.title, sub: it.subtitle, image: it.image ? resolveApiAssetUrl(it.image) : undefined,
+          open: () => router.push({ pathname: "/(tabs)/housing", params: { openListing: it.contentId } } as never),
+          remove: async () => { await removeInterested(it.type, it.contentId); setExtra((y) => ({ ...y, int: (y.int ?? []).filter((r) => r.id !== it.id) })); },
+        })) }));
+      } else {
+        const res = await getFavoriteRestaurants();
+        setExtra((x) => ({ ...x, fav: res.map((r) => ({
+          id: r.id, title: r.name, sub: [r.cuisine, r.city].filter(Boolean).join(" · ") || undefined, image: r.image,
+          open: () => router.push({ pathname: "/(tabs)/food", params: { openRestaurant: r.id } } as never),
+          remove: async () => { await toggleFavoriteRestaurant(r.id); setExtra((y) => ({ ...y, fav: (y.fav ?? []).filter((x2) => x2.id !== r.id) })); },
+        })) }));
+      }
+    } catch (err) {
+      appAlert("Could not load", err instanceof ApiError ? err.message : "Check your connection and try again.");
+      setExtra((x) => ({ ...x, [which]: [] }));
+    } finally {
+      setExtraLoading(false);
+    }
+  }, []);
+  useEffect(() => { if (seg !== "saved") void loadExtra(seg); }, [seg, loadExtra]);
+  useEffect(() => { void getSaveCounts().then((c) => setSavedTotal(totalSaveCount(c.counts))).catch(() => {}); }, []);
   const cache = useRef<
     Partial<
       Record<
@@ -332,6 +368,68 @@ export default function SavedScreen() {
     />
   );
 
+  const segmented = (
+    <Segmented
+      style={{ marginHorizontal: 16, marginBottom: 14 }}
+      items={[{ key: "saved", label: savedTotal ? `Saved · ${savedTotal}` : "Saved" }, { key: "int", label: "Interested" }, { key: "fav", label: "Favourites" }]}
+      value={seg}
+      onChange={(k) => setSeg(k as Seg)}
+    />
+  );
+  const extraRows = seg === "saved" ? [] : extra[seg] ?? [];
+  const extraEmpty = extraLoading || extra[seg as "int" | "fav"] == null ? (
+    <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 48 }} />
+  ) : seg === "int" ? (
+    <EmptyState icon="home-outline" title="Nothing here yet" sub="Homes you mark as interested show up here." actionLabel="Browse homes" onAction={() => router.push("/(tabs)/housing" as never)} />
+  ) : (
+    <EmptyState icon="heart-outline" title="No favourites yet" sub="Tap the heart on a place to keep it here." actionLabel="Browse food" onAction={() => router.push("/(tabs)/food" as never)} />
+  );
+
+  if (seg !== "saved") {
+    return (
+      <DPage
+        title="Saved"
+        onBack={() => goBackOr("/(tabs)/feed")}
+        renderList={({ onScroll, header, bottom }) => (
+          <Animated.FlatList
+            data={extraRows}
+            keyExtractor={(r: ExtraRow) => r.id}
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            itemLayoutAnimation={LinearTransition.springify().damping(20)}
+            ListHeaderComponent={<>{header}{segmented}</>}
+            ListEmptyComponent={extraEmpty}
+            contentContainerStyle={{ paddingBottom: bottom, gap: 10 }}
+            refreshControl={<RefreshControl refreshing={false} onRefresh={() => void loadExtra(seg)} tintColor={tc.accent} />}
+            renderItem={({ item, index }: { item: ExtraRow; index: number }) => (
+              <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
+                <PressableScale onPress={item.open} accessibilityRole="button" accessibilityLabel={item.title}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                  {item.image ? <FadeImage uri={item.image} style={{ width: 72, height: 72, borderRadius: 16 }} /> : (
+                    <View style={{ width: 72, height: 72, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+                      <Ionicons name={seg === "int" ? "home-outline" : "restaurant-outline"} size={24} color={tc.accentText} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                    <View style={{ alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: tc.accentSoft }}>
+                      <Text style={[TYPE.label, { color: tc.accentText, fontSize: 11 }]}>{seg === "int" ? "Home" : "Food"}</Text>
+                    </View>
+                    <Text numberOfLines={2} style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{item.title}</Text>
+                    {item.sub ? <Text numberOfLines={1} style={[TYPE.small, { color: tc.textSecondary }]}>{item.sub}</Text> : null}
+                  </View>
+                  <Pressable onPress={() => void item.remove().catch((err) => appAlert("Could not remove", err instanceof ApiError ? err.message : "Try again."))} hitSlop={10} accessibilityRole="button"
+                    accessibilityLabel={seg === "int" ? "Not interested any more" : "Remove from favourites"} style={{ width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name={seg === "int" ? "star" : "heart"} size={21} color={seg === "int" ? tc.accentText : "#E0245E"} />
+                  </Pressable>
+                </PressableScale>
+              </Animated.View>
+            )}
+          />
+        )}
+      />
+    );
+  }
+
   return (
     <DPage
       title="Saved"
@@ -345,7 +443,7 @@ export default function SavedScreen() {
           onScroll={onScroll}
           scrollEventThrottle={16}
           itemLayoutAnimation={LinearTransition.springify().damping(20)}
-          ListHeaderComponent={<>{header}{chips}</>}
+          ListHeaderComponent={<>{header}{segmented}{chips}</>}
           ListEmptyComponent={empty}
           columnWrapperStyle={isStories ? { gap: 10, paddingHorizontal: 16 } : undefined}
           contentContainerStyle={{ paddingBottom: bottom, gap: 10 }}
