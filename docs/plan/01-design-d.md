@@ -150,7 +150,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | verification | `app/verification-status.tsx` | not started |
 | messages | `app/chat.tsx` (list) | phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |
-| my-posts | `app/myposts.tsx` | not started |
+| my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | rebuilt; empty state phone-checked, rows to check after a post is made |
 | city | city picker | not started |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | not started |

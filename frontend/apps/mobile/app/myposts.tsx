@@ -30,6 +30,10 @@ import { getQuestions, deleteQuestion } from "../src/api/community-qa.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { ScrollView as GHScrollView } from 'react-native-gesture-handler';
+import { TYPE } from '../src/theme/d';
+import { Chip, EmptyState, PressableScale, Reveal, SoftButton } from '../src/shared/d';
+import { DPage, goBackOr } from '../src/shared/d/Page';
 
 /** Post types the backend supports editing via `PATCH /feed/:id` (mirrors deletePost's NEWS/ANNOUNCEMENT/JOBS coverage). */
 const EDITABLE_TYPES: ReadonlySet<UnifiedMyPostType> = new Set(["NEWS", "ANNOUNCEMENT", "JOBS"]);
@@ -367,392 +371,90 @@ export default function MyPostsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]}>
-      {/* ── Header ── */}
-      <View style={[s.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable
-          onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }}
-          style={({ pressed }) => [s.backBtn, { backgroundColor: tc.sectionBg }, pressed && { opacity: 0.8, transform: [{ scale: 0.9 }] }]}
-          hitSlop={{ top: rs(10), bottom: rs(10), left: rs(10), right: rs(10) }}
-        >
-          <Ionicons name="chevron-back" size={20} color={Colors.brand.blue} />
-        </Pressable>
-        <Text style={[s.headerTitle, { color: tc.textPrimary }]}>My Posts</Text>
-        <Pressable style={s.composeBtn} onPress={() => router.push("/create-post" as any)}>
-          <LinearGradient
-            colors={[Colors.brand.blue, Colors.brand.green]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={s.composeBtnGrad}
-          >
-            <Ionicons name="add" size={20} color="#FFF" />
-          </LinearGradient>
-        </Pressable>
-      </View>
+  const TYPE_ICON: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
+    COMMUNITY: "chatbubbles-outline", QUESTION: "help-circle-outline", POLL: "bar-chart-outline", NEWS: "newspaper-outline",
+    ANNOUNCEMENT: "megaphone-outline", JOBS: "briefcase-outline", EVENT: "calendar-outline", STORY: "camera-outline",
+    LISTING: "home-outline", HOUSING: "home-outline", FOOD: "restaurant-outline", CHALLENGE: "trophy-outline",
+  };
+  const subLine = items.length === 0 ? undefined : `${items.length} post${items.length === 1 ? "" : "s"}${totalLikes > 0 ? ` · ${totalLikes} likes` : ""}${totalComments > 0 ? ` · ${totalComments} comments` : ""}`;
+  const postMenu = (post: UnifiedMyPost) => appAlert(post.title || "Post", undefined, [
+    { text: "Edit", onPress: () => handleEdit(post) },
+    { text: "Delete", style: "destructive", onPress: () => handleDelete(post) },
+    { text: "Cancel", style: "cancel" },
+  ]);
 
+  return (
+    <>
+    <DPage
+      title="My posts"
+      sub={subLine}
+      onBack={() => goBackOr("/(tabs)/feed")}
+      right={
+        <Pressable onPress={() => router.push("/create-post" as any)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Post something"
+          style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+          <Ionicons name="add" size={26} color={tc.textPrimary} />
+        </Pressable>
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
+    >
       {error ? (
-        <View style={[s.errorBanner, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-          <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
-          <Text style={[s.errorText, { color: tc.textSecondary }]}>{error}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 14, backgroundColor: tc.warningBg }}>
+          <Ionicons name="alert-circle-outline" size={18} color={tc.warningText} />
+          <Text style={[TYPE.small, { flex: 1, color: tc.warningText }]}>{error}</Text>
         </View>
       ) : null}
 
-      {/* ── Stats banner ── */}
-      <LinearGradient
-        colors={[Colors.brand.blue, Colors.brand.green]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={s.statsBanner}
-      >
-        {[
-          { num: loading && items.length === 0 ? "—" : items.length, label: "Total", icon: "layers-outline" as const },
-          { num: loading && items.length === 0 ? "—" : totalLikes, label: "Likes", icon: "heart-outline" as const },
-          { num: loading && items.length === 0 ? "—" : totalComments, label: "Comments", icon: "chatbubble-outline" as const },
-        ].map((st, i, arr) => (
-          <View key={st.label} style={[s.statCell, i < arr.length - 1 && s.statCellBorder]}>
-            <Ionicons name={st.icon} size={16} color="rgba(255,255,255,0.75)" />
-            <Text style={s.statNum}>{st.num}</Text>
-            <Text style={s.statLbl}>{st.label}</Text>
-          </View>
-        ))}
-      </LinearGradient>
-
-      {/* ── Filter tabs ── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={[s.tabScroll, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}
-        contentContainerStyle={s.tabScrollContent}
-      >
+      <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 12 }}>
         {FILTER_TABS.map((t) => {
-          const active = filter === t;
           const count = countForTab(t, items);
-          return (
-            <Pressable
-              key={t}
-              onPress={() => setFilter(t)}
-              style={[s.tab, { backgroundColor: tc.sectionBg }, active && s.tabActive]}
-            >
-              <Ionicons name={tabIcon(t)} size={13} color={active ? "#FFF" : tc.textSecondary as string} />
-              <Text style={[s.tabText, { color: tc.textSecondary }, active && s.tabTextActive]}>{t}</Text>
-              {count > 0 && (
-                <View
-                  style={[
-                    s.tabBadge,
-                    active ? { backgroundColor: "rgba(255,255,255,0.3)" } : { backgroundColor: tc.borderLight },
-                  ]}
-                >
-                  <Text style={[s.tabBadgeText, { color: tc.textSecondary }, active && { color: "#FFF" }]}>{count}</Text>
-                </View>
-              )}
-            </Pressable>
-          );
+          return <Chip key={t} label={count > 0 ? `${t} · ${count}` : t} on={filter === t} onPress={() => setFilter(t)} />;
         })}
-      </ScrollView>
+      </GHScrollView>
 
-      {/* ── Post list ── */}
-      <ScrollView
-        style={[s.scroll, { backgroundColor: tc.pageBg }]}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.brand.blue} />}
-      >
-        {loading && items.length === 0 ? (
-          <View style={s.loadingWrap}>
-            <ActivityIndicator size="large" color={Colors.brand.blue} />
-            <Text style={[s.loadingHint, { color: tc.textSecondary }]}>Loading your content…</Text>
-          </View>
-        ) : null}
+      {loading && items.length === 0 ? <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 48 }} /> : null}
 
-        {filtered.map((post) => {
-          const meta = getTypeMeta(post.type);
-          const rel = formatRelativeTime(post.createdAt);
-          const cat = post.category?.trim() || "General";
-
-          const likes    = metaNum(post.metadata, "likesCount");
-          const comments = metaNum(post.metadata, "commentsCount");
-          const views    = metaNum(post.metadata, "viewsCount");
-          const answers  = metaNum(post.metadata, "answersCount") || comments;
-          const votes    = metaNum(post.metadata, "votesCount") || metaNum(post.metadata, "participantCount");
-          const attendees = metaNum(post.metadata, "attendeeCount");
-          const isCommunity = ["COMMUNITY", "QUESTION", "POLL"].includes(post.type);
-          const isPost = ["NEWS", "ANNOUNCEMENT", "JOBS"].includes(post.type);
-
-          return (
-            <Pressable key={`${post.type}-${post.id}`} onPress={() => openDetail(post)} style={({ pressed }) => [s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.94 }]}>
-            {/* SPRINT-42: detail open hydrates isEdited via GET /feed/:id for feed rows. */}
-              <View style={s.cardTop}>
-                <View style={s.avatarWrap}>
-                  <LinearGradient
-                    colors={[Colors.brand.blue, Colors.brand.green]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={s.avatarGrad}
-                  >
-                    <Text style={s.avatarText}>{initials}</Text>
-                  </LinearGradient>
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.authorName, { color: tc.textPrimary }]}>{user?.name || "You"}</Text>
-                  <View style={s.cardMetaRow}>
-                    <Ionicons name="folder-outline" size={12} color={tc.textTertiary} />
-                    <Text style={[s.cardMetaText, { color: tc.textTertiary }]}>{cat}</Text>
-                    <View style={[s.metaDot, { backgroundColor: tc.textTertiary }]} />
-                    <Ionicons name="time-outline" size={12} color={tc.textTertiary} />
-                    <Text style={[s.cardMetaText, { color: tc.textTertiary }]}>{rel}</Text>
-                  </View>
-                </View>
-
-                <View style={[s.typeBadge, { backgroundColor: meta.bg }]}>
-                  <Ionicons name={meta.icon} size={11} color={meta.color} />
-                  <Text style={[s.typeBadgeText, { color: meta.color }]}>{meta.label}</Text>
-                </View>
+      {filtered.map((post, i) => {
+        const meta = getTypeMeta(post.type);
+        const likes = metaNum(post.metadata, "likesCount");
+        const comments = metaNum(post.metadata, "commentsCount") || metaNum(post.metadata, "answersCount");
+        const bits = [likes > 0 ? `♥ ${likes}` : "", comments > 0 ? `${comments} ${post.type === "QUESTION" ? "answers" : "comments"}` : "", formatRelativeTime(post.createdAt)].filter(Boolean);
+        const extra = post.type === "EVENT" ? formatEventDate(post.metadata.date) : post.type === "STORY" && post.status === "EXPIRED" ? "Expired" : "";
+        return (
+          <Reveal key={`${post.type}-${post.id}`} i={i} style={{ marginHorizontal: 16, marginBottom: 10 }}>
+            <PressableScale onPress={() => openDetail(post)} accessibilityRole="button" accessibilityLabel={post.title}
+              style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+              <View style={{ width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+                <Ionicons name={TYPE_ICON[post.type] ?? meta.icon} size={24} color={tc.accentText} />
               </View>
-
-              {/* Title / question */}
-              <Text style={[s.content, { color: tc.textPrimary, fontWeight: "700" }]} numberOfLines={2}>
-                {post.title}
-              </Text>
-              {post.isEdited ? <Text style={{ color: tc.textTertiary, fontSize: rs(10), marginTop: rs(3) }}>Edited</Text> : null}
-              {/* SPRINT-42: my-post card marker follows backend isEdited. */}
-              {!!post.content && (
-                <Text style={[s.content, { color: tc.textSecondary, marginTop: rs(4) }]} numberOfLines={3}>
-                  {post.content}
-                </Text>
-              )}
-
-              {/* ── Community / Q&A / Poll details ── */}
-              {isCommunity && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  {post.type === "POLL" ? (
-                    <View style={s.detailRow}>
-                      <Ionicons name="bar-chart-outline" size={14} color={Colors.brand.orange} />
-                      <Text style={[s.detailText, { color: tc.textSecondary }]}>
-                        {votes > 0 ? `${votes} vote${votes !== 1 ? "s" : ""}` : "No votes yet"}
-                      </Text>
-                      {post.metadata.options != null && (
-                        <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                          {" · "}{String(post.metadata.options)} options
-                        </Text>
-                      )}
-                    </View>
-                  ) : (
-                    <View style={s.detailRow}>
-                      <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.brand.blue} />
-                      <Text style={[s.detailText, { color: tc.textSecondary }]}>
-                        {answers > 0 ? `${answers} answer${answers !== 1 ? "s" : ""}` : "No answers yet"}
-                      </Text>
-                      {likes > 0 && (
-                        <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                          {" · "}{likes} likes
-                        </Text>
-                      )}
-                    </View>
-                  )}
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <View style={{ alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: tc.accentSoft }}>
+                  <Text style={[TYPE.label, { color: tc.accentText, fontSize: 11 }]}>{meta.label}</Text>
                 </View>
-              )}
-
-              {/* ── News / Announcement / Job details ── */}
-              {isPost && (likes > 0 || comments > 0) && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <View style={s.detailRow}>
-                    {likes > 0 && (
-                      <>
-                        <Ionicons name="heart-outline" size={14} color="#EF4444" />
-                        <Text style={[s.detailText, { color: tc.textSecondary }]}>{likes} likes</Text>
-                      </>
-                    )}
-                    {likes > 0 && comments > 0 && <View style={[s.metaDot, { backgroundColor: tc.textTertiary, marginHorizontal: rs(4) }]} />}
-                    {comments > 0 && (
-                      <>
-                        <Ionicons name="chatbubble-outline" size={14} color={Colors.brand.blue} />
-                        <Text style={[s.detailText, { color: tc.textSecondary }]}>{comments} comments</Text>
-                      </>
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* ── Event details ── */}
-              {post.type === "EVENT" && (
-                <View style={[s.eventPill]}>
-                  <Ionicons name="calendar-outline" size={14} color={Colors.brand.orange} />
-                  <Text style={s.eventPillText} numberOfLines={1}>
-                    {formatEventDate(post.metadata.date)}
-                    {post.metadata.venue != null ? ` · ${String(post.metadata.venue)}` : ""}
-                  </Text>
-                  {attendees > 0 && (
-                    <View style={[s.statChip, { backgroundColor: Colors.brand.orange + "18", marginLeft: "auto" }]}>
-                      <Ionicons name="people-outline" size={12} color={Colors.brand.orange} />
-                      <Text style={[s.statChipText, { color: Colors.brand.orange }]}>{attendees} going</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              {post.type === "EVENT" ? ( // SPRINT-42: own/unified event card rating
-                <RatingSummary
-                  averageRating={Number(post.metadata.averageRating ?? 0) || 0}
-                  totalReviews={Number(post.metadata.totalReviews ?? 0) || 0}
-                  size="sm"
-                  textColor={tc.textPrimary}
-                  mutedColor={tc.textTertiary}
-                  style={{ marginTop: rs(6) }}
-                />
-              ) : null}
-
-              {/* ── Story details ── */}
-              {post.type === "STORY" && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <View style={s.detailRow}>
-                    <Ionicons name="eye-outline" size={14} color={Colors.brand.green} />
-                    <Text style={[s.detailText, { color: tc.textSecondary }]}>
-                      {views > 0 ? `${views} views` : "No views yet"}
-                    </Text>
-                    {post.metadata.mediaType != null && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}{String(post.metadata.mediaType)}
-                      </Text>
-                    )}
-                    {post.status === "EXPIRED" && (
-                      <View style={[s.statusPill, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}>
-                        <Text style={{ fontSize: rs(10), fontWeight: "700", color: "#DC2626" }}>Expired</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* ── Listing details ── */}
-              {(post.type === "LISTING" || post.type === "HOUSING") && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <View style={s.detailRow}>
-                    <Ionicons name="home-outline" size={14} color="#E11D48" />
-                    {post.metadata.price != null && (
-                      <Text style={[s.detailText, { color: tc.textSecondary }]}>{String(post.metadata.price)}</Text>
-                    )}
-                    {post.metadata.beds != null && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}{String(post.metadata.beds)} bed
-                      </Text>
-                    )}
-                    {post.metadata.city != null && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}{String(post.metadata.city)}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* ── Restaurant details ── */}
-              {post.type === "FOOD" && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <View style={s.detailRow}>
-                    <Ionicons name="restaurant-outline" size={14} color={Colors.brand.orange} />
-                    {post.metadata.cuisine != null && (
-                      <Text style={[s.detailText, { color: tc.textSecondary }]}>{String(post.metadata.cuisine)}</Text>
-                    )}
-                    {post.metadata.rating != null && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}★ {String(post.metadata.rating)}
-                      </Text>
-                    )}
-                    {post.metadata.city != null && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}{String(post.metadata.city)}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* ── Challenge details ── */}
-              {post.type === "CHALLENGE" && (
-                <View style={[s.detailBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <View style={s.detailRow}>
-                    <Ionicons name="trophy-outline" size={14} color={Colors.brand.orange} />
-                    <Text style={[s.detailText, { color: tc.textSecondary }]}>
-                      {post.status ? `Status: ${post.status}` : "Active Challenge"}
-                    </Text>
-                    {votes > 0 && (
-                      <Text style={[s.detailMuted, { color: tc.textTertiary }]}>
-                        {" · "}{votes} participants
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* ── Action buttons ── */}
-              <View style={s.statsRow}>
-                <View style={{ flex: 1 }} />
-                <Pressable style={s.actionBtn} onPress={(e) => { e.stopPropagation?.(); handleEdit(post); }}>
-                  <Ionicons name="pencil-outline" size={15} color={Colors.brand.blue} />
-                  <Text style={[s.actionBtnText, { color: Colors.brand.blue }]}>Edit</Text>
-                </Pressable>
-                <Pressable
-                  style={[s.actionBtn, { backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]}
-                  onPress={(e) => { e.stopPropagation?.(); handleDelete(post); }}
-                >
-                  <Ionicons name="trash-outline" size={15} color="#EF4444" />
-                  <Text style={[s.actionBtnText, { color: "#EF4444" }]}>Delete</Text>
-                </Pressable>
+                <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{post.title}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[...(extra ? [extra] : []), ...bits].join(" · ")}{post.isEdited ? " · edited" : ""}</Text>
               </View>
-            </Pressable>
-          );
-        })}
+              <Pressable onPress={() => postMenu(post)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Post options" style={{ width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="ellipsis-horizontal" size={20} color={tc.textSecondary} />
+              </Pressable>
+            </PressableScale>
+          </Reveal>
+        );
+      })}
 
-        {!loading && hasMore ? (
-          <Pressable
-            onPress={() => void loadPage(page + 1, true)}
-            disabled={loadingMore}
-            style={[s.loadMoreBtn, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}
-          >
-            {loadingMore ? (
-              <ActivityIndicator color={Colors.brand.blue} />
-            ) : (
-              <Text style={[s.loadMoreText, { color: Colors.brand.blue }]}>Load more</Text>
-            )}
-          </Pressable>
-        ) : null}
+      {!loading && hasMore ? (
+        <SoftButton label={loadingMore ? "Loading…" : "Load more"} disabled={loadingMore} onPress={() => void loadPage(page + 1, true)} style={{ alignSelf: "center", marginTop: 6 }} />
+      ) : null}
 
-        {!loading && filtered.length === 0 && !error ? (
-          <View style={s.emptyState}>
-            <View style={s.emptyIconWrap}>
-              <LinearGradient
-                colors={[Colors.brand.blue + "20", Colors.brand.green + "20"]}
-                style={s.emptyIconGrad}
-              >
-                <Ionicons name="document-text-outline" size={40} color={Colors.brand.blue} />
-              </LinearGradient>
-            </View>
-            <Text style={[s.emptyTitle, { color: tc.textPrimary }]}>No content yet</Text>
-            <Text style={[s.emptyDesc, { color: tc.textSecondary }]}>
-              {filter === "All"
-                ? "You haven't posted anything yet. Tap the + button above to add your first post."
-                : filter === "Community"
-                  ? "No discussions, questions or polls yet. Tap + above to start a community post."
-                  : filter === "News"
-                    ? "No news posts yet. Tap + above to share a news post or announcement."
-                    : filter === "Events"
-                      ? "No events posted yet. Tap + above to create an event."
-                      : filter === "Stories"
-                        ? "No stories yet. Tap + above to share a story."
-                        : `No ${filter.toLowerCase()} yet. Tap + above to add one.`}
-            </Text>
-            <View style={[s.addHint, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-              <Ionicons name="arrow-up-circle-outline" size={18} color={Colors.brand.blue} />
-              <Text style={[s.addHintText, { color: tc.textSecondary }]}>
-                Tap the <Text style={{ fontWeight: "800", color: Colors.brand.blue }}>+</Text> in the top right to add a post
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={{ height: rs(40) }} />
-      </ScrollView>
+      {!loading && filtered.length === 0 && !error ? (
+        <EmptyState
+          icon="document-text-outline"
+          title={filter === "All" ? "Nothing posted yet" : `No ${filter.toLowerCase()} yet`}
+          sub="What you post shows up here, with its likes and comments."
+          actionLabel="Post something"
+          onAction={() => router.push("/create-post" as any)}
+        />
+      ) : null}
+    </DPage>
 
       {/* ── Post Detail Modal ── */}
       <Modal visible={!!detailPost} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setDetailPost(null)}>
@@ -914,7 +616,7 @@ export default function MyPostsScreen() {
           </SafeAreaView>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </>
   );
 }
 
