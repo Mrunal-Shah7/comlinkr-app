@@ -1,5 +1,5 @@
 import { rs } from "../src/utils/responsive";
-import React, { useState, useCallback, useEffect } from "react"; // SPRINT-42: subscribe to successful in-memory post edits.
+import React, { useState, useCallback, useEffect, useRef } from "react"; // SPRINT-42: subscribe to successful in-memory post edits.
 import {
   View,
   Text,
@@ -274,29 +274,45 @@ export default function MyPostsScreen() {
     totalLikes += metaNum(p.metadata, "attendeeCount");
   }
 
+  // Delete = take it off the list now, offer Undo, and only call the server once the toast is gone (4.5 s).
+  // Leaving the screen sends any pending delete straight away.
+  const pendingDeletes = useRef(new Map<string, { post: UnifiedMyPost; timer: ReturnType<typeof setTimeout> }>());
+  const commitDelete = useCallback(async (post: UnifiedMyPost) => {
+    pendingDeletes.current.delete(post.id);
+    try {
+      if (post.type === "NEWS" || post.type === "ANNOUNCEMENT" || post.type === "JOBS") await deletePost(post.id);
+      else if (post.type === "EVENT") await deleteEvent(post.id);
+      else if (post.type === "QUESTION" || post.type === "COMMUNITY") await deleteQuestion(post.id);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Delete failed.";
+      showToast(msg, "error");
+      setItems((prev) => (prev.some((x) => x.id === post.id) ? prev : [post, ...prev]));
+    }
+  }, []);
+  useEffect(() => () => {
+    pendingDeletes.current.forEach(({ post, timer }) => { clearTimeout(timer); void commitDelete(post); });
+  }, [commitDelete]);
+
   const handleDelete = (post: UnifiedMyPost) => {
-    appAlert("Delete", "Remove this item? This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            if (post.type === "NEWS" || post.type === "ANNOUNCEMENT" || post.type === "JOBS") await deletePost(post.id);
-            else if (post.type === "EVENT") await deleteEvent(post.id);
-            else if (post.type === "QUESTION" || post.type === "COMMUNITY") await deleteQuestion(post.id);
-            else {
-              showToast("Deleting stories and challenges from the app is not supported yet.", "info");
-              return;
-            }
-            setItems((prev) => prev.filter((x) => x.id !== post.id));
-          } catch (e) {
-            const msg = e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Delete failed.";
-            showToast(msg, "error");
-          }
-        },
+    const supported = ["NEWS", "ANNOUNCEMENT", "JOBS", "EVENT", "QUESTION", "COMMUNITY"].includes(post.type);
+    if (!supported) {
+      showToast("Deleting stories and challenges from the app is not supported yet.", "info");
+      return;
+    }
+    let index = -1;
+    setItems((prev) => { index = prev.findIndex((x) => x.id === post.id); return prev.filter((x) => x.id !== post.id); });
+    const timer = setTimeout(() => void commitDelete(post), 4600);
+    pendingDeletes.current.set(post.id, { post, timer });
+    showToast("Deleted", "info", {
+      label: "Undo",
+      onPress: () => {
+        const p = pendingDeletes.current.get(post.id);
+        if (!p) return;
+        clearTimeout(p.timer);
+        pendingDeletes.current.delete(post.id);
+        setItems((prev) => { const n = [...prev]; n.splice(index < 0 ? 0 : Math.min(index, n.length), 0, post); return n; });
       },
-    ]);
+    });
   };
 
   const openDetail = useCallback((post: UnifiedMyPost) => { // SPRINT-42: open detail and hydrate edit marker from GET /feed/:id when the unified list omits it.
