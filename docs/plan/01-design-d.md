@@ -137,7 +137,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | event-register | `EventRegistrationModal` | not started |
 | event-ticket | ticket in `EventRegistrationModal` | not started |
 | events-all | `app/events.tsx` (its own detail sheet keeps the base coat) | phone-checked (list, save, unsave) |
-| check-in | `app/events/[id]/check-in.tsx` | not started |
+| check-in | `app/events/[id]/check-in.tsx` (stays dark on purpose: D fonts, the D dark background, a mint filter chip) | permission screen phone-checked; scanner not opened (camera not granted) |
 | story-viewer | `app/story-viewer.tsx` | not started |
 | profile | `app/profile.tsx` (roommate-preferences sheet still base coat) | phone-checked |
 | public-profile | `app/public-profile.tsx` | phone-checked (Follow fails on the backend: TR-006) |

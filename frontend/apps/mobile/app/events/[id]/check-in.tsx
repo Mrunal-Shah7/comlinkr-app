@@ -28,6 +28,7 @@ import {
 } from "../../../src/api/events.api";
 import { rs } from "../../../src/utils/responsive";
 import { appAlert } from '../../../src/shared/ui/Dialogs';
+import { createThemedStyles } from '../../../src/theme/themedStyles';
 
 type OutcomeKind = EventCheckInReasonCode | "NETWORK_ERROR" | "PARSE_ERROR"; // SPRINT-42:
 
@@ -307,7 +308,7 @@ export default function EventCheckInScreen() {
   if (ownerGate === "loading" || ownerGate === "denied") {
     // SPRINT-42: loading/denied — never mount CameraView
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14", justifyContent: "center", alignItems: "center" }]}>
+      <SafeAreaView style={[styles.root, { backgroundColor: "#091218", justifyContent: "center", alignItems: "center" }]}>
         {ownerGate === "loading" ? (
           <ActivityIndicator color="#FFF" />
         ) : (
@@ -326,7 +327,7 @@ export default function EventCheckInScreen() {
 
   if (!permission) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14", justifyContent: "center", alignItems: "center" }]}>
+      <SafeAreaView style={[styles.root, { backgroundColor: "#091218", justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator color="#FFF" />
       </SafeAreaView>
     );
@@ -335,7 +336,7 @@ export default function EventCheckInScreen() {
   if (!permission.granted) {
     const permanent = permission.canAskAgain === false;
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14" }]}>
+      <SafeAreaView style={[styles.root, { backgroundColor: "#091218" }]}>
         <View style={styles.permWrap}>
           <Ionicons name="camera-outline" size={48} color="#9CA3AF" />
           <Text style={styles.permTitle}>Camera access needed</Text>
@@ -362,7 +363,7 @@ export default function EventCheckInScreen() {
   const totalsAvailable = totals.totalsAvailable; // SPRINT-42:
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14" }]} edges={["top", "bottom"]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: "#091218" }]} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={22} color="#FFF" />
@@ -467,7 +468,7 @@ export default function EventCheckInScreen() {
               <Pressable
                 key={String(f.key)}
                 onPress={() => setFilter(f.key)}
-                style={[styles.filterChip, on && { backgroundColor: "#111827" }]}
+                style={[styles.filterChip, on && { backgroundColor: "#30855B" }]}
               >
                 <Text style={[styles.filterText, on && { color: "#FFF" }]}>{f.label}</Text>
               </Pressable>
@@ -514,7 +515,7 @@ export default function EventCheckInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: { flex: 1 }, // SPRINT-42:
   header: {
     flexDirection: "row",
