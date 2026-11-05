@@ -284,8 +284,8 @@ export function PropertyDetailModal({
             </Reveal>
           ) : null}
 
-          {/* Journey: only once you have started (problem 12) */}
-          {journeyStep > 0 && (
+          {/* Journey: only once you have contacted the owner (design D, problem 12) */}
+          {journeyStep >= 2 && (
             <Reveal>
               {section("Your journey")}
               <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
@@ -314,9 +314,9 @@ export function PropertyDetailModal({
             <Ionicons name="chatbubble-ellipses-outline" size={20} color={tc.accentText} />
           </Pressable>
 
-          {!unavailable && (journeyStep === 0 || journeyStep === 1) ? (
-            <Pressable onPress={() => { setJourneyStep(2); handleApply(); }} hitSlop={6} style={{ alignSelf: "center", marginTop: 16 }}>
-              <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Skip the viewing and apply</Text>
+          {!unavailable && journeyStep < 3 ? (
+            <Pressable onPress={handleRequestViewing} hitSlop={6} style={{ alignSelf: "center", marginTop: 16 }} accessibilityRole="button">
+              <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Ask to see it first</Text>
             </Pressable>
           ) : null}
         </ScrollView>
@@ -334,8 +334,7 @@ export function PropertyDetailModal({
                 {has(listing.priceNote) ? <Text style={[TYPE.small, { color: tc.textSecondary, fontSize: 12 }]}>{listing.priceNote}</Text> : null}
               </View>
               <SoftButton label="Message" onPress={() => { if (journeyStep < 2) setJourneyStep(2); messageLandlord(); }} />
-              {journeyStep <= 1 ? <GradientButton label="Viewing" onPress={handleRequestViewing} accessibilityLabel="Request a viewing" /> : null}
-              {journeyStep >= 2 && journeyStep < 4 ? <GradientButton label="Apply" onPress={handleApply} /> : null}
+              {journeyStep < 4 ? <GradientButton label="Apply" onPress={() => { if (journeyStep < 2) setJourneyStep(2); handleApply(); }} /> : null}
               {journeyStep >= 4 ? <GradientButton label="Agreement" onPress={handleApply} accessibilityLabel="View agreement" /> : null}
             </>
           )}
