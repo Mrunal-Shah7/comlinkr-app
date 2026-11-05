@@ -1,4 +1,4 @@
-# 01. Build design D (Night Market in the brand gradient)
+| question-detail |undefined| rebuilt with Community (inline answers restyled); answers view not walked || review (sheet) |undefined| rebuilt with the restaurant detail (section heading, gradient submit); not walked || listmenu |undefined| phone-checked through the dialogs (every ··· menu is an appAlert action sheet) || filters |undefined| phone-checked (chips, clear) || safety |undefined| phone-checked (collapsed and open) |# 01. Build design D (Night Market in the brand gradient)
 
 **Status: Building (phase 1).** Triage [TR-005](../triage.md). Review:
 [2026-11-05 design review](../review/2026-11-05-design-audit.md). Design:

@@ -1456,15 +1456,15 @@ export default function HousingScreen() {
       >
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowFilterSheet(false)} />
-          <View style={{ backgroundColor: tc.cardBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: insets.bottom + 20 }}>
+          <View style={{ backgroundColor: tc.sheetBg, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 20, paddingBottom: insets.bottom + 20 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-              <Text style={{ fontSize: 17, fontWeight: "900", color: tc.textPrimary }}>Filters</Text>
+              <Text style={[TYPE.section, { color: tc.textPrimary }]}>Filters</Text>
               <Pressable onPress={() => setShowFilterSheet(false)} hitSlop={10}>
                 <Ionicons name="close" size={22} color={tc.textSecondary} />
               </Pressable>
             </View>
 
-            <Text style={{ fontSize: 12, fontWeight: "800", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>PRICE RANGE / MONTH</Text>
+            <Text style={{ fontSize: 12, fontFamily: "Manrope_800ExtraBold", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>PRICE RANGE / MONTH</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <TextInput
                 value={minPriceFilter}
@@ -1472,7 +1472,7 @@ export default function HousingScreen() {
                 placeholder="Min"
                 placeholderTextColor={tc.textTertiary}
                 keyboardType="number-pad"
-                style={{ flex: 1, backgroundColor: tc.inputBg, borderRadius: 12, borderWidth: 1, borderColor: tc.borderLight, paddingHorizontal: 14, paddingVertical: 10, color: tc.textPrimary, fontSize: 14 }}
+                style={{ flex: 1, backgroundColor: tc.inputBg, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, color: tc.textPrimary, fontSize: 15, fontFamily: "Manrope_500Medium" }}
               />
               <Text style={{ color: tc.textTertiary }}>—</Text>
               <TextInput
@@ -1481,11 +1481,11 @@ export default function HousingScreen() {
                 placeholder="Max"
                 placeholderTextColor={tc.textTertiary}
                 keyboardType="number-pad"
-                style={{ flex: 1, backgroundColor: tc.inputBg, borderRadius: 12, borderWidth: 1, borderColor: tc.borderLight, paddingHorizontal: 14, paddingVertical: 10, color: tc.textPrimary, fontSize: 14 }}
+                style={{ flex: 1, backgroundColor: tc.inputBg, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, color: tc.textPrimary, fontSize: 15, fontFamily: "Manrope_500Medium" }}
               />
             </View>
 
-            <Text style={{ fontSize: 12, fontWeight: "800", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>BEDROOMS</Text>
+            <Text style={{ fontSize: 12, fontFamily: "Manrope_800ExtraBold", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>BEDROOMS</Text>
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
               {[null, 0, 1, 2, 3, 4].map((n) => (
                 <Pressable
@@ -1497,18 +1497,18 @@ export default function HousingScreen() {
                     borderRadius: 10,
                     borderWidth: 1,
                     alignItems: "center",
-                    backgroundColor: bedsFilter === n ? Colors.brand.blue : tc.inputBg,
-                    borderColor: bedsFilter === n ? Colors.brand.blue : tc.borderLight,
+                    backgroundColor: bedsFilter === n ? tc.mint : tc.inputBg,
+                    borderColor: bedsFilter === n ? tc.mint : tc.borderLight,
                   }}
                 >
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: bedsFilter === n ? "#FFF" : tc.textSecondary }}>
+                  <Text style={{ fontSize: 13, fontFamily: "Manrope_700Bold", color: bedsFilter === n ? "#FFF" : tc.textSecondary }}>
                     {n === null ? "Any" : n === 0 ? "Studio" : `${n}+`}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
-            <Text style={{ fontSize: 12, fontWeight: "800", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>PETS</Text>
+            <Text style={{ fontSize: 12, fontFamily: "Manrope_800ExtraBold", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>PETS</Text>
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 24 }}>
               {[{ label: "Any", value: null }, { label: "Pets Allowed", value: true }, { label: "No Pets", value: false }].map((opt) => (
                 <Pressable
@@ -1520,11 +1520,11 @@ export default function HousingScreen() {
                     borderRadius: 10,
                     borderWidth: 1,
                     alignItems: "center",
-                    backgroundColor: petsFilter === opt.value ? Colors.brand.blue : tc.inputBg,
-                    borderColor: petsFilter === opt.value ? Colors.brand.blue : tc.borderLight,
+                    backgroundColor: petsFilter === opt.value ? tc.mint : tc.inputBg,
+                    borderColor: petsFilter === opt.value ? tc.mint : tc.borderLight,
                   }}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: petsFilter === opt.value ? "#FFF" : tc.textSecondary }} numberOfLines={1}>
+                  <Text style={{ fontSize: 12, fontFamily: "Manrope_700Bold", color: petsFilter === opt.value ? "#FFF" : tc.textSecondary }} numberOfLines={1}>
                     {opt.label}
                   </Text>
                 </Pressable>
@@ -1542,14 +1542,14 @@ export default function HousingScreen() {
                 }}
                 style={{ flex: 1, paddingVertical: 13, borderRadius: 14, alignItems: "center", backgroundColor: tc.inputBg, borderWidth: 1, borderColor: tc.borderLight }}
               >
-                <Text style={{ fontSize: 14, fontWeight: "800", color: tc.textSecondary }}>Clear All</Text>
+                <Text style={{ fontSize: 14, fontFamily: "Manrope_800ExtraBold", color: tc.textSecondary }}>Clear all</Text>
               </Pressable>
               <Pressable
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowFilterSheet(false); }}
                 style={{ flex: 1, borderRadius: 14, overflow: "hidden" }}
               >
-                <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 13, alignItems: "center" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "800", color: "#FFF" }}>Apply Filters</Text>
+                <LinearGradient colors={["#1A6BAE", "#257A86", "#30855B"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 13, alignItems: "center" }}>
+                  <Text style={{ fontSize: 14, fontFamily: "Manrope_800ExtraBold", color: "#FFF" }}>Show results</Text>
                 </LinearGradient>
               </Pressable>
             </View>
