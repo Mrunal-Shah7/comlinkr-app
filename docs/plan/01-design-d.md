@@ -123,7 +123,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | gallery | `ImageViewer` | not started |
 | apply (sheet) | apply flow in `PropertyDetailModal.tsx` | not started |
 | agreement | `app/property-agreement.tsx` | not started |
-| landlord | `app/landlord-dashboard.tsx` | not started |
+| landlord | `app/landlord-dashboard.tsx` | rebuilt; empty state phone-checked, cards need an application |
 | my-listings | `app/my-listings.tsx` | rebuilt; empty state phone-checked, rows to check after a listing is made |
 | filters | filter sheet in `app/(tabs)/housing/index.tsx` | not started |
 | safety | `SafeRentingGuide` | not started |

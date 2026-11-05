@@ -30,6 +30,10 @@ import { getMyListings, type HousingListing } from "../src/api/housing.api";
 import { ApiError } from "../src/api/client";
 import { showToast } from "../src/shared/ui/Toast";
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { TYPE } from '../src/theme/d';
+import { EmptyState, GradientButton, GradientFill, PressableScale, Reveal, Segmented, SoftButton } from '../src/shared/d';
+import { DSheet } from '../src/shared/d/Sheet';
+import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -136,322 +140,141 @@ export default function LandlordDashboard() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  const tone = (s: ApplicationStatus): "ok" | "warn" | "plain" | "accent" =>
+    s === "approved" || s === "signed" ? "ok" : s === "submitted" || s === "under_review" ? "warn" : s === "rejected" || s === "withdrawn" ? "plain" : "accent";
+  const tagD = (label: string, t: "ok" | "warn" | "plain" | "accent") => (
+    <View style={{ alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9, backgroundColor: t === "ok" ? tc.mintSoft : t === "warn" ? tc.warningBg : t === "accent" ? tc.accentSoft : tc.inputBg }}>
+      <Text style={[TYPE.label, { fontSize: 11, color: t === "ok" ? tc.successText : t === "warn" ? tc.warningText : t === "accent" ? tc.accentText : tc.textSecondary }]}>{label}</Text>
+    </View>
+  );
+  const card = { borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg };
+  const appRows = (a: PropertyApplication) => ([
+    ["Move-in", a.agreementTerms?.moveInDate ? formatDate(a.agreementTerms.moveInDate) : ""],
+    ["Income", a.financialDetails?.monthlyIncome ? `$${a.financialDetails.monthlyIncome.toLocaleString()} /mo` : ""],
+    ["Job", [a.personalInfo?.jobTitle, a.personalInfo?.employerName].filter(Boolean).join(", ")],
+  ] as [string, string][]).filter(([, v]) => !!v);
+  const order = (s: ApplicationStatus) => (s === "submitted" || s === "under_review" ? 0 : s === "draft" ? 2 : 1);
+  const sortedApps = [...applications].sort((x, y) => order(x.status) - order(y.status));
+
   return (
-    <SafeAreaView style={[st.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      {/* Header */}
-      <View style={[st.header, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable style={st.backBtn} onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} hitSlop={10}>
-          <Ionicons name="chevron-back" size={rs(22)} color={tc.textPrimary} />
+    <DPage
+      title={tab === "applications" ? "Applications" : "Your listings"}
+      sub={[pendingCount > 0 ? `${pendingCount} waiting` : "", approvedCount > 0 ? `${approvedCount} approved` : "", activeListings > 0 ? `${activeListings} listing${activeListings === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ") || undefined}
+      onBack={() => goBackOr("/(tabs)/feed")}
+      right={
+        <Pressable onPress={() => router.push({ pathname: "/create-post" as any, params: { type: "listing" } })} hitSlop={8} accessibilityRole="button" accessibilityLabel="New listing"
+          style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+          <Ionicons name="add" size={26} color={tc.textPrimary} />
         </Pressable>
-        <Text style={[st.headerTitle, { color: tc.textPrimary }]}>Landlord Dashboard</Text>
-        <Pressable style={st.addBtn} onPress={() => router.push("/create-post" as any)} hitSlop={10}>
-          <Ionicons name="add" size={rs(22)} color={Colors.brand.green} />
-        </Pressable>
-      </View>
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
+    >
+      <Segmented
+        style={{ marginHorizontal: 16, marginBottom: 14 }}
+        items={[{ key: "applications", label: applications.length ? `Applications · ${applications.length}` : "Applications" }, { key: "listings", label: listings.length ? `Listings · ${listings.length}` : "Listings" }]}
+        value={tab}
+        onChange={(k) => setTab(k as Tab)}
+      />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.brand.green} colors={[Colors.brand.green]} />}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-        {/* Hero */}
-        <LinearGradient
-          colors={[Colors.brand.greenDark, Colors.brand.blue]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={st.hero}
-        >
-          <View style={st.heroRow}>
-            <Ionicons name="home" size={rs(12)} color="#A7F3D0" />
-            <Text style={st.heroLabel}>LANDLORD SPACE</Text>
-          </View>
-          <Text style={st.heroTitle}>
-            {user?.name?.split(" ")[0] ? `Hi ${user.name.split(" ")[0]},` : "Welcome,"} Manage Your Space
-          </Text>
-          <Text style={st.heroSub}>Track applications, listings, and tenants all in one place.</Text>
-        </LinearGradient>
-
-        {/* Summary cards */}
-        <View style={st.summaryRow}>
-          {[
-            { icon: "time-outline" as const, label: "Pending", value: pendingCount, color: "#D97706", bg: "#FFF8E6" },
-            { icon: "checkmark-circle-outline" as const, label: "Approved", value: approvedCount, color: "#16A34A", bg: "#F0FDF4" },
-            { icon: "business-outline" as const, label: "Listings", value: activeListings, color: Colors.brand.blue, bg: "#EEF5FF" },
-          ].map((s) => (
-            <View key={s.label} style={[st.summaryCard, { backgroundColor: isDark ? tc.cardBg : s.bg, borderColor: isDark ? tc.borderLight : `${s.color}30` }]}>
-              <View style={[st.summaryIconBox, { backgroundColor: `${s.color}18` }]}>
-                <Ionicons name={s.icon} size={rs(20)} color={s.color} />
-              </View>
-              <Text style={[st.summaryNum, { color: s.color }]}>{s.value}</Text>
-              <Text style={[st.summaryLabel, { color: tc.textTertiary }]}>{s.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Tabs */}
-        <View style={[st.tabRow, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }]}>
-          {([["applications", "document-text-outline", "Applications"], ["listings", "home-outline", "My Listings"]] as const).map(([key, icon, label]) => (
-            <Pressable
-              key={key}
-              style={[st.tabBtn, tab === key && st.tabBtnActive, tab === key && { backgroundColor: tc.cardBg }]}
-              onPress={() => setTab(key)}
-            >
-              <Ionicons name={icon} size={rs(14)} color={tab === key ? Colors.brand.green : tc.textTertiary} />
-              <Text style={[st.tabBtnText, { color: tab === key ? Colors.brand.greenDark : tc.textTertiary }]}>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {loading ? (
-          <View style={{ paddingVertical: 40, alignItems: "center" }}>
-            <ActivityIndicator size="large" color={Colors.brand.green} />
-          </View>
-        ) : error ? (
-          <View style={{ alignItems: "center", paddingVertical: 32 }}>
-            <Ionicons name="alert-circle-outline" size={40} color="#CBD5E1" />
-            <Text style={[st.emptyTitle, { color: tc.textSecondary }]}>{error}</Text>
-            <Pressable onPress={() => { loadedRef.current = false; void loadData(); }} style={st.retryBtn}>
-              <Text style={{ color: Colors.brand.green, fontWeight: "700" }}>Retry</Text>
-            </Pressable>
-          </View>
-        ) : tab === "applications" ? (
-          <ApplicationsList
-            applications={applications}
-            isDark={isDark}
-            tc={tc}
-            onSelect={(app) => { setSelectedApp(app); setDecisionNote(""); }}
-          />
-        ) : (
-          <ListingsList listings={listings} isDark={isDark} tc={tc} />
-        )}
-      </ScrollView>
-
-      {/* Application Detail Modal */}
-      <Modal
-        visible={!!selectedApp}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setSelectedApp(null)}
-      >
-        <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setSelectedApp(null)} />
-          {selectedApp ? (
-            <View style={[st.detailSheet, { backgroundColor: tc.cardBg }]}>
-              <View style={st.sheetHandle} />
-              <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                {/* Status + title */}
-                <View style={st.detailHeader}>
-                  <View style={[st.statusBadge, { backgroundColor: statusMeta(selectedApp.status).bg }]}>
-                    <Ionicons name={statusMeta(selectedApp.status).icon as any} size={13} color={statusMeta(selectedApp.status).color} />
-                    <Text style={[st.statusText, { color: statusMeta(selectedApp.status).color }]}>{statusMeta(selectedApp.status).label}</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} />
+      ) : error ? (
+        <EmptyState icon="alert-circle-outline" title="Could not load" sub={error} actionLabel="Try again" onAction={() => { loadedRef.current = false; void loadData(); }} />
+      ) : tab === "applications" ? (
+        sortedApps.length === 0 ? (
+          <EmptyState icon="document-text-outline" title="No applications yet" sub="When someone applies for one of your homes, it shows up here." />
+        ) : sortedApps.map((a, i) => {
+          const meta = statusMeta(a.status);
+          const rows = appRows(a);
+          const name = a.personalInfo?.fullName || "Applicant";
+          return (
+            <Reveal key={a.id} i={i} style={{ marginHorizontal: 16, marginBottom: 12 }}>
+              <PressableScale onPress={() => { setSelectedApp(a); setDecisionNote(""); }} accessibilityRole="button" accessibilityLabel={`${name}, ${meta.label}`} style={[card, { padding: 14 }]}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <GradientFill style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={[TYPE.label, { color: "#fff", fontSize: 14 }]}>{name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}</Text>
+                  </GradientFill>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{name}</Text>
+                    <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>for {a.listingTitle || "your listing"}</Text>
                   </View>
-                  <Text style={[st.detailTitle, { color: tc.textPrimary }]}>{selectedApp.listingTitle || `Listing #${selectedApp.listingId.slice(0, 8)}`}</Text>
-                  <Text style={[st.detailSub, { color: tc.textTertiary }]}>Application ID: {selectedApp.id.slice(0, 12)}…</Text>
+                  {tagD(meta.label, tone(a.status))}
                 </View>
-
-                {/* Info rows */}
-                {[
-                  { label: "Submitted", value: formatDate(selectedApp.submittedAt) },
-                  { label: "Created", value: formatDate(selectedApp.createdAt) },
-                  { label: "Step Completed", value: `Step ${selectedApp.currentStep}/5` },
-                  selectedApp.personalInfo?.fullName ? { label: "Applicant Name", value: selectedApp.personalInfo.fullName } : null,
-                  selectedApp.personalInfo?.email ? { label: "Email", value: selectedApp.personalInfo.email } : null,
-                  selectedApp.personalInfo?.phone ? { label: "Phone", value: selectedApp.personalInfo.phone } : null,
-                  selectedApp.personalInfo?.employerName ? { label: "Employer", value: selectedApp.personalInfo.employerName } : null,
-                  selectedApp.personalInfo?.jobTitle ? { label: "Job Title", value: selectedApp.personalInfo.jobTitle } : null,
-                  selectedApp.financialDetails?.monthlyIncome ? { label: "Monthly Income", value: `$${selectedApp.financialDetails.monthlyIncome.toLocaleString()}` } : null,
-                  selectedApp.agreementTerms?.rentAmount ? { label: "Rent Agreed", value: `$${selectedApp.agreementTerms.rentAmount.toLocaleString()}/mo` } : null,
-                  selectedApp.agreementTerms?.moveInDate ? { label: "Move-in Date", value: formatDate(selectedApp.agreementTerms.moveInDate) } : null,
-                  selectedApp.agreementTerms?.leaseTerm ? { label: "Lease Term", value: selectedApp.agreementTerms.leaseTerm } : null,
-                  selectedApp.landlordDecision ? { label: "Your Decision", value: selectedApp.landlordDecision === "approved" ? "✅ Approved" : "❌ Rejected" } : null,
-                  selectedApp.landlordNote ? { label: "Your Note", value: selectedApp.landlordNote } : null,
-                  selectedApp.decidedAt ? { label: "Decided On", value: formatDate(selectedApp.decidedAt) } : null,
-                ].filter(Boolean).map((row) => row && (
-                  <View key={row.label} style={[st.infoRow, { borderBottomColor: tc.borderLight }]}>
-                    <Text style={[st.infoLabel, { color: tc.textTertiary }]}>{row.label}</Text>
-                    <Text style={[st.infoValue, { color: tc.textPrimary }]}>{row.value}</Text>
-                  </View>
-                ))}
-
-                {/* Decision section — only for actionable statuses */}
-                {(selectedApp.status === "submitted" || selectedApp.status === "under_review") ? (
-                  <View style={{ paddingTop: 16 }}>
-                    <Text style={[st.decisionTitle, { color: tc.textPrimary }]}>Make a Decision</Text>
-                    <TextInput
-                      style={[st.noteInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                      placeholder="Optional note for applicant…"
-                      placeholderTextColor={tc.textTertiary}
-                      value={decisionNote}
-                      onChangeText={setDecisionNote}
-                      multiline
-                    />
-                    <View style={st.decisionBtns}>
-                      <Pressable
-                        style={[st.rejectBtn, { opacity: deciding ? 0.6 : 1 }]}
-                        onPress={() => void handleDecide("rejected")}
-                        disabled={deciding}
-                      >
-                        <Ionicons name="close-circle-outline" size={18} color="#DC2626" />
-                        <Text style={st.rejectBtnText}>Reject</Text>
-                      </Pressable>
-                      <Pressable
-                        style={{ flex: 1, borderRadius: rs(12), overflow: "hidden", opacity: deciding ? 0.6 : 1 }}
-                        onPress={() => void handleDecide("approved")}
-                        disabled={deciding}
-                      >
-                        <LinearGradient colors={[Colors.brand.green, Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.approveGrad}>
-                          {deciding ? (
-                            <ActivityIndicator size="small" color="#FFF" />
-                          ) : (
-                            <>
-                              <Ionicons name="checkmark-circle-outline" size={18} color="#FFF" />
-                              <Text style={st.approveBtnText}>Approve</Text>
-                            </>
-                          )}
-                        </LinearGradient>
-                      </Pressable>
-                    </View>
+                {rows.length ? (
+                  <View style={{ marginTop: 12, borderRadius: 16, paddingHorizontal: 12, backgroundColor: tc.inputBg }}>
+                    {rows.map(([k, v], j) => (
+                      <View key={k} style={[{ flexDirection: "row", justifyContent: "space-between", gap: 12, paddingVertical: 9 }, j > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+                        <Text style={[TYPE.small, { color: tc.textSecondary }]}>{k}</Text>
+                        <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold", flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+                      </View>
+                    ))}
                   </View>
                 ) : null}
-
-                <View style={{ height: 20 }} />
-              </ScrollView>
-
-              <Pressable style={[st.closeSheetBtn, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }]} onPress={() => setSelectedApp(null)}>
-                <Text style={[st.closeSheetText, { color: tc.textSecondary }]}>Close</Text>
-              </Pressable>
-            </View>
-          ) : null}
-        </KeyboardAvoidingView>
-      </Modal>
-    </SafeAreaView>
-  );
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
-function ApplicationsList({ applications, isDark, tc, onSelect }: {
-  applications: PropertyApplication[];
-  isDark: boolean;
-  tc: any;
-  onSelect: (a: PropertyApplication) => void;
-}) {
-  if (applications.length === 0) {
-    return (
-      <View style={st.emptyWrap}>
-        <Ionicons name="document-outline" size={48} color="#CBD5E1" />
-        <Text style={[st.emptyTitle, { color: tc.textSecondary }]}>No applications yet</Text>
-        <Text style={[st.emptySub, { color: tc.textTertiary }]}>When tenants apply to your listings, they'll appear here.</Text>
-      </View>
-    );
-  }
-
-  const byStatus = (s: ApplicationStatus) => applications.filter((a) => a.status === s);
-  const pending = [...byStatus("submitted"), ...byStatus("under_review")];
-  const decided = [...byStatus("approved"), ...byStatus("signed"), ...byStatus("rejected"), ...byStatus("withdrawn")];
-  const drafts = byStatus("draft");
-
-  return (
-    <View style={{ paddingTop: 4 }}>
-      {pending.length > 0 && <SectionHeader title={`Needs Action (${pending.length})`} icon="time-outline" color="#D97706" tc={tc} />}
-      {pending.map((a) => <AppCard key={a.id} app={a} isDark={isDark} tc={tc} onPress={() => onSelect(a)} />)}
-
-      {decided.length > 0 && <SectionHeader title={`Decided (${decided.length})`} icon="checkmark-done-outline" color="#16A34A" tc={tc} />}
-      {decided.map((a) => <AppCard key={a.id} app={a} isDark={isDark} tc={tc} onPress={() => onSelect(a)} />)}
-
-      {drafts.length > 0 && <SectionHeader title={`Drafts (${drafts.length})`} icon="document-outline" color="#6B7280" tc={tc} />}
-      {drafts.map((a) => <AppCard key={a.id} app={a} isDark={isDark} tc={tc} onPress={() => onSelect(a)} />)}
-    </View>
-  );
-}
-
-function SectionHeader({ title, icon, color, tc }: { title: string; icon: string; color: string; tc: any }) {
-  return (
-    <View style={[st.sectionHdr, { borderBottomColor: tc.borderLight }]}>
-      <Ionicons name={icon as any} size={rs(14)} color={color} />
-      <Text style={[st.sectionHdrText, { color }]}>{title}</Text>
-    </View>
-  );
-}
-
-function AppCard({ app, isDark, tc, onPress }: { app: PropertyApplication; isDark: boolean; tc: any; onPress: () => void }) {
-  const meta = statusMeta(app.status);
-  return (
-    <Pressable
-      style={({ pressed }) => [st.appCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.88 }]}
-      onPress={onPress}
-    >
-      <View style={[st.appCardIconBox, { backgroundColor: `${meta.color}15` }]}>
-        <Ionicons name={meta.icon as any} size={rs(22)} color={meta.color} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={[st.appCardTitle, { color: tc.textPrimary }]} numberOfLines={1}>
-          {app.listingTitle || `Listing #${app.listingId.slice(0, 10)}`}
-        </Text>
-        {app.personalInfo?.fullName ? (
-          <Text style={[st.appCardSub, { color: tc.textSecondary }]} numberOfLines={1}>
-            <Ionicons name="person-outline" size={11} color={tc.textTertiary} /> {app.personalInfo.fullName}
-          </Text>
-        ) : (
-          <Text style={[st.appCardSub, { color: tc.textTertiary }]}>Applicant ID: {app.applicantId.slice(0, 10)}…</Text>
-        )}
-        <Text style={[st.appCardDate, { color: tc.textTertiary }]}>
-          {app.submittedAt ? `Submitted ${formatDate(app.submittedAt)}` : `Created ${formatDate(app.createdAt)}`}
-        </Text>
-      </View>
-      <View>
-        <View style={[st.statusBadge, { backgroundColor: meta.bg, alignSelf: "flex-end" }]}>
-          <Text style={[st.statusText, { color: meta.color }]}>{meta.label}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 8, fontSize: 12 }]}>{a.submittedAt ? `Sent ${formatDate(a.submittedAt)}` : `Started ${formatDate(a.createdAt)}`}</Text>
+              </PressableScale>
+            </Reveal>
+          );
+        })
+      ) : listings.length === 0 ? (
+        <EmptyState icon="home-outline" title="No listings yet" sub="List a place to start getting applications." actionLabel="List a place" onAction={() => router.push({ pathname: "/create-post" as any, params: { type: "listing" } })} />
+      ) : (
+        <View style={[card, { marginHorizontal: 16, overflow: "hidden" }]}>
+          {listings.map((l, i) => (
+            <DRow key={l.id} first={i === 0} icon="home-outline" label={l.title}
+              value={[l.price ? `$${Number(l.price).toLocaleString()} /mo` : "", l.bedrooms ? `${l.bedrooms} bed` : ""].filter(Boolean).join(" · ") || undefined}
+              onPress={() => router.push({ pathname: "/my-listings" as any })} />
+          ))}
         </View>
-        <Ionicons name="chevron-forward" size={rs(16)} color={tc.textTertiary} style={{ marginTop: rs(6), alignSelf: "flex-end" }} />
-      </View>
-    </Pressable>
-  );
-}
+      )}
 
-function ListingsList({ listings, isDark, tc }: { listings: HousingListing[]; isDark: boolean; tc: any }) {
-  if (listings.length === 0) {
-    return (
-      <View style={st.emptyWrap}>
-        <Ionicons name="home-outline" size={48} color="#CBD5E1" />
-        <Text style={[st.emptyTitle, { color: tc.textSecondary }]}>No listings yet</Text>
-        <Text style={[st.emptySub, { color: tc.textTertiary }]}>Create your first property listing to start receiving applications.</Text>
-        <Pressable
-          onPress={() => router.push("/create-post" as any)}
-          style={[st.retryBtn, { backgroundColor: Colors.brand.green + "15" }]}
-        >
-          <Text style={{ color: Colors.brand.greenDark, fontWeight: "700" }}>+ Add Listing</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  return (
-    <View style={{ paddingTop: 4 }}>
-      {listings.map((l) => (
-        <Pressable
-          key={l.id}
-          style={({ pressed }) => [st.appCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.88 }]}
-          onPress={() => router.push({ pathname: "/my-listings" as any })}
-        >
-          <View style={[st.appCardIconBox, { backgroundColor: Colors.brand.blue + "15" }]}>
-            <Ionicons name="home-outline" size={rs(22)} color={Colors.brand.blue} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[st.appCardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{l.title}</Text>
-            <Text style={[st.appCardSub, { color: tc.textSecondary }]} numberOfLines={1}>
-              {l.address || l.location || l.neighborhood || "—"}
-            </Text>
-            <Text style={[st.appCardDate, { color: tc.textTertiary }]}>
-              {l.price ? `$${Number(l.price).toLocaleString()}/mo` : "Price TBD"}
-              {l.bedrooms ? ` · ${l.bedrooms} bed` : ""}
-              {l.bathrooms ? ` · ${l.bathrooms} bath` : ""}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={rs(16)} color={tc.textTertiary} />
-        </Pressable>
-      ))}
-    </View>
+      {/* Application detail */}
+      <DSheet visible={!!selectedApp} onClose={() => setSelectedApp(null)} title={selectedApp?.listingTitle || "Application"}>
+        {selectedApp ? (
+          <ScrollView style={{ maxHeight: 560 }} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={{ marginBottom: 12 }}>{tagD(statusMeta(selectedApp.status).label, tone(selectedApp.status))}</View>
+            <View style={[card, { paddingHorizontal: 14 }]}>
+              {([
+                ["Sent", selectedApp.submittedAt ? formatDate(selectedApp.submittedAt) : ""],
+                ["Steps done", `${selectedApp.currentStep} of 5`],
+                ["Name", selectedApp.personalInfo?.fullName ?? ""],
+                ["Email", selectedApp.personalInfo?.email ?? ""],
+                ["Phone", selectedApp.personalInfo?.phone ?? ""],
+                ["Employer", selectedApp.personalInfo?.employerName ?? ""],
+                ["Job", selectedApp.personalInfo?.jobTitle ?? ""],
+                ["Income", selectedApp.financialDetails?.monthlyIncome ? `$${selectedApp.financialDetails.monthlyIncome.toLocaleString()} /mo` : ""],
+                ["Rent agreed", selectedApp.agreementTerms?.rentAmount ? `$${selectedApp.agreementTerms.rentAmount.toLocaleString()} /mo` : ""],
+                ["Move-in", selectedApp.agreementTerms?.moveInDate ? formatDate(selectedApp.agreementTerms.moveInDate) : ""],
+                ["Lease", selectedApp.agreementTerms?.leaseTerm ?? ""],
+                ["Your decision", selectedApp.landlordDecision ? (selectedApp.landlordDecision === "approved" ? "Approved" : "Rejected") : ""],
+                ["Your note", selectedApp.landlordNote ?? ""],
+                ["Decided", selectedApp.decidedAt ? formatDate(selectedApp.decidedAt) : ""],
+              ] as [string, string][]).filter(([, v]) => !!v).map(([k, v], j) => (
+                <View key={k} style={[{ flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 11 }, j > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+                  <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                  <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+                </View>
+              ))}
+            </View>
+            {selectedApp.status === "submitted" || selectedApp.status === "under_review" ? (
+              <View style={{ marginTop: 16 }}>
+                <TextInput
+                  style={[TYPE.body, { minHeight: 70, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
+                  placeholder="A note for the applicant (optional)"
+                  placeholderTextColor={tc.textTertiary}
+                  value={decisionNote}
+                  onChangeText={setDecisionNote}
+                  multiline
+                />
+                <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                  <SoftButton block ghost label="Decline" outerStyle={{ flex: 1 }} disabled={deciding} onPress={() => void handleDecide("rejected")} />
+                  <GradientButton block label="Approve" outerStyle={{ flex: 1 }} loading={deciding} onPress={() => void handleDecide("approved")} />
+                </View>
+              </View>
+            ) : null}
+          </ScrollView>
+        ) : null}
+      </DSheet>
+    </DPage>
   );
 }
 
