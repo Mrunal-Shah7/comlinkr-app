@@ -6,6 +6,7 @@ import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeImage, resolveImageUri } from "../../../../components/FadeImage";
 import { rs } from "../../../utils/responsive";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ── Image carousel with dots ─────────────────────────────────────────────────
 export function ImageCarousel({
@@ -78,7 +79,7 @@ export function pinchDistance(touches: { pageX: number; pageY: number }[]): numb
   return Math.sqrt((a.pageX - b.pageX) ** 2 + (a.pageY - b.pageY) ** 2);
 }
 
-export function ZoomableImage({ uri, width, height }: { uri: string; width: number; height: number }) {
+export function ZoomableImage({ uri, width, height, onZoom }: { uri: string; width: number; height: number; onZoom?: (zoomed: boolean) => void }) {
   const scale = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
@@ -114,6 +115,7 @@ export function ZoomableImage({ uri, width, height }: { uri: string; width: numb
       },
       onPanResponderRelease: () => {
         lastScale.current = Math.max(1, Math.min(4, (scale as any)._value));
+        onZoom?.(lastScale.current > 1);
         pinchStartDist.current = 0;
         if (lastScale.current === 1) {
           Animated.parallel([
@@ -132,6 +134,7 @@ export function ZoomableImage({ uri, width, height }: { uri: string; width: numb
 
   const resetZoom = () => {
     lastScale.current = 1;
+    onZoom?.(false);
     lastTranslateX.current = 0;
     lastTranslateY.current = 0;
     Animated.parallel([
@@ -157,6 +160,8 @@ export function ZoomableImage({ uri, width, height }: { uri: string; width: numb
   );
 }
 
+/** Design D `gallery`: black, a bar with back and "1 of n", photos side by side, "Swipe for more · pinch to
+ *  zoom" below. Swipe down (when not zoomed) drags the photo and fades the black; past 120 px it closes. */
 export function FullscreenImageViewer({
   images,
   startIndex,
@@ -169,53 +174,75 @@ export function FullscreenImageViewer({
   const [idx, setIdx] = useState(startIndex);
   const W = Dimensions.get("window").width;
   const H = Dimensions.get("window").height;
+  const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const zoomed = useRef(false);
+  const dragY = useRef(new Animated.Value(0)).current;
+  const enter = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ x: startIndex * W, animated: false });
-  }, [startIndex, W]);
+    Animated.spring(enter, { toValue: 1, damping: 18, stiffness: 200, mass: 1, useNativeDriver: true }).start();
+  }, [startIndex, W, enter]);
+
+  const dismiss = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (evt, g) =>
+        !zoomed.current && evt.nativeEvent.touches.length === 1 && g.dy > 12 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
+      onPanResponderMove: (_, g) => dragY.setValue(Math.max(0, g.dy)),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > 120 || g.vy > 1) {
+          Animated.timing(dragY, { toValue: H, duration: 200, useNativeDriver: true }).start(onClose);
+        } else {
+          Animated.spring(dragY, { toValue: 0, damping: 18, stiffness: 200, mass: 1, useNativeDriver: true }).start();
+        }
+      },
+      onPanResponderTerminate: () => Animated.spring(dragY, { toValue: 0, useNativeDriver: true }).start(),
+    }),
+  ).current;
+
+  const bgOpacity = dragY.interpolate({ inputRange: [0, 300], outputRange: [1, 0.2], extrapolate: "clamp" });
+  const scaleIn = enter.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
 
   return (
     <Modal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.97)" }}>
-        {/* Close */}
-        <Pressable
-          onPress={onClose}
-          hitSlop={12}
-//           style={{ position: "absolute", top: 52, right: 20, zIndex: 20, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }}
-          // New:
-          style={{ position: "absolute", top: 52, right: 20, zIndex: 20, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", justifyContent: "center" }}
-        >
-          <Ionicons name="close" size={22} color="#FFF" />
-        </Pressable>
-        {/* Counter */}
-        {images.length > 1 && (
-          <View style={{ position: "absolute", top: 58, left: 0, right: 0, zIndex: 15, alignItems: "center" }}>
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "700" }}>{idx + 1} / {images.length}</Text>
-          </View>
-        )}
-        {/* Pinch hint */}
-        <View style={{ position: "absolute", bottom: 40, left: 0, right: 0, zIndex: 15, alignItems: "center" }}>
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Pinch to zoom · Long press to reset</Text>
-        </View>
-        {/* Images */}
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          scrollEnabled={true}
-          onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
-          style={{ flex: 1 }}
-        >
-          {images.map((uri, i) => (
-            <ZoomableImage key={i} uri={uri} width={W} height={H} />
-          ))}
-        </ScrollView>
+      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#000", opacity: bgOpacity }]} />
+      <View style={{ flex: 1 }} {...dismiss.panHandlers}>
+        <Animated.View style={{ flex: 1, opacity: enter, transform: [{ translateY: dragY }, { scale: scaleIn }] }}>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
+            style={{ flex: 1 }}
+          >
+            {images.map((uri, i) => (
+              <ZoomableImage key={i} uri={uri} width={W} height={H} onZoom={(z) => { zoomed.current = z; }} />
+            ))}
+          </ScrollView>
+        </Animated.View>
+        <Animated.View style={[gs.bar, { paddingTop: insets.top + 6, opacity: bgOpacity }]}>
+          <Pressable onPress={onClose} hitSlop={12} style={gs.back} accessibilityLabel="Back">
+            <Ionicons name="chevron-back" size={26} color="#FFF" />
+          </Pressable>
+          <Text style={gs.count}>{idx + 1} of {images.length}</Text>
+          <View style={gs.back} />
+        </Animated.View>
+        <Animated.Text style={[gs.hint, { bottom: insets.bottom + 34, opacity: bgOpacity }]}>
+          {images.length > 1 ? "Swipe for more · pinch to zoom" : "Pinch to zoom"}
+        </Animated.Text>
       </View>
     </Modal>
   );
 }
+
+const gs = createDTypeStyles({
+  bar: { position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingBottom: 8 },
+  back: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  count: { flex: 1, textAlign: "center", color: "#FFF", fontSize: 17, fontWeight: "700" },
+  hint: { position: "absolute", left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: "500" },
+});
 
 export const cs = createDTypeStyles({
   dotRow: {
