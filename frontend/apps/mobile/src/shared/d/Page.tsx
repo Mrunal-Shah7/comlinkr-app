@@ -4,7 +4,7 @@
 // (a glass action bar, an input bar).
 import { type ReactElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type RefreshControlProps, type StyleProp, type ViewStyle } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,6 +30,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
   scroll?: boolean;
 }) {
   const { tc } = useTheme();
+  const insets = useSafeAreaInsets();
   const y = useSharedValue(largeTitle ? 0 : 64);
   const onScroll = useAnimatedScrollHandler((e) => { y.value = e.contentOffset.y; });
   const bar = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 64], [0, 1], "clamp") }));
@@ -52,7 +53,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
       </View>
       {scroll ? (
         <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[{ paddingBottom: 40 }, contentStyle]}>
+          contentContainerStyle={[{ paddingBottom: (footer ? 16 : 40 + insets.bottom) }, contentStyle]}>
           {largeTitle ? (
             <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>
               <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{title}</Text>

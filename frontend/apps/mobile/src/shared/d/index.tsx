@@ -1,7 +1,7 @@
 // src/shared/d/index.tsx — design D building blocks (plan 01). Screens compose these instead of styling
 // buttons, chips, tiles and segmented controls themselves, so every screen moves and looks the same.
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -52,16 +52,15 @@ export function GradientFill({ style, children, colors = GRADIENT }: { style?: S
 }
 
 /* ---------- buttons ---------- */
-type BtnProps = { label: string; onPress?: () => void; icon?: ReactNode; disabled?: boolean; block?: boolean; small?: boolean; style?: StyleProp<ViewStyle>; outerStyle?: StyleProp<ViewStyle>; accessibilityLabel?: string };
+type BtnProps = { label: string; onPress?: () => void; icon?: ReactNode; disabled?: boolean; block?: boolean; small?: boolean; style?: StyleProp<ViewStyle>; outerStyle?: StyleProp<ViewStyle>; accessibilityLabel?: string; loading?: boolean };
 /** Primary action: the brand gradient with a soft glow (`.btn.pri`). */
-export function GradientButton({ label, onPress, icon, disabled, block, small, style, outerStyle, accessibilityLabel }: BtnProps) {
+export function GradientButton({ label, onPress, icon, disabled, block, small, style, outerStyle, accessibilityLabel, loading }: BtnProps) {
   const h = small ? 36 : 50;
   return (
-    <PressableScale disabled={disabled} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} outerStyle={outerStyle}
+    <PressableScale disabled={disabled || loading} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} outerStyle={outerStyle}
       style={[{ borderRadius: small ? 12 : RADIUS.button, opacity: disabled ? 0.4 : 1, alignSelf: block ? 'stretch' : 'flex-start' }, s.glow, style]}>
       <GradientFill style={[s.btn, { height: h, borderRadius: small ? 12 : RADIUS.button, paddingHorizontal: small ? 14 : 20 }]}>
-        {icon}
-        <Text style={[TYPE.button, { color: '#fff', fontSize: small ? 14 : 15.5 }]}>{label}</Text>
+        {loading ? <ActivityIndicator color="#fff" /> : <>{icon}<Text style={[TYPE.button, { color: '#fff', fontSize: small ? 14 : 15.5 }]}>{label}</Text></>}
       </GradientFill>
     </PressableScale>
   );
