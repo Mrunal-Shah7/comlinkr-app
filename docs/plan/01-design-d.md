@@ -128,7 +128,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | filters | filter sheet in `app/(tabs)/housing/index.tsx` | not started |
 | safety | `SafeRentingGuide` | not started |
 | listmenu | listing ··· menu | not started |
-| my-restaurants | `app/my-restaurants.tsx` | not started |
+| my-restaurants | `app/my-restaurants.tsx` (manage sheet still base coat) | rebuilt; empty state phone-checked, cards to check after a restaurant is made |
 | review (sheet) | rate and review in the restaurant modal | not started |
 | ask (sheet) | ask sheet in `app/(tabs)/community/index.tsx` | not started |
 | question-detail | answers in `app/(tabs)/community/index.tsx` | not started |

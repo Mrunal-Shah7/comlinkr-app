@@ -27,6 +27,10 @@ import { getMyRestaurants, deleteRestaurant, updateRestaurant, type Restaurant, 
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { Image } from 'expo-image';
+import { TYPE } from '../src/theme/d';
+import { EmptyState, GradientFill, Reveal, SoftButton } from '../src/shared/d';
+import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -118,116 +122,49 @@ function RestaurantCard({
     }
   };
 
+  const tagV = (label: string, tone: "ok" | "warn" | "plain") => (
+    <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: tone === "ok" ? tc.mintSoft : tone === "warn" ? tc.warningBg : tc.inputBg }}>
+      <Text style={[TYPE.label, { fontSize: 11, color: tone === "ok" ? tc.successText : tone === "warn" ? tc.warningText : tc.textSecondary }]}>{label}</Text>
+    </View>
+  );
+  const photo = restaurant.images?.[0] || restaurant.image;
+  const stats = ([
+    ["Views", (restaurant as any).views],
+    ["Likes", (restaurant as any).likes],
+    ["Reviews", restaurant.reviews],
+    ["Bookings", (restaurant as any).reservations],
+  ] as [string, number | undefined][]).filter(([, v]) => typeof v === "number");
   return (
-    <View style={[styles.restaurantCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-      {/* Colored top bar */}
-      <LinearGradient colors={["#30855B", "#256B49"]} style={styles.cardTopBar} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: rs(10) }}>
-          <View style={styles.restaurantIconSmall}>
-            <Ionicons name="restaurant" size={16} color="#FFF" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTopName} numberOfLines={1}>{restaurant.name}</Text>
-            <Text style={styles.cardTopCuisine} numberOfLines={1}>
-              {restaurant.cuisine}{restaurant.city ? ` · ${restaurant.city}` : ""}
-            </Text>
-          </View>
-          <View style={[styles.statusPill, { backgroundColor: restaurant.openNow ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)" }]}>
-            <View style={[styles.statusDot, { backgroundColor: restaurant.openNow ? "#A7F3A0" : "#FECACA" }]} />
-            <Text style={[styles.statusPillText, { color: "#FFF" }]}>
-              {restaurant.openNow ? "Open" : "Closed"}
-            </Text>
-          </View>
+    <Reveal style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 24, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+      {photo ? <Image source={{ uri: photo }} style={{ width: "100%", height: 150 }} contentFit="cover" transition={200} /> : (
+        <GradientFill style={{ height: 90, alignItems: "center", justifyContent: "center" }}><Ionicons name="restaurant" size={28} color="#fff" /></GradientFill>
+      )}
+      <View style={{ padding: 14, gap: 6 }}>
+        <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{restaurant.name}</Text>
+        <Text style={[TYPE.small, { color: tc.textSecondary }]} numberOfLines={1}>{[restaurant.reviews > 0 ? `★ ${restaurant.rating} (${restaurant.reviews})` : "", restaurant.cuisine, restaurant.city, listedDate ? `listed ${listedDate}` : ""].filter(Boolean).join(" · ")}</Text>
+        <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+          {restaurant.openNow ? tagV("Open now", "ok") : tagV("Closed", "plain")}
+          {restaurant.verified ? tagV("Verified", "ok") : tagV(verifCfg.label, "warn")}
         </View>
-      </LinearGradient>
-
-      <View style={styles.cardBody}>
-        {/* Address */}
-        {restaurant.address ? (
-          <View style={styles.addressRow}>
-            <Ionicons name="location-outline" size={12} color="#9CA3AF" />
-            <Text style={[styles.addressText, { color: tc.textSecondary }]} numberOfLines={1}>{restaurant.address}</Text>
-          </View>
-        ) : null}
-
-        {/* Verification + Rating row */}
-        <View style={styles.verifyRatingRow}>
-          <View style={[styles.verifPill, { backgroundColor: verifCfg.bg }]}>
-            <Ionicons name="shield-checkmark" size={11} color={verifCfg.color} />
-            <Text style={[styles.verifPillText, { color: verifCfg.color }]}>{verifCfg.label}</Text>
-          </View>
-          <View style={styles.ratingGroup}>
-            <StarRow rating={restaurant.rating} />
-            <Text style={[styles.ratingText, { color: tc.textSecondary }]}>{restaurant.rating} ({restaurant.reviews} reviews)</Text>
-          </View>
-        </View>
-
-        {/* Services */}
-        {restaurant.services && restaurant.services.length > 0 ? (
-          <View style={styles.servicesRow}>
-            {restaurant.services.map((svc) => (
-              <View key={svc} style={styles.serviceChip}>
-                <Text style={styles.serviceChipText}>{svc}</Text>
-              </View>
-            ))}
-            {listedDate ? <Text style={[styles.listedSince, { color: tc.textTertiary }]}>Listed {listedDate}</Text> : null}
-          </View>
-        ) : null}
-
-        {/* Popular dishes */}
-        {restaurant.popularDishes && restaurant.popularDishes.length > 0 ? (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: rs(6), marginBottom: rs(12) }}>
-            {restaurant.popularDishes.slice(0, 4).map((dish) => (
-              <View key={dish} style={{ backgroundColor: Colors.brand.greenLight, borderRadius: rs(6), paddingHorizontal: rs(8), paddingVertical: rs(3) }}>
-                <Text style={{ fontSize: rs(10), fontWeight: "600", color: Colors.brand.green }}>{dish}</Text>
+        {stats.length ? (
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+            {stats.map(([k, v]) => (
+              <View key={k} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 14, backgroundColor: tc.inputBg }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{v}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary, fontSize: 11.5 }]}>{k}</Text>
               </View>
             ))}
           </View>
         ) : null}
-
-        {/* Analytics grid */}
-        <View style={styles.analyticsGrid}>
-          {[
-            { icon: "eye-outline" as const,          color: "#1A6BAE", bg: "#EEF5FF", label: "Views",        value: (restaurant as any).views        ?? 0 },
-            { icon: "heart-outline" as const,         color: "#EF4444", bg: "#FEF2F2", label: "Likes",        value: (restaurant as any).likes        ?? 0 },
-            { icon: "chatbubble-outline" as const,    color: "#30855B", bg: "#E3F1EA", label: "Comments",     value: (restaurant as any).commentsCount ?? restaurant.reviews ?? 0 },
-            { icon: "calendar-outline" as const,      color: "#257A86", bg: "#E2F0F1", label: "Reservations", value: (restaurant as any).reservations ?? 0 },
-          ].map((stat) => (
-            <View key={stat.label} style={[styles.analyticsCell, { backgroundColor: stat.bg }]}>
-              <View style={[styles.analyticsIconBox, { backgroundColor: stat.color + "22" }]}>
-                <Ionicons name={stat.icon} size={rs(14)} color={stat.color} />
-              </View>
-              <Text style={[styles.analyticsValue, { color: stat.color }]}>{stat.value}</Text>
-              <Text style={styles.analyticsLabel}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Actions */}
-        <View style={[styles.cardActions, { borderTopColor: tc.borderLight }]}>
-          <Pressable
-            onPress={openManage}
-            style={({ pressed }) => [styles.actionBtn, styles.msgBtn, pressed && { opacity: 0.8 }]}
-          >
-            <Ionicons name="settings-outline" size={13} color={Colors.brand.green} />
-            <Text style={[styles.actionBtnText, { color: Colors.brand.green }]}>Manage</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push("/chat" as any)}
-            style={({ pressed }) => [styles.actionBtn, { backgroundColor: "#EEF5FF", borderColor: Colors.brand.blue + "33", borderWidth: 1 }, pressed && { opacity: 0.8 }]}
-          >
-            <Ionicons name="chatbubble-outline" size={13} color={Colors.brand.blue} />
-            <Text style={[styles.actionBtnText, { color: Colors.brand.blue }]}>Messages</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => appAlert("Delete Restaurant", `Delete "${restaurant.name}"?`, [
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+          <SoftButton small block label="Manage" outerStyle={{ flex: 1 }} onPress={openManage} />
+          <SoftButton small block ghost label="Messages" outerStyle={{ flex: 1 }} onPress={() => router.push("/chat" as any)} />
+          <Pressable onPress={() => appAlert("Delete restaurant", `Delete "${restaurant.name}"? Its reviews go with it.`, [
               { text: "Cancel", style: "cancel" },
               { text: "Delete", style: "destructive", onPress: () => onDelete(restaurant.id) },
-            ])}
-            style={({ pressed }) => [styles.actionBtn, { backgroundColor: "#FEF2F2", borderColor: "#FECACA", borderWidth: 1 }, pressed && { opacity: 0.8 }]}
-          >
-            <Ionicons name="trash-outline" size={13} color="#DC2626" />
-            <Text style={[styles.actionBtnText, { color: "#DC2626" }]}>Delete</Text>
+            ])} hitSlop={6} accessibilityRole="button" accessibilityLabel="Delete restaurant"
+            style={{ width: 40, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.12)" }}>
+            <Ionicons name="trash-outline" size={17} color={tc.dangerText} />
           </Pressable>
         </View>
       </View>
@@ -371,7 +308,7 @@ function RestaurantCard({
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </Reveal>
   );
 }
 
@@ -428,158 +365,58 @@ export default function MyRestaurantsScreen() {
     ? (restaurants.reduce((acc, r) => acc + r.rating, 0) / restaurants.length).toFixed(1)
     : "—";
 
+  const RULES: [keyof typeof Ionicons.glyphMap, string][] = [
+    ["shield-checkmark-outline", "Only list places you own or are allowed to manage."],
+    ["ribbon-outline", "UK: a food hygiene rating (FHRS) and council registration with the FSA."],
+    ["medkit-outline", "US: a local health department permit, and FDA registration where it applies."],
+    ["alert-circle-outline", "List allergens accurately for every dish."],
+    ["ban-outline", "False listings or health claims mean a permanent ban."],
+  ];
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable
-          onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }}
-          style={({ pressed }) => [styles.backBtn, { backgroundColor: tc.sectionBg }, pressed && { opacity: 0.7 }]}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
+    <DPage
+      title="My restaurants"
+      sub={restaurants.length ? [`${restaurants.length} listed`, avgRating !== "—" && totalReviews > 0 ? `★ ${avgRating} average` : "", totalReviews > 0 ? `${totalReviews} reviews` : ""].filter(Boolean).join(" · ") : undefined}
+      onBack={() => goBackOr("/(tabs)/feed")}
+      right={
+        <Pressable onPress={() => router.push({ pathname: "/create-post" as any, params: { type: "restaurant" } })} hitSlop={8} accessibilityRole="button" accessibilityLabel="Add a restaurant"
+          style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+          <Ionicons name="add" size={26} color={tc.textPrimary} />
         </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: tc.textPrimary }]}>My Restaurants</Text>
-          <Text style={[styles.headerSub, { color: tc.textSecondary }]}>Manage your food listings</Text>
-        </View>
-        <Pressable
-          onPress={() => router.push({ pathname: "/create-post" as any })}
-          style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
-        >
-          <LinearGradient colors={["#30855B", "#256B49"]} style={styles.addBtnGrad}>
-            <Ionicons name="add" size={18} color="#FFF" />
-          </LinearGradient>
-        </Pressable>
-      </View>
+      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} tintColor={tc.accent} />}
+    >
+      {loading ? <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} /> : null}
 
-      {loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={Colors.brand.green} />
-        </View>
-      ) : null}
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} tintColor={Colors.brand.green} />}
-      >
-        {isVerifiedRestaurantOwner ? (
-          <LinearGradient colors={badgeGradient} style={styles.badgeBanner}>
-            <View style={styles.badgeBannerLeft}>
-              <Ionicons name="shield-checkmark" size={20} color="#FFF" />
-              <View>
-                <Text style={styles.badgeBannerTitle}>Verified Restaurant Owner</Text>
-                <Text style={styles.badgeBannerSub}>Trusted indicator shown on your listings</Text>
-              </View>
-            </View>
-            <Pressable onPress={() => router.push("/verification-status" as any)}>
-              <Text style={styles.badgeBannerLink}>Details</Text>
-            </Pressable>
-          </LinearGradient>
-        ) : (
-          <View style={[styles.badgeBanner, { backgroundColor: tc.sectionBg, borderWidth: 1, borderColor: tc.borderLight }]}>
-            <Ionicons name="restaurant-outline" size={20} color="#6B7280" style={{ flexShrink: 0 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.badgeBannerTitle, { color: tc.textPrimary }]}>Your restaurants</Text>
-              <Text style={[styles.badgeBannerSub, { color: tc.textSecondary }]}>
-                Apply for the Restaurant Owner badge to show a trust indicator on your listings.
-              </Text>
-            </View>
-            <Pressable
-              onPress={() =>
-                router.push({ pathname: "/apply-badge" as any, params: { badgeType: "restaurant_owner" } })
-              }
-              style={{ flexShrink: 0, paddingLeft: rs(8) }}
-            >
-              <Text style={[styles.badgeBannerLink, { color: Colors.brand.blue }]}>Apply</Text>
-            </Pressable>
-          </View>
-        )}
+      {!loading && restaurants.length === 0 ? (
+        <EmptyState icon="restaurant-outline" title="No restaurants yet" sub="Put your place on the map: a name, a photo and when you are open." actionLabel="Add my restaurant" onAction={() => router.push({ pathname: "/create-post" as any, params: { type: "restaurant" } })} />
+      ) : restaurants.map((r) => <RestaurantCard key={r.id} restaurant={r} onDelete={handleDelete} onUpdate={handleUpdate} />)}
 
-        {/* Fraud prevention reminder — collapsed, smaller */}
-        <View style={[styles.fraudBanner, { backgroundColor: isDark ? "#1A0606" : "#FFF5F5", borderColor: isDark ? "#5A1515" : "#FECACA" }]}>
-          <Ionicons name="information-circle-outline" size={14} color="#DC2626" />
-          <Text style={[styles.fraudText, { color: isDark ? "#FCA5A5" : "#B91C1C" }]}>
-            Only list restaurants you own or are authorised to manage.
-          </Text>
-        </View>
-
-        {/* Overview stats */}
-        <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>OVERVIEW</Text>
-        <View style={styles.statsRow}>
-          {[
-            { icon: "restaurant",        label: "Listed",     value: restaurants.length.toString(),                   color: "#30855B" },
-            { icon: "checkmark-circle",  label: "Verified",   value: restaurants.filter((r) => r.verified).length.toString(), color: "#1A6BAE" },
-            { icon: "star-outline",      label: "Avg Rating", value: avgRating.toString(),                             color: "#257A86" },
-            { icon: "chatbubble-outline",label: "Reviews",    value: totalReviews.toString(),                          color: "#16A34A" },
-          ].map((s) => (
-            <View key={s.label} style={[styles.overviewCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={[styles.overviewIconBox, { backgroundColor: s.color + "18" }]}>
-                <Ionicons name={s.icon as any} size={18} color={s.color} />
-              </View>
-              <Text style={[styles.overviewValue, { color: tc.textPrimary }]}>{s.value}</Text>
-              <Text style={[styles.overviewLabel, { color: tc.textTertiary }]}>{s.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Restaurant cards */}
-        <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>MY RESTAURANTS</Text>
-        {!loading && restaurants.length === 0 ? (
-          <View style={{ alignItems: "center", paddingVertical: rs(32), gap: rs(8) }}>
-            <Ionicons name="restaurant-outline" size={36} color="#D1D5DB" />
-            <Text style={{ fontSize: rs(16), fontWeight: "700", color: tc.textPrimary }}>No restaurants yet</Text>
-            <Text style={{ fontSize: rs(13), color: tc.textSecondary, textAlign: "center" }}>Tap the + button to list your first restaurant.</Text>
-          </View>
-        ) : (
-          restaurants.map((r) => (
-            <RestaurantCard key={r.id} restaurant={r} onDelete={handleDelete} onUpdate={handleUpdate} />
-          ))
-        )}
-
-
-
-
-        {/* Food safety compliance */}
-        <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>COMPLIANCE & FOOD SAFETY</Text>
-        <View style={[styles.complianceCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <View style={styles.complianceHeader}>
-            <LinearGradient colors={["#30855B", "#256B49"]} style={styles.complianceIcon}>
-              <Ionicons name="shield-checkmark" size={16} color="#FFF" />
-            </LinearGradient>
-            <Text style={[styles.complianceTitle, { color: tc.textPrimary }]}>Food Safety Requirements</Text>
-          </View>
-          {[
-            { icon: "checkmark-circle", text: "UK: Food Hygiene Rating (FHRS) certificate required for all listed restaurants", color: "#30855B" },
-            { icon: "checkmark-circle", text: "UK: FSA registration mandatory; premises must be registered with your local council", color: "#30855B" },
-            { icon: "checkmark-circle", text: "US: Local health department permit required for all food service establishments", color: "#1A6BAE" },
-            { icon: "checkmark-circle", text: "US: FDA food facility registration required for applicable establishments", color: "#1A6BAE" },
-            { icon: "alert-circle",     text: "Allergen information must be accurately listed for all menu items", color: "#257A86" },
-            { icon: "alert-circle",     text: "Fraudulent listings or false health certification claims result in permanent ban", color: "#DC2626" },
-          ].map((item, i) => (
-            <View key={i} style={styles.complianceRow}>
-              <Ionicons name={item.icon as any} size={14} color={item.color} />
-              <Text style={[styles.complianceText, { color: tc.textSecondary }]}>{item.text}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Help card */}
-        <View style={[styles.helpCard, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <Ionicons name="help-circle-outline" size={20} color={Colors.brand.blue} />
+      {!loading ? (
+        <Reveal style={{ marginHorizontal: 16, marginTop: 6, padding: 16, borderRadius: 22, backgroundColor: tc.mintSoft, flexDirection: "row", gap: 12, alignItems: "center" }}>
+          <Ionicons name="shield-checkmark" size={22} color={tc.successText} />
           <View style={{ flex: 1 }}>
-            <Text style={[styles.helpTitle, isDark && { color: tc.textPrimary }]}>Need help with your restaurant listing?</Text>
-            <Text style={[styles.helpDesc, isDark && { color: tc.textSecondary }]}>Contact our team at support@comlinkr.com</Text>
+            <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{isVerifiedRestaurantOwner ? "Verified restaurant owner" : "Get the owner badge"}</Text>
+            <Text style={[TYPE.small, { color: tc.textSecondary }]}>{isVerifiedRestaurantOwner ? "Your listings carry the trust mark." : "A trust mark on your restaurant listings."}</Text>
           </View>
-          <Pressable onPress={() => router.push("/help-support" as any)}>
-            <Text style={styles.helpLink}>Get Help</Text>
-          </Pressable>
-        </View>
+          <SoftButton small label={isVerifiedRestaurantOwner ? "Details" : "Apply"} onPress={() => isVerifiedRestaurantOwner ? router.push("/verification-status" as any) : router.push({ pathname: "/apply-badge" as any, params: { badgeType: "restaurant_owner" } })} />
+        </Reveal>
+      ) : null}
 
-        <View style={{ height: rs(40) }} />
-      </ScrollView>
-    </SafeAreaView>
+      <Text style={[TYPE.overline, { color: tc.textTertiary, marginHorizontal: 30, marginTop: 24, marginBottom: 6 }]}>Food safety and the rules</Text>
+      <View style={{ marginHorizontal: 16, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+        {RULES.map(([icon, text], i) => (
+          <View key={text} style={[{ flexDirection: "row", gap: 12, padding: 14, alignItems: "center" }, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+            <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+              <Ionicons name={icon} size={17} color={tc.accentText} />
+            </View>
+            <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]}>{text}</Text>
+          </View>
+        ))}
+      </View>
+      <View style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+        <DRow first icon="help-circle-outline" label="Help with a listing" value="support@comlinkr.com" onPress={() => router.push("/help-support" as any)} />
+      </View>
+    </DPage>
   );
 }
 
