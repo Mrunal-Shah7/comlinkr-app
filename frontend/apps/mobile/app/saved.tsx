@@ -35,10 +35,12 @@ import { resolveApiAssetUrl } from "../src/api/feed.api";
 import { ApiError } from "../src/api/client";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
-
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+import Animated, { FadeInDown, FadeOut, LinearTransition } from "react-native-reanimated";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { LinearGradient } from "expo-linear-gradient";
+import { TYPE } from "../src/theme/d";
+import { Chip, EmptyState, PressableScale } from "../src/shared/d";
+import { DPage, goBackOr } from "../src/shared/d/Page";
 
 const TABS: { type: SaveTypeQuery; label: string; empty: string }[] = [
   { type: "news", label: "News", empty: "No saved news yet — bookmark posts you like to find them here." },
@@ -229,7 +231,6 @@ export default function SavedScreen() {
           return;
       }
       if (saved) return;
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       const st = cache.current[t];
       if (!st) return;
       cache.current[t] = {
@@ -312,178 +313,111 @@ export default function SavedScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  const TYPE_LABEL: Record<string, string> = { news: "News", events: "Event", listings: "Home", food: "Food", community: "Question", stories: "Story", roommates: "Roommate" };
+  const chips = (
+    <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 14 }}>
+      {TABS.map((t) => <Chip key={t.type} label={t.label} on={t.type === active} onPress={() => onTabPress(t.type)} />)}
+    </GHScrollView>
+  );
+  const isStories = active === "stories";
+  const empty = st.loading && !st.loaded ? (
+    <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 48 }} />
+  ) : (
+    <EmptyState
+      icon="bookmark-outline"
+      title="Nothing saved"
+      sub={tabMeta?.empty}
+      actionLabel="Browse"
+      onAction={() => router.push((({ listings: "/(tabs)/housing", roommates: "/(tabs)/housing", food: "/(tabs)/food", community: "/(tabs)/community" } as Record<string, string>)[active] ?? "/(tabs)/feed") as any)}
+    />
+  );
+
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: tc.sheetBg }]} edges={["top"]}>
-      <View style={styles.headerRow}>
-        <Pressable
-          onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }}
-          hitSlop={12}
-          style={[styles.backBtn, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }]}
-        >
-          <Ionicons name="chevron-back" size={22} color={tc.textPrimary} />
-        </Pressable>
-        <Text style={[styles.headerTitle, { color: tc.textPrimary }]}>Saved</Text>
-        <View style={{ width: rs(40) }} />
-      </View>
-
-      <View style={[styles.tabBar, { borderBottomColor: tc.borderLight }]}>
-        <FlatList
-          horizontal
-          data={TABS}
-          keyExtractor={(x) => x.type}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: rs(10), gap: rs(6), paddingVertical: rs(10) }}
-          renderItem={({ item }) => {
-            const on = item.type === active;
-            return (
-              <Pressable
-                onPress={() => onTabPress(item.type)}
-                style={[
-                  styles.tabChip,
-                  {
-                    backgroundColor: on ? Colors.brand.blue : isDark ? tc.inputBg : "#FFF",
-                    borderColor: on ? Colors.brand.blue : tc.borderLight,
-                  },
-                ]}
-              >
-                <Text style={{ fontSize: rs(12), fontWeight: "800", color: on ? "#FFF" : tc.textSecondary }}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          }}
-        />
-      </View>
-
-      {st.loading && !st.loaded ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.brand.blue} />
-        </View>
-      ) : st.items.length === 0 ? (
-        <ListState
-          kind="empty"
-          icon="bookmark-outline"
-          title="Nothing saved"
-          message={tabMeta?.empty}
-          actionLabel="Browse"
-          onAction={() => router.push((({ listings: "/(tabs)/housing", roommates: "/(tabs)/housing", food: "/(tabs)/food", community: "/(tabs)/community" } as Record<string, string>)[active] ?? "/(tabs)/feed") as any)}
-        />
-) : active === "stories" ? (
-        <FlatList
-          key="stories-grid"
+    <DPage
+      title="Saved"
+      onBack={() => goBackOr("/(tabs)/feed")}
+      renderList={({ onScroll, header, bottom }) => (
+        <Animated.FlatList
+          key={isStories ? "stories-grid" : "rows"}
           data={st.items}
-          numColumns={2}
-          keyExtractor={(item) => pickId(item, active)}
-          columnWrapperStyle={{ gap: rs(10), paddingHorizontal: rs(14) }}
-          contentContainerStyle={{ paddingVertical: rs(14), gap: rs(10) }}
-          refreshControl={<RefreshControl refreshing={st.loading && st.loaded} onRefresh={onRefresh} />}
+          numColumns={isStories ? 2 : 1}
+          keyExtractor={(item: Row) => pickId(item, active)}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          itemLayoutAnimation={LinearTransition.springify().damping(20)}
+          ListHeaderComponent={<>{header}{chips}</>}
+          ListEmptyComponent={empty}
+          columnWrapperStyle={isStories ? { gap: 10, paddingHorizontal: 16 } : undefined}
+          contentContainerStyle={{ paddingBottom: bottom, gap: 10 }}
+          refreshControl={<RefreshControl refreshing={st.loading && st.loaded} onRefresh={onRefresh} tintColor={tc.accent} />}
           onEndReachedThreshold={0.35}
           onEndReached={() => {
             if (st.hasMore && !st.loading && st.loaded) void loadPage(active, (st.page ?? 0) + 1, true);
           }}
-          renderItem={({ item }) => {
-            const id = pickId(item, active);
-            const uri = thumbUri(item, active) || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=60";
-            const expired = item.isExpired === true;
-            return (
-              <Pressable
-                onPress={() => openItem(item, active)}
-                style={[
-                  styles.storyTile,
-                  { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                ]}
-              >
-                <FadeImage // SPRINT-42: render saved story media through the shared image component.
-                  uri={uri} // SPRINT-42: pass the normalized story thumbnail.
-                  style={styles.storyImg}
-                />
-                <Pressable
-                  style={styles.storyBookmark}
-                  onPress={() => void unsave(item, active)}
-                  hitSlop={10}
-                >
-                  <Ionicons name="bookmark" size={18} color="#257A86" />
-                </Pressable>
-                {expired ? (
-                  <View style={styles.expiredBadge}>
-                    <Text style={styles.expiredText}>Expired</Text>
-                  </View>
-                ) : null}
-                <View style={styles.storyMeta}>
-                  <Text numberOfLines={2} style={[styles.storyTitle, { color: tc.textPrimary }]}>
-                    {titleLine(item, active)}
-                  </Text>
-                  <Text numberOfLines={1} style={[styles.storyCat, { color: tc.textTertiary }]}>
-                    {String(item.category ?? "")}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          }}
-        />
-      ) : (
-        <FlatList
-          key={active}
-          data={st.items}
-          keyExtractor={(item) => pickId(item, active)}
-          contentContainerStyle={{ padding: rs(14), paddingBottom: rs(32), gap: rs(10) }}
-          refreshControl={<RefreshControl refreshing={st.loading && st.loaded} onRefresh={onRefresh} />}
-          onEndReachedThreshold={0.35}
-          onEndReached={() => {
-            if (st.hasMore && !st.loading && st.loaded) void loadPage(active, (st.page ?? 0) + 1, true);
-          }}
-          renderItem={({ item }) => {
+          renderItem={({ item, index }: { item: Row; index: number }) => {
+            if (isStories) {
+              const uri = thumbUri(item, active);
+              const expired = item.isExpired === true;
+              return (
+                <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ flex: 1, maxWidth: "50%" }}>
+                  <PressableScale onPress={() => openItem(item, active)} accessibilityRole="button" accessibilityLabel={titleLine(item, active)}
+                    style={{ height: 230, borderRadius: 22, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                    {uri ? <FadeImage uri={uri} style={StyleSheet.absoluteFill} /> : null}
+                    <LinearGradient colors={["transparent", "rgba(0,0,0,0.72)"]} style={[StyleSheet.absoluteFill, { top: "45%" }]} />
+                    <Pressable onPress={() => void unsave(item, active)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Remove from saved"
+                      style={{ position: "absolute", top: 10, right: 10, width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.38)" }}>
+                      <Ionicons name="bookmark" size={17} color="#fff" />
+                    </Pressable>
+                    {expired ? <View style={{ position: "absolute", top: 12, left: 12, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.5)" }}><Text style={[TYPE.label, { color: "#fff" }]}>Expired</Text></View> : null}
+                    <View style={{ position: "absolute", left: 12, right: 12, bottom: 12 }}>
+                      <Text numberOfLines={2} style={[TYPE.cardTitle, { color: "#fff" }]}>{titleLine(item, active)}</Text>
+                      {item.category ? <Text numberOfLines={1} style={[TYPE.small, { color: "rgba(255,255,255,0.8)" }]}>{String(item.category)}</Text> : null}
+                    </View>
+                  </PressableScale>
+                </Animated.View>
+              );
+            }
             const uri = thumbUri(item, active);
             const sub = subtitleLine(item, active);
             return (
-              <Pressable
-                onPress={() => openItem(item, active)}
-                style={[
-                  styles.row,
-                  { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                ]}
-              >
-                {uri ? (
-                  <FadeImage // SPRINT-42: render saved feed/listing thumbnails through the shared image component.
-                    uri={uri} // SPRINT-42: preserve the order-selected thumbnail.
-                    style={styles.rowThumb}
-                  />
-                ) : (
-                  <View style={[styles.rowThumb, styles.rowThumbPh, { backgroundColor: tc.inputBg }]}>
-                    <Ionicons name="image-outline" size={22} color={tc.textTertiary} />
+              <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
+                <PressableScale onPress={() => openItem(item, active)} accessibilityRole="button" accessibilityLabel={titleLine(item, active)}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                  {uri ? (
+                    <FadeImage uri={uri} style={{ width: 72, height: 72, borderRadius: 16 }} />
+                  ) : (
+                    <View style={{ width: 72, height: 72, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+                      <Ionicons name={active === "community" ? "help-circle-outline" : active === "roommates" ? "person-outline" : "image-outline"} size={24} color={tc.accentText} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                    <View style={{ alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: tc.accentSoft }}>
+                      <Text style={[TYPE.label, { color: tc.accentText, fontSize: 11 }]}>{TYPE_LABEL[active] ?? "Saved"}</Text>
+                    </View>
+                    <Text numberOfLines={2} style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{titleLine(item, active)}</Text>
+                    {active === "news" && item.isEdited === true ? <Text style={[TYPE.small, { color: tc.textTertiary }]}>Edited</Text> : null}
+                    {active === "events" ? (
+                      <RatingSummary
+                        averageRating={Number(item.averageRating ?? 0) || 0}
+                        totalReviews={Number(item.totalReviews ?? 0) || 0}
+                        size="sm"
+                        textColor={tc.textPrimary}
+                        mutedColor={tc.textTertiary}
+                      />
+                    ) : null}
+                    {sub ? <Text numberOfLines={1} style={[TYPE.small, { color: tc.textSecondary }]}>{sub}</Text> : null}
                   </View>
-                )}
-                <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text numberOfLines={2} style={[styles.rowTitle, { color: tc.textPrimary }]}>
-                    {titleLine(item, active)}
-                  </Text>
-                  {active === "news" && item.isEdited === true ? <Text style={[styles.rowSub, { color: tc.textTertiary }]}>Edited</Text> : null}
-                  {/* SPRINT-42: saved feed-row marker follows backend isEdited. */}
-                  {active === "events" ? ( // SPRINT-42: saved event row rating
-                    <RatingSummary
-                      averageRating={Number(item.averageRating ?? 0) || 0}
-                      totalReviews={Number(item.totalReviews ?? 0) || 0}
-                      size="sm"
-                      textColor={tc.textPrimary}
-                      mutedColor={tc.textTertiary}
-                      style={{ marginTop: 2 }}
-                    />
-                  ) : null}
-                  {sub ? (
-                    <Text numberOfLines={1} style={[styles.rowSub, { color: tc.textSecondary }]}>
-                      {sub}
-                    </Text>
-                  ) : null}
-                </View>
-                <Pressable onPress={() => void unsave(item, active)} hitSlop={10} style={styles.rowBookmark}>
-                  <Ionicons name="bookmark" size={22} color="#257A86" />
-                </Pressable>
-              </Pressable>
+                  <Pressable onPress={() => void unsave(item, active)} hitSlop={10} accessibilityRole="button" accessibilityLabel="Remove from saved"
+                    style={{ width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="bookmark" size={21} color={tc.accentText} />
+                  </Pressable>
+                </PressableScale>
+              </Animated.View>
             );
           }}
         />
       )}
-    </SafeAreaView>
+    />
   );
 }
 

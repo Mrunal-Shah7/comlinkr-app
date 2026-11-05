@@ -16,11 +16,14 @@ export function goBackOr(fallback: string) {
   else router.replace(fallback as any);
 }
 
-export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true }: {
+/** What a list screen gets from DPage: the scroll handler that drives the bar, the large title to put at the top of
+ *  the list (ListHeaderComponent) and the bottom padding that clears the system bar. */
+export type DPageList = { onScroll: ReturnType<typeof useAnimatedScrollHandler>; header: ReactElement | null; bottom: number };
+
+export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true, renderList }: {
   title: string;
   sub?: string;
   right?: ReactNode;
-  children: ReactNode;
   footer?: ReactNode;
   refreshControl?: ReactElement<RefreshControlProps>;
   contentStyle?: StyleProp<ViewStyle>;
@@ -28,6 +31,9 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
   largeTitle?: boolean;
   /** false: children fill the space under the bar (a list that scrolls itself). */
   scroll?: boolean;
+  /** A virtualised list instead of the ScrollView: render an Animated.FlatList with these. */
+  renderList?: (p: DPageList) => ReactNode;
+  children?: ReactNode;
 }) {
   const { tc } = useTheme();
   const insets = useSafeAreaInsets();
@@ -51,7 +57,12 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
         </Animated.View>
         <View style={s.right}>{right}</View>
       </View>
-      {scroll ? (
+      {renderList ? renderList({ onScroll, header: largeTitle ? (
+        <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>
+          <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{title}</Text>
+          {sub ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>{sub}</Text> : null}
+        </View>
+      ) : null, bottom: footer ? 16 : 40 + insets.bottom }) : scroll ? (
         <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={[{ paddingBottom: (footer ? 16 : 40 + insets.bottom) }, contentStyle]}>
           {largeTitle ? (
