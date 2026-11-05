@@ -26,6 +26,23 @@ import { HttpApiError } from "../../src/services/http/apiClient";
 import { COUNTRIES, STATES_BY_COUNTRY, CITIES_BY_STATE } from "../../src/data/locationData";
 import { rs, screenWidth } from "../../src/utils/responsive";
 import { appAlert } from '../../src/shared/ui/Dialogs';
+import { createThemedStyles } from '../../src/theme/themedStyles';
+import Reanimated, { FadeInRight, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { GradientFill } from '../../src/shared/d';
+import { SPRING } from '../../src/shared/motion/presets';
+
+/** The onboarding progress: a gradient bar that springs to the step (design D). */
+function OnbProgress({ step, total }: { step: number; total: number }) {
+  const { tc } = useTheme();
+  const p = useSharedValue((step + 1) / total);
+  useEffect(() => { p.value = withSpring((step + 1) / total, SPRING.settle); }, [step, total, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
+  return (
+    <View style={{ flex: 1, height: 6, borderRadius: 3, marginHorizontal: 12, backgroundColor: tc.surface3, overflow: 'hidden' }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: step + 1 }}>
+      <Reanimated.View style={[{ height: '100%', borderRadius: 3, overflow: 'hidden' }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Reanimated.View>
+    </View>
+  );
+}
 
 
 /** Sprint 21: enrollment limited to US + UK at onboarding. */
@@ -311,6 +328,7 @@ export default function OnboardingScreen() {
   const logout = useAuthStore((s) => s.logout);
 
   const [step, setStep] = useState(0);
+  const reduceMotion = useReducedMotion();
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -439,35 +457,19 @@ export default function OnboardingScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
-      <LinearGradient
-        colors={isDark ? ["#0D1B2A", "#0A0E1A", "#0A1628"] : ["#F0F7FF", "#FFFFFF", "#F0FBF0"]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={isDark ? ["rgba(26,107,174,0.28)", "rgba(48,133,91,0.08)", "transparent"] : ["rgba(26,107,174,0.14)", "rgba(48,133,91,0.05)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} pointerEvents="none" />
       <SafeAreaView style={styles.safe}>
         {/* ── Header ── */}
         <View style={styles.header}>
           {step > 0 ? (
-            <Pressable onPress={goBack} style={[styles.backBtn, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <Ionicons name="arrow-back" size={20} color={tc.textSecondary} />
+            <Pressable onPress={goBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
             </Pressable>
           ) : (
             <View style={styles.backPlaceholder} />
           )}
 
-          <View style={styles.progressRow}>
-            {STEPS.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.progressDot,
-                  { backgroundColor: tc.borderMedium },
-                  idx === step && styles.progressActive,
-                  idx < step && styles.progressDone,
-                ]}
-              />
-            ))}
-          </View>
+          <OnbProgress step={step} total={STEPS.length} />
 
           <View style={styles.headerRight}>
             <Pressable onPress={handleSignOut} hitSlop={10} disabled={submitting}>
@@ -487,12 +489,13 @@ export default function OnboardingScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <Reanimated.View key={step} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200)}>
           {/* ─── Step 0: Location ─── */}
           {step === 0 && (
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.blue, Colors.brand.green]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -591,7 +594,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.orange, "#FF5722"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -657,7 +660,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.green, "#1a8a1a"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -731,7 +734,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.blue, Colors.brand.green]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -794,7 +797,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={["#6366F1", "#8B5CF6"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -1004,10 +1007,11 @@ export default function OnboardingScreen() {
               </Text>
             </View>
           )}
+          </Reanimated.View>
         </ScrollView>
 
         {/* ── Bottom CTA ── */}
-        <View style={[styles.bottomBar, { backgroundColor: tc.cardBg, borderTopColor: tc.borderLight }]}>
+        <View style={[styles.bottomBar, { backgroundColor: tc.glass, borderTopColor: tc.glassLine }]}>
           <Pressable
             onPress={step === 5 ? handleFinish : goNext}
             disabled={!canProceed() || submitting}
@@ -1019,7 +1023,7 @@ export default function OnboardingScreen() {
           >
             <LinearGradient
               colors={
-                canProceed() ? [Colors.brand.blue, Colors.brand.green] : ["#D1D5DB", "#D1D5DB"]
+                [Colors.brand.blue, Colors.brand.green]
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -1048,7 +1052,7 @@ export default function OnboardingScreen() {
 // ─── Styles ──────────────────────────────────────────────
 const CHIP_WIDTH = (screenWidth() - 50) / 2;
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: { flex: 1 },
   safe: { flex: 1 },
 
@@ -1559,7 +1563,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#F3F4F6",
   },
   ctaWrap: { borderRadius: rs(16), overflow: "hidden" },
-  ctaDisabled: { opacity: 0.65 },
+  ctaDisabled: { opacity: 0.4 },
   ctaGradient: {
     height: rs(54),
     borderRadius: rs(16),

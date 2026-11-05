@@ -157,7 +157,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | signup | `app/(auth)/signup.tsx` | phone-checked (form; no code sent) |
 | otp | OTP step in sign-up (`OtpBoxes`) | rebuilt; the same component phone-checked in reset password, sign-up code step not walked |
 | forgot | `app/(auth)/forgot-password.tsx`, `src/shared/d/Otp.tsx` | phone-checked (code sent, wrong code shakes; password not changed) |
-| onboarding | onboarding screens | not started (look only in phase 1) |
+| onboarding | `app/(auth)/onboarding.tsx` (look only; 5 steps is phase 2) | phone-checked (step 1 and the country picker; not finished, to keep the test account as it is) |
 | compose-listing | `app/create-post.tsx` | not started |
 | compose-room | `app/create-post.tsx` | not started |
 | compose-news | `app/create-post.tsx` | not started |
