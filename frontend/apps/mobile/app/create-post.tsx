@@ -53,7 +53,7 @@ import { File } from "expo-file-system"; // SPRINT-42: resolve image byte size w
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { TYPE } from '../src/theme/d';
-import { PressableScale, Reveal } from '../src/shared/d';
+import { Chip, ChipInput, PressableScale, Reveal, Stepper } from '../src/shared/d';
 import { goBackOr } from '../src/shared/d/Page';
 
 type AttachedMedia = {
@@ -1979,12 +1979,13 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
   const [instagram, setInstagram] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [priceRange, setPriceRange] = useState("");
+  const [priceRange, setPriceRange] = useState(type.id === "restaurant" ? "$ Mid-range" : "");
   const [avgPricePerPerson, setAvgPricePerPerson] = useState("");
   const [phone, setPhone] = useState("");
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
-  const [features, setFeatures] = useState<string[]>([]);
+  // Restaurant defaults the server needs anyway (design D `compose-restaurant`): $ and Dine-in.
+  const [features, setFeatures] = useState<string[]>(type.id === "restaurant" ? ["Dine-in"] : []);
   const [restTags, setRestTags] = useState<string[]>([]);
   const [restCity, setRestCity] = useState(user?.city ?? "");
   const [restState, setRestState] = useState("");
@@ -2032,6 +2033,10 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
   const [sharedSpaceCity, setSharedSpaceCity] = useState(user?.city ?? "");
   const [sharedSpaceState, setSharedSpaceState] = useState("");
   const [sharedSpaceCountry, setSharedSpaceCountry] = useState(user?.country ?? "");
+  useEffect(() => {
+    const c = getBusinessCurrency(null, sharedSpaceCountry.trim() || user?.country || "");
+    if (c) setSharedSpaceCurrency(c.code);
+  }, [sharedSpaceCountry, user?.country]);
   const [sharedSpacePetPolicy, setSharedSpacePetPolicy] = useState("");
   const [sharedSpaceSmoking, setSharedSpaceSmoking] = useState(false);
   const [sharedSpaceHouseRules, setSharedSpaceHouseRules] = useState("");
@@ -3457,77 +3462,17 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 </View>
               </View>
             </View>
-            <View style={[s.inputWrap, { marginTop: 10, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-              <TextInput
-                style={[s.titleInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
-                placeholder="Currency (e.g. USD)"
-                placeholderTextColor={tc.textTertiary}
-                value={sharedSpaceCurrency}
-                onChangeText={setSharedSpaceCurrency}
-                autoCapitalize="characters"
-                maxLength={8}
-              />
-            </View>
+            <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 8 }]}>Prices in {sharedSpaceCurrency} · from {sharedSpaceCountry.trim() || "your profile"}</Text>
 
             <SectionLabel label="ROOMS & OCCUPANCY" color={type.color} />
             <Text style={{ fontSize: 12, color: tc.textTertiary, marginTop: -6, marginBottom: 10 }}>
               How many rooms/bathrooms the place has, and how many people live there vs. how many spots are still open.
             </Text>
-            <View style={s.rowFields}>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Rooms</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
-                    placeholder="1"
-                    placeholderTextColor={tc.textTertiary}
-                    value={sharedSpaceRooms}
-                    onChangeText={setSharedSpaceRooms}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Baths</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
-                    placeholder="1"
-                    placeholderTextColor={tc.textTertiary}
-                    value={sharedSpaceBaths}
-                    onChangeText={setSharedSpaceBaths}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-            </View>
-            <View style={[s.rowFields, { marginTop: 14 }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]} numberOfLines={1}>Current occupants</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
-                    placeholder="0"
-                    placeholderTextColor={tc.textTertiary}
-                    value={sharedSpaceTotalOccupants}
-                    onChangeText={setSharedSpaceTotalOccupants}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]} numberOfLines={1}>Open spots</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
-                  <TextInput
-                    style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
-                    placeholder="1"
-                    placeholderTextColor={tc.textTertiary}
-                    value={sharedSpaceAvailableSpots}
-                    onChangeText={setSharedSpaceAvailableSpots}
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
+            <View style={{ gap: 10 }}>
+              <Stepper label="Rooms" value={parseInt(sharedSpaceRooms, 10) || 1} onChange={(v) => setSharedSpaceRooms(String(v))} min={1} max={20} />
+              <Stepper label="Bathrooms" value={parseInt(sharedSpaceBaths, 10) || 1} onChange={(v) => setSharedSpaceBaths(String(v))} min={1} max={20} />
+              <Stepper label="People living there" value={parseInt(sharedSpaceTotalOccupants, 10) || 0} onChange={(v) => setSharedSpaceTotalOccupants(String(v))} min={0} max={30} />
+              <Stepper label="Spots open" value={parseInt(sharedSpaceAvailableSpots, 10) || 1} onChange={(v) => setSharedSpaceAvailableSpots(String(v))} min={1} max={20} />
             </View>
 
             <SectionLabel label="ADDRESS" color={type.color} />
@@ -3702,18 +3647,10 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 {canPostRestaurant &&
                   !isAdmin &&
                   !isVerifiedRestaurantOwner && (
-                  <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
-                    <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
-                    <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
-                      {"Anyone can post — "}
-                      <Text style={{ fontWeight: "800" }}>Verified Restaurant Owner</Text>
-                      {" posts get a trust badge and more visibility. "}
-                      <Text
-                        style={{ fontWeight: "800", color: "#15803D", textDecorationLine: "underline" }}
-                        onPress={() => router.push({ pathname: "/apply-badge" as any, params: { badgeType: "restaurant_owner" } })}
-                      >Get verified</Text>
-                    </Text>
-                  </View>
+                  <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 12 }]}>
+                    Verified owners get a badge on their posts.{" "}
+                    <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }} onPress={() => router.push({ pathname: "/apply-badge" as any, params: { badgeType: "restaurant_owner" } })}>Get verified</Text>
+                  </Text>
                 )}
 
                 <SectionLabel label="OWNER / MANAGER NAME (OPTIONAL)" color={type.color} />
@@ -4363,19 +4300,15 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                   bg={type.bg}
                 />
 
-                <SectionLabel label="TAGS (comma-separated)" color={type.color} />
-                <View style={[s.locationField, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                  <Ionicons name="pricetag-outline" size={17} color={type.color} />
-                  <TextInput
-                    style={[s.locationInput, { color: tc.textPrimary }]}
-                    placeholder="e.g. jobs, housing, safety"
-                    placeholderTextColor={tc.textTertiary}
-                    value={newsTags}
-                    onChangeText={setNewsTags}
-                  />
-                </View>
+                <SectionLabel label="TAGS" color={type.color} />
+                <ChipInput value={newsTags} onChange={setNewsTags} placeholder="Type a tag, then space" icon="pricetag-outline" />
 
                 <SectionLabel label="LOCATION (optional)" color={type.color} />
+                {user?.city && location.trim() !== user.city ? (
+                  <View style={{ flexDirection: "row", marginBottom: 8 }}>
+                    <Chip label={user.city} icon={<Ionicons name="location" size={14} color={tc.textSecondary} />} onPress={() => setLocation(user.city ?? "")} />
+                  </View>
+                ) : null}
                 <View style={[s.locationField, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
                   <Ionicons name="location-outline" size={17} color={type.color} />
                   <TextInput

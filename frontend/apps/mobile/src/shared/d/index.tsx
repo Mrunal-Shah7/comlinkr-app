@@ -1,8 +1,10 @@
 // src/shared/d/index.tsx — design D building blocks (plan 01). Screens compose these instead of styling
 // buttons, chips, tiles and segmented controls themselves, so every screen moves and looks the same.
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type LayoutChangeEvent, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View, type LayoutChangeEvent, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
+  ZoomIn,
+  ZoomOut,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -187,6 +189,8 @@ const s = StyleSheet.create({
   stepBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', shadowColor: '#0F283C', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   prefill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, alignSelf: 'flex-start' },
+  chipInput: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, minHeight: 50, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.input },
+  tagChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingLeft: 11, paddingRight: 8, borderRadius: 99 },
   tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });
 
@@ -350,5 +354,49 @@ export function PopPressable({ style, onPress, children, ...rest }: PressablePro
     >
       {children}
     </APressable>
+  );
+}
+
+/* ---------- chip input ---------- */
+/** `.chipinput`: type a word, then space, comma or return makes it a chip (it pops in: 0.4 → 1.08 → 1, 280 ms);
+ *  backspace in an empty box removes the last chip; × removes one (shrinks out, 180 ms). The value stays the
+ *  comma-joined string the composers already send. */
+export function ChipInput({ value, onChange, placeholder, icon, max = 10 }: { value: string; onChange: (v: string) => void; placeholder?: string; icon?: keyof typeof Ionicons.glyphMap; max?: number }) {
+  const { tc } = useTheme();
+  const reduce = useReducedMotion();
+  const [draft, setDraft] = useState('');
+  const chips = value.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean);
+  const commit = (raw: string) => {
+    const t = raw.trim().replace(/^#/, '').replace(/[,\s]+$/g, '');
+    if (!t || chips.includes(t) || chips.length >= max) { setDraft(''); return; }
+    onChange([...chips, t].join(', '));
+    setDraft('');
+  };
+  return (
+    <View style={[s.chipInput, { backgroundColor: tc.inputBg }]}>
+      {icon ? <Ionicons name={icon} size={17} color={tc.textTertiary} /> : null}
+      {chips.map((c) => (
+        <Animated.View key={c} entering={reduce ? undefined : ZoomIn.springify().damping(12).stiffness(300)} exiting={reduce ? undefined : ZoomOut.duration(180)}
+          style={[s.tagChip, { backgroundColor: tc.accentSoft }]}>
+          <Text style={[body(600), { fontSize: 13.5, color: tc.accentText }]}>{c}</Text>
+          <Pressable onPress={() => onChange(chips.filter((x) => x !== c).join(', '))} hitSlop={8} accessibilityLabel={`Remove ${c}`}>
+            <Ionicons name="close" size={14} color={tc.accentText} />
+          </Pressable>
+        </Animated.View>
+      ))}
+      <TextInput
+        value={draft}
+        onChangeText={(t) => (/[\s,]$/.test(t) ? commit(t) : setDraft(t))}
+        onSubmitEditing={() => commit(draft)}
+        onKeyPress={(e) => { if (e.nativeEvent.key === 'Backspace' && !draft && chips.length) onChange(chips.slice(0, -1).join(', ')); }}
+        onBlur={() => commit(draft)}
+        placeholder={chips.length ? '' : placeholder}
+        placeholderTextColor={tc.textTertiary}
+        autoCapitalize="none"
+        blurOnSubmit={false}
+        style={[body(500), { flexGrow: 1, minWidth: 80, fontSize: 15, color: tc.textPrimary, paddingVertical: 6 }]}
+        accessibilityLabel={placeholder ?? 'Tags'}
+      />
+    </View>
   );
 }
