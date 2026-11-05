@@ -146,7 +146,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | settings | `app/settings.tsx` | phone-checked |
 | help | `app/help-support.tsx` | phone-checked |
 | legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` (shared `LegalDoc.tsx`) | phone-checked (privacy walked; terms uses the same component) |
-| badges | `app/apply-badge.tsx` | not started |
+| badges | `app/apply-badge.tsx` (frame, progress, fields, upload rows; step bodies keep their layout on the base coat) | rebuilt; steps 1–2 and back phone-checked, upload and send not walked (needs ID photos) |
 | verification | `app/verification-status.tsx` | rebuilt; not-applied state phone-checked, review timeline checked with the badge journey |
 | messages | `app/chat.tsx` (list) | phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |

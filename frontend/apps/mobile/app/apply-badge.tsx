@@ -36,6 +36,11 @@ import {
 import { validatePhoneNumber, formatPhoneHint, sanitizePhoneInput } from "../src/utils/phoneValidation";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import Animated, { FadeInRight, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { TYPE } from '../src/theme/d';
+import { SPRING } from '../src/shared/motion/presets';
+import { GradientFill, PressableScale } from '../src/shared/d';
+import { DPage, goBackOr } from '../src/shared/d/Page';
 
 const MAX_DOC_BYTES = 10 * 1024 * 1024; // 10MB — matches the "max 10MB" copy shown in the upload UI
 
@@ -78,7 +83,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   landlord: {
     label: "Verified Property Host",
     icon: "home",
-    gradient: ["#1A6BAE", "#0054CC"],
+    gradient: ["#1A6BAE", "#30855B"],
     description: "List your property for rent, accommodation sharing, or short-stay on ComLinkr. Open to property owners and authorized managers.",
     unlocks: ["Verified trust badge on all your listings", "Priority placement in housing search results", "Direct tenant messaging"],
     requirements: ["Passport or government-issued photo ID", "Proof of right to list the property (ownership deed, tenancy agreement, or management authorization)", "Contact phone number", "Property address you intend to list"],
@@ -90,7 +95,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   restaurant_owner: {
     label: "Verified Restaurant Owner",
     icon: "restaurant",
-    gradient: ["#30855B", "#256B49"],
+    gradient: ["#1A6BAE", "#30855B"],
     description: "Register your restaurant on ComLinkr and connect with local food lovers.",
     unlocks: ["Verified Business badge on your restaurant posts", "Priority placement in food search results", "Reply to community reviews", "Manage menu & hours"],
     requirements: ["Business registration number / license", "Government-issued ID", "Business phone and email", "Restaurant physical address"],
@@ -102,7 +107,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   agency: {
     label: "Verified Agency",
     icon: "business",
-    gradient: ["#257A86", "#E56800"],
+    gradient: ["#1A6BAE", "#30855B"],
     description: "Manage and list properties on behalf of multiple landlords. Ideal for lettings agencies.",
     unlocks: ["Unlimited listings", "Agency branding on all listings", "Priority search placement", "Multi-agent team support", "Agency Dashboard"],
     requirements: ["Registered company/agency name", "Business registration certificate", "Agency license number (if applicable)", "Primary contact name and title", "Business phone and email"],
@@ -114,7 +119,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   local_reviewer: {
     label: "Local Reviewer",
     icon: "star",
-    gradient: ["#F59E0B", "#D97706"],
+    gradient: ["#1A6BAE", "#30855B"],
     description: "Share trusted restaurant recommendations and community reviews as a verified local.",
     unlocks: [
       "Trusted reviewer badge on your profile and all reviews",
@@ -441,22 +446,14 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
 };
 
 // ── Step indicator ─────────────────────────────────────────────────────────────
-function StepDots({ total, current, idleColor }: { total: number; current: number; idleColor?: string }) {
+function StepDots({ total, current }: { total: number; current: number; idleColor?: string }) {
+  const { tc } = useTheme();
+  const p = useSharedValue((current + 1) / total);
+  useEffect(() => { p.value = withSpring((current + 1) / total, SPRING.settle); }, [current, total, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
   return (
-    <View style={styles.stepDots}>
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.stepDot,
-            i < current
-              ? styles.stepDotDone
-              : i === current
-              ? styles.stepDotActive
-              : { width: rs(16), backgroundColor: idleColor ?? "#E5E7EB" },
-          ]}
-        />
-      ))}
+    <View style={{ height: 6, borderRadius: 3, backgroundColor: tc.surface3, overflow: "hidden", marginHorizontal: 16, marginBottom: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current + 1 }}>
+      <Animated.View style={[{ height: "100%", borderRadius: 3, overflow: "hidden" }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Animated.View>
     </View>
   );
 }
@@ -485,20 +482,18 @@ function Field({
   error?: string | null;
   onBlur?: () => void;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc } = useTheme();
   return (
-    <View style={styles.field}>
-      <Text style={[styles.fieldLabel, { color: tc.textSecondary }]}>
+    <View style={{ marginBottom: 14 }}>
+      <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6, marginLeft: 2 }]}>
         {label}
-        {required && <Text style={styles.required}> *</Text>}
+        {required ? <Text style={{ color: tc.dangerText }}> *</Text> : null}
       </Text>
-      {hint && <Text style={[styles.fieldHint, { color: tc.textTertiary }]}>{hint}</Text>}
+      {hint ? <Text style={[TYPE.small, { color: tc.textTertiary, marginBottom: 6, marginLeft: 2, fontSize: 12 }]}>{hint}</Text> : null}
       <TextInput
         style={[
-          styles.fieldInput,
-          multiline && styles.fieldInputMulti,
-          { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary },
-          error && { borderColor: "#DC2626" },
+          TYPE.body,
+          { minHeight: multiline ? 96 : 50, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: tc.inputBg, color: tc.textPrimary, borderWidth: 1, borderColor: error ? tc.dangerText : "transparent" },
         ]}
         value={value}
         onChangeText={onChangeText}
@@ -509,13 +504,14 @@ function Field({
         autoCapitalize={keyboardType === "email-address" || keyboardType === "url" ? "none" : "words"}
         multiline={multiline}
         textAlignVertical={multiline ? "top" : "center"}
+        accessibilityLabel={label}
       />
-      {error && (
-        <View style={styles.fieldErrorRow}>
-          <Ionicons name="alert-circle" size={13} color="#DC2626" />
-          <Text style={styles.fieldErrorText}>{error}</Text>
+      {error ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6, marginLeft: 2 }}>
+          <Ionicons name="alert-circle" size={14} color={tc.dangerText} />
+          <Text style={[TYPE.small, { color: tc.dangerText, fontSize: 12 }]}>{error}</Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -534,36 +530,29 @@ function DocUploadRow({
   uploadedDetail?: string;
   onPress: () => void;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc } = useTheme();
   return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.docRow,
-        { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-        uploaded && styles.docRowUploaded,
-      ]}
-    >
-      <View style={[styles.docIcon, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }, uploaded && styles.docIconDone]}>
-        <Ionicons name={uploaded ? "checkmark" : "cloud-upload-outline"} size={16} color={uploaded ? "#FFF" : (isDark ? tc.textTertiary : "#6B7280")} />
+    <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
+      style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, marginBottom: 10, borderRadius: 18, borderWidth: 1, borderStyle: uploaded ? "solid" : "dashed", borderColor: uploaded ? tc.mint : tc.borderMedium, backgroundColor: uploaded ? tc.mintSoft : tc.cardBg }}>
+      <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: uploaded ? tc.mint : tc.accentSoft }}>
+        <Ionicons name={uploaded ? "checkmark" : "cloud-upload-outline"} size={18} color={uploaded ? "#FFF" : tc.accentText} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={[styles.docLabel, { color: tc.textPrimary }]}>
+        <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>
           {label}
-          {required && <Text style={styles.required}> *</Text>}
+          {required ? <Text style={{ color: tc.dangerText }}> *</Text> : null}
         </Text>
-        <Text style={[styles.docSub, { color: tc.textTertiary }]} numberOfLines={2}>
-          {uploaded ? (uploadedDetail ?? "Selected") : "Tap to choose a photo (JPG/PNG — max 10MB)"}
-        </Text>
+        <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{uploaded ? (uploadedDetail ?? "Added") : "Tap to add a photo (JPG or PNG, up to 10 MB)"}</Text>
       </View>
-      <Ionicons name={uploaded ? "create-outline" : "chevron-forward"} size={14} color={tc.textTertiary} />
-    </Pressable>
+      <Ionicons name={uploaded ? "create-outline" : "chevron-forward"} size={16} color={tc.textTertiary} />
+    </PressableScale>
   );
 }
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 export default function ApplyBadgeScreen() {
   const { isDark, tc } = useTheme();
+  const reduceMotion = useReducedMotion();
   const params = useLocalSearchParams<{ badgeType?: string }>();
   const user = useAuthStore((s) => s.user);
 
@@ -702,7 +691,7 @@ export default function ApplyBadgeScreen() {
             onPress={() => router.push("/verification-status" as any)}
             style={{ marginTop: rs(16) }}
           >
-            <LinearGradient colors={["#1A6BAE", "#0054CC"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>Open verification status</Text>
               <Ionicons name="arrow-forward" size={16} color="#FFF" />
             </LinearGradient>
@@ -728,7 +717,7 @@ export default function ApplyBadgeScreen() {
 
     return (
       <View style={styles.section}>
-        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Choose Your Badge</Text>
+        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Choose a badge</Text>
         <Text style={[styles.stepDesc, { color: tc.textSecondary }]}>What best describes your role on ComLinkr?</Text>
         <Text style={[styles.badgeChooserHint, { color: tc.textTertiary }]}>
           Badges you already have, or that are awaiting review, are hidden. Rejected applications can be submitted again.
@@ -790,7 +779,7 @@ export default function ApplyBadgeScreen() {
     if (!config || !selectedBadge) return null;
     return (
       <View style={styles.section}>
-        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>What You'll Unlock</Text>
+        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>What you get</Text>
         <View style={[styles.unlockCard, { borderColor: tc.borderLight }]}>
           <LinearGradient colors={config.gradient} style={styles.unlockCardHeader}>
             <Ionicons name={config.icon as any} size={22} color="#FFF" />
@@ -806,7 +795,7 @@ export default function ApplyBadgeScreen() {
           </View>
         </View>
 
-        <Text style={[styles.stepTitle, { marginTop: rs(20), color: tc.textPrimary }]}>What You'll Need</Text>
+        <Text style={[styles.stepTitle, { marginTop: rs(20), color: tc.textPrimary }]}>You will need</Text>
         <View style={styles.requirementsList}>
           {config.requirements.map((req, i) => (
             <View key={i} style={styles.requirementRow}>
@@ -836,7 +825,7 @@ export default function ApplyBadgeScreen() {
           )}
           <Pressable onPress={() => setStep(2)} style={{ flex: 1 }}>
             <LinearGradient colors={config.gradient} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Text style={styles.nextBtnText}>Start Application</Text>
+              <Text style={styles.nextBtnText}>Start</Text>
               <Ionicons name="arrow-forward" size={16} color="#FFF" />
             </LinearGradient>
           </Pressable>
@@ -860,7 +849,7 @@ export default function ApplyBadgeScreen() {
 
     return (
       <View style={styles.section}>
-        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Business Details</Text>
+        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Your details</Text>
         <Text style={[styles.stepDesc, { color: tc.textSecondary }]}>All information must be accurate and match your official documents.</Text>
 
         <Field label="Full Legal Name" value={fullName} onChangeText={setFullName} placeholder="As it appears on your ID" required />
@@ -1020,7 +1009,7 @@ export default function ApplyBadgeScreen() {
 
     return (
       <View style={styles.section}>
-        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Upload Documents</Text>
+        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Add your documents</Text>
         <Text style={[styles.stepDesc, { color: tc.textSecondary }]}>
           Photos from your library (JPG/PNG). Max 10MB each. Documents are reviewed by our verification team and kept confidential.
         </Text>
@@ -1191,7 +1180,7 @@ export default function ApplyBadgeScreen() {
 
     return (
       <View style={styles.section}>
-        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Review Your Application</Text>
+        <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Check and send</Text>
 
         <View style={[styles.summaryCard, { borderColor: tc.borderLight }]}>
           <LinearGradient colors={config.gradient} style={styles.summaryHeader} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -1235,7 +1224,7 @@ export default function ApplyBadgeScreen() {
           <Text style={[styles.termsText, { color: tc.textSecondary }]}>
             I confirm all information provided is accurate and I agree to ComLinkr's{" "}
             <Text style={{ color: Colors.brand.blue }}>Verification Terms of Service</Text> and{" "}
-            <Text style={{ color: Colors.brand.blue }}>Fraud Prevention Policy</Text>.
+            <Text style={{ color: Colors.brand.blue }}>fraud prevention policy</Text>.
           </Text>
         </Pressable>
 
@@ -1287,7 +1276,7 @@ export default function ApplyBadgeScreen() {
 
       <View style={{ flexDirection: "row", gap: rs(12), marginTop: rs(32), width: "100%" }}>
         <Pressable onPress={() => router.push("/verification-status" as any)} style={[styles.outlineBtn, { flex: 1 }]}>
-          <Text style={styles.outlineBtnText}>Check Status</Text>
+          <Text style={styles.outlineBtnText}>See status</Text>
         </Pressable>
         <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={{ flex: 1 }}>
           <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -1302,56 +1291,30 @@ export default function ApplyBadgeScreen() {
   const adjustedTotal = preselectedSkipsChooser ? 4 : 5;
   const adjustedStep = preselectedSkipsChooser ? Math.max(0, step - 1) : step;
 
+  const goBackStep = () => {
+    const atEntryPoint = step <= 0 || step >= 5 || (step === 1 && Boolean(preselected));
+    if (atEntryPoint) { goBackOr("/(tabs)/feed"); return; }
+    if (step === 4 && selectedBadge === "restaurant_owner") { setStep(2); return; }
+    setStep(step - 1);
+  };
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable
-          onPress={() => {
-            const atEntryPoint = step <= 0 || step >= 5 || (step === 1 && Boolean(preselected));
-            if (atEntryPoint) {
-              if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any);
-              return;
-            }
-            if (step === 4 && selectedBadge === "restaurant_owner") {
-              setStep(2);
-              return;
-            }
-            setStep(step - 1);
-          }}
-          style={({ pressed }) => [styles.headerBack, { backgroundColor: tc.pillBg }, pressed && { opacity: 0.7 }]}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: tc.textPrimary }]}>Badge Verification</Text>
-          {step < 5 && <StepDots total={adjustedTotal} current={adjustedStep} idleColor={tc.borderLight} />}
-        </View>
-        {config && step < 5 && (
-          <LinearGradient colors={config.gradient} style={styles.headerBadgeIcon}>
-            <Ionicons name={config.icon as any} size={14} color="#FFF" />
-          </LinearGradient>
-        )}
-      </View>
-
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {step === 0 && renderBadgeSelect()}
-        {step === 1 && renderRequirements()}
-        {step === 2 && renderForm()}
-        {step === 3 && renderDocuments()}
-        {step === 4 && renderReview()}
-        {step === 5 && renderConfirmation()}
-        <View style={{ height: rs(40) }} />
-      </ScrollView>
+    <DPage
+      title={step >= 5 ? "Application sent" : "Get a badge"}
+      sub={step < 5 ? `Step ${adjustedStep + 1} of ${adjustedTotal}${config ? ` · ${config.label}` : ""}` : undefined}
+      onBack={goBackStep}
+    >
+      {step < 5 ? <StepDots total={adjustedTotal} current={adjustedStep} /> : null}
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <Animated.View key={step} style={{ paddingHorizontal: 16, paddingTop: 10 }} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200)}>
+          {step === 0 && renderBadgeSelect()}
+          {step === 1 && renderRequirements()}
+          {step === 2 && renderForm()}
+          {step === 3 && renderDocuments()}
+          {step === 4 && renderReview()}
+          {step === 5 && renderConfirmation()}
+        </Animated.View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </DPage>
   );
 }
 
