@@ -79,10 +79,11 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
-import Reanimated, { Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, type SharedValue } from 'react-native-reanimated';
+import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, type SharedValue } from 'react-native-reanimated';
+import { DSheet } from '../src/shared/d/Sheet';
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { TYPE, display } from '../src/theme/d';
-import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton } from '../src/shared/d';
+import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton, Tag } from '../src/shared/d';
 const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
 import { DPage, goBackOr, type DPageList } from '../src/shared/d/Page';
 
@@ -1074,41 +1075,36 @@ function Thread({
       {isGroupChat && showGroupInfo && (
         <View style={[th.groupInfoPanel, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }]}>
           <View style={th.groupInfoSection}>
-            <Text style={[th.groupInfoLabel, { color: tc.textTertiary }]}>ORGANIZER (ADMIN)</Text>
+            <Text style={[TYPE.overline, { color: tc.textTertiary, marginBottom: 8 }]}>Organiser</Text>
             <View style={th.groupInfoRow}>
               <Avatar name={conv.host || "Organizer"} size={32} />
               <View style={{ flex: 1, marginLeft: rs(10) }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: rs(6) }}>
-                  <Text style={[th.groupInfoName, { color: tc.textPrimary }]}>{conv.host}</Text>
-                  <View style={th.adminBadge}>
-                    <Ionicons name="shield-checkmark" size={9} color="#FFF" />
-                    <Text style={th.adminBadgeText}>ADMIN</Text>
-                  </View>
+                  <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{conv.host}</Text>
+                  <Tag label="Admin" icon="shield-checkmark" />
                 </View>
-                <Text style={[th.groupInfoSub, { color: tc.textTertiary }]}>Event organizer · Can manage this group</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>Organiser · manages this group</Text>
               </View>
             </View>
           </View>
           <View style={th.groupInfoSection}>
-            <Text style={[th.groupInfoLabel, { color: tc.textTertiary }]}>
-              MEMBERS ({liveMembers.length > 0 ? liveMembers.length : (conv.members || "—")})
+            <Text style={[TYPE.overline, { color: tc.textTertiary, marginBottom: 8 }]}>
+              {liveMembers.length > 0 || conv.members ? `Members · ${liveMembers.length > 0 ? liveMembers.length : conv.members}` : "Members"}
             </Text>
             <View style={{ gap: rs(8) }}>
               {(liveMembers.length > 0 ? liveMembers : []).slice(0, 6).map((m) => (
                 <View key={m.id} style={th.groupInfoRow}>
                   <Avatar name={m.name} size={28} />
                   <View style={{ flex: 1, marginLeft: rs(10), flexDirection: "row", alignItems: "center", gap: rs(6) }}>
-                    <Text style={[th.groupInfoName, { fontSize: rs(13), color: tc.textPrimary }]}>{m.name}</Text>
+                    <Text style={[TYPE.body, { color: tc.textPrimary }]}>{m.name}</Text>
                     {m.role === "ADMIN" && (
-                      <View style={th.adminBadge}>
-                        <Text style={th.adminBadgeText}>ADMIN</Text>
-                      </View>
+                      <Tag label="Admin" />
                     )}
                   </View>
                 </View>
               ))}
               {liveMembers.length === 0 && (
-                <Text style={{ fontSize: rs(12), color: tc.textTertiary, fontWeight: "500" }}>Loading members…</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>Loading members…</Text>
               )}
               {liveMembers.length > 6 && (
                 <Text style={{ fontSize: rs(12), color: tc.textTertiary, fontWeight: "600" }}>
@@ -1118,7 +1114,7 @@ function Thread({
             </View>
           </View>
           <View style={[th.groupInfoSection, { borderBottomWidth: 0 }]}>
-            <Text style={[th.groupInfoLabel, { color: tc.textTertiary }]}>GROUP RULES</Text>
+            <Text style={[TYPE.overline, { color: tc.textTertiary, marginBottom: 8 }]}>Group rules</Text>
             <View style={{ gap: rs(6) }}>
               {[
                 "Be respectful and on-topic",
@@ -1126,10 +1122,10 @@ function Thread({
                 "Only the organizer can pin messages",
               ].map((rule, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: rs(8) }}>
-                  <View style={{ width: rs(18), height: rs(18), borderRadius: rs(9), backgroundColor: Colors.brand.blueLight, alignItems: "center", justifyContent: "center" }}>
-                    <Text style={{ fontSize: rs(10), fontWeight: "800", color: Colors.brand.blue }}>{i + 1}</Text>
+                  <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: tc.accentSoft, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={[TYPE.label, { fontSize: 11, color: tc.accentText }]}>{i + 1}</Text>
                   </View>
-                  <Text style={{ fontSize: rs(13), color: tc.textSecondary, fontWeight: "500" }}>{rule}</Text>
+                  <Text style={[TYPE.body, { fontSize: 14, color: tc.textSecondary }]}>{rule}</Text>
                 </View>
               ))}
             </View>
@@ -1373,7 +1369,7 @@ function Thread({
 
       {/* Emoji picker panel — categorized grid */}
       {showEmoji && !voiceComposerActive && ( // SPRINT-40: recording mode owns the composer surface
-        <View style={{ backgroundColor: tc.cardBg, borderTopWidth: 1, borderTopColor: tc.borderLight, paddingBottom: insets.bottom }}>
+        <Reanimated.View entering={FadeInDown.duration(220)} style={{ backgroundColor: tc.glass, borderTopWidth: 1, borderTopColor: tc.glassLine, paddingBottom: insets.bottom }}>
           {/* Category tabs */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: rs(10), gap: rs(4), paddingVertical: rs(8) }}>
             {EMOJI_CATS.map((cat) => (
@@ -1381,16 +1377,16 @@ function Thread({
                 key={cat.key}
                 onPress={() => setEmojiCat(cat.key)}
                 style={{
-                  paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(10),
-                  backgroundColor: emojiCat === cat.key ? Colors.brand.blue : (tc.inputBg),
-                  borderWidth: 1.5,
-                  borderColor: emojiCat === cat.key ? Colors.brand.blue : tc.borderLight,
-                  flexDirection: "row", alignItems: "center", gap: rs(4),
+                  paddingHorizontal: 11, paddingVertical: 6, borderRadius: 14,
+                  backgroundColor: emojiCat === cat.key ? tc.mint : tc.chipBg,
+                  borderWidth: 1,
+                  borderColor: emojiCat === cat.key ? tc.mint : tc.borderMedium,
+                  flexDirection: "row", alignItems: "center", gap: 4,
                 }}
               >
                 <Text style={{ fontSize: rs(14) }}>{cat.icon}</Text>
                 {emojiCat === cat.key && (
-                  <Text style={{ fontSize: rs(11), fontWeight: "700", color: "#FFF" }}>{cat.label}</Text>
+                  <Text style={[TYPE.label, { color: "#FFF" }]}>{cat.label}</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -1407,18 +1403,12 @@ function Thread({
               </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+        </Reanimated.View>
       )}
 
-      {/* Three-dots menu modal */}
-      <Modal visible={showMenu} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowMenu(false)}>
-        <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }} onPress={() => setShowMenu(false)}>
-          {/* onStartShouldSetResponder stops touches on this sheet from bubbling to the backdrop Pressable */}
-          <View
-            style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: tc.sheetBg, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingBottom: insets.bottom + 12, paddingTop: 8 }}
-            onStartShouldSetResponder={() => true}
-          >
-            <View style={{ width: rs(36), height: rs(4), borderRadius: rs(2), backgroundColor: tc.borderLight, alignSelf: "center", marginBottom: rs(12) }} />
+      {/* Three-dots menu */}
+      <DSheet visible={showMenu} onClose={() => setShowMenu(false)}>
+          <View style={{ paddingTop: 4 }}>
             {[
               {
                 icon: "person-outline", label: "View Profile",
@@ -1528,8 +1518,7 @@ function Thread({
               </TouchableOpacity>
             ))}
           </View>
-        </Pressable>
-      </Modal>
+      </DSheet>
     </KeyboardAvoidingView>
   );
 }
