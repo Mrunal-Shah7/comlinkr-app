@@ -46,7 +46,9 @@ import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { TYPE, display } from "../src/theme/d";
-import { GradientButton, GradientFill, PressableScale, Reveal, SoftButton, TileIn } from "../src/shared/d";
+import { Chip, GradientButton, GradientFill, PressableScale, Reveal, SoftButton, TileIn } from "../src/shared/d";
+import { DSheet } from "../src/shared/d/Sheet";
+import { Switch } from "react-native";
 import { DPage, DRow, goBackOr } from "../src/shared/d/Page";
 
 // ─── Country Flags & Dial Codes ─────────────────────────
@@ -804,208 +806,65 @@ export default function ProfileScreen() {
         </Pressable>
         <Text style={[TYPE.small, { color: tc.textTertiary, marginHorizontal: 18, marginTop: 8 }]}>These show on your roommate card when people look for a match.</Text>
 
-        {/* ── ROOMMATE EDIT MODAL ── */}
-        <Modal
-          visible={rmModalVisible}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setRmModalVisible(false)}
-        >
+        {/* ── ROOMMATE EDIT SHEET ── */}
+        <DSheet visible={rmModalVisible} onClose={() => setRmModalVisible(false)} title="Roommate preferences" full>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-            <SafeAreaView style={[s.rmModalSafe, { backgroundColor: tc.sheetBg }]} edges={["top", "bottom"]}>
-              {/* Modal header */}
-              <View style={[s.rmModalHeader, { borderBottomColor: tc.borderLight }]}>
-                <Pressable onPress={() => setRmModalVisible(false)} hitSlop={12}>
-                  <Ionicons name="close" size={24} color={tc.textPrimary} />
-                </Pressable>
-                <Text style={[s.rmModalTitle, { color: tc.textPrimary }]}>Edit Roommate Preferences</Text>
-                <Pressable onPress={saveRoommatePrefs} hitSlop={12} disabled={rmSaving} style={[s.rmModalSaveBtn, { backgroundColor: Colors.brand.blue }, rmSaving && { opacity: 0.65 }]}>
-                  {rmSaving ? (
-                    <ActivityIndicator color="#fff" size="small" />
-                  ) : (
-                    <Text style={s.rmModalSaveBtnText}>Save</Text>
-                  )}
-                </Pressable>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Monthly budget</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                {[{ v: rmBudgetMin, set: setRmBudgetMin, ph: "Min" }, { v: rmBudgetMax, set: setRmBudgetMax, ph: "Max" }].map((b2, i) => (
+                  <View key={b2.ph} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6, height: 50, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tc.inputBg }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textSecondary }]}>$</Text>
+                    <TextInput style={[TYPE.body, { flex: 1, color: tc.textPrimary, paddingVertical: 0 }]} value={b2.v} onChangeText={b2.set} keyboardType="numeric" placeholder={b2.ph} placeholderTextColor={tc.textTertiary} accessibilityLabel={i ? "Most per month" : "Least per month"} />
+                  </View>
+                ))}
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>/mo</Text>
               </View>
 
-              <ScrollView style={[s.rmModalScroll, { backgroundColor: tc.sheetBg }]} contentContainerStyle={s.rmModalScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Move-in date</Text>
+              <DatePickerField
+                value={rmMoveInDate}
+                onChange={(iso) => setRmMoveInDate(iso ?? "")}
+                dateFormat="iso"
+                placeholder="Choose a date"
+                accentColor={tc.accent}
+                minimumDate={new Date()}
+                style={{ backgroundColor: tc.inputBg, borderWidth: 0, borderRadius: 16, paddingHorizontal: 14, minHeight: 50, marginBottom: 16 }}
+                textStyle={[TYPE.body, { color: tc.textPrimary }]}
+              />
 
-                {/* Budget */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.blueLight }]}>
-                      <Ionicons name="cash-outline" size={16} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Monthly Budget</Text>
-                  </View>
-                  <View style={s.rmBudgetRow}>
-                    <View style={[s.rmInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                      <Text style={[s.rmInputPrefix, { color: tc.textSecondary }]}>$</Text>
-                      <TextInput
-                        style={[s.rmInput, { color: tc.textPrimary }]}
-                        value={rmBudgetMin}
-                        onChangeText={setRmBudgetMin}
-                        keyboardType="numeric"
-                        placeholder="Min"
-                        placeholderTextColor={tc.textTertiary}
-                      />
-                    </View>
-                    <Text style={[s.rmBudgetDash, { color: tc.textTertiary }]}>–</Text>
-                    <View style={[s.rmInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                      <Text style={[s.rmInputPrefix, { color: tc.textSecondary }]}>$</Text>
-                      <TextInput
-                        style={[s.rmInput, { color: tc.textPrimary }]}
-                        value={rmBudgetMax}
-                        onChangeText={setRmBudgetMax}
-                        keyboardType="numeric"
-                        placeholder="Max"
-                        placeholderTextColor={tc.textTertiary}
-                      />
-                    </View>
-                    <Text style={[s.rmBudgetSuffix, { color: tc.textTertiary }]}>/mo</Text>
+              {([
+                ["Sleep schedule", SLEEP_OPTIONS, rmSleep, setRmSleep],
+                ["Cleanliness", CLEANLINESS_OPTIONS, rmClean, setRmClean],
+                ["Noise level", NOISE_OPTIONS, rmNoise, setRmNoise],
+                ["Guests", GUEST_OPTIONS, rmGuest, setRmGuest],
+              ] as const).map(([label, opts, val, set]) => (
+                <View key={label} style={{ marginBottom: 16 }}>
+                  <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 8 }]}>{label}</Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                    {(opts as readonly string[]).map((opt) => <Chip key={opt} label={opt} on={val === opt} onPress={() => (set as (v: string) => void)(opt)} />)}
                   </View>
                 </View>
+              ))}
 
-                {/* Move-in Date */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.greenLight }]}>
-                      <Ionicons name="calendar-outline" size={16} color={Colors.brand.green} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Move-in Date</Text>
+              <View style={{ borderRadius: 20, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine, marginBottom: 18 }}>
+                {[
+                  { key: "pet", icon: "paw-outline" as const, label: "Pets are fine", val: rmPet, set: setRmPet },
+                  { key: "smoke", icon: "flame-outline" as const, label: "Smoking is fine", val: rmSmoke, set: setRmSmoke },
+                  { key: "wfh", icon: "laptop-outline" as const, label: "I work from home", val: rmWfh, set: setRmWfh },
+                ].map((item, i) => (
+                  <View key={item.key} style={[{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: tc.borderLight }]}>
+                    <Ionicons name={item.icon} size={19} color={tc.textSecondary} />
+                    <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>{item.label}</Text>
+                    <Switch value={item.val} onValueChange={item.set} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel={item.label} />
                   </View>
-                  <DatePickerField
-                    value={rmMoveInDate}
-                    onChange={(iso) => setRmMoveInDate(iso ?? "")}
-                    dateFormat="iso"
-                    placeholder="Select move-in date"
-                    accentColor={Colors.brand.green}
-                    minimumDate={new Date()}
-                    style={{ backgroundColor: tc.inputBg, borderColor: tc.borderLight, borderWidth: 1.5, borderRadius: rs(12), paddingHorizontal: rs(14), paddingVertical: rs(13) }}
-                    textStyle={{ color: tc.textPrimary, fontSize: rs(14), fontWeight: "500" }}
-                  />
-                </View>
+                ))}
+              </View>
 
-                {/* Sleep Schedule */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.blueLight }]}>
-                      <Ionicons name="moon-outline" size={16} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Sleep Schedule</Text>
-                  </View>
-                  <View style={s.rmOptionRow}>
-                    {SLEEP_OPTIONS.map((opt) => (
-                      <Pressable
-                        key={opt}
-                        style={[s.rmOptionChip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, rmSleep === opt && s.rmOptionChipActive]}
-                        onPress={() => setRmSleep(opt)}
-                      >
-                        <Text style={[s.rmOptionChipText, { color: tc.textSecondary }, rmSleep === opt && s.rmOptionChipTextActive]}>{opt}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Cleanliness */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.blueLight }]}>
-                      <Ionicons name="sparkles" size={16} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Cleanliness</Text>
-                  </View>
-                  <View style={s.rmOptionRow}>
-                    {CLEANLINESS_OPTIONS.map((opt) => (
-                      <Pressable
-                        key={opt}
-                        style={[s.rmOptionChip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, rmClean === opt && s.rmOptionChipActive]}
-                        onPress={() => setRmClean(opt)}
-                      >
-                        <Text style={[s.rmOptionChipText, { color: tc.textSecondary }, rmClean === opt && s.rmOptionChipTextActive]}>{opt}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Noise Level */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.greenLight }]}>
-                      <Ionicons name="volume-medium-outline" size={16} color={Colors.brand.green} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Noise Level</Text>
-                  </View>
-                  <View style={s.rmOptionRow}>
-                    {NOISE_OPTIONS.map((opt) => (
-                      <Pressable
-                        key={opt}
-                        style={[s.rmOptionChip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, rmNoise === opt && s.rmOptionChipActive]}
-                        onPress={() => setRmNoise(opt)}
-                      >
-                        <Text style={[s.rmOptionChipText, { color: tc.textSecondary }, rmNoise === opt && s.rmOptionChipTextActive]}>{opt}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Guest Policy */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.blueLight }]}>
-                      <Ionicons name="people-outline" size={16} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Guest Policy</Text>
-                  </View>
-                  <View style={s.rmOptionRow}>
-                    {GUEST_OPTIONS.map((opt) => (
-                      <Pressable
-                        key={opt}
-                        style={[s.rmOptionChip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, rmGuest === opt && s.rmOptionChipActive]}
-                        onPress={() => setRmGuest(opt)}
-                      >
-                        <Text style={[s.rmOptionChipText, { color: tc.textSecondary }, rmGuest === opt && s.rmOptionChipTextActive]}>{opt}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Toggle switches */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: Colors.brand.orangeLight }]}>
-                      <Ionicons name="options-outline" size={16} color={Colors.brand.orange} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Lifestyle</Text>
-                  </View>
-                  <View style={s.rmToggleList}>
-                    {[
-                      { key: "pet",  icon: "paw-outline" as const,    label: "Pet Friendly",   val: rmPet,   set: setRmPet },
-                      { key: "smoke", icon: "ban-outline" as const,    label: "Smoking Allowed", val: rmSmoke, set: setRmSmoke },
-                      { key: "wfh",  icon: "laptop-outline" as const, label: "Work from Home",  val: rmWfh,   set: setRmWfh },
-                    ].map((item) => (
-                      <Pressable
-                        key={item.key}
-                        style={[s.rmToggleRow, { borderBottomColor: tc.borderLight }]}
-                        onPress={() => item.set(!item.val)}
-                      >
-                        <View style={s.rmToggleLeft}>
-                          <Ionicons name={item.icon} size={18} color={tc.textSecondary} />
-                          <Text style={[s.rmToggleLabel, { color: tc.textPrimary }]}>{item.label}</Text>
-                        </View>
-                        <View style={[s.rmToggleTrack, item.val && s.rmToggleTrackActive]}>
-                          <View style={[s.rmToggleThumb, item.val && s.rmToggleThumbActive]} />
-                        </View>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={{ height: rs(40) }} />
-              </ScrollView>
-            </SafeAreaView>
+              <GradientButton block label="Save" loading={rmSaving} onPress={saveRoommatePrefs} />
+            </ScrollView>
           </KeyboardAvoidingView>
-        </Modal>
+        </DSheet>
 
         {/* ── Verification (design D) ── */}
         {h2("Verification", { label: "Manage", onPress: () => router.push("/verification-status" as any) })}
@@ -1047,190 +906,6 @@ export default function ProfileScreen() {
             onPress={() => { if (listingTrustInReview) router.push("/verification-status" as any); else router.push({ pathname: "/apply-badge" as any, params: { badgeType: "landlord" } }); }} />
         </Reveal>
 
-        {/* ── FEATURE MY LISTING ── */}
-        {false && <View style={s.section}>
-          <SectionLabel
-            icon="star-outline"
-            label="FEATURE MY LISTING"
-            rightEl={
-              featureSubmitted ? (
-                <View style={[s.submittedPill, { backgroundColor: "#FEF3C7", borderColor: "#FDE68A" }]}>
-                  <Ionicons name="time-outline" size={12} color="#D97706" />
-                  <Text style={[s.submittedPillText, { color: "#D97706" }]}>Active</Text>
-                </View>
-              ) : null
-            }
-          />
-          <View style={[s.promoCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-            <LinearGradient
-              colors={isDark ? [tc.cardElevated, tc.inputBg] : ["#FFF7ED", "#FFFBEB"]}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={s.promoCardHeader}
-            >
-              <View style={s.promoIconWrap}>
-                <LinearGradient colors={[Colors.brand.orange, "#E56800"]} style={s.promoIcon}>
-                  <Ionicons name="star" size={20} color="#FFF" />
-                </LinearGradient>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.promoCardTitle, { color: tc.textPrimary }]}>Promoted Listing</Text>
-                <Text style={[s.promoCardSub, { color: tc.textSecondary }]}>Get top placement in search results and featured sections</Text>
-              </View>
-            </LinearGradient>
-            <View style={s.promoBenefitsRow}>
-              {["Gold ⭐ Featured badge", "Top search placement", "Homepage exposure"].map((b) => (
-                <View key={b} style={s.promoBenefit}>
-                  <Ionicons name="checkmark-circle" size={14} color={Colors.brand.orange} />
-                  <Text style={[s.promoBenefitText, { color: tc.textSecondary }]}>{b}</Text>
-                </View>
-              ))}
-            </View>
-            {/* Plan cards */}
-            <View style={s.planRow}>
-              {FEATURED_PLANS.map((plan) => (
-                <Pressable
-                  key={plan.id}
-                  style={[s.planCard, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }, featurePlan === plan.id && s.planCardActive, plan.highlight && s.planCardHighlight]}
-                  onPress={() => setFeaturePlan(plan.id)}
-                >
-                  {plan.highlight && (
-                    <View style={s.planPopularBadge}>
-                      <Text style={s.planPopularText}>Popular</Text>
-                    </View>
-                  )}
-                  <Text style={[s.planLabel, { color: tc.textSecondary }, featurePlan === plan.id && s.planLabelActive]}>{plan.label}</Text>
-                  <Text style={[s.planPrice, { color: tc.textPrimary }, featurePlan === plan.id && s.planPriceActive]}>{plan.price}</Text>
-                </Pressable>
-              ))}
-            </View>
-            <Pressable
-              style={({ pressed }) => [s.promoActionBtn, pressed && { opacity: 0.85 }]}
-              onPress={() => {
-                setFeatureSubmitted(false);
-                setFeatureListingTitle("");
-                setFeaturePlacement(FEATURED_PLACEMENTS[0]);
-                setFeatureNote("");
-                setFeatureModalVisible(true);
-              }}
-            >
-              <LinearGradient colors={[Colors.brand.orange, "#E56800"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.promoActionGrad}>
-                <Ionicons name="star" size={15} color="#FFF" />
-                <Text style={s.promoActionText}>{featureSubmitted ? "Manage Promotion" : "Promote My Listing"}</Text>
-              </LinearGradient>
-            </Pressable>
-          </View>
-        </View>}
-
-        {/* ── FEATURE LISTING MODAL ── */}
-        <Modal
-          visible={featureModalVisible}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setFeatureModalVisible(false)}
-        >
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-            <SafeAreaView style={[s.rmModalSafe, { backgroundColor: tc.sheetBg }]} edges={["top", "bottom"]}>
-              <View style={[s.rmModalHeader, { borderBottomColor: tc.borderLight }]}>
-                <Pressable onPress={() => setFeatureModalVisible(false)} hitSlop={12}>
-                  <Ionicons name="close" size={24} color={tc.textPrimary} />
-                </Pressable>
-                <Text style={[s.rmModalTitle, { color: tc.textPrimary }]}>Promote My Listing</Text>
-                <Pressable onPress={handleFeatureSubmit} hitSlop={12} style={[s.rmModalSaveBtn, { backgroundColor: Colors.brand.orange }]}>
-                  <Text style={s.rmModalSaveBtnText}>Submit</Text>
-                </Pressable>
-              </View>
-              <ScrollView style={[s.rmModalScroll, { backgroundColor: tc.sheetBg }]} contentContainerStyle={s.rmModalScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                {/* Info note */}
-                <View style={[s.rmInfoNote, { backgroundColor: isDark ? "#1A0D00" : "#FFF7ED", borderColor: isDark ? tc.borderLight : "#FDE68A", marginBottom: rs(16) }]}>
-                  <Ionicons name="star-outline" size={14} color={Colors.brand.orange} />
-                  <Text style={[s.rmInfoNoteText, { color: isDark ? "#FCD34D" : "#92400E" }]}>
-                    Featured listings display a gold ⭐ badge and appear at the top of search results. Payment is processed after approval.
-                  </Text>
-                </View>
-
-                {/* Listing Title */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: "#FFF7ED" }]}>
-                      <Ionicons name="home-outline" size={16} color={Colors.brand.orange} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Listing Title</Text>
-                  </View>
-                  <TextInput
-                    style={[s.rmFullInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                    value={featureListingTitle}
-                    onChangeText={setFeatureListingTitle}
-                    placeholder="e.g. Modern 2BR in Downtown"
-                    placeholderTextColor={tc.textTertiary}
-                  />
-                </View>
-
-                {/* Duration Plan */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: "#FFF7ED" }]}>
-                      <Ionicons name="calendar-outline" size={16} color={Colors.brand.orange} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Promotion Duration</Text>
-                  </View>
-                  <View style={s.planRow}>
-                    {FEATURED_PLANS.map((plan) => (
-                      <Pressable
-                        key={plan.id}
-                        style={[s.planCard, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }, featurePlan === plan.id && s.planCardActive]}
-                        onPress={() => setFeaturePlan(plan.id)}
-                      >
-                        <Text style={[s.planLabel, { color: tc.textSecondary }, featurePlan === plan.id && s.planLabelActive]}>{plan.label}</Text>
-                        <Text style={[s.planPrice, { color: tc.textPrimary }, featurePlan === plan.id && s.planPriceActive]}>{plan.price}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Placement */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: "#FFF7ED" }]}>
-                      <Ionicons name="trophy-outline" size={16} color={Colors.brand.orange} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Placement Preference</Text>
-                  </View>
-                  <View style={s.rmOptionRow}>
-                    {FEATURED_PLACEMENTS.map((p) => (
-                      <Pressable
-                        key={p}
-                        style={[s.rmOptionChip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, featurePlacement === p && { ...s.rmOptionChipActive, backgroundColor: Colors.brand.orange, borderColor: Colors.brand.orange }]}
-                        onPress={() => setFeaturePlacement(p)}
-                      >
-                        <Text style={[s.rmOptionChipText, { color: tc.textSecondary }, featurePlacement === p && s.rmOptionChipTextActive]}>{p}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Additional Note */}
-                <View style={s.rmFormSection}>
-                  <View style={s.rmFormLabelRow}>
-                    <View style={[s.rmFormLabelIcon, { backgroundColor: "#FFF7ED" }]}>
-                      <Ionicons name="create-outline" size={16} color={Colors.brand.orange} />
-                    </View>
-                    <Text style={[s.rmFormLabel, { color: tc.textPrimary }]}>Note to Team (Optional)</Text>
-                  </View>
-                  <TextInput
-                    style={[s.rmFullInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary, height: rs(80), textAlignVertical: "top", paddingTop: rs(10) }]}
-                    value={featureNote}
-                    onChangeText={setFeatureNote}
-                    placeholder="Any special instructions..."
-                    placeholderTextColor={tc.textTertiary}
-                    multiline
-                  />
-                </View>
-
-                <View style={{ height: rs(40) }} />
-              </ScrollView>
-            </SafeAreaView>
-          </KeyboardAvoidingView>
-        </Modal>
 
         {/* ── Shortcuts (design D) ── */}
         {h2("Your account")}
