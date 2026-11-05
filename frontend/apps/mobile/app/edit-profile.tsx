@@ -586,12 +586,12 @@ export default function EditProfileScreen() {
     }
     return null;
   };
-  const saveText = async (k: "name" | "username" | "phone" | "bio") => {
+  const saveText = async (k: "name" | "username" | "phone" | "bio", quiet = false) => {
     if (!lastSaved.current) return;
     const value = k === "username" ? username.trim().toLowerCase() : k === "name" ? name.trim() : k === "phone" ? phone.trim() : bio.trim();
     if (value === lastSaved.current[k]) return;
     const err = textError(k);
-    if (err) { mark(k, "err"); showToast(err, "error"); return; }
+    if (err) { if (quiet) return; mark(k, "err"); showToast(err, "error"); return; }
     if (k === "phone" && !value) return; // the API rejects an empty phone; leaving it empty keeps the old one
     mark(k, "saving");
     try {
@@ -604,6 +604,14 @@ export default function EditProfileScreen() {
       showToast(apiErrorMessage(ex, "Could not save."), "error");
     }
   };
+  // Text also saves a second after typing stops (closing the Android keyboard does not blur the field);
+  // problems are only reported when you leave the field.
+  useEffect(() => {
+    if (!lastSaved.current) return;
+    const t = setTimeout(() => { for (const k of ["name", "username", "phone", "bio"] as const) void saveText(k, true); }, 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveText reads the latest values
+  }, [name, username, phone, bio]);
   // Location and the chips save a moment after they change, once they are complete.
   useEffect(() => {
     if (!prefsReady.current) return;
