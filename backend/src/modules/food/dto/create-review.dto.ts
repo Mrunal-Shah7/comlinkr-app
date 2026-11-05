@@ -1,8 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsInt,
   IsString,
-  IsNotEmpty,
+  IsOptional,
   Max,
   MaxLength,
   Min,
@@ -15,9 +15,10 @@ export class CreateReviewDto {
   @Max(5)
   rating: number;
 
-  @ApiProperty({ maxLength: 1000 })
+  /** Optional: a rating on its own is a review (design D). Stored as an empty string when left out. */
+  @ApiPropertyOptional({ maxLength: 1000 })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(1000)
-  content: string;
+  content?: string;
 }

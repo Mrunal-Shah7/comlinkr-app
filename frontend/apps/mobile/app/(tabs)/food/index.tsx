@@ -3,7 +3,9 @@ import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import { FullscreenImageViewer } from "../../../src/features/housing/components/ImageViewer";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
-import { BentoTile, Chip, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
+import { BentoTile, Chip, GradientButton, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
+import { DSheet } from "../../../src/shared/d/Sheet";
+import { StarPicker } from "../../../src/shared/d/StarPicker";
 import { GRADIENT, TYPE } from "../../../src/theme/d";
 import { DatePickerField, TimePickerField } from "../../../components/DateTimePickerField";
 import {
@@ -701,12 +703,14 @@ export default function FoodScreen() {
     setReservationSubmitting(false);
   };
 
+  const [rateFor, setRateFor] = useState<string | null>(null);
+
   const submitReviewForRestaurant = async (r: Restaurant) => {
-    if (!reviewText.trim()) return;
+    const rating = userRatings[r.id] || 0;
+    if (!rating) return;
     if (!requireAuth(undefined, "Sign in to share your review.")) return;
-    const rating = userRatings[r.id] || 5;
     try {
-      const created = await submitReview(r.id, { rating, content: reviewText.trim() });
+      const created = await submitReview(r.id, { rating, content: reviewText.trim() || undefined });
       const [fresh, remote] = await Promise.all([getRestaurant(r.id), getReviews(r.id)]);
       setSelectedRestaurant(fresh);
       setReviewsList((prev) => ({ ...prev, [r.id]: remote }));
@@ -1160,106 +1164,77 @@ export default function FoodScreen() {
                     {(() => {
                       const rid = selectedRestaurant.id;
                       const my = myRestaurantReviews[rid];
-                      const editing = reviewEditMode[rid] === true;
-                      if (my && !editing) {
+                      const openSheet = () => {
+                        if (!requireAuth(undefined, "Sign in to rate this place.")) return;
+                        if (my) {
+                          setReviewEditMode((p) => ({ ...p, [rid]: true }));
+                          setEditRating((p) => ({ ...p, [rid]: my.rating }));
+                          setEditText((p) => ({ ...p, [rid]: my.text || my.content || "" }));
+                        }
+                        setRateFor(rid);
+                      };
+                      if (my) {
                         const full = Math.min(5, Math.max(0, Math.floor(my.rating)));
                         return (
-                          <View style={[rdm.userReview, { backgroundColor: isDark ? tc.sectionBg : "#F9FAFB", paddingTop: 36 }]}>
-                            <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", gap: 12 }}>
-                              <Pressable
-                                accessibilityLabel="Edit review"
-                                onPress={() => {
-                                  setReviewEditMode((p) => ({ ...p, [rid]: true }));
-                                  setEditRating((p) => ({ ...p, [rid]: my.rating }));
-                                  setEditText((p) => ({ ...p, [rid]: my.text || my.content || "" }));
-                                }}
-                                hitSlop={8}
-                              >
-                                <Ionicons name="pencil" size={18} color={Colors.brand.blue} />
-                              </Pressable>
-                              <Pressable accessibilityLabel="Delete review" onPress={() => confirmDeleteMyReview(selectedRestaurant)} hitSlop={8}>
-                                <Ionicons name="trash-outline" size={18} color="#DC2626" />
-                              </Pressable>
+                          <View style={[rdm.userReview, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: 1 }]}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flex: 1 }]}>Your rating</Text>
+                              <Pressable accessibilityLabel="Edit review" onPress={openSheet} hitSlop={8}><Ionicons name="create-outline" size={20} color={tc.accentText} /></Pressable>
+                              <Pressable accessibilityLabel="Delete review" onPress={() => confirmDeleteMyReview(selectedRestaurant)} hitSlop={8}><Ionicons name="trash-outline" size={20} color={tc.dangerText} /></Pressable>
                             </View>
-                            <Text style={{ color: "#F59E0B", marginBottom: 4 }}>
-                              {"★".repeat(full)}
-                              {"☆".repeat(5 - full)}
-                            </Text>
-                            <Text style={[rdm.reviewText, { color: tc.textSecondary, marginBottom: 6 }]}>{my.text || my.content}</Text>
-                            <Text style={[rdm.reviewTime, { color: tc.textTertiary }]}>{new Date(my.createdAt).toLocaleString()}</Text>
+                            <View style={{ flexDirection: "row", gap: 2, marginVertical: 6 }}>
+                              {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name={n <= full ? "star" : "star-outline"} size={18} color={n <= full ? "#F5B300" : tc.surface3} />)}
+                            </View>
+                            {my.text || my.content ? <Text style={[TYPE.body, { color: tc.textSecondary, marginBottom: 6 }]}>{my.text || my.content}</Text> : null}
+                            <Text style={[TYPE.small, { color: tc.textTertiary }]}>{new Date(my.createdAt).toLocaleDateString()}</Text>
                           </View>
-                        );
-                      }
-                      if (my && editing) {
-                        const er = editRating[rid] ?? my.rating;
-                        return (
-                          <>
-                            <View style={rdm.rateRow}>
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Pressable key={star} onPress={() => setEditRating((p) => ({ ...p, [rid]: star }))}>
-                                  <Ionicons name={er >= star ? "star" : "star-outline"} size={32} color="#F59E0B" />
-                                </Pressable>
-                              ))}
-                            </View>
-                            <View style={[rdm.reviewInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                              <TextInput
-                                style={[rdm.reviewInput, { color: tc.textPrimary }]}
-                                placeholder="Write your review..."
-                                placeholderTextColor={tc.textTertiary}
-                                value={editText[rid] ?? ""}
-                                onChangeText={(t) => setEditText((p) => ({ ...p, [rid]: t }))}
-                                multiline
-                              />
-                            </View>
-                            <Pressable style={rdm.reviewSubmitBtn} onPress={() => void saveReviewEdits(selectedRestaurant)}>
-                              <LinearGradient colors={[...GRADIENT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={rdm.reviewSubmitGrad}>
-                                <Ionicons name="save-outline" size={14} color="#FFF" />
-                                <Text style={rdm.reviewSubmitText}>Save Changes</Text>
-                              </LinearGradient>
-                            </Pressable>
-                            <Pressable style={{ marginBottom: 12 }} onPress={() => setReviewEditMode((p) => ({ ...p, [rid]: false }))}>
-                              <Text style={{ color: tc.textTertiary, textAlign: "center", fontSize: 13 }}>Cancel</Text>
-                            </Pressable>
-                          </>
                         );
                       }
                       return (
-                        <>
-                          <View style={rdm.rateRow}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Pressable key={star} onPress={() => setUserRatings((p) => ({ ...p, [rid]: star }))}>
-                                <Ionicons
-                                  name={(userRatings[rid] || 0) >= star ? "star" : "star-outline"}
-                                  size={32}
-                                  color="#F59E0B"
-                                />
-                              </Pressable>
-                            ))}
+                        <PressableScale onPress={openSheet} accessibilityRole="button" accessibilityLabel={`Rate ${selectedRestaurant.name}`}
+                          style={[rdm.userReview, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: 1, alignItems: "center" }]}>
+                          <View style={{ flexDirection: "row", gap: 6 }}>
+                            {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name="star-outline" size={30} color={tc.surface3} />)}
                           </View>
-                          <View style={[rdm.reviewInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                            <TextInput
-                              style={[rdm.reviewInput, { color: tc.textPrimary }]}
-                              placeholder="Write your review..."
-                              placeholderTextColor={tc.textTertiary}
-                              value={reviewText}
-                              onChangeText={setReviewText}
-                              multiline
-                            />
-                          </View>
-                          <Pressable
-                            style={[rdm.reviewSubmitBtn, !reviewText.trim() && { opacity: 0.5 }]}
-                            onPress={() => void submitReviewForRestaurant(selectedRestaurant)}
-                          >
-                            <LinearGradient colors={[...GRADIENT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={rdm.reviewSubmitGrad}>
-                              <Ionicons name="send" size={14} color="#FFF" />
-                              <Text style={rdm.reviewSubmitText}>Submit Review</Text>
-                            </LinearGradient>
-                          </Pressable>
-                        </>
+                          <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 6 }]}>Been here? Tap to rate it</Text>
+                        </PressableScale>
                       );
                     })()}
                   </>
                 ) : null}
+
+                <DSheet visible={rateFor === selectedRestaurant.id} onClose={() => { setRateFor(null); setReviewEditMode((p) => ({ ...p, [selectedRestaurant.id]: false })); }} title={`Rate ${selectedRestaurant.name}`}>
+                  {(() => {
+                    const rid = selectedRestaurant.id;
+                    const my = myRestaurantReviews[rid];
+                    const rating = my ? (editRating[rid] ?? my.rating) : (userRatings[rid] || 0);
+                    const text = my ? (editText[rid] ?? "") : reviewText;
+                    return (
+                      <View style={{ paddingHorizontal: 18, paddingBottom: 8 }}>
+                        <StarPicker value={rating} onChange={(v) => (my ? setEditRating((p) => ({ ...p, [rid]: v })) : setUserRatings((p) => ({ ...p, [rid]: v })))} />
+                        <Text style={[TYPE.label, { color: tc.textSecondary, marginTop: 16, marginBottom: 6 }]}>Tell people more (optional)</Text>
+                        <TextInput
+                          style={[TYPE.body, { minHeight: 96, textAlignVertical: "top", borderRadius: 16, padding: 12, backgroundColor: tc.inputBg, color: tc.textPrimary }]}
+                          placeholder="What should people order?"
+                          placeholderTextColor={tc.textTertiary}
+                          value={text}
+                          onChangeText={(t) => (my ? setEditText((p) => ({ ...p, [rid]: t })) : setReviewText(t))}
+                          multiline
+                        />
+                        <GradientButton
+                          block
+                          label={my ? "Save changes" : "Post rating"}
+                          disabled={!rating}
+                          outerStyle={{ marginTop: 16 }}
+                          onPress={() => {
+                            setRateFor(null);
+                            void (my ? saveReviewEdits(selectedRestaurant) : submitReviewForRestaurant(selectedRestaurant));
+                          }}
+                        />
+                      </View>
+                    );
+                  })()}
+                </DSheet>
 
                 {(reviewsList[selectedRestaurant.id] || [])
                   .filter((rv) => String(rv.author.id) !== String(user?.id))

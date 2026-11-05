@@ -601,7 +601,7 @@ export class FoodService {
           restaurantId,
           userId,
           rating: dto.rating,
-          content: dto.content,
+          content: dto.content?.trim() ?? '',
         },
       });
       await this.recomputeReviewAggregate(tx, restaurantId);
