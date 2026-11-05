@@ -152,7 +152,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | chat | `app/chat.tsx` (conversation) | not started |
 | my-posts | `app/myposts.tsx` | not started |
 | city | city picker | not started |
-| more | ··· sheets (share, report, block) | not started |
+| more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | not started |
 | signup | `app/(auth)/signup.tsx` | not started |
 | otp | OTP step in sign-up | not started |
