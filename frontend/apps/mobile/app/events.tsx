@@ -38,6 +38,9 @@ import {
 import { RatingSummary, EventReviewsSection } from "../components/events"; // SPRINT-42:
 import * as Brightness from "expo-brightness"; // SPRINT-42:
 import { appAlert } from '../src/shared/ui/Dialogs';
+import { TYPE, display } from '../src/theme/d';
+import { EmptyState, PressableScale, Reveal, Segmented } from '../src/shared/d';
+import { DPage, goBackOr } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -826,192 +829,68 @@ export default function EventsScreen() {
     }
   };
 
+  const upcomingCount = events.filter((e) => e.category === "upcoming").length;
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]}>
-      {/* ── Header ── */}
-      <View style={[s.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={[s.backBtn, { backgroundColor: tc.sectionBg }]} hitSlop={{ top: rs(10), bottom: rs(10), left: rs(10), right: rs(10) }}>
-          <Ionicons name="chevron-back" size={20} color={tc.textPrimary} />
-        </Pressable>
-        <Text style={[s.headerTitle, { color: tc.textPrimary }]}>Events</Text>
-        <View style={{ width: s.backBtn.width }} />
-      </View>
-
-      {/* ── Hero banner ── */}
-      <LinearGradient
-        colors={[Colors.brand.orange, "#FF9A3C"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={s.hero}
-      >
-        <View>
-          <Text style={s.heroTitle}>Discover Events 🎊</Text>
-          <Text style={s.heroDesc}>Find exciting events happening in your city</Text>
-        </View>
-        <View style={s.heroStat}>
-          <Text style={s.heroStatNum}>{events.filter((e) => e.category === "upcoming").length}</Text>
-          <Text style={s.heroStatLbl}>Upcoming</Text>
-        </View>
-      </LinearGradient>
-
-      {/* ── Tabs ── */}
-      <View style={[s.tabRow, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        {TABS.map((t) => {
-          const active = tab === t;
-          return (
-            <Pressable key={t} onPress={() => setTab(t)} style={[s.tab, { backgroundColor: tc.sectionBg }, active && s.tabActive]}>
-              <Text style={[s.tabText, { color: tc.textSecondary }, active && s.tabTextActive]}>{t}</Text>
-              {t === "Saved" && savedIds.size > 0 && (
-                <View style={[s.tabBadge, active && { backgroundColor: "rgba(255,255,255,0.35)" }]}>
-                  <Text style={s.tabBadgeText}>{savedIds.size}</Text>
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+    <>
+    <DPage title="Events" sub={upcomingCount > 0 ? `${upcomingCount} coming up near you` : undefined} onBack={() => goBackOr("/(tabs)/feed")}>
+      <Segmented
+        style={{ marginHorizontal: 16, marginBottom: 14 }}
+        items={TABS.map((t) => ({ key: t, label: t === "Saved" && savedIds.size > 0 ? `Saved · ${savedIds.size}` : t }))}
+        value={tab}
+        onChange={(k) => setTab(k as typeof TABS[number])}
+      />
 
       {error ? (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: rs(8), paddingHorizontal: rs(16), paddingVertical: rs(10), backgroundColor: tc.sectionBg }}>
-          <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
-          <Text style={{ flex: 1, fontSize: rs(13), fontWeight: "600", color: tc.textSecondary }}>{error}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 14, backgroundColor: tc.warningBg }}>
+          <Ionicons name="alert-circle-outline" size={18} color={tc.warningText} />
+          <Text style={[TYPE.small, { flex: 1, color: tc.warningText }]}>{error}</Text>
         </View>
       ) : null}
 
-      {/* ── Event list ── */}
-      {loading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: rs(10) }}>
-          <ActivityIndicator size="large" color={Colors.brand.orange} />
-        </View>
-      ) : (
-      <ScrollView
-        style={[s.scroll, { backgroundColor: tc.pageBg }]}
-        contentContainerStyle={s.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {filtered.map((event) => {
-          const saved = savedIds.has(event.id);
-          const interested = interestedIds.has(event.id);
-          return (
-            <Pressable key={event.id} style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]} onPress={() => setSelectedEvent(event)}>
-              {/* Card image */}
-              <FadeImage uri={event.image} style={s.cardImg} />
+      {loading ? <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} /> : null}
 
-              {/* Price overlay */}
-              <View style={[s.priceOverlay, { backgroundColor: event.price === "Free" ? "#16A34A" : Colors.brand.orange }]}>
-                <Text style={s.priceOverlayText}>{event.price}</Text>
+      {!loading && filtered.map((event, i) => {
+        const saved = savedIds.has(event.id);
+        const interested = interestedIds.has(event.id);
+        const day = event.date.split(",")[0]?.toUpperCase() ?? "";
+        const num = event.date.split(" ").pop() ?? "";
+        const going = event.attendees + (interested ? 1 : 0);
+        const past = event.category === "past";
+        return (
+          <Reveal key={event.id} i={i} style={{ marginHorizontal: 16, marginBottom: 10 }}>
+            <PressableScale onPress={() => setSelectedEvent(event)} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}
+              style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, opacity: past ? 0.75 : 1 }}>
+              <View style={{ width: 54, height: 60, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+                <Text style={[TYPE.label, { color: tc.accentText, fontSize: 11 }]}>{day}</Text>
+                <Text style={[display(800), { fontSize: 22, color: tc.textPrimary, lineHeight: 24 }]}>{num}</Text>
               </View>
-
-              {/* Save button overlay */}
-              <Pressable
-                style={s.saveOverlay}
-                onPress={(e) => { e.stopPropagation(); toggleSave(event.id); }}
-                hitSlop={{ top: rs(8), bottom: rs(8), left: rs(8), right: rs(8) }}
-              >
-                <Ionicons
-                  name={saved ? "bookmark" : "bookmark-outline"}
-                  size={18}
-                  color={saved ? Colors.brand.orange : "#FFF"}
-                />
-              </Pressable>
-
-              <View style={s.cardBody}>
-                {/* Date + title */}
-                <View style={s.cardHeader}>
-                  <View style={s.dateBadge}>
-                    <Text style={s.dateBadgeDay}>{event.date.split(",")[0]}</Text>
-                    <Text style={s.dateBadgeDate}>{event.date.split(", ")[1]?.split(" ").slice(0, 2).join(" ")}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.cardTitle, { color: tc.textPrimary }]} numberOfLines={2}>
-                      {event.emoji} {event.title}
-                    </Text>
-                    <RatingSummary // SPRINT-42: browse card aggregate
-                      averageRating={event.averageRating}
-                      totalReviews={event.totalReviews}
-                      size="sm"
-                      textColor={tc.textPrimary}
-                      mutedColor={tc.textTertiary}
-                      style={{ marginTop: rs(4) }}
-                    />
-                    <View style={s.cardMetaRow}>
-                      <Ionicons name="time-outline" size={11} color={tc.textTertiary} />
-                      <Text style={[s.cardMetaText, { color: tc.textTertiary }]}>{event.time}</Text>
-                    </View>
-                    <View style={s.cardMetaRow}>
-                      <Ionicons name="location-outline" size={11} color={tc.textTertiary} />
-                      <Text style={[s.cardMetaText, { color: tc.textTertiary }]}>{event.location}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Tags */}
-                <View style={s.tagRow}>
-                  {event.tags.map((tag) => (
-                    <View key={tag} style={[s.tag, { backgroundColor: tc.sectionBg }]}>
-                      <Text style={[s.tagText, { color: tc.textSecondary }]}>{tag}</Text>
-                    </View>
-                  ))}
-                  <View style={s.attendeeChip}>
-                    <Ionicons name="people-outline" size={11} color={Colors.brand.blue} />
-                    <Text style={s.attendeeText}>{event.attendees + (interested ? 1 : 0)} going</Text>
-                  </View>
-                </View>
-
-                {/* Actions */}
-                <View style={s.actions}>
-                  <Pressable
-                    style={[s.interestedBtn, interested && s.interestedBtnActive]}
-                    onPress={(e) => { e.stopPropagation(); toggleInterested(event.id); }}
-                  >
-                    <Ionicons
-                      name={interested ? "checkmark-circle" : "star-outline"}
-                      size={15}
-                      color={interested ? Colors.brand.green : Colors.brand.orange}
-                    />
-                    <Text style={[s.interestedBtnText, interested && { color: Colors.brand.green }]}>
-                      {interested ? "Going" : "Interested"}
-                    </Text>
-                  </Pressable>
-
-                  {event.category !== "past" && (
-                    <Pressable
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        setSelectedEvent(event);
-                      }}
-                    >
-                      <LinearGradient
-                        colors={[Colors.brand.orange, "#E56800"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={s.rsvpBtn}
-                      >
-                        <Text style={s.rsvpBtnText}>RSVP</Text>
-                      </LinearGradient>
-                    </Pressable>
-                  )}
-                </View>
+              <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={2}>{event.title}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[event.time, event.location].filter(Boolean).join(" · ")}</Text>
+                <Text style={[TYPE.small, { color: interested ? tc.successText : tc.textTertiary }]} numberOfLines={1}>
+                  {[interested ? "You are going" : going > 0 ? `${going} going` : "", event.price].filter(Boolean).join(" · ")}
+                </Text>
               </View>
-            </Pressable>
-          );
-        })}
+              <View>
+                <FadeImage uri={event.image} style={{ width: 60, height: 60, borderRadius: 14 }} />
+                <Pressable onPress={() => void toggleSave(event.id)} hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? "Remove from saved" : "Save event"}
+                  style={{ position: "absolute", top: -6, right: -6, width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.sheetBg, borderWidth: 1, borderColor: tc.glassLine }}>
+                  <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={14} color={saved ? tc.accentText : tc.textSecondary} />
+                </Pressable>
+              </View>
+            </PressableScale>
+          </Reveal>
+        );
+      })}
 
-        {filtered.length === 0 && (
-          <View style={s.emptyState}>
-            <Text style={{ fontSize: rs(52) }}>🎊</Text>
-            <Text style={[s.emptyTitle, { color: tc.textPrimary }]}>No events found</Text>
-            <Text style={[s.emptyDesc, { color: tc.textSecondary }]}>
-              {tab === "Saved"
-                ? "Save events to find them here later"
-                : "Check back soon for new events!"}
-            </Text>
-          </View>
-        )}
-
-        <View style={{ height: rs(40) }} />
-      </ScrollView>
-      )}
+      {!loading && filtered.length === 0 ? (
+        <EmptyState
+          icon="calendar-outline"
+          title={tab === "Saved" ? "No saved events" : tab === "Past" ? "No past events" : "Nothing coming up yet"}
+          sub={tab === "Saved" ? "Tap the bookmark on an event to keep it here." : "Host one: tap + and choose An event."}
+        />
+      ) : null}
+    </DPage>
 
       {/* ── Event detail modal ── */}
       <EventDetailModal
@@ -1023,7 +902,7 @@ export default function EventsScreen() {
         isSaved={selectedEvent ? savedIds.has(selectedEvent.id) : false}
         onSaveToggle={() => selectedEvent && toggleSave(selectedEvent.id)}
       />
-    </SafeAreaView>
+    </>
   );
 }
 

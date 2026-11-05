@@ -136,7 +136,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | event-detail | `EventDetailModal` | not started |
 | event-register | `EventRegistrationModal` | not started |
 | event-ticket | ticket in `EventRegistrationModal` | not started |
-| events-all | `app/events.tsx` | not started |
+| events-all | `app/events.tsx` (its own detail sheet keeps the base coat) | phone-checked (list, save, unsave) |
 | check-in | `app/events/[id]/check-in.tsx` | not started |
 | story-viewer | `app/story-viewer.tsx` | not started |
 | profile | `app/profile.tsx` (roommate-preferences sheet still base coat) | phone-checked |
