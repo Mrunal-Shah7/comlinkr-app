@@ -28,12 +28,15 @@ import {
 import { ApiError } from "../src/api/client";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { TYPE } from '../src/theme/d';
+import { GradientButton, GradientFill, Reveal, SoftButton } from '../src/shared/d';
+import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
 const BADGE_META: Record<string, { label: string; icon: string; gradient: [string, string]; unlocks: string }> = {
-  landlord:         { label: "Verified Landlord",         icon: "home",       gradient: ["#1A6BAE", "#0054CC"], unlocks: "Post housing listings & manage properties" },
-  restaurant_owner: { label: "Verified Restaurant Owner", icon: "restaurant", gradient: ["#30855B", "#256B49"], unlocks: "List & manage your restaurant" },
-  agency:           { label: "Verified Agency",           icon: "business",   gradient: ["#257A86", "#E56800"], unlocks: "Post unlimited listings with agency branding" },
-  local_reviewer:   { label: "Local Reviewer",            icon: "star",       gradient: ["#8B5CF6", "#6D3FD1"], unlocks: "Share trusted local reviews & recommendations" },
+  landlord:         { label: "Verified landlord",         icon: "home",       gradient: ["#1A6BAE", "#0054CC"], unlocks: "Post housing listings & manage properties" },
+  restaurant_owner: { label: "Verified restaurant owner", icon: "restaurant", gradient: ["#30855B", "#256B49"], unlocks: "List & manage your restaurant" },
+  agency:           { label: "Verified agency",           icon: "business",   gradient: ["#257A86", "#E56800"], unlocks: "Post unlimited listings with agency branding" },
+  local_reviewer:   { label: "Local reviewer",            icon: "star",       gradient: ["#8B5CF6", "#6D3FD1"], unlocks: "Share trusted local reviews & recommendations" },
 };
 
 const STATUS_CONFIG: Record<VerificationStatus, {
@@ -45,7 +48,7 @@ const STATUS_CONFIG: Record<VerificationStatus, {
   desc: string;
 }> = {
   none: {
-    label: "Not Applied",
+    label: "Not applied",
     icon: "ellipse-outline",
     color: "#9CA3AF",
     bg: "#F9FAFB",
@@ -53,7 +56,7 @@ const STATUS_CONFIG: Record<VerificationStatus, {
     desc: "Apply for this badge to show verified trust on your listings and profile.",
   },
   pending: {
-    label: "Under Review",
+    label: "In review",
     icon: "time",
     color: "#D97706",
     bg: "#FFFBEB",
@@ -69,7 +72,7 @@ const STATUS_CONFIG: Record<VerificationStatus, {
     desc: "Your badge is active. You have full access to all associated features.",
   },
   rejected: {
-    label: "Not Approved",
+    label: "Not approved",
     icon: "close-circle",
     color: "#DC2626",
     bg: "#FEF2F2",
@@ -99,106 +102,60 @@ function BadgeStatusCard({
   const statusCfg = STATUS_CONFIG[status];
   const { isDark, tc } = useTheme();
 
+  const tone = status === "verified" ? { bg: tc.mintSoft, fg: tc.successText } : status === "pending" ? { bg: tc.warningBg, fg: tc.warningText } : status === "rejected" ? { bg: "rgba(239,68,68,0.12)", fg: tc.dangerText } : { bg: tc.inputBg, fg: tc.textSecondary };
+  const ICON: Record<string, keyof typeof Ionicons.glyphMap> = { landlord: "home-outline", restaurant_owner: "restaurant-outline", agency: "business-outline", local_reviewer: "star-outline" };
+  const steps: [string, "done" | "cur" | "todo"][] = [["Application sent", "done"], ["Being reviewed", "cur"], ["Badge on your profile", "todo"]];
   return (
-    <View style={[styles.statusCard, { borderColor: isDark ? tc.borderLight : statusCfg.border, backgroundColor: isDark ? tc.cardBg : statusCfg.bg }]}>
-      {/* Badge header */}
-      <View style={styles.statusCardHeader}>
-        <LinearGradient
-          colors={status === "verified" ? meta.gradient : ["#D1D5DB", "#9CA3AF"]}
-          style={styles.badgeIconBox}
-        >
-          <Ionicons name={meta.icon as any} size={18} color="#FFF" />
-        </LinearGradient>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.badgeLabel, { color: tc.textPrimary }]}>{meta.label}</Text>
-          <Text style={[styles.badgeUnlocks, { color: tc.textSecondary }]} numberOfLines={1}>{meta.unlocks}</Text>
+    <Reveal style={{ marginHorizontal: 16, marginBottom: 12, padding: 14, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        {status === "verified" ? (
+          <GradientFill style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" }}><Ionicons name={ICON[badge] ?? "ribbon-outline"} size={20} color="#fff" /></GradientFill>
+        ) : (
+          <View style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}><Ionicons name={ICON[badge] ?? "ribbon-outline"} size={20} color={tc.accentText} /></View>
+        )}
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{meta.label}</Text>
+          <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{meta.unlocks}</Text>
         </View>
-        <View style={[styles.statusPill, { backgroundColor: statusCfg.color + "18" }]}>
-          <Ionicons name={statusCfg.icon as any} size={12} color={statusCfg.color} />
-          <Text style={[styles.statusPillText, { color: statusCfg.color }]}>{statusCfg.label}</Text>
-        </View>
+        <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 9, backgroundColor: tone.bg }}><Text style={[TYPE.label, { fontSize: 11, color: tone.fg }]}>{statusCfg.label}</Text></View>
       </View>
 
-      {/* Status description */}
-      <Text style={[styles.statusDesc, { color: tc.textSecondary }]}>{statusCfg.desc}</Text>
-
-      {/* Rejection reason */}
-      {status === "rejected" && rejectionReason && (
-        <View style={[styles.rejectionBox, isDark && { backgroundColor: "#3B0A0A" }]}>
-          <Ionicons name="information-circle" size={14} color="#DC2626" />
-          <Text style={[styles.rejectionText, isDark && { color: "#FCA5A5" }]}>{rejectionReason}</Text>
-        </View>
-      )}
-
-      {/* Verified — celebration banner */}
-      {status === "verified" && (
-        <View style={[styles.verifiedFeatures, isDark && { backgroundColor: "#0A2E18" }]}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-            <Text style={[styles.verifiedClaimedTitle, isDark && { color: "#86EFAC" }]}>Badge Claimed & Verified!</Text>
-          </View>
-          <Text style={[styles.verifiedFeaturesText, isDark && { color: "#86EFAC" }]}>
-            All features are unlocked and active. Your {meta.label} badge is publicly shown on your profile and listings.
-          </Text>
-        </View>
-      )}
-
-      {/* CTA buttons */}
-      <View style={styles.statusCardActions}>
-        {(status === "none" || status === "rejected") && (
-          <Pressable
-            onPress={onApply}
-            style={({ pressed }) => [styles.applyBtn, pressed && { opacity: 0.8 }]}
-          >
-            <LinearGradient
-              colors={meta.gradient}
-              style={styles.applyBtnGrad}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Ionicons name={status === "rejected" ? "refresh" : "arrow-forward-circle"} size={14} color="#FFF" />
-              <Text style={styles.applyBtnText}>
-                {status === "rejected" ? "Re-apply" : "Apply Now"}
-              </Text>
-            </LinearGradient>
-          </Pressable>
-        )}
-
-        {status === "pending" && (
-          <View style={{ flex: 1, gap: rs(8) }}>
-            <View style={styles.pendingNote}>
-              <Ionicons name="time-outline" size={14} color="#D97706" />
-              <Text style={styles.pendingNoteText}>Estimated: within 48 hours</Text>
+      {status === "pending" ? (
+        <View style={{ marginTop: 14, marginLeft: 6 }}>
+          {steps.map(([t, st], i) => (
+            <View key={t} style={{ flexDirection: "row", gap: 12 }}>
+              <View style={{ alignItems: "center", width: 16 }}>
+                <View style={{ width: 14, height: 14, borderRadius: 7, marginTop: 3, backgroundColor: st === "done" ? tc.mint : st === "cur" ? tc.accent : tc.surface3, borderWidth: st === "cur" ? 3 : 0, borderColor: tc.accentSoft }} />
+                {i < steps.length - 1 ? <View style={{ flex: 1, width: 2, backgroundColor: st === "done" ? tc.mint : tc.surface3, marginVertical: 2 }} /> : null}
+              </View>
+              <View style={{ paddingBottom: 14, flex: 1 }}>
+                <Text style={[TYPE.bodyStrong, { color: st === "todo" ? tc.textTertiary : tc.textPrimary, fontSize: 14 }]}>{t}</Text>
+                {st === "cur" ? <Text style={[TYPE.small, { color: tc.textTertiary }]}>Usually within 48 hours</Text> : null}
+              </View>
             </View>
-            {onWithdraw ? (
-              <Pressable
-                onPress={onWithdraw}
-                disabled={withdrawing}
-                style={({ pressed }) => [
-                  { flexDirection: "row", alignItems: "center", gap: rs(6), alignSelf: "flex-start" },
-                  (pressed || withdrawing) && { opacity: 0.6 },
-                ]}
-              >
-                {withdrawing ? (
-                  <ActivityIndicator size="small" color="#DC2626" />
-                ) : (
-                  <Ionicons name="close-circle-outline" size={14} color="#DC2626" />
-                )}
-                <Text style={{ fontSize: rs(12), color: "#DC2626", fontWeight: "700" }}>Withdraw application</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        )}
+          ))}
+        </View>
+      ) : (
+        <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 10 }]}>{statusCfg.desc}</Text>
+      )}
 
-        {/* Demo: simulate approval (dev only) */}
-        {status === "pending" && __DEV__ && (
-          <Pressable onPress={onDemo} style={[styles.demoBtn, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-            <Ionicons name="flash" size={11} color={tc.textTertiary} />
-            <Text style={[styles.demoBtnText, { color: tc.textTertiary }]}>Demo: Simulate Approval</Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
+      {status === "rejected" && rejectionReason ? (
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 10, padding: 10, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.10)" }}>
+          <Ionicons name="information-circle" size={16} color={tc.dangerText} />
+          <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{rejectionReason}</Text>
+        </View>
+      ) : null}
+
+      {status === "none" || status === "rejected" ? (
+        <GradientButton small label={status === "rejected" ? "Apply again" : "Apply"} onPress={onApply} style={{ marginTop: 12 }} />
+      ) : null}
+      {status === "pending" && onWithdraw ? (
+        <SoftButton small ghost label={withdrawing ? "Withdrawing…" : "Withdraw application"} disabled={withdrawing} onPress={onWithdraw} />
+      ) : null}
+      {status === "pending" && __DEV__ ? (
+        <Pressable onPress={onDemo} hitSlop={6} style={{ marginTop: 10 }}><Text style={[TYPE.small, { color: tc.textTertiary, fontSize: 11.5 }]}>Dev only: simulate approval</Text></Pressable>
+      ) : null}
+    </Reveal>
   );
 }
 
@@ -318,104 +275,41 @@ export default function VerificationStatusScreen() {
 
   const { isDark, tc } = useTheme();
 
+  const PROTECT: [keyof typeof Ionicons.glyphMap, string][] = [
+    ["person-circle-outline", "Every landlord and restaurant is identity-checked before posting."],
+    ["map-outline", "UK homes are checked against the Land Registry and the EPC register."],
+    ["navigate-outline", "US homes are checked against official address records."],
+    ["flag-outline", "Three or more reports hide a suspicious listing straight away."],
+    ["ban-outline", "A revoked badge is gone for good, from that moment."],
+  ];
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable
-          onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }}
-          style={({ pressed }) => [styles.backBtn, { backgroundColor: tc.sectionBg }, pressed && { opacity: 0.7 }]}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: tc.textPrimary }]}>My Verification</Text>
-          <Text style={[styles.headerSub, { color: tc.textSecondary }]}>Badge status & applications</Text>
-        </View>
+    <DPage title="Badge status" sub="Badges show people they can trust you." onBack={() => goBackOr("/(tabs)/feed")}>
+      {loading ? <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} /> : badges.map((badge) => (
+        <BadgeStatusCard
+          key={badge}
+          badge={badge}
+          status={verificationStatus(badge)}
+          rejectionReason={rejections[badge]}
+          onApply={() => handleApply(badge)}
+          onDemo={() => handleDemoApprove(badge)}
+          onWithdraw={() => handleWithdraw(badge)}
+          withdrawing={withdrawingBadge === badge}
+        />
+      ))}
+
+      <Text style={[TYPE.overline, { color: tc.textTertiary, marginHorizontal: 30, marginTop: 16, marginBottom: 6 }]}>How we keep it safe</Text>
+      <View style={{ marginHorizontal: 16, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+        {PROTECT.map(([icon, text], i) => (
+          <View key={text} style={[{ flexDirection: "row", gap: 12, padding: 14, alignItems: "center" }, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+            <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}><Ionicons name={icon} size={17} color={tc.accentText} /></View>
+            <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]}>{text}</Text>
+          </View>
+        ))}
       </View>
-
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Intro card */}
-        <LinearGradient
-          colors={["#1A6BAE", "#30855B"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.introCard}
-        >
-          <Ionicons name="shield-checkmark" size={28} color="#FFF" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.introTitle}>ComLinkr Badges</Text>
-            <Text style={styles.introDesc}>
-              Badges show other members that landlords, restaurant owners and agencies are verified by our team.
-            </Text>
-          </View>
-        </LinearGradient>
-
-        {/* Badge status cards */}
-        <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>BADGE STATUS</Text>
-
-        {loading ? (
-          <View style={{ paddingVertical: rs(28), alignItems: "center" }}>
-            <ActivityIndicator size="large" color={Colors.brand.blue} />
-          </View>
-        ) : (
-          badges.map((badge) => (
-            <BadgeStatusCard
-              key={badge}
-              badge={badge}
-              status={verificationStatus(badge)}
-              rejectionReason={rejections[badge]}
-              onApply={() => handleApply(badge)}
-              onDemo={() => handleDemoApprove(badge)}
-              onWithdraw={() => handleWithdraw(badge)}
-              withdrawing={withdrawingBadge === badge}
-            />
-          ))
-        )}
-
-        {/* Marketplace trust section */}
-        <Text style={[styles.sectionLabel, { color: tc.textTertiary }]}>MARKETPLACE PROTECTION</Text>
-        <View style={[styles.protectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <View style={styles.protectionHeader}>
-            <LinearGradient colors={["#DC2626", "#EF4444"]} style={styles.protectionIcon}>
-              <Ionicons name="shield" size={16} color="#FFF" />
-            </LinearGradient>
-            <Text style={[styles.protectionTitle, { color: tc.textPrimary }]}>How We Protect Users</Text>
-          </View>
-          {[
-            { icon: "checkmark-circle", text: "Every landlord & restaurant is identity-verified before posting" },
-            { icon: "checkmark-circle", text: "UK properties cross-checked against Land Registry & EPC Register" },
-            { icon: "checkmark-circle", text: "US properties validated against official address databases" },
-            { icon: "checkmark-circle", text: "Community flagging: 3+ reports auto-hide a suspicious listing" },
-            { icon: "checkmark-circle", text: "All badge revocations are permanent and immediately effective" },
-          ].map((item, i) => (
-            <View key={i} style={styles.protectionRow}>
-              <Ionicons name={item.icon as any} size={14} color="#30855B" />
-              <Text style={[styles.protectionText, { color: tc.textSecondary }]}>{item.text}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Help */}
-        <View style={[styles.helpCard, { backgroundColor: isDark ? tc.pillBg : "#EEF5FF", borderColor: isDark ? tc.borderLight : "#BFDBFE" }]}>
-          <Ionicons name="help-circle-outline" size={20} color={Colors.brand.blue} />
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.helpTitle, { color: isDark ? tc.textPrimary : "#1E40AF" }]}>Need help with your application?</Text>
-            <Text style={[styles.helpDesc, { color: isDark ? tc.textSecondary : "#3B82F6" }]}>Contact our verification team at support@comlinkr.com</Text>
-          </View>
-          <Pressable onPress={() => router.push("/help-support" as any)}>
-            <Text style={styles.helpLink}>Get Help</Text>
-          </Pressable>
-        </View>
-
-        <View style={{ height: rs(40) }} />
-      </ScrollView>
-    </SafeAreaView>
+      <View style={{ marginHorizontal: 16, marginTop: 14, borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+        <DRow first icon="help-circle-outline" label="Help with an application" value="support@comlinkr.com" onPress={() => router.push("/help-support" as any)} />
+      </View>
+    </DPage>
   );
 }
 
