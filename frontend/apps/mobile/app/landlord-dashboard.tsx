@@ -1,5 +1,7 @@
 import { rs } from "../src/utils/responsive";
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { useWindowDimensions } from "react-native";
+import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -31,7 +33,7 @@ import { ApiError } from "../src/api/client";
 import { showToast } from "../src/shared/ui/Toast";
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { TYPE } from '../src/theme/d';
-import { EmptyState, GradientButton, GradientFill, PressableScale, Reveal, Segmented, SoftButton } from '../src/shared/d';
+import { EmptyState, GradientButton, GradientFill, PersonAvatar, PressableScale, Reveal, Segmented, SoftButton } from '../src/shared/d';
 import { DSheet } from '../src/shared/d/Sheet';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
@@ -59,6 +61,28 @@ function formatDate(iso?: string) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 type Tab = "applications" | "listings";
+
+/** A card that rises in like `Reveal`, then slides off sideways when a decision is made (approve right,
+ *  decline left: translateX ±110 %, opacity 0, 300 ms). */
+function SlideAway({ i, leaving, children }: { i: number; leaving?: "approved" | "rejected"; children: React.ReactNode }) {
+  const reduce = useReducedMotion();
+  const { width } = useWindowDimensions();
+  const x = useSharedValue(0);
+  const o = useSharedValue(1);
+  useEffect(() => {
+    if (!leaving) { x.value = 0; o.value = 1; return; }
+    const to = (leaving === "approved" ? 1 : -1) * width * 1.1;
+    if (reduce) { o.value = withTiming(0, { duration: 200 }); return; }
+    x.value = withTiming(to, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) });
+    o.value = withTiming(0, { duration: 300 });
+  }, [leaving, reduce, width, x, o]);
+  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateX: x.value }] }));
+  return (
+    <Reveal i={i} style={{ marginHorizontal: 16, marginBottom: 12 }}>
+      <Animated.View style={a}>{children}</Animated.View>
+    </Reveal>
+  );
+}
 
 export default function LandlordDashboard() {
   const { isDark, tc } = useTheme();
@@ -109,6 +133,23 @@ export default function LandlordDashboard() {
     setRefreshing(true);
     void loadData(true);
   }, [loadData]);
+
+  // One tap on a card: decide, slide the card off to its side, then move it down the list.
+  const [leaving, setLeaving] = useState<Record<string, "approved" | "rejected">>({});
+  const quickDecide = async (a: PropertyApplication, decision: "approved" | "rejected") => {
+    if (leaving[a.id]) return;
+    try {
+      const updated = await decideApplication(a.id, decision);
+      setLeaving((m) => ({ ...m, [a.id]: decision }));
+      setTimeout(() => {
+        setApplications((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+        setLeaving((m) => { const n = { ...m }; delete n[a.id]; return n; });
+      }, 320);
+      showToast(decision === "approved" ? `Approved. ${a.personalInfo?.fullName?.split(" ")[0] || "The applicant"} will hear from you.` : "Declined. The applicant is told.", "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not process decision.", "error");
+    }
+  };
 
   const handleDecide = async (decision: "approved" | "rejected") => {
     if (!selectedApp) return;
@@ -188,12 +229,10 @@ export default function LandlordDashboard() {
           const rows = appRows(a);
           const name = a.personalInfo?.fullName || "Applicant";
           return (
-            <Reveal key={a.id} i={i} style={{ marginHorizontal: 16, marginBottom: 12 }}>
+            <SlideAway key={a.id} i={i} leaving={leaving[a.id]}>
               <PressableScale onPress={() => { setSelectedApp(a); setDecisionNote(""); }} accessibilityRole="button" accessibilityLabel={`${name}, ${meta.label}`} style={[card, { padding: 14 }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                  <GradientFill style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
-                    <Text style={[TYPE.label, { color: "#fff", fontSize: 14 }]}>{name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}</Text>
-                  </GradientFill>
+                  <PersonAvatar name={name} size={40} />
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{name}</Text>
                     <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>for {a.listingTitle || "your listing"}</Text>
@@ -211,8 +250,14 @@ export default function LandlordDashboard() {
                   </View>
                 ) : null}
                 <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 8, fontSize: 12 }]}>{a.submittedAt ? `Sent ${formatDate(a.submittedAt)}` : `Started ${formatDate(a.createdAt)}`}</Text>
+                {a.status === "submitted" || a.status === "under_review" ? (
+                  <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                    <SoftButton small block ghost label="Decline" outerStyle={{ flex: 1 }} onPress={() => void quickDecide(a, "rejected")} />
+                    <GradientButton small block label="Approve" outerStyle={{ flex: 1 }} onPress={() => void quickDecide(a, "approved")} />
+                  </View>
+                ) : null}
               </PressableScale>
-            </Reveal>
+            </SlideAway>
           );
         })
       ) : listings.length === 0 ? (
