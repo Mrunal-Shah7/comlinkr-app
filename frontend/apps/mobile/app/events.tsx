@@ -40,6 +40,9 @@ import * as Brightness from "expo-brightness"; // SPRINT-42:
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { TYPE, display } from '../src/theme/d';
 import { EmptyState, PressableScale, Reveal, Segmented } from '../src/shared/d';
+import { EventDetailModal } from '../src/features/explore/components/EventDetailModal';
+import EventRegistrationModal from './components/modals/EventRegistrationModal';
+import type { ExploreEventRow } from '../src/features/explore/models';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';
 
@@ -55,6 +58,17 @@ const CATEGORY_EMOJI: Record<string, string> = {
   COMMUNITY: "🤝",
   EDUCATION: "📚",
 };
+
+/** The shared event detail takes Explore's row shape. */
+function toExploreRow(ev: EventItem, saved: boolean, going: boolean): ExploreEventRow {
+  return {
+    id: ev.id, title: ev.title, date: ev.date, time: ev.time, location: ev.location, image: ev.image, images: ev.image ? [ev.image] : [],
+    interested: ev.attendees, category: ev.tags[0] ?? "", price: ev.price, desc: ev.desc, host: ev.host, emoji: ev.emoji,
+    registeredByMe: going, isSaved: saved, isOwner: ev.isOwner, authorId: "", conversationId: null, canAccessChat: false,
+    averageRating: ev.averageRating, totalReviews: ev.totalReviews, rawDate: ev.rawDate, startTimeRaw: ev.startTimeRaw, endTimeRaw: ev.endTimeRaw,
+    isAttending: going, hasReviewed: ev.hasReviewed, myReviewId: ev.myReviewId,
+  };
+}
 
 type EventItem = {
   id: string;
@@ -131,620 +145,6 @@ function toUiEvent(e: ApiEvent): EventItem {
 const TABS = ["Upcoming", "Past", "Saved"] as const;
 
 // ── Registration modal ────────────────────────────────────────────────────────
-function RegistrationModal({
-  event,
-  visible,
-  onClose,
-}: {
-  event: EventItem | null;
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [tickets, setTickets] = useState(1);
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [ticket, setTicket] = useState<EventTicket | null>(null);
-  const { isDark, tc } = useTheme();
-  const priorBrightness = useRef<number | null>(null); // SPRINT-42: capture prior once per raise session
-  const brightnessGenRef = useRef(0); // SPRINT-42: invalidate in-flight raise after cancel
-
-  const restoreBrightness = useCallback(() => {
-    // SPRINT-42: bump gen so a late setBrightness(1) cannot stick
-    brightnessGenRef.current += 1; // SPRINT-42:
-    const prior = priorBrightness.current; // SPRINT-42:
-    if (prior != null) {
-      // SPRINT-42:
-      void Brightness.setBrightnessAsync(prior).catch(() => {}); // SPRINT-42:
-      priorBrightness.current = null; // SPRINT-42:
-    }
-  }, []);
-
-  useEffect(() => {
-    // SPRINT-42: raise brightness while QR visible
-    if (!visible || !submitted || !ticket?.qrCode) return; // SPRINT-42:
-    const gen = ++brightnessGenRef.current; // SPRINT-42:
-    let cancelled = false; // SPRINT-42:
-    let sessionPrior: number | null = priorBrightness.current; // SPRINT-42: local prior for late-max restore
-    void (async () => {
-      // SPRINT-42:
-      try {
-        if (sessionPrior == null) {
-          // SPRINT-42: capture prior once
-          const current = await Brightness.getBrightnessAsync(); // SPRINT-42:
-          if (cancelled || gen !== brightnessGenRef.current) return; // SPRINT-42:
-          sessionPrior = current; // SPRINT-42:
-          priorBrightness.current = current; // SPRINT-42:
-        }
-        if (cancelled || gen !== brightnessGenRef.current) return; // SPRINT-42:
-        await Brightness.setBrightnessAsync(1); // SPRINT-42:
-        if (cancelled || gen !== brightnessGenRef.current) {
-          // SPRINT-42: late max after cancel — restore using session prior (ref may already be null)
-          if (sessionPrior != null) void Brightness.setBrightnessAsync(sessionPrior).catch(() => {}); // SPRINT-42:
-        }
-      } catch {
-        /* optional */ // SPRINT-42:
-      }
-    })();
-    return () => {
-      cancelled = true; // SPRINT-42:
-      restoreBrightness(); // SPRINT-42:
-    };
-  }, [visible, submitted, ticket?.qrCode, restoreBrightness]);
-
-  useEffect(() => {
-    // SPRINT-42: restore when modal hides without handleClose
-    if (!visible) restoreBrightness(); // SPRINT-42:
-  }, [visible, restoreBrightness]);
-
-  const handleClose = () => {
-    restoreBrightness(); // SPRINT-42:
-    setSubmitted(false);
-    setName("");
-    setEmail("");
-    setTickets(1);
-    setTicket(null);
-    onClose();
-  };
-
-  if (!event) return null;
-  const isFree = event.price === "Free";
-  const priceNum = isFree ? 0 : parseFloat(event.price.replace("$", ""));
-  const totalPrice = isFree ? "Free" : `$${(priceNum * tickets).toFixed(0)}`;
-
-  const handleConfirm = async () => {
-    setSubmitting(true);
-    try {
-      const issuedTicket = await registerWithDetails(event.id, {
-        name: name.trim(),
-        email: email.trim(),
-        quantity: tickets,
-      });
-      setTicket(issuedTicket);
-      setSubmitted(true);
-    } catch (err) {
-      appAlert(
-        "Registration failed",
-        err instanceof ApiError ? err.message : "Could not complete registration. Try again."
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={handleClose}>
-      <Pressable style={rm.overlay} onPress={handleClose}>
-        <Pressable style={[rm.sheet, { backgroundColor: tc.pageBg }]} onPress={() => {}}>
-          <View style={rm.handle} />
-
-          {submitted ? (
-            /* ── Success state ── */
-            <ScrollView contentContainerStyle={rm.successWrap} showsVerticalScrollIndicator={false}>
-              <LinearGradient colors={["#22C55E", "#16A34A"]} style={rm.successCircle}>
-                <Ionicons name="checkmark" size={42} color="#FFF" />
-              </LinearGradient>
-              <Text style={[rm.successTitle, { color: tc.textPrimary }]}>You're Registered! 🎉</Text>
-              <Text style={[rm.successSub, { color: tc.textSecondary }]}>
-                Confirmation sent to{" "}
-                <Text style={{ fontWeight: "800", color: Colors.brand.blue }}>
-                  {email || "your email"}
-                </Text>
-              </Text>
-
-              {/* Ticket visual */}
-              <View style={[rm.ticketVisual, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                {/* Ticket header */}
-                <LinearGradient
-                  colors={[Colors.brand.orange, "#CC5800"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={rm.ticketVisualHeader}
-                >
-                  <Text style={rm.ticketVisualEmoji}>{event.emoji}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={rm.ticketVisualLabel}>YOUR TICKET</Text>
-                    <Text style={rm.ticketVisualName} numberOfLines={2}>{event.title}</Text>
-                  </View>
-                </LinearGradient>
-
-                {/* Ticket detail rows */}
-                <View style={rm.ticketDetailBlock}>
-                  {[
-                    { icon: "calendar-outline" as const, text: event.date, color: Colors.brand.orange },
-                    { icon: "time-outline" as const, text: event.time, color: Colors.brand.blue },
-                    { icon: "location-outline" as const, text: event.location, color: Colors.brand.blue },
-                    { icon: "ticket-outline" as const, text: `${tickets} ticket${tickets > 1 ? "s" : ""} · ${totalPrice}`, color: isFree ? Colors.brand.green : Colors.brand.orange },
-                  ].map((row, i) => (
-                    <View key={i} style={rm.ticketDetailRow}>
-                      <View style={[rm.ticketDetailIcon, { backgroundColor: row.color + "18" }]}>
-                        <Ionicons name={row.icon} size={13} color={row.color} />
-                      </View>
-                      <Text style={[rm.ticketDetailText, { color: tc.textPrimary }]}>{row.text}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Tear separator */}
-                <View style={rm.ticketTear}>
-                  <View style={rm.ticketTearCircleL} />
-                  <View style={rm.ticketTearLine} />
-                  <View style={rm.ticketTearCircleR} />
-                </View>
-
-                {/* QR code */}
-                <View style={[rm.ticketQRStub, { backgroundColor: "#FFFFFF" }]}>
-                  {ticket?.qrCode ? (
-                    <View style={{ backgroundColor: "#FFFFFF", padding: rs(12), borderWidth: 1, borderColor: "#111827", borderRadius: rs(8) }}>
-                      {/* SPRINT-42: arm's-length high-contrast server QR */}
-                      <Image
-                        source={{ uri: ticket.qrCode.startsWith("http") || ticket.qrCode.startsWith("data:") ? ticket.qrCode : `data:image/png;base64,${ticket.qrCode}` }}
-                        style={{ width: rs(220), height: rs(220) }}
-                        resizeMode="contain"
-                      />
-                    </View>
-                  ) : (
-                    <Ionicons name="qr-code-outline" size={60} color={Colors.text.tertiary} />
-                  )}
-                  <Text style={rm.ticketQRHint}>Scan QR at event entry</Text>
-                  {ticket?.id ? (
-                    <Text style={{ fontSize: rs(10), color: Colors.text.tertiary, fontWeight: "600", letterSpacing: 1 }}>
-                      #{ticket.id.slice(-8).toUpperCase()}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-
-              <Pressable style={rm.doneBtn} onPress={handleClose}>
-                <LinearGradient
-                  colors={[Colors.brand.green, "#16A34A"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={rm.doneBtnGrad}
-                >
-                  <Text style={rm.doneBtnText}>Done</Text>
-                </LinearGradient>
-              </Pressable>
-              <View style={{ height: rs(28) }} />
-            </ScrollView>
-          ) : (
-            /* ── Form state ── */
-            <>
-              {/* Event image header */}
-              <View style={rm.imgHeader}>
-                <FadeImage uri={event.image} style={StyleSheet.absoluteFill} cachePolicy="disk" transition={300} />
-                <LinearGradient
-                  colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.80)"]}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={rm.registerPill}>
-                  <Ionicons name="ticket-outline" size={10} color="#FFF" />
-                  <Text style={rm.registerPillText}>REGISTER</Text>
-                </View>
-                <Pressable onPress={handleClose} style={rm.imgCloseBtn}>
-                  <Ionicons name="close" size={16} color="#FFF" />
-                </Pressable>
-                <View style={rm.imgHeaderBody}>
-                  <Text style={rm.imgHeaderEmoji}>{event.emoji}</Text>
-                  <Text style={rm.imgHeaderTitle} numberOfLines={2}>{event.title}</Text>
-                  <View style={rm.imgHeaderMeta}>
-                    <Ionicons name="calendar-outline" size={11} color="rgba(255,255,255,0.8)" />
-                    <Text style={rm.imgHeaderMetaText}>{event.date} · {event.time}</Text>
-                  </View>
-                </View>
-              </View>
-
-              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={rm.formScroll}>
-                {/* Price badge */}
-                <View style={[rm.priceBadge, {
-                  backgroundColor: isFree ? Colors.brand.greenLight : Colors.brand.orangeLight,
-                  borderColor: isFree ? Colors.brand.green + "35" : Colors.brand.orange + "35",
-                }]}>
-                  <Ionicons name="ticket-outline" size={14} color={isFree ? Colors.brand.green : Colors.brand.orange} />
-                  <Text style={[rm.priceBadgeText, { color: isFree ? Colors.brand.green : Colors.brand.orange }]}>
-                    {isFree ? "Free Entry" : `${event.price} per ticket`}
-                  </Text>
-                </View>
-
-                {/* Fields card */}
-                <View style={[rm.formCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                  <View style={rm.fieldGroup}>
-                    <Text style={[rm.fieldLabel, { color: tc.textTertiary }]}>Full Name</Text>
-                    <View style={[rm.inputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                      <Ionicons name="person-outline" size={16} color={Colors.text.tertiary} style={rm.inputIcon} />
-                      <TextInput
-                        style={[rm.input, { color: tc.textPrimary }]}
-                        placeholder="Your full name"
-                        placeholderTextColor={Colors.text.tertiary}
-                        value={name}
-                        onChangeText={setName}
-                        autoCapitalize="words"
-                      />
-                    </View>
-                  </View>
-                  <View style={rm.formDivider} />
-                  <View style={rm.fieldGroup}>
-                    <Text style={[rm.fieldLabel, { color: tc.textTertiary }]}>Email Address</Text>
-                    <View style={[rm.inputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                      <Ionicons name="mail-outline" size={16} color={Colors.text.tertiary} style={rm.inputIcon} />
-                      <TextInput
-                        style={[rm.input, { color: tc.textPrimary }]}
-                        placeholder="your@email.com"
-                        placeholderTextColor={Colors.text.tertiary}
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                  </View>
-                </View>
-
-                {/* Ticket count card */}
-                <View style={[rm.ticketStepCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                  <Text style={[rm.ticketStepTitle, { color: tc.textTertiary }]}>Number of Tickets</Text>
-                  <View style={rm.ticketStepRow}>
-                    <Pressable
-                      style={[rm.ticketBtn, tickets <= 1 && rm.ticketBtnDisabled]}
-                      onPress={() => setTickets((t) => Math.max(1, t - 1))}
-                    >
-                      <Ionicons name="remove" size={20} color={tickets <= 1 ? Colors.text.tertiary : Colors.brand.orange} />
-                    </Pressable>
-                    <View style={[rm.ticketCount, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                      <Text style={[rm.ticketCountNum, { color: tc.textPrimary }]}>{tickets}</Text>
-                      <Text style={[rm.ticketCountLbl, { color: tc.textTertiary }]}>ticket{tickets > 1 ? "s" : ""}</Text>
-                    </View>
-                    <Pressable
-                      style={[rm.ticketBtn, tickets >= 10 && rm.ticketBtnDisabled]}
-                      onPress={() => setTickets((t) => Math.min(10, t + 1))}
-                    >
-                      <Ionicons name="add" size={20} color={tickets >= 10 ? Colors.text.tertiary : Colors.brand.orange} />
-                    </Pressable>
-                    <View style={rm.totalBox}>
-                      <Text style={rm.totalLabel}>Total</Text>
-                      <Text style={[rm.totalValue, { color: isFree ? Colors.brand.green : Colors.brand.orange }]}>
-                        {totalPrice}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Hosted by */}
-                <View style={[rm.hostedRow, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                  <LinearGradient
-                    colors={[Colors.brand.blue, Colors.brand.green]}
-                    style={rm.hostedAvatar}
-                  >
-                    <Ionicons name="person" size={17} color="#FFF" />
-                  </LinearGradient>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[rm.hostedLabel, { color: tc.textTertiary }]}>Hosted by</Text>
-                    <Text style={[rm.hostedName, { color: tc.textPrimary }]}>{event.host}</Text>
-                  </View>
-                  <View style={rm.verifiedBadge}>
-                    <Ionicons name="shield-checkmark" size={11} color={Colors.brand.green} />
-                    <Text style={rm.verifiedText}>Verified</Text>
-                  </View>
-                </View>
-
-                <View style={{ height: rs(8) }} />
-              </ScrollView>
-
-              {/* CTA */}
-              <View style={[rm.ctaWrap, { backgroundColor: tc.headerBg, borderTopColor: tc.borderLight }]}>
-                <Pressable
-                  style={[rm.confirmBtn, (!name.trim() || !email.trim() || submitting) && rm.confirmBtnDisabled]}
-                  onPress={() => void handleConfirm()}
-                  disabled={!name.trim() || !email.trim() || submitting}
-                >
-                  <LinearGradient
-                    colors={(!name.trim() || !email.trim() || submitting) ? ["#D1D5DB", "#D1D5DB"] : [Colors.brand.orange, "#E56800"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={rm.confirmBtnGrad}
-                  >
-                    {submitting ? (
-                      <ActivityIndicator color="#FFF" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="ticket-outline" size={18} color="#FFF" />
-                        <Text style={rm.confirmBtnText}>
-                          Confirm{!isFree ? ` · ${totalPrice}` : " Registration"}
-                        </Text>
-                      </>
-                    )}
-                  </LinearGradient>
-                </Pressable>
-              </View>
-            </>
-          )}
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
-// ── Event detail modal ────────────────────────────────────────────────────────
-function EventDetailModal({
-  event,
-  visible,
-  onClose,
-  isInterested,
-  onToggle,
-  isSaved,
-  onSaveToggle,
-}: {
-  event: EventItem | null;
-  visible: boolean;
-  onClose: () => void;
-  isInterested: boolean;
-  onToggle: () => void;
-  isSaved: boolean;
-  onSaveToggle: () => void;
-}) {
-  const [showRegModal, setShowRegModal] = useState(false);
-  const [detailApi, setDetailApi] = useState<ApiEvent | null>(null); // SPRINT-42: load getEvent for reviews
-  const { tc } = useTheme();
-  const { requireAuth } = useRequireAuth();
-  const isPast = event?.category === "past";
-
-  useEffect(() => {
-    // SPRINT-42: share EventReviewsSection with feed by loading full detail
-    if (!visible || !event?.id) {
-      setDetailApi(null);
-      return;
-    }
-    let cancelled = false;
-    void getEvent(event.id)
-      .then((api) => {
-        if (!cancelled) setDetailApi(api);
-      })
-      .catch(() => {
-        if (!cancelled) setDetailApi(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [visible, event?.id]);
-
-  if (!event) return null;
-  const isFree = event.price === "Free";
-  const avg = detailApi?.averageRating ?? event.averageRating;
-  const total = detailApi?.totalReviews ?? event.totalReviews;
-
-  return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={[edm.root, { backgroundColor: tc.pageBg }]}>
-        <View style={edm.heroWrap}>
-          <FadeImage uri={event.image} style={edm.heroImg} cachePolicy="disk" transition={300} />
-          <LinearGradient
-            colors={["rgba(0,0,0,0.52)", "transparent", "rgba(0,0,0,0.82)"]}
-            style={StyleSheet.absoluteFill}
-          />
-          <TouchableOpacity style={edm.backBtn} onPress={onClose} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={22} color="#FFF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={edm.saveBtn} onPress={onSaveToggle} activeOpacity={0.8}>
-            <Ionicons
-              name={isSaved ? "bookmark" : "bookmark-outline"}
-              size={20}
-              color={isSaved ? Colors.brand.orange : "#FFF"}
-            />
-          </TouchableOpacity>
-          <View style={edm.heroBadgeRow}>
-            <View style={[edm.badge, { backgroundColor: isFree ? "#16A34A" : Colors.brand.orange }]}>
-              <Ionicons name="ticket-outline" size={11} color="#FFF" />
-              <Text style={edm.badgeText}>{event.price}</Text>
-            </View>
-            {isPast && (
-              <View style={[edm.badge, { backgroundColor: "rgba(0,0,0,0.55)" }]}>
-                <Text style={edm.badgeText}>Past Event</Text>
-              </View>
-            )}
-          </View>
-          <View style={edm.heroBottom}>
-            <Text style={edm.heroEmoji}>{event.emoji}</Text>
-            <Text style={edm.heroTitle}>{event.title}</Text>
-            <RatingSummary // SPRINT-42: detail hero aggregate
-              averageRating={avg}
-              totalReviews={total}
-              size="sm"
-              textColor="#FFF"
-              mutedColor="rgba(255,255,255,0.75)"
-              style={{ marginBottom: rs(6) }}
-            />
-            <View style={edm.heroMeta}>
-              <Ionicons name="time-outline" size={13} color="rgba(255,255,255,0.85)" />
-              <Text style={edm.heroMetaText}>{event.date} · {event.time}</Text>
-              <View style={edm.heroDot} />
-              <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.85)" />
-              <Text style={edm.heroMetaText}>{event.location}</Text>
-            </View>
-          </View>
-        </View>
-
-        <ScrollView style={[edm.scroll, { backgroundColor: tc.pageBg }]} contentContainerStyle={edm.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={[edm.statsRow, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-            <View style={edm.statItem}>
-              <Ionicons name="people" size={20} color={Colors.brand.blue} />
-              <Text style={[edm.statNum, { color: tc.textPrimary }]}>{event.attendees + (isInterested ? 1 : 0)}</Text>
-              <Text style={[edm.statLbl, { color: tc.textTertiary }]}>Going</Text>
-            </View>
-            <View style={edm.statDiv} />
-            <View style={edm.statItem}>
-              <Ionicons name="calendar-outline" size={20} color={Colors.brand.orange} />
-              <Text style={[edm.statNum, { color: tc.textPrimary }]}>{event.date.split(",")[0]}</Text>
-              <Text style={[edm.statLbl, { color: tc.textTertiary }]}>Date</Text>
-            </View>
-            <View style={edm.statDiv} />
-            <View style={edm.statItem}>
-              <Ionicons
-                name="ticket-outline"
-                size={20}
-                color={isFree ? Colors.brand.green : Colors.brand.orange}
-              />
-              <Text style={[edm.statNum, { color: isFree ? Colors.brand.green : Colors.brand.orange }]}>
-                {event.price}
-              </Text>
-              <Text style={[edm.statLbl, { color: tc.textTertiary }]}>Entry</Text>
-            </View>
-          </View>
-
-          <View style={edm.tagRow}>
-            {event.tags.map((tag) => (
-              <View key={tag} style={[edm.tag, { backgroundColor: tc.sectionBg }]}>
-                <Text style={[edm.tagText, { color: tc.textSecondary }]}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={edm.section}>
-            <Text style={[edm.sectionTitle, { color: tc.textPrimary }]}>About this Event</Text>
-            <LinkifiedText text={event.desc} style={[edm.description, { color: tc.textSecondary }]} />
-          </View>
-
-          <View style={edm.section}>
-            <Text style={[edm.sectionTitle, { color: tc.textPrimary }]}>Event Details</Text>
-            <View style={[edm.detailGrid, { borderColor: tc.borderLight }]}>
-              {[
-                { icon: "calendar-outline" as const, label: "Date", value: event.date },
-                { icon: "time-outline" as const, label: "Time", value: event.time },
-                { icon: "location-outline" as const, label: "Venue", value: event.location },
-                { icon: "person-outline" as const, label: "Hosted by", value: event.host },
-                { icon: "ticket-outline" as const, label: "Admission", value: event.price },
-                {
-                  icon: "people-outline" as const,
-                  label: "Attending",
-                  value: `${event.attendees + (isInterested ? 1 : 0)} people`,
-                },
-              ].map((d, i, arr) => (
-                <View
-                  key={d.label}
-                  style={[edm.detailRow, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }, i === arr.length - 1 && { borderBottomWidth: 0 }]}
-                >
-                  <View style={edm.detailIconBox}>
-                    <Ionicons name={d.icon} size={16} color={Colors.brand.blue} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[edm.detailLabel, { color: tc.textTertiary }]}>{d.label}</Text>
-                    <Text style={[edm.detailValue, { color: tc.textPrimary }]}>{d.value}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* SPRINT-42: shared reviews section; always available (eligibility gates write) */}
-          <View style={edm.section}>
-            <EventReviewsSection
-              eventId={event.id}
-              detailEvent={
-                detailApi
-                  ? {
-                      ...detailApi,
-                      registeredByMe: isInterested || detailApi.registeredByMe,
-                      isAttending: isInterested || detailApi.isAttending,
-                    }
-                  : null
-              }
-              onDetailRefreshed={(fresh) => setDetailApi(fresh)}
-            />
-          </View>
-
-          <View style={{ height: rs(120) }} />
-        </ScrollView>
-
-        <View style={[edm.cta, { backgroundColor: tc.headerBg, borderTopColor: tc.borderLight }]}>
-          {!isPast ? (
-            <>
-              <Pressable
-                style={[edm.ctaInterested, isInterested && edm.ctaInterestedActive]}
-                onPress={onToggle}
-              >
-                <Ionicons
-                  name={isInterested ? "checkmark-circle" : "star-outline"}
-                  size={18}
-                  color={isInterested ? Colors.brand.green : Colors.brand.orange}
-                />
-                <Text style={[edm.ctaInterestedText, isInterested && { color: Colors.brand.green }]}>
-                  {isInterested ? "Going" : "Interested"}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={edm.ctaChat}
-                onPress={() => {
-                  if (!requireAuth(undefined, "Sign in to message the host.")) return;
-                  router.push({
-                    pathname: "/chat",
-                    params: { eventTitle: event.title, recipientName: event.host, recipientType: "event" },
-                  } as any);
-                }}
-              >
-                <Ionicons name="chatbubbles-outline" size={19} color={Colors.brand.orange} />
-              </Pressable>
-              <Pressable
-                style={{ flex: 1, borderRadius: rs(14), overflow: "hidden" }}
-                onPress={() => { if (requireAuth(undefined, "Sign in to register for this event.")) setShowRegModal(true); }}
-              >
-                <LinearGradient
-                  colors={[Colors.brand.orange, "#E56800"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={edm.ctaRSVP}
-                >
-                  <Ionicons name="ticket-outline" size={17} color="#FFF" />
-                  <Text style={edm.ctaRSVPText}>Register / RSVP</Text>
-                </LinearGradient>
-              </Pressable>
-            </>
-          ) : (
-            <Pressable
-              style={[edm.ctaChat, { flex: 1, backgroundColor: Colors.brand.blueLight, borderColor: "#BFDBFE" }]}
-              onPress={() => {
-                if (!requireAuth(undefined, "Sign in to message the host.")) return;
-                router.push({
-                  pathname: "/chat",
-                  params: { eventTitle: event.title, recipientName: event.host, recipientType: "event" },
-                } as any);
-              }}
-            >
-              <Ionicons name="chatbubbles-outline" size={19} color={Colors.brand.blue} />
-              <Text style={{ marginLeft: 8, fontWeight: "800", color: Colors.brand.blue }}>Message Host</Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
-
-      <RegistrationModal
-        event={event}
-        visible={showRegModal}
-        onClose={() => setShowRegModal(false)}
-      />
-    </Modal>
-  );
-}
-
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function EventsScreen() {
   const { isDark, tc } = useTheme();
@@ -804,6 +204,8 @@ export default function EventsScreen() {
       appAlert("Could not update", "Try again.");
     }
   };
+
+  const [regEvent, setRegEvent] = useState<EventItem | null>(null);
 
   const toggleInterested = async (id: string) => {
     if (!requireAuth(undefined, "Sign in to RSVP and get event updates.")) return;
@@ -894,13 +296,27 @@ export default function EventsScreen() {
 
       {/* ── Event detail modal ── */}
       <EventDetailModal
-        event={selectedEvent}
+        event={selectedEvent ? toExploreRow(selectedEvent, savedIds.has(selectedEvent.id), interestedIds.has(selectedEvent.id)) : null}
         visible={!!selectedEvent}
         onClose={() => setSelectedEvent(null)}
-        isInterested={selectedEvent ? interestedIds.has(selectedEvent.id) : false}
-        onToggle={() => selectedEvent && toggleInterested(selectedEvent.id)}
         isSaved={selectedEvent ? savedIds.has(selectedEvent.id) : false}
-        onSaveToggle={() => selectedEvent && toggleSave(selectedEvent.id)}
+        onToggleSave={() => selectedEvent && toggleSave(selectedEvent.id)}
+        isRegistered={selectedEvent ? interestedIds.has(selectedEvent.id) : false}
+        onToggleGoing={() => selectedEvent && toggleInterested(selectedEvent.id)}
+        onRegister={() => {
+          if (!requireAuth(undefined, "Sign in to register for this event.")) return;
+          if (selectedEvent) { const ev = selectedEvent; setSelectedEvent(null); setRegEvent(ev); }
+        }}
+      />
+      <EventRegistrationModal
+        visible={!!regEvent}
+        event={regEvent}
+        onClose={() => setRegEvent(null)}
+        onRegistered={async ({ name, email, phone, tickets }) => {
+          if (!regEvent) return;
+          await registerForEvent(regEvent.id, { attendeeName: name, attendeeEmail: email, attendeePhone: phone || undefined, ticketCount: parseInt(tickets, 10) || 1 });
+          setInterestedIds((prev) => new Set(prev).add(regEvent.id));
+        }}
       />
     </>
   );
