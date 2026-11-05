@@ -122,3 +122,15 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, minHeight: 52 },
   icon: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
 });
+
+/** `.stick`: the glass bar pinned under a page's content, for the page's main actions. */
+export function DStick({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const { tc } = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10 + insets.bottom,
+      backgroundColor: tc.glass, borderTopWidth: 1, borderTopColor: tc.glassLine }, style]}>
+      {children}
+    </View>
+  );
+}
