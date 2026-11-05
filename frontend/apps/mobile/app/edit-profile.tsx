@@ -1,5 +1,6 @@
 import { rs } from "../src/utils/responsive";
 import { useEffect, useRef, useState } from "react";
+import Reanimated, { ZoomIn } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -541,7 +542,7 @@ export default function EditProfileScreen() {
       serverAvatarPathAtLoad.current = fresh.avatarUrl;
       setProfileImage(resolveAvatarDisplayUrl(fresh.avatarUrl));
       pendingAvatarMime.current = null;
-      appAlert("Saved", "Your profile has been updated.", [{ text: "OK", onPress: () => { if (router.canGoBack()) router.back(); else router.replace("/profile" as any); } }]);
+      if (router.canGoBack()) router.back(); else router.replace("/profile" as any);
     } catch (e) {
       showToast(apiErrorMessage(e, "Could not save profile."), "error");
     } finally {
@@ -549,20 +550,138 @@ export default function EditProfileScreen() {
     }
   };
 
+  // ── Save as you go ──────────────────────────────────────────────────────────
+  type SaveKey = "photo" | "name" | "username" | "phone" | "bio" | "place" | "prefs";
+  const [saveState, setSaveState] = useState<Partial<Record<SaveKey, "saving" | "ok" | "err">>>({});
+  const mark = (k: SaveKey, v: "saving" | "ok" | "err") => setSaveState((m) => ({ ...m, [k]: v }));
+  const lastSaved = useRef<{ name: string; username: string; phone: string; bio: string } | null>(null);
+  const prefsReady = useRef(false);
+  useEffect(() => {
+    if (profileLoading || lastSaved.current) return;
+    lastSaved.current = { name: name.trim(), username: username.trim().toLowerCase(), phone: phone.trim(), bio: bio.trim() };
+    setTimeout(() => { prefsReady.current = true; }, 0);
+  }, [profileLoading, name, username, phone, bio]);
+  const refreshUser = async () => {
+    const fresh = await getMyFullProfile();
+    await applyUser(mergeFullProfileIntoUser(fresh, useAuthStore.getState().user));
+    return fresh;
+  };
+  const textError = (k: "name" | "username" | "phone" | "bio"): string | null => {
+    if (k === "name") {
+      const v = name.trim();
+      if (!v) return "Please enter your full name.";
+      if (v.length < 2) return "Your name must be at least 2 characters.";
+      if (v.length > 60) return "Name must be under 60 characters.";
+    }
+    if (k === "username") {
+      const v = username.trim().toLowerCase();
+      if (!v) return "Please enter a username.";
+      if (v.length < 3) return "Username must be at least 3 characters.";
+      if (v.length > 30) return "Username must be under 30 characters.";
+      if (!/^[a-z0-9_]+$/.test(v)) return "Username may only contain lowercase letters, numbers, and underscores.";
+    }
+    if (k === "phone" && phone.trim()) {
+      const c = validatePhoneNumber(phone, countryToPhoneMarket(country));
+      if (!c.valid) return c.error ?? "Please enter a valid phone number.";
+    }
+    return null;
+  };
+  const saveText = async (k: "name" | "username" | "phone" | "bio") => {
+    if (!lastSaved.current) return;
+    const value = k === "username" ? username.trim().toLowerCase() : k === "name" ? name.trim() : k === "phone" ? phone.trim() : bio.trim();
+    if (value === lastSaved.current[k]) return;
+    const err = textError(k);
+    if (err) { mark(k, "err"); showToast(err, "error"); return; }
+    if (k === "phone" && !value) return; // the API rejects an empty phone; leaving it empty keeps the old one
+    mark(k, "saving");
+    try {
+      await patchMyProfile(k === "name" ? { fullName: value } : k === "username" ? { username: value } : k === "phone" ? { phoneNumber: value } : { bio: value });
+      lastSaved.current = { ...lastSaved.current, [k]: value };
+      await refreshUser();
+      mark(k, "ok");
+    } catch (ex) {
+      mark(k, "err");
+      showToast(apiErrorMessage(ex, "Could not save."), "error");
+    }
+  };
+  // Location and the chips save a moment after they change, once they are complete.
+  useEffect(() => {
+    if (!prefsReady.current) return;
+    const hasStates = (STATES_BY_COUNTRY[country] ?? []).length > 0;
+    const hasCities = (CITIES_BY_STATE[stateProvince] ?? []).length > 0;
+    if (!country.trim() || (hasStates && !stateProvince.trim()) || (hasCities && !city.trim())) return;
+    if (selectedInterests.length === 0 && hadInterestsAtLoad.current) return;
+    const t = setTimeout(() => {
+      mark("place", "saving"); mark("prefs", "saving");
+      void syncProfileSelectionsToApi({
+        country: country.trim(), stateProvince: stateProvince.trim(), city: city.trim(),
+        cultureUiIds: selectedCulture, interestUiIds: selectedInterests, communityUiIds: selectedCommunities,
+      }).then(refreshUser).then(() => { mark("place", "ok"); mark("prefs", "ok"); })
+        .catch((ex) => { mark("place", "err"); mark("prefs", "err"); showToast(apiErrorMessage(ex, "Could not save."), "error"); });
+    }, 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshUser and mark only use stable setters
+  }, [country, stateProvince, city, selectedCulture, selectedInterests, selectedCommunities]);
+  // A new photo uploads right away; removing it removes it.
+  const lastPhoto = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (profileLoading) return;
+    if (lastPhoto.current === undefined) { lastPhoto.current = profileImage; return; }
+    if (profileImage === lastPhoto.current) return;
+    lastPhoto.current = profileImage;
+    const isLocal = profileImage != null && isLocalAssetUri(profileImage);
+    if (!isLocal && profileImage != null) return;
+    mark("photo", "saving");
+    void (async () => {
+      try {
+        if (isLocal && profileImage) await uploadMyAvatar(profileImage, pendingAvatarMime.current || "image/jpeg");
+        else if (serverAvatarPathAtLoad.current) await removeMyAvatar();
+        const fresh = await refreshUser();
+        serverAvatarPathAtLoad.current = fresh.avatarUrl;
+        pendingAvatarMime.current = null;
+        lastPhoto.current = resolveAvatarDisplayUrl(fresh.avatarUrl);
+        setProfileImage(lastPhoto.current);
+        mark("photo", "ok");
+      } catch (ex) {
+        mark("photo", "err");
+        showToast(apiErrorMessage(ex, "Could not save the photo."), "error");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the photo changes
+  }, [profileImage, profileLoading]);
+  const savedMark = (k: SaveKey) => {
+    const v = saveState[k];
+    if (!v) return null;
+    if (v === "saving") return <ActivityIndicator size="small" color={tc.textTertiary} style={{ transform: [{ scale: 0.7 }] }} />;
+    return (
+      <Reanimated.View key={v} entering={ZoomIn.springify().damping(14).stiffness(260)}>
+        <Ionicons name={v === "ok" ? "checkmark-circle" : "alert-circle"} size={16} color={v === "ok" ? tc.mint : tc.dangerText} accessibilityLabel={v === "ok" ? "Saved" : "Not saved"} />
+      </Reanimated.View>
+    );
+  };
+
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const field = (label: string, input: React.ReactNode, hint?: string) => (
+  const field = (label: string, input: React.ReactNode, hint?: string, k?: SaveKey) => (
     <View style={{ marginBottom: 14 }}>
-      <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6, marginLeft: 2 }]}>{label}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6, marginLeft: 2 }}>
+        <Text style={[TYPE.label, { color: tc.textSecondary }]}>{label}</Text>
+        {k ? savedMark(k) : null}
+      </View>
       {input}
       {hint ? <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 5, marginLeft: 2, fontSize: 12 }]}>{hint}</Text> : null}
     </View>
   );
   const inputBox = { minHeight: 50, borderRadius: 16, paddingHorizontal: 14, backgroundColor: tc.inputBg, justifyContent: "center" as const };
   const inputText = [TYPE.body, { color: tc.textPrimary, paddingVertical: 12 }];
-  const group = (t: string) => <Text style={[TYPE.overline, { color: tc.textTertiary, marginTop: 18, marginBottom: 10, marginLeft: 2 }]}>{t}</Text>;
+  const group = (t: string, k?: SaveKey) => (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 18, marginBottom: 10, marginLeft: 2 }}>
+      <Text style={[TYPE.overline, { color: tc.textTertiary }]}>{t}</Text>
+      {k ? savedMark(k) : null}
+    </View>
+  );
   const busy = saving || profileLoading;
 
   return (
@@ -598,21 +717,24 @@ export default function EditProfileScreen() {
               </View>
             </PressableScale>
             <Pressable onPress={showImageOptions} hitSlop={8} style={{ marginTop: 10 }} accessibilityRole="button">
-              <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>{profileImage ? "Change photo" : "Add a photo"}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>{profileImage ? "Change photo" : "Add a photo"}</Text>
+                {savedMark("photo")}
+              </View>
             </Pressable>
             <Text style={[TYPE.small, { color: tc.textTertiary, fontSize: 12, marginTop: 2 }]}>JPEG, PNG or WebP, up to {MAX_FILE_SIZE_MB} MB</Text>
           </Reveal>
 
           <Reveal i={1}>
-            {field("Name", <View style={inputBox}><TextInput style={inputText} value={name} onChangeText={setName} placeholder="Your full name" placeholderTextColor={tc.textTertiary} /></View>)}
-            {field("Username", <View style={inputBox}><TextInput style={inputText} value={username} onChangeText={setUsername} placeholder="username" placeholderTextColor={tc.textTertiary} autoCapitalize="none" /></View>)}
+            {field("Name", <View style={inputBox}><TextInput style={inputText} value={name} onChangeText={setName} onBlur={() => void saveText("name")} placeholder="Your full name" placeholderTextColor={tc.textTertiary} /></View>, undefined, "name")}
+            {field("Username", <View style={inputBox}><TextInput style={inputText} value={username} onChangeText={setUsername} onBlur={() => void saveText("username")} placeholder="username" placeholderTextColor={tc.textTertiary} autoCapitalize="none" /></View>, undefined, "username")}
             {field("Email", <View style={[inputBox, { opacity: 0.7 }]}><TextInput style={inputText} value={email} editable={false} placeholder="email@example.com" placeholderTextColor={tc.textTertiary} keyboardType="email-address" autoCapitalize="none" /></View>, "Change your email in Settings, Account details.")}
-            {field("Phone", <View style={inputBox}><TextInput style={inputText} value={phone} onChangeText={(t) => setPhone(sanitizePhoneInput(t, countryToPhoneMarket(country)))} placeholder="+1 (555) 000-0000" placeholderTextColor={tc.textTertiary} keyboardType="phone-pad" /></View>, phone.trim().length > 0 ? formatPhoneHint(countryToPhoneMarket(country)) : undefined)}
-            {field("Bio", <View style={[inputBox, { paddingVertical: 4 }]}><TextInput style={[inputText, { minHeight: 90, textAlignVertical: "top" }]} value={bio} onChangeText={setBio} placeholder="A line about you" placeholderTextColor={tc.textTertiary} multiline maxLength={200} /></View>, `${bio.length}/200`)}
+            {field("Phone", <View style={inputBox}><TextInput style={inputText} value={phone} onChangeText={(t) => setPhone(sanitizePhoneInput(t, countryToPhoneMarket(country)))} onBlur={() => void saveText("phone")} placeholder="+1 (555) 000-0000" placeholderTextColor={tc.textTertiary} keyboardType="phone-pad" /></View>, phone.trim().length > 0 ? formatPhoneHint(countryToPhoneMarket(country)) : undefined, "phone")}
+            {field("Bio", <View style={[inputBox, { paddingVertical: 4 }]}><TextInput style={[inputText, { minHeight: 90, textAlignVertical: "top" }]} value={bio} onChangeText={setBio} onBlur={() => void saveText("bio")} placeholder="A line about you" placeholderTextColor={tc.textTertiary} multiline maxLength={200} /></View>, `${bio.length}/200`, "bio")}
           </Reveal>
 
           <Reveal i={2}>
-            {group("Where you live")}
+            {group("Where you live", "place")}
             {field("Country", <LocationPickerField label="Country" value={country} items={COUNTRIES} onSelect={(v) => { setCountry(v); setStateProvince(""); setCity(""); }} placeholder="Choose a country" showFlags tc={tc} />)}
             {country.length > 0 && availableStates.length > 0
               ? field(country === "United States" ? "State" : country === "Canada" ? "Province" : country === "United Kingdom" ? "Region" : "State or province",
@@ -624,7 +746,7 @@ export default function EditProfileScreen() {
           </Reveal>
 
           <Reveal i={3}>
-            {group("Your vibe")}
+            {group("Your vibe", "prefs")}
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {CULTURE_OPTIONS.map((item) => (
                 <Chip key={item.id} label={item.label} on={selectedCulture.includes(item.id)} onPress={() => toggle(item.id, selectedCulture, setSelectedCulture)} />
@@ -652,7 +774,7 @@ export default function EditProfileScreen() {
             </View>
           </Reveal>
 
-          <GradientButton block label="Save changes" loading={saving} disabled={profileLoading} onPress={handleSave} style={{ marginTop: 28 }} />
+          <Text style={[TYPE.small, { color: tc.textTertiary, textAlign: "center", marginTop: 24 }]}>Changes save as you go.</Text>
         </View>
       </KeyboardAvoidingView>
       )}
