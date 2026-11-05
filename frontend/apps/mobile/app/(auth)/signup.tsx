@@ -34,6 +34,9 @@ import { rs } from "../../src/utils/responsive";
 import { Image } from "expo-image";
 import { appAlert } from '../../src/shared/ui/Dialogs';
 import { showToast } from '../../src/shared/ui/Toast';
+import { TYPE, display } from '../../src/theme/d';
+import { GradientButton, Reveal, SoftButton } from '../../src/shared/d';
+import { OtpBoxes, type OtpHandle } from '../../src/shared/d/Otp';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
@@ -100,6 +103,8 @@ export default function SignupScreen() {
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const codeRef = useRef<TextInput>(null);
+  const otpRef = useRef<OtpHandle>(null);
+  const [codeOk, setCodeOk] = useState(false);
 
   const toastAnim = useRef(new Animated.Value(0)).current;
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -159,7 +164,7 @@ export default function SignupScreen() {
     const trimmed = code.replace(/\D/g, "");
     if (trimmed.length !== 6) {
       setError("Enter the 6-digit code from your email");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      otpRef.current?.shake();
       return;
     }
     setError("");
@@ -176,10 +181,12 @@ export default function SignupScreen() {
       const { onboardingDone } = await syncFromApiLogin(profile, sessionCookie);
       void useSidebarStore.getState().fetchSidebarData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCodeOk(true);
+      await new Promise((r) => setTimeout(r, 520));
       router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
     } catch (e: unknown) {
       setError(formatSignupError(e));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      otpRef.current?.shake();
     } finally {
       setLoading(false);
     }
@@ -322,10 +329,7 @@ export default function SignupScreen() {
           setOauthTempToken("");
         }}
       />
-      <LinearGradient
-        colors={isDark ? ["#080F1E", "#0D1526"] : ["#EEF6FF", "#F5FAF5"]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={isDark ? ["rgba(26,107,174,0.30)", "rgba(48,133,91,0.10)", "transparent"] : ["rgba(26,107,174,0.16)", "rgba(48,133,91,0.06)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} pointerEvents="none" />
 
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
@@ -337,76 +341,37 @@ export default function SignupScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo */}
-            <View style={styles.logoSection}>
-              <View style={styles.logoWrap}>
-                <Image
-                  source={require("../../assets/images/brand/app_icon_1024.png")}
-                  style={styles.logo}
-                  contentFit="contain"
-                  transition={200}
-                />
-              </View>
-            </View>
+            <Reveal i={0} style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 22 }}>
+              <Pressable onPress={() => (step === "verify" ? (setStep("form"), setCode(""), setError("")) : router.back())} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+                style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginLeft: -10 }}>
+                <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
+              </Pressable>
+              <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 32, height: 32, borderRadius: 10 }} contentFit="contain" />
+              <Text style={[display(800), { fontSize: 19, color: tc.textPrimary, letterSpacing: -0.4 }]}>comlinkr</Text>
+            </Reveal>
 
-            {/* Card */}
-            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(26,107,174,0.06)" }]}>
-              <GradientText
-                text={step === "form" ? "Create account" : "Verify email"}
-                style={styles.heading}
-                colors={["#1A6BAE", "#30855B"]}
-              />
-              <Text style={[styles.subheading, { color: tc.textSecondary }]}>
-                {step === "form"
-                  ? "Sign up to discover your neighborhood"
-                  : `Enter the code sent to ${email.trim() || "your email"}`}
-              </Text>
+            <View>
+              <Reveal i={1}>
+                <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{step === "form" ? "Create account" : "Check your email"}</Text>
+                <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 4, marginBottom: 20 }]}>
+                  {step === "form" ? "Takes a minute. We email you a 6-digit code." : `Sent to ${email.trim() || "your email"}`}
+                </Text>
+              </Reveal>
 
               {/* Social Sign Up */}
               {step === "form" ? (
-              <View style={styles.socialGroup}>
-                <Pressable
-                  onPress={() => handleSocialSignup("Google")}
-                  style={({ pressed }) => [
-                    styles.socialBtn,
-                    { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                  ]}
-                >
-                  <View style={styles.socialBtnInner}>
-                    <Ionicons name="logo-google" size={rs(20)} color="#4285F4" />
-                    <GradientText
-                      text="Continue with Google"
-                      style={styles.socialLabel}
-                      colors={["#4285F4", "#1A6BAE"]}
-                    />
-                  </View>
-                </Pressable>
-
-                {Platform.OS === "ios" ? (
-                  <Pressable
-                    onPress={() => void handleSocialSignup("Apple")}
-                    style={({ pressed }) => [
-                      styles.socialBtn,
-                      { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                      pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                    ]}
-                  >
-                    <View style={styles.socialBtnInner}>
-                      <Ionicons name="logo-apple" size={22} color={isDark ? "#FFFFFF" : "#000000"} />
-                      <Text style={[styles.socialLabel, { color: tc.textPrimary }]}>Continue with Apple</Text>
-                    </View>
-                  </Pressable>
-                ) : null}
-              </View>
+              <Reveal i={2} style={{ flexDirection: "row", gap: 10 }}>
+                <SoftButton ghost block outerStyle={{ flex: 1 }} label={Platform.OS === "ios" ? "Google" : "Sign up with Google"} onPress={() => void handleSocialSignup("Google")} icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
+                {Platform.OS === "ios" ? <SoftButton ghost block outerStyle={{ flex: 1 }} label="Apple" onPress={() => void handleSocialSignup("Apple")} icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} /> : null}
+              </Reveal>
               ) : null}
 
               {/* Divider */}
               {step === "form" ? (
-              <View style={styles.dividerRow}>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
-                <Text style={[styles.dividerText, { color: tc.textTertiary }]}>or sign up with email</Text>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 20 }}>
+                <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>or with email</Text>
+                <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
               </View>
               ) : null}
 
@@ -476,31 +441,12 @@ export default function SignupScreen() {
                 />
               </View>
               ) : (
-              <View style={styles.form}>
-                <Pressable
-                  onPress={() => {
-                    setStep("form");
-                    setCode("");
-                    setError("");
-                  }}
-                  hitSlop={8}
-                  style={({ pressed }) => [{ marginBottom: 12, opacity: pressed ? 0.7 : 1, flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start" }]}
-                >
-                  <Ionicons name="arrow-back" size={17} color="#1A6BAE" />
-                  <Text style={{ color: "#1A6BAE", fontWeight: "600", fontSize: 15, lineHeight: 20 }}>Edit details</Text>
+              <Reveal key="otp" style={{ marginTop: 4 }}>
+                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); setError(""); }} onComplete={() => void handleVerifyAndCreate()} autoFocus />
+                <Pressable onPress={() => { setStep("form"); setCode(""); setError(""); }} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
+                  <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Edit details</Text></Text>
                 </Pressable>
-                <Input
-                  ref={codeRef}
-                  label="6-digit code"
-                  placeholder="000000"
-                  value={code}
-                  onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  returnKeyType="go"
-                  onSubmitEditing={handleVerifyAndCreate}
-                />
-              </View>
+              </Reveal>
               )}
 
               {/* Password Strength */}
@@ -546,10 +492,10 @@ export default function SignupScreen() {
 
               {/* Error */}
               {error ? (
-                <View style={[styles.errorBox, { backgroundColor: isDark ? "#2D0F0F" : "#FEF2F2" }]}>
-                  <Ionicons name="alert-circle" size={rs(16)} color="#EF4444" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
+                <Reveal style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.12)" }}>
+                  <Ionicons name="alert-circle" size={17} color={tc.dangerText} />
+                  <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{error}</Text>
+                </Reveal>
               ) : null}
 
               {/* Spacer */}
@@ -564,8 +510,8 @@ export default function SignupScreen() {
                   <View
                     style={[
                       styles.checkbox,
-                      { borderColor: agreedToTerms ? "#1A6BAE" : tc.borderLight },
-                      agreedToTerms && { backgroundColor: "#1A6BAE" },
+                      { borderColor: agreedToTerms ? tc.accent : tc.borderMedium, borderRadius: 7 },
+                      agreedToTerms && { backgroundColor: tc.accent },
                     ]}
                   >
                     {agreedToTerms ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
@@ -585,43 +531,21 @@ export default function SignupScreen() {
               ) : null}
 
               {/* Create Account / Verify Button */}
-              <Pressable
+              <GradientButton
+                block
+                style={{ marginTop: 10 }}
+                loading={loading}
+                disabled={socialLoading || (step === "form" && !agreedToTerms)}
                 onPress={step === "form" ? handleSendCode : handleVerifyAndCreate}
-                disabled={loading || socialLoading || (step === "form" && !agreedToTerms)}
-                style={({ pressed }) => [
-                  styles.signupBtn,
-                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  (loading || socialLoading || (step === "form" && !agreedToTerms)) && { opacity: 0.5 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.signupBtnGradient}
-                >
-                  <Text style={styles.signupBtnText}>
-                    {loading || socialLoading
-                      ? step === "form"
-                        ? "Sending code..."
-                        : "Creating account..."
-                      : step === "form"
-                        ? "Send verification code"
-                        : "Verify & create account"}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
+                label={step === "form" ? "Email me a code" : "Create my account"}
+              />
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: tc.textSecondary }]}>Already have an account? </Text>
-              <Pressable onPress={() => router.back()}>
-                <GradientText
-                  text="Sign in"
-                  style={styles.footerLink}
-                  colors={["#1A6BAE", "#30855B"]}
-                />
+              <Text style={[TYPE.body, { color: tc.textSecondary }]}>Already on Comlinkr? </Text>
+              <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Sign in</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -640,11 +564,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: rs(20),
-    paddingTop: rs(6),
-    paddingBottom: rs(16),
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingTop: 36,
+    paddingBottom: 32,
+    justifyContent: "flex-start",
+    alignItems: "stretch",
   },
 
   /* Decorative */
@@ -791,8 +715,10 @@ const styles = StyleSheet.create({
     left: rs(20),
     right: rs(20),
     zIndex: 999,
-    backgroundColor: "#1A1A2E",
-    borderRadius: rs(14),
+    backgroundColor: "#12303A",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    borderRadius: 18,
     paddingHorizontal: rs(14),
     paddingVertical: rs(12),
     flexDirection: "row",
@@ -806,13 +732,14 @@ const styles = StyleSheet.create({
   },
   toastTextWrap: { flex: 1, gap: rs(2) },
   toastTitle: {
-    fontSize: rs(13),
-    fontWeight: "700",
+    ...TYPE.bodyStrong,
+    fontSize: 14,
     color: "#FFFFFF",
     marginBottom: rs(3),
   },
   toastLine: {
-    fontSize: rs(12),
+    ...TYPE.small,
+    fontSize: 12.5,
     color: "rgba(255,255,255,0.8)",
     lineHeight: rs(18),
   },

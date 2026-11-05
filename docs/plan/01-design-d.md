@@ -154,8 +154,8 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | city | city picker | not started |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | phone-checked (opened while signed in; signing in again not walked) |
-| signup | `app/(auth)/signup.tsx` | not started |
-| otp | OTP step in sign-up | not started |
+| signup | `app/(auth)/signup.tsx` | phone-checked (form; no code sent) |
+| otp | OTP step in sign-up (`OtpBoxes`) | rebuilt; the same component phone-checked in reset password, sign-up code step not walked |
 | forgot | `app/(auth)/forgot-password.tsx`, `src/shared/d/Otp.tsx` | phone-checked (code sent, wrong code shakes; password not changed) |
 | onboarding | onboarding screens | not started (look only in phase 1) |
 | compose-listing | `app/create-post.tsx` | not started |
