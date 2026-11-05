@@ -37,15 +37,18 @@ one-question composer, onboarding in five steps, the merges).
 
 `createDTypeStyles` is the fonts-only version, for the story viewer, the gallery and other dark-on-purpose screens.
 
-**Screens rebuilt**, one commit each: see `git log main..feature/design-d`. The tracker in the plan has 57 rows
-(the 52 screens plus small sheets). By status:
+**Screens**, one commit each: see `git log main..feature/design-d`. The tracker in the plan has 57 rows (the 52 screens plus small sheets), labelled by the plan's own rules:
 
-- 44 were seen on the phone, at least in part;
-- 12 are rebuilt but not walked: the seven composers other than News, the event ticket, review, question detail,
-  the story viewer, and the sign-up step of the RSVP sheet;
-- 1 is at the base coat only: the city picker, which only guests see.
+- **40 rebuilt and seen on the phone.**
+- **9 rebuilt, not walked:** the seven composers other than News (they share the News composer's look), restaurant
+  review, the question answers view.
+- **2 partly rebuilt** (the frame follows the design, the step bodies keep their layout on the base coat): Apply for
+  a badge, the tenancy agreement.
+- **6 on the base coat** (D fonts and colours on the old layout): the RSVP sheet, the RSVP ticket, the city picker
+  (guests only), and three kept dark on purpose: the gallery, the story viewer, door check-in.
 
-The ones not walked share their components with screens that were.
+So the screens that do **not** yet match the design exactly are those 8 (partly rebuilt or base coat), plus the
+sheets listed below inside rebuilt screens.
 
 **Left at the base coat inside rebuilt screens:**
 
@@ -64,9 +67,33 @@ The ones not walked share their components with screens that were.
 - the Help tip no longer claims an answer "within the hour";
 - the composer chooser's tips cards were dropped, including the unverified "3× more engagement".
 
+## Motion in the design that phase 1 does not have
+
+From the prototype's per-screen notes (`docs/design/2026-11-05-redesign/src/notes.js`) and its motion markers:
+
+- **Card to detail expand** (`data-flip` / `data-hero`): in the design a card's photo grows into the detail's hero
+  (events, listings, restaurants, All events rows). Phase 1 opens details with the zoom push or the modal slide.
+- **The event ticket flips in** with its QR code (the ticket is on the base coat).
+- **Door check-in counter ticks up** on each scan (the scanner was not opened).
+- **Review stars fill as you drag** (the review sheet keeps today's stars).
+- **Landlord: a decision slides the card away** (today the decision is made in a sheet).
+- **Question detail: an upvote bounces.**
+- **Onboarding: chips pop when chosen** (steps do slide in).
+- **Codes: "Send again in 0:30" countdown**, and a wrong code clearing the boxes (it shakes but keeps the digits).
+- **Event detail: the pulsing map pin** (there is no map on the event detail today).
+- **Chat: messages pop in from their own side** (they rise in from below).
+- **Gallery and story viewer gestures** (swipe down to close, hold to pause) were not checked.
+
+Built and checked: the zoom push and edge-swipe back, the liquid tab indicator, the + sheet growing from the bar,
+large titles that fade into a glass bar, rows rising in, tiles popping in, the match ring sweep, the code boxes (pop,
+shake, green sweep), dialogs zooming in and sheets rising, chevrons that turn, steps sliding in, progress bars that
+spring, unread pills popping. Behaviour changes in the notes (swipe to archive, undo instead of confirm, save as you
+go, the one-question composer, five-step onboarding) are phase 2.
+
 ## How it was checked
 
-- `pnpm typecheck` after every screen, all passing. There are no mobile unit tests. The backend was not changed.
+- `pnpm typecheck` after every screen, all passing. Lists were walked with 0 to 2 items; the row entrance only
+  animates the first 14 rows so long, virtualised lists do not replay it while scrolling. Not tested at busiest-city size. There are no mobile unit tests. The backend was not changed.
 - Walked on a OnePlus (Android 16) in Expo Go against the local backend, signed in as `ui_tester`. Steps and
   results are in [the run log](../device-runs/2026-11-05-design-d.md). Journeys included the way back:
   - save and unsave a listing and an event;

@@ -5,9 +5,10 @@ else. Keep old entries short: what was done and where it is written._
 
 ## 2026-11-05 (latest) - design D phase 1 built on `feature/design-d` (plan 01)
 
-- **State:** every screen in the plan's tracker (57 rows) has the D look. 44 were checked on the phone, 12 were
-  rebuilt but not walked, and 1 (the guest city picker) is base coat only. One commit per screen, nothing pushed,
-  no pull request. Build note:
+- **State:** of the plan's 57 tracker rows, 40 are rebuilt and seen on the phone, 9 rebuilt but not walked, 2
+  partly rebuilt (Apply for a badge, the tenancy agreement) and 6 on the base coat (RSVP sheet and ticket, city
+  picker, and the dark-on-purpose gallery, story viewer and door check-in). One commit per screen, nothing pushed,
+  no pull request. Build note (with the motion the design has and phase 1 lacks):
   [build/2026-11-05-design-d-phase-1.md](build/2026-11-05-design-d-phase-1.md). Run log: the second section of
   [device-runs/2026-11-05-design-d.md](device-runs/2026-11-05-design-d.md).
 - **Not walked:**
@@ -28,7 +29,13 @@ else. Keep old entries short: what was done and where it is written._
   - then phase 2, the behaviour changes in the plan;
   - triage TR-006 to TR-009, found on the way and none caused by this work.
 - **Before a pull request:** check that `frontend/apps/mobile/.env` still points at production (it was not
-  edited), walk the journeys not yet walked, and get the owner's go-ahead to push.
+  edited); walk the journeys not yet walked; check a detail page, a sheet and sign-in in light mode; update the system
+  reviews in `docs/system-review/` for the interactions that moved (edit, delete and report in ··· menus, the Dark
+  mode row in Settings, fewer profile shortcuts, "Show results" in filters, the composer chooser without tips); get the
+  owner's go-ahead to push.
+- **Servers:** backend and Metro were stopped at the end. To walk again, start them as in
+  [device-testing.md](device-testing.md) (backend with `RESEND_API_KEY=` empty and `NODE_ENV=development`; Metro with
+  `EXPO_PUBLIC_API_BASE_URL` set to the local API for the process, port 8083).
 - **Lesson:** build `RegExp` patterns in a script file with escaped `|`; an unescaped one put text at the top of the
   plan (repaired in `d7fb062`).
 

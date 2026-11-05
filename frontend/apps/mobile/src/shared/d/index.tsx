@@ -131,7 +131,8 @@ export function Segmented({ items, value, onChange, style }: { items: { key: str
 /* ---------- entrance animations ---------- */
 /** Wrap list rows: rise and fade in, 45 ms apart. */
 export function Reveal({ i = 0, children, style }: { i?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <Animated.View entering={revealIn(i)} style={style}>{children}</Animated.View>;
+  // Only the first screenful animates in, so rows a virtualised list remounts while scrolling do not replay it.
+  return <Animated.View entering={i < 14 ? revealIn(i) : undefined} style={style}>{children}</Animated.View>;
 }
 /** Wrap bento tiles: pop in from 0.96, 45 ms apart. */
 export function TileIn({ i = 0, children, style }: { i?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {

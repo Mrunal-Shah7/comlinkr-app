@@ -103,7 +103,7 @@ a backend change with its own migration-free DTO change and e2e test).
 ## Screen tracker (phase 1)
 
 The screens of `d-night-market-gradient.html` (52 plus small sheets: city, more, listing menu, the RSVP ticket and others; 57 rows). Status is one
-of: **not started**; **base coat** (fonts and colours only, through the shared style layer, old layout); **rebuilt**
+of: **not started**; **base coat** (fonts and colours only, through the shared style layer, old layout; also the screens kept dark on purpose); **partly rebuilt** (the frame follows the design, the body keeps its layout); **rebuilt**
 (the screen's own layout follows the design, not yet seen on the phone); **phone-checked** (rebuilt and walked on
 the phone against the local backend). Only "phone-checked" counts as done.
 
@@ -120,9 +120,9 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | roommate-detail | `RoommateDetailModal.tsx`, `MatchRing.tsx` | phone-checked |
 | notifications | `app/notifications.tsx` | phone-checked |
 | room-detail | `AvailableRoomDetailModal.tsx` | phone-checked (with a temporary uit_ room, removed after) |
-| gallery | `ImageViewer` (createDTypeStyles) | phone-checked (fonts only on purpose: stays black) |
+| gallery | `ImageViewer` (createDTypeStyles) | base coat (fonts only, on purpose: stays black); phone-checked |
 | apply (sheet) | apply flow in `PropertyDetailModal.tsx` (Apply leads to the agreement's step 1) | phone-checked (Apply opens the agreement, Cancel returns) |
-| agreement | `app/property-agreement.tsx` | rebuilt: glass header, sentence case, accent pill, one gradient; step bodies on the base coat; step 1 and cancel phone-checked |
+| agreement | `app/property-agreement.tsx` | partly rebuilt (glass header, sentence case, accent pill, one gradient; step bodies on the base coat); step 1 and cancel phone-checked |
 | landlord | `app/landlord-dashboard.tsx` | rebuilt; empty state phone-checked, cards need an application |
 | my-listings | `app/my-listings.tsx` | rebuilt; empty state phone-checked, rows to check after a listing is made |
 | filters | filter sheet in `app/(tabs)/housing/index.tsx` | phone-checked (chips, clear) |
@@ -134,11 +134,11 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | question-detail | answers in `app/(tabs)/community/index.tsx` | rebuilt with Community (inline answers restyled); answers view not walked |
 | post-detail | post comments modal (comments modal in `app/(tabs)/feed/index.tsx`) | phone-checked (opened a seeded post; no comment posted) |
 | event-detail | `EventDetailModal` | phone-checked (with a temporary uit_ event, removed after) |
-| event-register | `EventRegistrationModal` | rebuilt (createThemedStyles, brand gradients); sheet opened on the phone, sign-up not completed |
-| event-ticket | ticket in `EventRegistrationModal` | rebuilt with the sign-up sheet (mint success, brand gradients); not walked |
+| event-register | `EventRegistrationModal` | base coat (createThemedStyles, brand gradients; old layout); sheet opened on the phone, sign-up not completed |
+| event-ticket | ticket in `EventRegistrationModal` | base coat (with the RSVP sheet: mint success, brand gradients; old layout); not walked |
 | events-all | `app/events.tsx` (its own detail sheet keeps the base coat) | phone-checked (list, save, unsave) |
-| check-in | `app/events/[id]/check-in.tsx` (stays dark on purpose: D fonts, the D dark background, a mint filter chip) | permission screen phone-checked; scanner not opened (camera not granted) |
-| story-viewer | `app/story-viewer.tsx` (createDTypeStyles) | rebuilt (fonts only on purpose: stays black); not walked, no stories in the seed |
+| check-in | `app/events/[id]/check-in.tsx` (stays dark on purpose: D fonts, the D dark background, a mint filter chip) | base coat (fonts, the D dark, a mint filter chip; stays dark on purpose); permission screen phone-checked, scanner not opened |
+| story-viewer | `app/story-viewer.tsx` (createDTypeStyles) | base coat (fonts only, on purpose: stays black); not walked, no stories in the seed |
 | profile | `app/profile.tsx` (roommate-preferences sheet still base coat) | phone-checked |
 | public-profile | `app/public-profile.tsx` | phone-checked (Follow fails on the backend: TR-006) |
 | edit-profile | `app/edit-profile.tsx` | phone-checked (save and undo walked) |
@@ -146,7 +146,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | settings | `app/settings.tsx` | phone-checked |
 | help | `app/help-support.tsx` | phone-checked |
 | legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` (shared `LegalDoc.tsx`) | phone-checked (privacy walked; terms uses the same component) |
-| badges | `app/apply-badge.tsx` (frame, progress, fields, upload rows; step bodies keep their layout on the base coat) | rebuilt; steps 1–2 and back phone-checked, upload and send not walked (needs ID photos) |
+| badges | `app/apply-badge.tsx` (frame, progress, fields, upload rows; step bodies keep their layout on the base coat) | partly rebuilt (frame, progress bar, step motion, fields, upload rows; step bodies on the base coat); steps 1–2 and back phone-checked, upload and send not walked |
 | verification | `app/verification-status.tsx` | rebuilt; not-applied state phone-checked, review timeline checked with the badge journey |
 | messages | `app/chat.tsx` (list) | phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |
