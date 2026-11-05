@@ -2,7 +2,7 @@
 // that fades into a glass bar as the large title scrolls away (interpolate(scrollY, [0, 64], [0, 1])), an optional
 // action on the right, a large title with a subtitle, then the content. `footer` sits under the scroll area
 // (a glass action bar, an input bar).
-import { type ReactElement, type ReactNode } from "react";
+import React, { type ReactElement, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View, type RefreshControlProps, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
@@ -20,7 +20,7 @@ export function goBackOr(fallback: string) {
  *  the list (ListHeaderComponent) and the bottom padding that clears the system bar. */
 export type DPageList = { onScroll: ReturnType<typeof useAnimatedScrollHandler>; header: ReactElement | null; bottom: number };
 
-export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true, renderList }: {
+export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true, renderList, scrollRef }: {
   title: string;
   sub?: string;
   right?: ReactNode;
@@ -33,6 +33,8 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
   scroll?: boolean;
   /** A virtualised list instead of the ScrollView: render an Animated.FlatList with these. */
   renderList?: (p: DPageList) => ReactNode;
+  /** To scroll the page from outside (a table of contents). */
+  scrollRef?: React.RefObject<Animated.ScrollView | null>;
   children?: ReactNode;
 }) {
   const { tc } = useTheme();
@@ -63,7 +65,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
           {sub ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>{sub}</Text> : null}
         </View>
       ) : null, bottom: footer ? 16 : 40 + insets.bottom }) : scroll ? (
-        <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+        <Animated.ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={[{ paddingBottom: (footer ? 16 : 40 + insets.bottom) }, contentStyle]}>
           {largeTitle ? (
             <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>

@@ -145,7 +145,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | saved | `app/saved.tsx` (`interested.tsx` is not linked from anywhere: base coat; merging it is phase 2) | phone-checked |
 | settings | `app/settings.tsx` | phone-checked |
 | help | `app/help-support.tsx` | phone-checked |
-| legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` | not started |
+| legal | `app/terms-of-service.tsx`, `app/privacy-policy.tsx` (shared `LegalDoc.tsx`) | phone-checked (privacy walked; terms uses the same component) |
 | badges | `app/apply-badge.tsx` | not started |
 | verification | `app/verification-status.tsx` | not started |
 | messages | `app/chat.tsx` (list) | not started |
