@@ -54,7 +54,7 @@ import { File } from "expo-file-system"; // SPRINT-42: resolve image byte size w
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { TYPE } from '../src/theme/d';
-import { Chip, ChipInput, PressableScale, Reveal, Stepper } from '../src/shared/d';
+import { Chip, ChipInput, PressableScale, Reveal, Segmented, Stepper } from '../src/shared/d';
 import { goBackOr } from '../src/shared/d/Page';
 
 type AttachedMedia = {
@@ -3625,44 +3625,13 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
         {/* ════════ RESTAURANT FORM ════════ */}
         {type.id === "restaurant" && (
           <>
-            {/* Notice box */}
-            <View style={[s.ownerNotice, { borderColor: type.color + "40", backgroundColor: type.bg }]}>
-              <Ionicons name="shield-checkmark" size={18} color={type.color} />
-              <View style={{ flex: 1 }}>
-                <Text style={[s.ownerNoticeTitle, { color: type.color }]}>Restaurant Posting on ComLinkr</Text>
-                <Text style={s.ownerNoticeText}>
-                  {"• "}
-                  <Text style={{ fontWeight: "700" }}>Restaurant owners</Text>
-                  {" — Anyone can add a business listing; the "}
-                  <Text style={{ fontWeight: "700" }}>Restaurant Owner</Text>
-                  {" badge adds a trusted indicator on your listing.\n"}
-                  {"• "}
-                  <Text style={{ fontWeight: "700" }}>Local Reviewers</Text>
-                  {" — Community members with the "}
-                  <Text style={{ fontWeight: "700" }}>Local Reviewer</Text>
-                  {" badge can share recommendations and reviews from personal visits.\n"}
-                  {"• Pick owner or community mode below — badges unlock trust signals where they apply."}
-                </Text>
-              </View>
-            </View>
-
-            {/* Mode selector */}
-            <View style={s.modeSelectorRow}>
-              <Pressable
-                style={[s.modeTab, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, restaurantPostMode === "owner" && { backgroundColor: type.color, borderColor: type.color }]}
-                onPress={() => setRestaurantPostMode("owner")}
-              >
-                <Ionicons name="storefront-outline" size={15} color={restaurantPostMode === "owner" ? "#FFF" : type.color} />
-                <Text style={[s.modeTabText, { color: tc.textSecondary }, restaurantPostMode === "owner" && { color: "#FFF" }]}>I'm the Owner</Text>
-              </Pressable>
-              <Pressable
-                style={[s.modeTab, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, restaurantPostMode === "review" && { backgroundColor: type.color, borderColor: type.color }]}
-                onPress={() => setRestaurantPostMode("review")}
-              >
-                <Ionicons name="star-outline" size={15} color={restaurantPostMode === "review" ? "#FFF" : type.color} />
-                <Text style={[s.modeTabText, { color: tc.textSecondary }, restaurantPostMode === "review" && { color: "#FFF" }]}>Community Post</Text>
-              </Pressable>
-            </View>
+            {/* Owner or review (design D: two composers; here one segmented control) */}
+            <Segmented
+              style={{ marginTop: 12, marginBottom: 6 }}
+              items={[{ key: "owner", label: "My restaurant" }, { key: "review", label: "A review" }]}
+              value={restaurantPostMode}
+              onChange={(k) => setRestaurantPostMode(k as typeof restaurantPostMode)}
+            />
 
             {/* ── OWNER FORM ── */}
             {restaurantPostMode === "owner" && (

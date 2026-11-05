@@ -102,7 +102,9 @@ that were never sent.
   emptied; edit profile did not save when the keyboard was closed (Android does not blur); the sign pad lost its
   strokes to the page scroll; the offer page kept the previous scroll; "N/A" deposit shown; re-applying after
   leaving the flow failed with "already applied" (it now resumes the draft).
-- **Not walked:** onboarding (the test account is onboarded), badges, quest, room, news, restaurant and review
-  composers, listing composer screens 2 to 7 (would need the phone's photo picker), landlord decisions, My
-  posts Undo, gallery, story viewer, door check-in scanning, the Ask topic guess, upvotes, All events. Light mode
-  was not checked on anything new. Not compared side by side with the prototype screen by screen.
+- Also checked on the phone: quest, room, news and restaurant composers (screens, not posted); an upvote and
+  its removal; light mode on the quest composer, the apply page and Saved; the event card expand (frame
+  captures). An event detail once stayed stuck on screen after hot reloads and could not be reproduced after a
+  restart (run log).
+- **Not walked:** onboarding (the test account is onboarded), badges, the review composer's list, listing composer screens 2 to 7 (would need the phone's photo picker), landlord decisions, My
+  posts Undo, gallery, story viewer, door check-in scanning, the Ask topic guess, upvotes, All events. Light mode was checked on three new screens only. Not compared side by side with the prototype screen by screen.
