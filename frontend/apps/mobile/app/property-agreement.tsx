@@ -18,6 +18,7 @@ import { useAuthStore } from "../src/store/auth.store";
 import { DatePickerField } from "../components/DateTimePickerField";
 import {
   createApplication,
+  getMyApplications,
   saveStep,
   submitApplication,
   signApplication,
@@ -324,8 +325,10 @@ export default function PropertyAgreementScreen() {
 
   const propertyTitle   = params.propertyTitle   || "Property";
   const propertyAddress = params.propertyAddress || "";
-  const price           = params.price           || "";
-  const deposit         = params.deposit         || "";
+  // Missing values are hidden, not shown as "N/A" (rule B6); the listing passes "N/A" when it has none.
+  const missing = (v?: string) => !v || /^(n\/?a|—|-|\$?0)$/i.test(v.trim());
+  const price           = missing(params.price) ? "" : params.price!;
+  const deposit         = missing(params.deposit) ? "" : params.deposit!;
   const landlordName    = params.landlordName    || "the owner";
   const listingId       = params.listingId       || "";
   const market: Market  = params.country === "US" ? "US" : "UK";
@@ -335,7 +338,7 @@ export default function PropertyAgreementScreen() {
 
   const [part, setPart] = useState<Part>("apply");
   const [dir, setDir] = useState<1 | -1>(1);
-  const go = (p: Part, d: 1 | -1 = 1) => { setDir(d); setPart(p); };
+  const go = (p: Part, d: 1 | -1 = 1) => { setDir(d); setPart(p); scrollRef.current?.scrollTo?.({ y: 0, animated: false }); };
 
   // Part 1 — what the owner needs. Name, email, phone and city come from the profile.
   const profileAddress = user?.city ? [user.city, user.stateProvince, user.country].filter(Boolean).join(", ") : "";
@@ -366,6 +369,7 @@ export default function PropertyAgreementScreen() {
   const [typeInstead,  setTypeInstead]  = useState(false);
   const [typedName,    setTypedName]    = useState("");
   const pad = useRef<SignPadHandle>(null);
+  const [drawing, setDrawing] = useState(false);
   const scrollRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any -- Animated.ScrollView ref
   const startDate = laterStart ? addDays(moveInDate, 7) : moveInDate;
   const duration  = shortLease ? "6 months" : "12 months";
@@ -386,9 +390,17 @@ export default function PropertyAgreementScreen() {
         setSubmitting(true);
         let appId = applicationId;
         if (!appId) {
-          const app = await createApplication(listingId);
-          appId = app.id;
-          setApplicationId(app.id);
+          try {
+            const app = await createApplication(listingId);
+            appId = app.id;
+          } catch (err) {
+            // Already applied: pick up your unfinished application for this listing instead of stopping.
+            if (!(err instanceof ApiError && err.status === 409)) throw err;
+            const mine = (await getMyApplications()).find((a) => a.listingId === listingId && a.status === "draft");
+            if (!mine) throw err;
+            appId = mine.id;
+          }
+          setApplicationId(appId);
         }
         stage = "save";
         // Always (re)save step 1 so a failed save is retried instead of skipped.
@@ -498,7 +510,7 @@ export default function PropertyAgreementScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <DPage title={title} sub={propertyTitle} onBack={part === "done" ? undefined : onBack} footer={footer} scrollRef={scrollRef}>
+      <DPage title={title} sub={propertyTitle} onBack={part === "done" ? undefined : onBack} footer={footer} scrollRef={scrollRef} scrollEnabled={!drawing}>
         <Progress frac={part === "apply" ? 1 / 3 : part === "offer" ? 2 / 3 : 1} />
         <View style={{ height: 16 }} />
         <Animated.View key={part} entering={entering} exiting={exiting}>
@@ -631,7 +643,7 @@ export default function PropertyAgreementScreen() {
                     <TextInput value={typedName} onChangeText={setTypedName} autoCapitalize="words" placeholder="Type your full legal name" placeholderTextColor={tc.textTertiary}
                       style={[st.field, { height: 150, textAlign: "center", fontSize: 26, fontStyle: "italic", color: tc.textPrimary, backgroundColor: tc.inputBg }]} accessibilityLabel="Your full legal name" />
                   ) : (
-                    <SignPad ref={pad} onChange={setSigned} onDrawing={(d) => scrollRef.current?.setNativeProps?.({ scrollEnabled: !d })} />
+                    <SignPad ref={pad} onChange={setSigned} onDrawing={(d) => setDrawing(d)} />
                   )}
                   <View style={st.hint}>
                     <Ionicons name={typeInstead ? "text-outline" : "create-outline"} size={14} color={tc.textTertiary} />

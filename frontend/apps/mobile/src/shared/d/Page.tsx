@@ -20,7 +20,9 @@ export function goBackOr(fallback: string) {
  *  the list (ListHeaderComponent) and the bottom padding that clears the system bar. */
 export type DPageList = { onScroll: ReturnType<typeof useAnimatedScrollHandler>; header: ReactElement | null; bottom: number };
 
-export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true, renderList, scrollRef }: {
+export function DPage({ title, sub, right, children, footer, refreshControl, contentStyle, onBack, largeTitle = true, scroll = true, renderList, scrollRef, scrollEnabled = true }: {
+  /** false while a child needs every touch (a sign pad). */
+  scrollEnabled?: boolean;
   title: string;
   sub?: string;
   right?: ReactNode;
@@ -68,7 +70,7 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
           {sub ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>{sub}</Text> : null}
         </View>
       ) : null, bottom: footer ? 16 : 40 + insets.bottom }) : scroll ? (
-        <Animated.ScrollView ref={scrollRef} onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+        <Animated.ScrollView ref={scrollRef} scrollEnabled={scrollEnabled} onScroll={onScroll} scrollEventThrottle={16} refreshControl={refreshControl} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={[{ paddingBottom: (footer ? 16 : 40 + insets.bottom) }, contentStyle]}>
           {showTitle ? (
             <View style={{ paddingHorizontal: 18, paddingBottom: 14 }}>

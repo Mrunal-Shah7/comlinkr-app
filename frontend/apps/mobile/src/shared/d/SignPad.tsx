@@ -21,6 +21,9 @@ export const SignPad = forwardRef<SignPadHandle, { onChange?: (signed: boolean) 
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      // Claim the touch before a parent ScrollView can.
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
       onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (e) => {
         onDrawing?.(true);
