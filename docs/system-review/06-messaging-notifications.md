@@ -80,3 +80,13 @@ development build; broadcasts; notification preferences actually suppressing a t
   [observed]. Read ticks not checked: no conversations in the seed.
 - Notifications: "No notifications yet", filters All / Unread (0) [observed].
 - Expo Go shows "Push notifications are disabled in Expo Go. Use a development build." on every launch [observed].
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- Swipe a conversation left to remove it (hide for you), with Undo for about 4.5 seconds; the server has no archive. **[phone]**
+- A conversation pins the home or event it is about under the bar; new messages pop in from their own side (not the ones already there). **[phone]**
+- Toasts are a glass pill from the top; deletes in My posts and conversations offer Undo instead of a confirm dialog.
+- Saved, Interested (homes) and Favourites (restaurants) are tabs of one screen; `/interested` and `/favorites` open those tabs. **[phone]**

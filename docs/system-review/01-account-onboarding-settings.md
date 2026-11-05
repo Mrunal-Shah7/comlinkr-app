@@ -99,3 +99,17 @@ account deletion and its cron.
   shows the guest view with "Choose your city" [observed].
 - Theme: the menu's Dark Mode / Light Mode switch changes the whole app at once [observed]. In the signed-in menu the
   switch sits under the pinned Log Out footer until the menu is scrolled [observed].
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- Login shows errors under the field with a shake, not in a box. **[phone]**
+- Sign-up and reset password show the password rules live (8 characters, a capital, a number). Reset password now enforces them; the server still accepts 6. **[phone]**
+- Code boxes empty after a wrong code; "Send again in 0:30" counts down before a resend. **[phone]**
+- Reset password is one sliding screen: email, code, new password. The code is checked only when the password is saved; a wrong code returns to the boxes. **[phone]**
+- Onboarding has 5 steps: the agreement step is gone; a required switch on the last step agrees to the Terms and the Privacy Policy. Consent is still posted to `/onboarding/agreement` when onboarding finishes. Not walked.
+- Edit profile saves each field as you go (on leaving the field, or a second after typing stops); no Save button. **[phone]**
+- My profile: roommate preferences edit in a sheet; the hidden promote-listing sheet (toast only) is removed.
+- Apply for a badge: 3 steps (choose; details and documents; send) instead of 5. Same fields and submit. Not walked.

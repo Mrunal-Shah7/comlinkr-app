@@ -3,21 +3,24 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-05 (latest, later) - design D full match in progress (owner: include phase 2 behaviour)
+## 2026-11-06 (latest) - design D full match on `feature/design-d` (plan 01)
 
-- **Owner, 2026-11-05:** every screen must match design D exactly, motion included; asked whether to fold in the
-  phase 2 behaviour changes, answered "Yes, include them now".
-- **Done since phase 1 (type-checked, committed, not yet walked on the phone):** RSVP sheet with profile prefill and
-  the ticket flip; door check-in (scanner box, rolling counts); glass toast with an optional Undo; story viewer photo
-  cross-fade; gallery (1 of n, swipe down to close; Food uses it); apply and sign (short application, one offer page,
-  finger sign pad sending a drawn PNG, terms chips sent with the server terms step, Decline withdraws); landlord
-  one-tap decisions with the slide-away. Toolkit: Stepper, Prefill, Tag, PersonAvatar, RollNumber, DStick, SignPad.
-- **Left:** the checklist in the session scratchpad `gaps.md` (copied below in short): Food review stars drag and
-  review search; question upvote bounce, ask topic chip; badges in 3 steps; base-coat sheets; Saved/Interested/
-  Favourites merge; messages swipe actions; chat side-pop; my-posts undo; edit-profile save as you go; help search;
-  login errors under fields; signup live rules; OTP clear and 0:30 resend; forgot on one screen; onboarding 5 steps;
-  every composer change (story title optional needs a backend DTO change and e2e test); card-to-hero; city picker;
-  then the side-by-side check against the prototype on the phone, docs (build note, tracker, system reviews).
+- **Owner, 2026-11-05:** every screen must match design D, motion included, and the phase 2 behaviour changes
+  are in ("Yes, include them now").
+- **Done:** see [the build note](build/2026-11-06-design-d-full-match.md) and the tracker in
+  [plan 01](plan/01-design-d.md). Two optional API fields and migration `20261105000000_story_general_category`
+  (applied to the local databases only). One commit per screen; nothing pushed, no pull request.
+- **Not built:** card-to-detail expand; the guest city picker.
+- **Not walked:** listed in the build note (onboarding, badges, most composers, landlord, My posts Undo, gallery,
+  story viewer, scanning, Ask, upvotes, All events). Light mode not checked on anything new. No screen-by-screen
+  comparison with the prototype.
+- **Before a pull request:** check the production PostgreSQL version (12 or later for the enum migration);
+  update the system reviews (`docs/system-review/`, sections "Update 2026-11-06" added with the moved
+  interactions, still to be read through by the owner); walk the screens not walked; confirm
+  `frontend/apps/mobile/.env` still points at production; the owner's go-ahead to push.
+- **Known failing test, not from this branch:** `test/sprint54/stories-listing-reason.e2e-spec.ts` (listing
+  moderation) fails with `main`'s code too.
+- **Servers:** stopped at the end.
 
 ## 2026-11-05 (latest) - design D phase 1 built on `feature/design-d` (plan 01)
 

@@ -57,3 +57,11 @@ Checklist: none yet; the smoke checklist opens the tab. Test data: 10 questions 
 
 Ask, answer and upvote end to end; the category suggester with non-English text; report and block from a
 question; pagination past one page; answers from blocked users.
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- Upvotes bounce and the count rolls; answers are sorted with the most-upvoted first and tagged "Best answer" when there is more than one.
+- Ask sheet: the topic is guessed from the words and can be changed with a chip; your pick wins. Not walked.
