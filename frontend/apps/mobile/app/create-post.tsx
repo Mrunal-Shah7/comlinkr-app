@@ -49,6 +49,10 @@ import { DatePickerField, TimePickerField } from "../components/DateTimePickerFi
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: render all persisted edit media through the shared image component.
 import { File } from "expo-file-system"; // SPRINT-42: resolve image byte size when the picker omits fileSize.
 import { appAlert } from '../src/shared/ui/Dialogs';
+import { createThemedStyles } from '../src/theme/themedStyles';
+import { TYPE } from '../src/theme/d';
+import { PressableScale, Reveal } from '../src/shared/d';
+import { goBackOr } from '../src/shared/d/Page';
 
 type AttachedMedia = {
   uri: string;
@@ -181,52 +185,52 @@ const POST_TYPES = [
   {
     id: "news",
     icon: "newspaper-outline" as const,
-    label: "News Post",
+    label: "News for neighbours",
     desc: "Share updates & announcements",
     color: "#1A6BAE",
     bg: "#E3EDF6",
-    gradient: ["#1A6BAE", "#0054CC"] as [string, string],
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "event",
     icon: "calendar-outline" as const,
-    label: "Create Event",
+    label: "An event",
     desc: "Organize a local event or meetup",
-    color: "#257A86",
-    bg: "#E2F0F1",
-    gradient: ["#257A86", "#E56800"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "listing",
     icon: "home-outline" as const,
-    label: "Add Listing",
+    label: "A whole place for rent",
     desc: "List your property for rent or sale",
     color: "#1A6BAE",
     bg: "#E3EDF6",
-    gradient: ["#1A6BAE", "#0054CC"] as [string, string],
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "shared_space",
     icon: "people-circle-outline" as const,
-    label: "List a Space",
+    label: "A room in my home",
     desc: "Offer a room or shared space for co-living",
-    color: "#257A86",
-    bg: "#FFF3E8",
-    gradient: ["#257A86", "#E56800"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "restaurant",
     icon: "restaurant-outline" as const,
-    label: "List My Restaurant",
+    label: "My restaurant",
     desc: "Register your restaurant on ComLinkr",
-    color: "#30855B",
-    bg: "#E3F1EA",
-    gradient: ["#30855B", "#256B49"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
   {
     id: "story",
     icon: "videocam-outline" as const,
-    label: "Add Story",
+    label: "A story",
     desc: "Upload a photo or video",
     color: "#1A6BAE",
     bg: "#E3EDF6",
@@ -235,11 +239,11 @@ const POST_TYPES = [
   {
     id: "challenge",
     icon: "trophy-outline" as const,
-    label: "Create Challenge",
+    label: "A quest",
     desc: "Start an interactive community challenge",
-    color: "#257A86",
-    bg: "#E2F0F1",
-    gradient: ["#257A86", "#1A6BAE"] as [string, string],
+    color: "#1A6BAE",
+    bg: "#E3EDF6",
+    gradient: ["#1A6BAE", "#30855B"] as [string, string],
   },
 ];
 
@@ -416,15 +420,19 @@ function ChipSelect({
       {options.map((opt) => {
         const active = value === opt;
         return (
-          <Pressable
+          <PressableScale
             key={opt}
-            style={[ch.chip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, active && { backgroundColor: activeBg, borderColor: color }]}
+            scaleTo={0.94}
+            style={[ch.chip, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }, active && { backgroundColor: tc.mint, borderColor: tc.mint }]}
             onPress={() => onChange(active ? "" : opt)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
           >
-            <Text style={[ch.chipText, { color: tc.textSecondary }, active && { color, fontWeight: "700" }]}>
+            
+            <Text style={[ch.chipText, { color: active ? "#fff" : tc.textPrimary }]}>
               {opt}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </Wrap>
@@ -461,40 +469,41 @@ function ChipMulti({
       {options.map((opt) => {
         const active = value.includes(opt);
         return (
-          <Pressable
+          <PressableScale
             key={opt}
-            style={[ch.chip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, active && { backgroundColor: activeBg, borderColor: color }]}
+            scaleTo={0.94}
+            style={[ch.chip, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }, active && { backgroundColor: tc.mint, borderColor: tc.mint }]}
             onPress={() => toggle(opt)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
           >
-            {active && (
-              <Ionicons name="checkmark" size={12} color={color} style={{ marginRight: 2 }} />
-            )}
-            <Text style={[ch.chipText, { color: tc.textSecondary }, active && { color, fontWeight: "700" }]}>
+            {active && <Ionicons name="checkmark" size={13} color="#fff" style={{ marginRight: 3 }} />}
+            <Text style={[ch.chipText, { color: active ? "#fff" : tc.textPrimary }]}>
               {opt}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </Wrap>
   );
 }
 
-const ch = StyleSheet.create({
+const ch = createThemedStyles({
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   scrollRow: { flexDirection: "row", gap: 8, paddingRight: 16 },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: "#E0E5EF",
     backgroundColor: "#F5F7FB",
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: "500",
+    fontSize: 13.5,
+    fontWeight: "700",
     color: "#5A6A7E",
   },
 });
@@ -587,7 +596,7 @@ function AttachedFile({
     </View>
   );
 }
-const af = StyleSheet.create({
+const af = createThemedStyles({
   file: {
     flexDirection: "row",
     alignItems: "center",
@@ -1404,7 +1413,7 @@ function PreviewModal({
   );
 }
 
-const pv = StyleSheet.create({
+const pv = createThemedStyles({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
   sheet: {
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
@@ -1709,14 +1718,9 @@ const pv = StyleSheet.create({
 });
 
 // ── Section header helper ──────────────────────────────────────────────────────
-function SectionLabel({ label, color }: { label: string; color: string }) {
+function SectionLabel({ label }: { label: string; color?: string }) {
   const { tc } = useTheme();
-  return (
-    <View style={s.sectionLabelRow}>
-      <View style={[s.sectionDot, { backgroundColor: color }]} />
-      <Text style={[s.sectionLabel, { color: tc.textSecondary }]}>{label}</Text>
-    </View>
-  );
+  return <Text style={[TYPE.overline, { color: tc.textTertiary, marginTop: 20, marginBottom: 8, marginLeft: 2 }]}>{label}</Text>;
 }
 
 // ── Native-style media picker sheet (Android — iOS uses ActionSheetIOS) ──────
@@ -1777,7 +1781,7 @@ function MediaPickerSheet({
   );
 }
 
-const mps = StyleSheet.create({
+const mps = createThemedStyles({
   sheet: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
@@ -1798,7 +1802,8 @@ const mps = StyleSheet.create({
 });
 
 // ── Full form for a selected post type ────────────────────────────────────────
-function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBack: () => void; initialMode?: string; editId?: string }) { // SPRINT-42: accept the entity id selected by owner-only edit actions.
+function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBack: () => void; initialMode?: string; editId?: string }) {
+  const insetsTop = 0; // the screen's SafeAreaView already clears the status bar // SPRINT-42: accept the entity id selected by owner-only edit actions.
   const { isDark, tc } = useTheme();
   const user = useAuthStore((s) => s.user);
   const {
@@ -2833,27 +2838,19 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
   return (
     <>
-      {/* ── Header ── */}
-      <LinearGradient
-        colors={type.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={s.headerGrad}
-      >
-        <View style={s.header}>
-          <Pressable
-              onPress={onBack}
-              style={s.backBtn}
-              hitSlop={10}
-            >
-            <Ionicons name="chevron-back" size={22} color="#FFF" />
+      {/* ── Bar (design D) ── */}
+      <View style={{ paddingTop: insetsTop, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
+        <View style={{ height: 56, flexDirection: "row", alignItems: "center", paddingHorizontal: 8 }}>
+          <Pressable onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+            style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+            <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
           </Pressable>
-          <View style={s.headerTypePill}>
-            <Ionicons name={type.icon} size={13} color="#FFF" />
-            <Text style={s.headerTypePillText} numberOfLines={1}>{type.label}</Text>
+          <View style={{ position: "absolute", left: 64, right: 64, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }} pointerEvents="none">
+            <Ionicons name={type.icon} size={17} color={tc.accentText} />
+            <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>{type.label}</Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView
         style={[s.scroll, { backgroundColor: tc.pageBg }]}
@@ -2895,7 +2892,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             {listingStep === 1 && (
             <>
             <SectionLabel label="TITLE" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Spacious 2BR in Downtown Manhattan"
@@ -2918,7 +2915,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             <SectionLabel label="PRICE & FEES" color={type.color} />
             <View style={s.rowFields}>
-              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
                   <Text style={[s.fieldPrefix, { color: type.color }]}>{derivedListingCurrency.symbol}</Text>
                   <TextInput
@@ -2931,7 +2928,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                   />
                 </View>
               </View>
-              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
                   <Text style={[s.fieldPrefix, { color: type.color }]}>{derivedListingCurrency.symbol}</Text>
                   <TextInput
@@ -2947,7 +2944,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="DESCRIPTION" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
                 placeholder="Describe the property — size, neighborhood, nearby transit, what makes it special..."
@@ -2969,7 +2966,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             <View style={s.rowFields}>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Beds</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="0"
@@ -2982,7 +2979,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Baths</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="0"
@@ -2995,7 +2992,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Sqft</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="0"
@@ -3008,7 +3005,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]} numberOfLines={1}>Floor</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="e.g. 3rd"
@@ -3034,7 +3031,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             />
 
             <SectionLabel label="YEAR BUILT (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. 2018"
@@ -3046,7 +3043,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="LEASE TERM (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. 12 months, Month-to-month"
@@ -3084,7 +3081,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             {listingStep === 3 && (
             <>
             <SectionLabel label="PARKING (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. Street parking, 1 garage spot"
@@ -3095,7 +3092,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="LAUNDRY (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. In-unit washer/dryer"
@@ -3106,7 +3103,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="HEATING (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. Central heat"
@@ -3117,7 +3114,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="COOLING (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. Central A/C"
@@ -3128,7 +3125,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="UTILITIES" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.bodyInput, { color: tc.textPrimary, minHeight: 44 }]}
                 placeholder="e.g. Tenant pays electric & gas"
@@ -3151,7 +3148,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="CITY" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="City"
@@ -3162,7 +3159,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="STATE / PROVINCE (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="State or province"
@@ -3173,7 +3170,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="COUNTRY" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="Country"
@@ -3184,7 +3181,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="TRANSIT INFO (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. 2 min to 6 train"
@@ -3195,7 +3192,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="WALK SCORE (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="0–100"
@@ -3225,7 +3222,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             {isEditing ? <><SectionLabel label="LISTING DETAILS — SAVED WITH BUTTON BELOW" color={type.color} /><SectionLabel label="STATUS" color={type.color} /><ChipSelect options={["AVAILABLE", "RENTED", "UNLISTED"]} value={listingStatus} onChange={(value) => setListingStatus(value as ListingStatus)} color={type.color} bg={type.bg} /></> : null}
             {/* SPRINT-42: separate owner detail/status Save from immediate image operations. */}
             <SectionLabel label="PET POLICY (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary, minHeight: 72 }]}
                 placeholder="e.g. Cats allowed, no dogs"
@@ -3390,7 +3387,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
         {type.id === "shared_space" && (
           <>
             <SectionLabel label="TITLE" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Sunny room in shared Williamsburg loft"
@@ -3403,7 +3400,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="DESCRIPTION" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
                 placeholder="Describe the space, housemates, vibe, and what you are looking for..."
@@ -3419,7 +3416,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             <SectionLabel label="MONTHLY RENT & FEES" color={type.color} />
             <View style={s.rowFields}>
-              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
                   <Text style={[s.fieldPrefix, { color: type.color }]}>$</Text>
                   <TextInput
@@ -3432,7 +3429,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                   />
                 </View>
               </View>
-              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+              <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
                   <Text style={[s.fieldPrefix, { color: type.color }]}>$</Text>
                   <TextInput
@@ -3446,7 +3443,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 </View>
               </View>
             </View>
-            <View style={[s.inputWrap, { marginTop: 10, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { marginTop: 10, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="Currency (e.g. USD)"
@@ -3465,7 +3462,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             <View style={s.rowFields}>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Rooms</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="1"
@@ -3478,7 +3475,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]}>Baths</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="1"
@@ -3493,7 +3490,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             <View style={[s.rowFields, { marginTop: 14 }]}>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]} numberOfLines={1}>Current occupants</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="0"
@@ -3506,7 +3503,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.miniFieldLabel, { color: tc.textTertiary }]} numberOfLines={1}>Open spots</Text>
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.fieldInput, s.fieldInputCenter, { color: tc.textPrimary }]}
                     placeholder="1"
@@ -3568,7 +3565,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="PET POLICY (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
                 placeholder="e.g. Cats OK, no dogs"
@@ -3601,7 +3598,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="HOUSE RULES (OPTIONAL)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary, minHeight: 88 }]}
                 placeholder="Quiet hours, guests, shared spaces..."
@@ -3718,7 +3715,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 </View>
 
                 <SectionLabel label="RESTAURANT NAME *" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.titleInput, { color: tc.textPrimary }]}
                     placeholder="e.g. Bella Napoli – Italian Kitchen"
@@ -3859,7 +3856,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 />
 
                 <SectionLabel label="TELL YOUR STORY" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
                     placeholder="Tell customers what makes your restaurant unique — your inspiration, ambiance, must-try dishes, and what to expect when they visit..."
@@ -3956,7 +3953,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 )}
 
                 <SectionLabel label="RESTAURANT NAME *" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[s.titleInput, { color: tc.textPrimary }]}
                     placeholder="Name of the restaurant you visited"
@@ -4014,7 +4011,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
                 />
 
                 <SectionLabel label="YOUR REVIEW" color={type.color} />
-                <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+                <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
                     placeholder="Share your experience — what you loved, the ambiance, must-try dishes, and who you'd recommend it to..."
@@ -4048,7 +4045,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
         {type.id === "event" && (
           <>
             <SectionLabel label="EVENT NAME" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Rooftop Sunset Social Mixer"
@@ -4147,7 +4144,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
             </View>
 
             <SectionLabel label="EVENT DESCRIPTION" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
                 placeholder="Describe your event — what to expect, who should attend, what to bring..."
@@ -4181,7 +4178,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
           <>
             {/* Title */}
             <SectionLabel label="STORY TITLE *" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Sunset at the harbor 🌅"
@@ -4205,7 +4202,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             {/* Description */}
             <SectionLabel label="DESCRIPTION (optional)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="Tell your community what this story is about…"
                 placeholderTextColor={tc.textTertiary}
@@ -4220,7 +4217,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             {/* Hashtags */}
             <SectionLabel label="HASHTAGS (optional)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary }]}
                 placeholder="#community, #local, #weekend"
@@ -4233,7 +4230,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             {/* Location */}
             <SectionLabel label="LOCATION (optional)" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.fieldInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Riverside Park, New York"
@@ -4254,7 +4251,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>CHALLENGE TITLE</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="e.g. Best Sunset Shot 🌅"
@@ -4285,7 +4282,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>CHALLENGE DETAILS</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="What do participants need to do?"
                 placeholderTextColor={tc.textTertiary}
@@ -4316,7 +4313,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>GOAL / WIN CONDITION *</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="e.g. Most likes wins, First to finish, Best photo"
                 placeholderTextColor={tc.textTertiary}
@@ -4331,7 +4328,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>REWARD / PRIZE *</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="e.g. Bragging rights 🏆, Gift card, Featured on feed"
                 placeholderTextColor={tc.textTertiary}
@@ -4346,7 +4343,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>MAX PARTICIPANTS (OPTIONAL)</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="Leave empty for unlimited"
                 placeholderTextColor={tc.textTertiary}
@@ -4362,7 +4359,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
               <Text style={s.sectionLabel}>HASHTAGS</Text>
             </View>
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 placeholder="#SunsetChallenge, #NYCSunsets, #GoldenHour"
                 placeholderTextColor={tc.textTertiary}
@@ -4394,7 +4391,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
           <>
             {/* ── Title — always visible ── */}
             <SectionLabel label="TITLE" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
                 placeholder="What's happening in your community?"
@@ -4408,7 +4405,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
             {/* ── Content — always visible but compact ── */}
             <SectionLabel label="CONTENT" color={type.color} />
-            <View style={[s.inputWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary, minHeight: 80 }]}
                 placeholder="Share details with your community..."
@@ -4764,155 +4761,37 @@ export default function CreatePostScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-      {/* ── White header (matches app style) ── */}
-      <View style={[s.chooserHeaderWhite, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={[s.backBtnWhite, { backgroundColor: tc.sectionBg }]} hitSlop={10}>
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
+      <View style={{ height: 56, flexDirection: "row", alignItems: "center", paddingHorizontal: 8 }}>
+        <Pressable onPress={() => goBackOr("/(tabs)/feed")} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+          style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+          <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
         </Pressable>
-        <View style={{ flex: 1 }}>
-          <Svg height={28} width={180}>
-              <Defs>
-                <SvgGradient id="createTitleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <Stop offset="0%" stopColor={Colors.brand.blue} />
-                  <Stop offset="100%" stopColor={Colors.brand.green} />
-                </SvgGradient>
-              </Defs>
-              <SvgText fill="url(#createTitleGrad)" fontSize={20} fontWeight="900" x="0" y={22} letterSpacing="-0.4">
-                Create &amp; Share
-              </SvgText>
-            </Svg>
-          <Text style={[s.chooserSubGrey, { color: tc.textSecondary }]}>What would you like to add?</Text>
-        </View>
       </View>
-
-      <ScrollView
-        style={s.scroll}
-        contentContainerStyle={[s.scrollContent, { paddingTop: 20 }]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Post type grid (2 columns, wraps all types) ── */}
-        <View style={s.typeGrid}>
-          {Array.from({ length: Math.ceil(POST_TYPES.length / 2) }, (_, row) => row * 2).map((rowStart) => (
-            <View key={rowStart} style={s.typeGridRow}>
-              {POST_TYPES.slice(rowStart, rowStart + 2).map((type) => {
-                return (
-                <Pressable
-                  key={type.id}
-                  style={({ pressed }) => [
-                    s.typeGridCard,
-                    { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
-                    pressed && { transform: [{ scale: 0.96 }] },
-                  ]}
-                  onPress={() => setSelectedType(type)}
-                >
-                  {/* Gradient top accent bar */}
-                  <LinearGradient
-                    colors={type.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={s.typeGridTopBar}
-                  />
-
-                  {/* Soft radial tint */}
-                  <View style={[s.typeGridBg, { backgroundColor: isDark ? type.color + "1A" : type.bg, opacity: isDark ? 1 : 0.35 }]} />
-
-                  {/* Content */}
-                  <View style={[s.typeGridContent, { paddingBottom: 26 }]}>
-                    {/* Icon */}
-                    <View style={s.typeGridIconWrap}>
-                      <LinearGradient
-                        colors={type.gradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={s.typeGridIcon}
-                      >
-                        <Ionicons name={type.icon} size={24} color="#FFF" />
-                      </LinearGradient>
-                    </View>
-
-                    {/* Label */}
-                    <Text style={[s.typeGridLabel, { color: type.color }]} numberOfLines={1}>
-                      {type.label}
-                    </Text>
-
-                    {/* Description */}
-                    <Text style={[s.typeGridDesc, { color: tc.textSecondary }]} numberOfLines={2}>
-                      {type.desc}
-                    </Text>
-                  </View>
-
-                  {/* Arrow indicator at bottom right */}
-                  <View style={[s.typeGridArrow, { backgroundColor: type.color + "12" }]}>
-                    <Ionicons name="arrow-forward" size={14} color={type.color} />
-                  </View>
-                </Pressable>
-                );
-              })}
-            </View>
-          ))}
-        </View>
-
-        {/* ── Pro Tips ── */}
-        <View style={[s.tipsCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <View style={s.tipsHeader}>
-            <LinearGradient
-              colors={["#F59E0B", "#D97706"]}
-              style={s.tipsIconBox}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name="bulb-outline" size={16} color="#FFF" />
-            </LinearGradient>
-            <Text style={[s.tipsTitle, { color: tc.textPrimary }]}>Pro Tips</Text>
-          </View>
-          {[
-            "Add eye-catching photos to get significantly more views",
-            "Include your location to reach the right local audience",
-            "Write a clear, engaging description for better reach",
-            "Fill in all details — complete posts rank higher",
-            "Use specific details: price, date, address boost relevance",
-            "Respond quickly to inquiries — speed builds trust",
-          ].map((tip, i) => (
-            <View key={i} style={s.tipRow}>
-              <View style={s.tipDot} />
-              <Text style={[s.tipText, { color: tc.textSecondary }]}>{tip}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ── Suggestions ── */}
-        <View style={[s.suggestionsCard, { backgroundColor: isDark ? "#0A1628" : "#F0F7FF", borderColor: tc.borderLight }]}>
-          <View style={s.suggestionsHeader}>
-            <LinearGradient
-              colors={[Colors.brand.blue, Colors.brand.green]}
-              style={s.tipsIconBox}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name="sparkles" size={16} color="#FFF" />
-            </LinearGradient>
-            <Text style={s.suggestionsTitle}>Suggestions</Text>
-          </View>
-          {[
-            { icon: "camera-outline" as const, text: "Photos with natural light get 3× more engagement" },
-            { icon: "megaphone-outline" as const, text: "Post during evenings for higher visibility" },
-            { icon: "people-outline" as const, text: "Tag your community to reach more members" },
-            { icon: "heart-outline" as const, text: "Authentic stories connect better than polished ads" },
-          ].map((sug, i) => (
-            <View key={i} style={s.sugRow}>
-              <Ionicons name={sug.icon} size={15} color={Colors.brand.blue} />
-              <Text style={[s.sugText, { color: tc.textSecondary }]}>{sug.text}</Text>
-            </View>
-          ))}
-        </View>
-
+      <ScrollView style={s.scroll} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, marginLeft: 2 }]}>Post something</Text>
+        <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 2, marginBottom: 16, marginLeft: 2 }]}>What would you like to share with your city?</Text>
+        {POST_TYPES.map((type, i) => (
+          <Reveal key={type.id} i={i}>
+            <PressableScale onPress={() => setSelectedType(type)} accessibilityRole="button" accessibilityLabel={type.label}
+              style={{ flexDirection: "row", alignItems: "center", gap: 14, padding: 14, marginBottom: 10, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
+              <View style={{ width: 46, height: 46, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+                <Ionicons name={type.icon} size={22} color={tc.accentText} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{type.label}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{type.desc}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={tc.textTertiary} />
+            </PressableScale>
+          </Reveal>
+        ))}
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
+const s = createThemedStyles({
   safe: { flex: 1, backgroundColor: "#F5F6FA" },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 20 },

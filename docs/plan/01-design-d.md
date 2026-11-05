@@ -113,7 +113,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | listings | `app/(tabs)/housing/index.tsx`, `DListingCards.tsx`, `RoommateCard.tsx` | phone-checked |
 | food | `app/(tabs)/food/index.tsx` | phone-checked |
 | community | `app/(tabs)/community/index.tsx` | phone-checked |
-| compose (+ sheet) | `src/shared/navigation/ComposeSheet.tsx` | phone-checked |
+| compose (+ sheet) | `src/shared/navigation/ComposeSheet.tsx`; the chooser in `app/create-post.tsx` matches it | phone-checked |
 | menu (You sheet) | `components/HamburgerMenu.tsx` | phone-checked |
 | listing-detail | `PropertyDetailModal.tsx` | phone-checked |
 | restaurant-detail | restaurant modal in `app/(tabs)/food/index.tsx` | phone-checked |
@@ -150,7 +150,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | verification | `app/verification-status.tsx` | rebuilt; not-applied state phone-checked, review timeline checked with the badge journey |
 | messages | `app/chat.tsx` (list) | phone-checked |
 | chat | `app/chat.tsx` (conversation; group info panel and emoji picker still base coat) | phone-checked (send, remove conversation) |
-| my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | rebuilt; empty state phone-checked, rows to check after a post is made |
+| my-posts | `app/myposts.tsx` (detail and edit sheets still base coat) | phone-checked (a post made, its row, delete) |
 | city | city picker | not started |
 | more | ··· sheets and dialogs: `src/shared/ui/Dialogs.tsx` (every appAlert, confirm and action sheet) | phone-checked |
 | login | `app/(auth)/login.tsx` | phone-checked (opened while signed in; signing in again not walked) |
@@ -158,11 +158,11 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | otp | OTP step in sign-up (`OtpBoxes`) | rebuilt; the same component phone-checked in reset password, sign-up code step not walked |
 | forgot | `app/(auth)/forgot-password.tsx`, `src/shared/d/Otp.tsx` | phone-checked (code sent, wrong code shakes; password not changed) |
 | onboarding | `app/(auth)/onboarding.tsx` (look only; 5 steps is phase 2) | phone-checked (step 1 and the country picker; not finished, to keep the test account as it is) |
-| compose-listing | `app/create-post.tsx` | not started |
-| compose-room | `app/create-post.tsx` | not started |
-| compose-news | `app/create-post.tsx` | not started |
-| compose-event | `app/create-post.tsx` | not started |
-| compose-story | `app/create-post.tsx` | not started |
-| compose-restaurant | `app/create-post.tsx` | not started |
-| compose-review | `app/create-post.tsx` | not started |
-| compose-quest | `app/create-post.tsx` | not started |
+| compose-listing | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-room | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-news | `app/create-post.tsx` (shared look: glass bar, overline labels, soft inputs, mint chips) | phone-checked (published a test post, deleted it) |
+| compose-event | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-story | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-restaurant | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-review | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
+| compose-quest | `app/create-post.tsx` (same shared look; one-question layout is phase 2) | rebuilt (look), not walked |
