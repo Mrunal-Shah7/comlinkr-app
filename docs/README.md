@@ -122,6 +122,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 - 2026-11-04: [TR-002 guest menu 401s](build/2026-11-04-TR-002-guest-menu-401s.md): the side menu refreshes its
   data only when signed in; guest menu opens now send no requests. Checked on the phone; not committed.
+- 2026-11-05: [Design D, phase 1](build/2026-11-05-design-d-phase-1.md): the D look and motion on every screen, a
+  shared base coat for the rest, one commit per screen on `feature/design-d`.
 - 2026-11-04: [One repository for backend and frontend](build/2026-11-04-combined-repository.md): moved into
   `comlinkr-app`, fresh git repository, nothing committed; dependencies reinstalled; docs system written.
 - 2026-10-29: [Bug audit](build/2026-10-29-bug-audit.md): B1 to B10 found and fixed (roommate filter, dates, read

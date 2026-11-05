@@ -1,6 +1,6 @@
 # 01. Build design D (Night Market in the brand gradient)
 
-**Status: Building (phase 1).** Triage [TR-005](../triage.md). Review:
+**Status: Phase 1 built (2026-11-05), on the branch, not pushed; phase 2 next.** [Build note](../build/2026-11-05-design-d-phase-1.md). Triage [TR-005](../triage.md). Review:
 [2026-11-05 design review](../review/2026-11-05-design-audit.md). Design:
 [`d-night-market-gradient.html`](../design/2026-11-05-redesign/d-night-market-gradient.html), built from
 `docs/design/2026-11-05-redesign/src/` (`c1.js`, `a2.js`, `a3.js`, `a4.js`, `c3.js`, `a.css` + `c.css` + `d.css`).
@@ -102,7 +102,7 @@ a backend change with its own migration-free DTO change and e2e test).
 
 ## Screen tracker (phase 1)
 
-The 55 screens of `d-night-market-gradient.html` (52 plus three small sheets: city, more, listing menu). Status is one
+The screens of `d-night-market-gradient.html` (52 plus small sheets: city, more, listing menu, the RSVP ticket and others; 57 rows). Status is one
 of: **not started**; **base coat** (fonts and colours only, through the shared style layer, old layout); **rebuilt**
 (the screen's own layout follows the design, not yet seen on the phone); **phone-checked** (rebuilt and walked on
 the phone against the local backend). Only "phone-checked" counts as done.

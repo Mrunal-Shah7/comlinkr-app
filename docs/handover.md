@@ -3,7 +3,36 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-05 (latest) - building design D, phase 1 in progress (plan 01)
+## 2026-11-05 (latest) - design D phase 1 built on `feature/design-d` (plan 01)
+
+- **State:** every screen in the plan's tracker (57 rows) has the D look. 44 were checked on the phone, 12 were
+  rebuilt but not walked, and 1 (the guest city picker) is base coat only. One commit per screen, nothing pushed,
+  no pull request. Build note:
+  [build/2026-11-05-design-d-phase-1.md](build/2026-11-05-design-d-phase-1.md). Run log: the second section of
+  [device-runs/2026-11-05-design-d.md](device-runs/2026-11-05-design-d.md).
+- **Not walked:**
+  - the seven composers other than News;
+  - the RSVP ticket and the sign-up step of the RSVP sheet;
+  - restaurant review, the question answers view, the story viewer (no stories in the seed);
+  - badge upload and send;
+  - the sign-up code step (same `OtpBoxes` as reset password, which was walked).
+- **Still on the base coat inside rebuilt screens:**
+  - the roommate-preferences sheet in My profile;
+  - My posts' detail and edit sheets;
+  - My restaurants' manage sheet;
+  - a conversation's group info and emoji picker;
+  - the step bodies of Apply for a badge and the tenancy agreement;
+  - the detail sheet in `app/events.tsx`.
+- **Next:**
+  - the owner reviews on the phone;
+  - then phase 2, the behaviour changes in the plan;
+  - triage TR-006 to TR-009, found on the way and none caused by this work.
+- **Before a pull request:** check that `frontend/apps/mobile/.env` still points at production (it was not
+  edited), walk the journeys not yet walked, and get the owner's go-ahead to push.
+- **Lesson:** build `RegExp` patterns in a script file with escaped `|`; an unescaped one put text at the top of the
+  plan (repaired in `d7fb062`).
+
+## 2026-11-05 (earlier) - building design D, phase 1 in progress (plan 01)
 
 - **Stopped here (usage limit).** Done and checked on the phone: foundation, navigation (zoom stack, floating tab bar, + sheet), Explore tab (all five sub-tabs), Listings tab (homes, rooms, roommates). Food tab restyled and type-checked but **not yet checked on the phone** (last commit). Not started: Community tab, all detail screens and modals, the You screens, sign-in and onboarding, the composers. Backend and Metro were stopped.
 
