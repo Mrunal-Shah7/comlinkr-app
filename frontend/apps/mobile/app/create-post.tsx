@@ -42,6 +42,7 @@ import { createSharedSpace, uploadSharedSpaceImages } from "../src/api/roommates
 import { getBusinessCurrency } from "../src/utils/currency";
 import { createRestaurant, submitReview, uploadRestaurantImages, type Restaurant } from "../src/api/food.api";
 import { ReviewPicker } from "../src/features/food/components/ReviewPicker";
+import { ListingQuestions, clearListingDraft } from "../src/features/housing/components/ListingQuestions";
 import { createStory, type StoryMediaTypeApi, type StoryCategoryApi } from "../src/api/stories.api";
 import { createChallenge, type ChallengeDurationApi, type ChallengeTypeApi } from "../src/api/challenges.api";
 import { ApiError } from "../src/api/client";
@@ -1880,6 +1881,9 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
   const [listingStepError, setListingStepError] = useState<string | null>(null);
   /** Listing photos only (Step 4); separate from `attachedFiles` used by other post types. */
   const [listingImages, setListingImages] = useState<AttachedMedia[]>([]);
+  // The one-question listing flow posts through handlePost once listingStep is 4 (its canPost gate).
+  const [listingPostReq, setListingPostReq] = useState(0);
+  useEffect(() => { if (listingPostReq > 0) void handlePost(); }, [listingPostReq]); // eslint-disable-line react-hooks/exhaustive-deps -- fire once per request
   const [existingListingImages, setExistingListingImages] = useState<HousingListingImageRef[]>([]); // SPRINT-42: keep persisted images separate from detail fields and new picks.
   const [listingStatus, setListingStatus] = useState<ListingStatus>("AVAILABLE"); // SPRINT-42: expose the owner-controlled listing lifecycle.
   const [imageBusy, setImageBusy] = useState(false); // SPRINT-42: serialize immediate image mutations.
@@ -2585,6 +2589,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
           } // SPRINT-42: finish listing edit branch.
           const listing = await createListing(current as Parameters<typeof createListing>[0]); // SPRINT-42: reuse fully validated normalized fields for listing creation.
           createdListingId = listing.id;
+          clearListingDraft();
           const photoFiles = listingImages.filter((f) => f.mediaType === "photo");
           if (photoFiles.length > 0) {
             try {
@@ -2818,6 +2823,32 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
     : "ME";
 
   if (editLoading) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: tc.pageBg }}><ActivityIndicator color={type.color} /><Text style={{ color: tc.textSecondary, marginTop: 10 }}>Loading editor…</Text></View>; // SPRINT-42: prevent editing stale defaults while detail data loads.
+
+  if (type.id === "listing" && !isEditing) {
+    const place = [listingCityEff, listingState.trim() || user?.stateProvince?.trim(), listingCountryEff].filter(Boolean).join(", ");
+    return (
+      <ListingQuestions
+        images={listingImages}
+        onAddPhotos={handleListingPickImages}
+        onRemovePhoto={(idx) => setListingImages((prev) => prev.filter((_, i) => i !== idx))}
+        propType={[propType, setPropType]} price={[price, setPrice]} beds={[beds, setBeds]} baths={[baths, setBaths]}
+        address={[location, setLocation]} body={[body, setBody]} title={[title, setTitle]}
+        currencySymbol={derivedListingCurrency.symbol} currencyCode={(listingCurrency || derivedListingCurrency.code).toUpperCase()}
+        placeLine={place}
+        extras={{
+          deposit: [deposit, setDeposit], available: [available, setAvailable], leaseTerm: [leaseTerm, setLeaseTerm],
+          petPolicy: [petPolicy, setPetPolicy], parking: [parking, setParking], laundry: [laundry, setLaundry], sqft: [sqft, setSqft],
+          yearBuilt: [yearBuiltStr, setYearBuiltStr], heating: [heating, setHeating], cooling: [cooling, setCooling],
+          utilities: [utilitiesText, setUtilitiesText], furnished: [listingFurnishedSwitch, setListingFurnishedSwitch],
+        }}
+        error={listingStepError}
+        validateAddress={() => validateListingStep(3)}
+        onPost={() => { setListingStep(4); setListingPostReq((n) => n + 1); }}
+        submitting={submitting}
+        onClose={onBack}
+      />
+    );
+  }
 
   return (
     <>
