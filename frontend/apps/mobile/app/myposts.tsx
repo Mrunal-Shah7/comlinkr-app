@@ -32,7 +32,8 @@ import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { ScrollView as GHScrollView } from 'react-native-gesture-handler';
 import { TYPE } from '../src/theme/d';
-import { Chip, EmptyState, PressableScale, Reveal, SoftButton } from '../src/shared/d';
+import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag } from '../src/shared/d';
+import { DSheet } from '../src/shared/d/Sheet';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 
 /** Post types the backend supports editing via `PATCH /feed/:id` (mirrors deletePost's NEWS/ANNOUNCEMENT/JOBS coverage). */
@@ -473,9 +474,8 @@ export default function MyPostsScreen() {
     </DPage>
 
       {/* ── Post Detail Modal ── */}
-      <Modal visible={!!detailPost} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setDetailPost(null)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setDetailPost(null)} />
+      <DSheet visible={!!detailPost} onClose={() => setDetailPost(null)}>
+        <View>
           {detailPost ? (() => {
             const meta = getTypeMeta(detailPost.type);
             const likes    = metaNum(detailPost.metadata, "likesCount");
@@ -485,26 +485,18 @@ export default function MyPostsScreen() {
             const votes    = metaNum(detailPost.metadata, "votesCount") || metaNum(detailPost.metadata, "participantCount");
             const attendees = metaNum(detailPost.metadata, "attendeeCount");
             return (
-              <View style={[s.detailModal, { backgroundColor: tc.cardBg }]}>
-                <View style={s.detailHandle} />
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {/* Type badge + time */}
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: rs(8), marginBottom: rs(10) }}>
-                    <View style={[s.typeBadge, { backgroundColor: meta.bg }]}>
-                      <Ionicons name={meta.icon} size={12} color={meta.color} />
-                      <Text style={[s.typeBadgeText, { color: meta.color }]}>{meta.label}</Text>
-                    </View>
-                    <Text style={[s.cardMetaText, { color: tc.textTertiary }]}>{formatRelativeTime(detailPost.createdAt)}</Text>
-                    {detailPost.status ? (
-                      <View style={[s.typeBadge, { backgroundColor: "#F3F4F6", marginLeft: "auto" }]}>
-                        <Text style={[s.typeBadgeText, { color: "#6B7280" }]}>{detailPost.status}</Text>
-                      </View>
-                    ) : null}
+              <View style={{ paddingHorizontal: 18 }}>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 560 }}>
+                  {/* Type and time */}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <Tag label={meta.label} />
+                    <Text style={[TYPE.small, { color: tc.textTertiary }]}>{formatRelativeTime(detailPost.createdAt)}</Text>
+                    {detailPost.status ? <Tag label={detailPost.status.charAt(0) + detailPost.status.slice(1).toLowerCase()} style={{ marginLeft: "auto" }} /> : null}
                   </View>
 
                   {/* Title */}
-                  <Text style={[s.detailTitle, { color: tc.textPrimary }]}>{detailPost.title}</Text>
-                  {detailPost.isEdited ? <Text style={{ color: tc.textTertiary, fontSize: rs(10), marginBottom: rs(8) }}>Edited</Text> : null}
+                  <Text style={[TYPE.section, { color: tc.textPrimary, marginBottom: 6 }]}>{detailPost.title}</Text>
+                  {detailPost.isEdited ? <Text style={[TYPE.small, { color: tc.textTertiary, marginBottom: 8 }]}>Edited</Text> : null}
                   {/* SPRINT-42: my-post detail marker follows backend isEdited. */}
 
                   {/* Category */}
@@ -517,11 +509,11 @@ export default function MyPostsScreen() {
 
                   {/* Full content */}
                   {!!detailPost.content && (
-                    <Text style={[s.detailContent, { color: tc.textSecondary }]}>{detailPost.content}</Text>
+                    <Text style={[TYPE.body, { color: tc.textSecondary }]}>{detailPost.content}</Text>
                   )}
 
                   {/* ── All metadata rows ── */}
-                  <View style={[s.detailMetaBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
+                  <View style={{ borderRadius: 20, overflow: "hidden", backgroundColor: tc.inputBg, marginTop: 12 }}>
                     {likes > 0 && <DetailRow icon="heart-outline" color="#EF4444" label="Likes" value={String(likes)} tc={tc} />}
                     {comments > 0 && <DetailRow icon="chatbubble-outline" color={Colors.brand.blue} label="Comments" value={String(comments)} tc={tc} />}
                     {views > 0 && <DetailRow icon="eye-outline" color={Colors.brand.green} label="Views" value={String(views)} tc={tc} />}
@@ -536,8 +528,6 @@ export default function MyPostsScreen() {
                         value={`${Number(detailPost.metadata.averageRating ?? 0).toFixed(1)} (${detailPost.metadata.totalReviews})`}
                         tc={tc}
                       />
-                    ) : detailPost.type === "EVENT" ? (
-                      <DetailRow icon="star-outline" color="#9CA3AF" label="Rating" value="No ratings yet" tc={tc} />
                     ) : null}
                     {detailPost.metadata?.date ? <DetailRow icon="calendar-outline" color={Colors.brand.orange} label="Event Date" value={formatEventDate(detailPost.metadata.date)} tc={tc} /> : null}
                     {detailPost.metadata?.venue ? <DetailRow icon="location-outline" color={Colors.brand.blue} label="Venue" value={String(detailPost.metadata.venue)} tc={tc} /> : null}
@@ -552,96 +542,59 @@ export default function MyPostsScreen() {
                       <DetailRow icon="pricetags-outline" color={Colors.brand.blue} label="Tags" value={(detailPost.metadata.tags as string[]).join(", ")} tc={tc} />
                     ) : null}
                     <DetailRow icon="time-outline" color={tc.textTertiary} label="Created" value={new Date(detailPost.createdAt).toLocaleString()} tc={tc} />
-                    <DetailRow icon="key-outline" color={tc.textTertiary} label="Post ID" value={detailPost.id} tc={tc} />
                   </View>
 
                   {/* Actions */}
-                  <View style={{ flexDirection: "row", gap: rs(10), marginTop: rs(16) }}>
-                    <Pressable style={[s.actionBtn, { flex: 1 }]} onPress={() => { setDetailPost(null); handleEdit(detailPost); }}>
-                      <Ionicons name="pencil-outline" size={15} color={Colors.brand.blue} />
-                      <Text style={[s.actionBtnText, { color: Colors.brand.blue }]}>Edit</Text>
-                    </Pressable>
-                    <Pressable style={[s.actionBtn, { flex: 1, backgroundColor: "#FEF2F2", borderColor: "#FECACA" }]} onPress={() => { setDetailPost(null); handleDelete(detailPost); }}>
-                      <Ionicons name="trash-outline" size={15} color="#EF4444" />
-                      <Text style={[s.actionBtnText, { color: "#EF4444" }]}>Delete</Text>
-                    </Pressable>
+                  <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+                    <SoftButton block label="Edit" outerStyle={{ flex: 1 }} icon={<Ionicons name="create-outline" size={17} color={tc.accentText} />} onPress={() => { setDetailPost(null); handleEdit(detailPost); }} />
+                    <SoftButton block ghost label="Delete" outerStyle={{ flex: 1 }} icon={<Ionicons name="trash-outline" size={17} color={tc.dangerText} />} onPress={() => { setDetailPost(null); handleDelete(detailPost); }} />
                   </View>
-                  <View style={{ height: rs(20) }} />
+                  <View style={{ height: 12 }} />
                 </ScrollView>
               </View>
             );
           })() : null}
         </View>
-      </Modal>
+      </DSheet>
 
-      {/* ── Edit Post Modal ── */}
-      <Modal
-        visible={!!editPost}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => !editSaving && setEditPost(null)}
-      >
+      {/* ── Edit post ── */}
+      <DSheet visible={!!editPost} onClose={() => { if (!editSaving) setEditPost(null); }} title="Edit post" full>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-          <SafeAreaView style={[s.editModalSafe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-            <View style={[s.editModalHeader, { borderBottomColor: tc.borderLight }]}>
-              <Pressable onPress={() => !editSaving && setEditPost(null)} hitSlop={12}>
-                <Ionicons name="close" size={24} color={tc.textPrimary} />
-              </Pressable>
-              <Text style={[s.editModalTitle, { color: tc.textPrimary }]}>Edit Post</Text>
-              <Pressable
-                onPress={() => void handleSaveEdit()}
-                disabled={editSaving}
-                hitSlop={12}
-                style={[s.editSaveBtn, { backgroundColor: Colors.brand.blue, opacity: editSaving ? 0.6 : 1 }]}
-              >
-                {editSaving ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <Text style={s.editSaveBtnText}>Save</Text>
-                )}
-              </Pressable>
-            </View>
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{ padding: rs(18) }}
-              keyboardShouldPersistTaps="handled"
-            >
-              <Text style={[s.editFieldLabel, { color: tc.textSecondary }]}>Title</Text>
-              <TextInput
-                style={[s.editTitleInput, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                value={editTitle}
-                onChangeText={setEditTitle}
-                placeholder="Post title"
-                placeholderTextColor={tc.textTertiary}
-                editable={!editSaving}
-                maxLength={120}
-              />
-
-              <Text style={[s.editFieldLabel, { color: tc.textSecondary, marginTop: rs(16) }]}>Content</Text>
-              <TextInput
-                style={[s.editContentInput, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                value={editContent}
-                onChangeText={setEditContent}
-                placeholder="What's on your mind?"
-                placeholderTextColor={tc.textTertiary}
-                editable={!editSaving}
-                multiline
-                textAlignVertical="top"
-              />
-            </ScrollView>
-          </SafeAreaView>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+            <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Title</Text>
+            <TextInput
+              style={[TYPE.body, { minHeight: 50, borderRadius: 16, paddingHorizontal: 14, backgroundColor: tc.inputBg, color: tc.textPrimary }]}
+              value={editTitle}
+              onChangeText={setEditTitle}
+              placeholder="Post title"
+              placeholderTextColor={tc.textTertiary}
+              editable={!editSaving}
+              maxLength={120}
+            />
+            <Text style={[TYPE.label, { color: tc.textSecondary, marginTop: 16, marginBottom: 6 }]}>Text</Text>
+            <TextInput
+              style={[TYPE.body, { minHeight: 180, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
+              value={editContent}
+              onChangeText={setEditContent}
+              placeholder="What's on your mind?"
+              placeholderTextColor={tc.textTertiary}
+              editable={!editSaving}
+              multiline
+            />
+            <GradientButton block label="Save" loading={editSaving} onPress={() => void handleSaveEdit()} outerStyle={{ marginTop: 18 }} />
+          </ScrollView>
         </KeyboardAvoidingView>
-      </Modal>
+      </DSheet>
     </>
   );
 }
 
-function DetailRow({ icon, color, label, value, tc }: { icon: string; color: string; label: string; value: string; tc: any }) {
+/** A label / value row in the D detail list (`.dl`); the icon and colour arguments are kept for the callers. */
+function DetailRow({ label, value, tc }: { icon: string; color: string; label: string; value: string; tc: any }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: rs(10), paddingVertical: rs(8), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.borderLight }}>
-      <Ionicons name={icon as any} size={rs(14)} color={color} style={{ marginTop: rs(1) }} />
-      <Text style={{ fontSize: rs(12), fontWeight: "700", color: tc.textTertiary, flex: 1 }}>{label}</Text>
-      <Text style={{ fontSize: rs(13), color: tc.textPrimary, flex: 2, textAlign: "right" }}>{value}</Text>
+    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 11, paddingHorizontal: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.borderLight }}>
+      <Text style={[TYPE.body, { fontSize: 14.5, color: tc.textSecondary, flex: 1 }]}>{label}</Text>
+      <Text style={[TYPE.bodyStrong, { fontSize: 14.5, color: tc.textPrimary, flex: 2, textAlign: "right" }]}>{value}</Text>
     </View>
   );
 }
