@@ -52,12 +52,12 @@ export function GradientFill({ style, children, colors = GRADIENT }: { style?: S
 }
 
 /* ---------- buttons ---------- */
-type BtnProps = { label: string; onPress?: () => void; icon?: ReactNode; disabled?: boolean; block?: boolean; small?: boolean; style?: StyleProp<ViewStyle>; accessibilityLabel?: string };
+type BtnProps = { label: string; onPress?: () => void; icon?: ReactNode; disabled?: boolean; block?: boolean; small?: boolean; style?: StyleProp<ViewStyle>; outerStyle?: StyleProp<ViewStyle>; accessibilityLabel?: string };
 /** Primary action: the brand gradient with a soft glow (`.btn.pri`). */
-export function GradientButton({ label, onPress, icon, disabled, block, small, style, accessibilityLabel }: BtnProps) {
+export function GradientButton({ label, onPress, icon, disabled, block, small, style, outerStyle, accessibilityLabel }: BtnProps) {
   const h = small ? 36 : 50;
   return (
-    <PressableScale disabled={disabled} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label}
+    <PressableScale disabled={disabled} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} outerStyle={outerStyle}
       style={[{ borderRadius: small ? 12 : RADIUS.button, opacity: disabled ? 0.4 : 1, alignSelf: block ? 'stretch' : 'flex-start' }, s.glow, style]}>
       <GradientFill style={[s.btn, { height: h, borderRadius: small ? 12 : RADIUS.button, paddingHorizontal: small ? 14 : 20 }]}>
         {icon}
@@ -67,10 +67,10 @@ export function GradientButton({ label, onPress, icon, disabled, block, small, s
   );
 }
 /** Secondary (`.btn.sec`) and outline (`.btn.ghost`) buttons. */
-export function SoftButton({ label, onPress, icon, disabled, block, small, style, ghost, accessibilityLabel }: BtnProps & { ghost?: boolean }) {
+export function SoftButton({ label, onPress, icon, disabled, block, small, style, outerStyle, ghost, accessibilityLabel }: BtnProps & { ghost?: boolean }) {
   const { tc } = useTheme();
   return (
-    <PressableScale disabled={disabled} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label}
+    <PressableScale disabled={disabled} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} outerStyle={outerStyle}
       style={[s.btn, { height: small ? 36 : 50, borderRadius: small ? 12 : RADIUS.button, paddingHorizontal: small ? 14 : 20, opacity: disabled ? 0.4 : 1, alignSelf: block ? 'stretch' : 'flex-start' },
         ghost ? { backgroundColor: tc.cardBg, borderWidth: 1.5, borderColor: tc.borderMedium } : { backgroundColor: tc.accentSoft }, style]}>
       {icon}

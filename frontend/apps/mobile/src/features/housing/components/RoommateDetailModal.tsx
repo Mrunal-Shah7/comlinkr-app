@@ -1,4 +1,7 @@
-import { View, Text, ScrollView, Pressable, Modal } from "react-native";
+import { View, Text, ScrollView, Pressable, Modal, StyleSheet } from "react-native";
+import { TYPE } from "../../../theme/d";
+import { GradientButton, GradientFill, Reveal, SoftButton } from "../../../shared/d";
+import { MatchRing } from "../../../shared/d/MatchRing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -87,341 +90,160 @@ export function RoommateDetailModal({
     displayScore >= 80 ? Colors.brand.green : displayScore >= 60 ? Colors.brand.blue : Colors.brand.orange;
   const cs = roommate.connectionStatus ?? null;
 
+  const shared = [
+    ...match.sharedCommunities.map((c) => COMMUNITY_DISPLAY[c]?.label).filter(Boolean),
+    ...match.sharedVibes.map((v) => VIBE_DISPLAY[v]?.label).filter(Boolean),
+    ...match.sharedInterests.map((i) => INTEREST_DISPLAY[i]?.label).filter(Boolean),
+  ] as string[];
+  const lookingFor = ([
+    ["Budget", roommate.budgetMin > 0 && roommate.budgetMax > 0 ? `${formatPrice(roommate.budgetMin, currencyCode)}–${formatPrice(roommate.budgetMax, currencyCode)} /mo` : ""],
+    ["Move-in", roommate.moveInDate && !/not set/i.test(roommate.moveInDate) ? roommate.moveInDate : ""],
+    ["Area", roommate.location],
+  ] as [string, string][]).filter(([, v]) => !!v);
+  const lifestyle: [string, string, boolean][] = [
+    ["Cleanliness", roommate.cleanliness, cu.cleanliness === roommate.cleanliness],
+    ["Sleep", roommate.sleepSchedule, cu.sleepSchedule === roommate.sleepSchedule],
+    ["Noise", roommate.noiseLevel, cu.noiseLevel === roommate.noiseLevel],
+    ["Guests", roommate.guestPolicy, cu.guestPolicy === roommate.guestPolicy],
+    ["Smoking", roommate.smoking, cu.smoking === roommate.smoking],
+    ["Pets", roommate.pets, cu.pets === roommate.pets || roommate.pets === "Pet Friendly" || cu.pets === "Pet Friendly"],
+    ["Works from home", roommate.workFromHome ? "Yes" : "No", cu.workFromHome === roommate.workFromHome],
+  ];
+  const section = (t: string) => <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>{t}</Text>;
+  const openChat = () => {
+    if (roommate.conversationId?.trim()) {
+      router.push({ pathname: "/chat", params: { conversationId: roommate.conversationId, returnTo: "housing" } } as any);
+    } else {
+      router.push({ pathname: "/chat", params: { recipientId: roommate.id, recipientName: roommate.name, recipientType: "roommate", returnTo: "housing" } } as any);
+    }
+  };
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <DismissibleSheet onDismiss={onClose} style={{ backgroundColor: tc.sheetBg }}>
-        {/* ── Header ── */}
+      <DismissibleSheet onDismiss={onClose} style={{ backgroundColor: tc.pageBg }}>
         <SheetDragArea>
-        <LinearGradient
-          colors={isDark ? [tc.cardElevated, tc.inputBg] : ["#EBF4FF", "#D6E8FF"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[rm.modalHeader, { paddingTop: insets.top + 12 }]}
-        >
-          <Pressable onPress={onClose} style={rm.modalBackBtn}>
-            <Ionicons name="chevron-back" size={20} color={tc.textPrimary} />
-          </Pressable>
-          <Text style={[rm.modalHeaderTitle, { color: tc.textPrimary }]}>Roommate Profile</Text>
-          <Pressable onPress={onToggleBookmark} style={rm.modalBackBtn} accessibilityLabel={isBookmarked ? "Remove bookmark" : "Save profile"}>
-            <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} size={20} color={isBookmarked ? "#FF7B00" : tc.textPrimary} />
-          </Pressable>
-        </LinearGradient>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingTop: insets.top + 8, paddingHorizontal: 10, paddingBottom: 4 }}>
+            <Pressable onPress={onClose} hitSlop={6} style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }} accessibilityLabel="Back">
+              <Ionicons name="chevron-back" size={22} color={tc.textPrimary} />
+            </Pressable>
+            <View style={{ flex: 1 }} />
+            <Pressable onPress={onToggleBookmark} hitSlop={6} style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }} accessibilityLabel={isBookmarked ? "Remove from saved" : "Save profile"}>
+              <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} size={21} color={isBookmarked ? tc.accentText : tc.textPrimary} />
+            </Pressable>
+          </View>
         </SheetDragArea>
 
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingBottom: 30 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* ── Profile hero ── */}
-          <View style={[rm.modalProfileHero, isDark && { borderBottomColor: tc.borderLight }]}>
-            <View style={rm.modalAvatarWrap}>
-              <FadeImage uri={roommate.avatar} style={rm.modalAvatar} />
-              {roommate.verified && (
-                <View style={rm.modalVerifiedBadge}>
-                  <Ionicons name="shield-checkmark" size={12} color="#FFF" />
-                </View>
-              )}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
+          {/* ── Profile head (design D, plan 01) ── */}
+          <Reveal i={0} style={{ alignItems: "center", paddingTop: 4 }}>
+            <GradientFill colors={[tc.mint, tc.accent] as const} style={{ width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden" }}>
+                <FadeImage uri={roommate.avatar} style={{ width: "100%", height: "100%" }} />
+              </View>
+            </GradientFill>
+            <Text style={[TYPE.pageTitle, { fontSize: 25, color: tc.textPrimary, marginTop: 10, textAlign: "center" }]}>{roommate.name}{roommate.age > 0 ? `, ${roommate.age}` : ""}</Text>
+            <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>{[roommate.occupation, roommate.location].filter(Boolean).join(" · ")}</Text>
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 8 }}>
+              {roommate.verified ? <View style={[rd.tag, { backgroundColor: tc.mintSoft }]}><Text style={[TYPE.label, { color: tc.successText }]}>Verified</Text></View> : null}
+              {cs === "pending_sent" ? <View style={[rd.tag, { backgroundColor: tc.warningBg }]}><Text style={[TYPE.label, { color: tc.warningText }]}>Request sent</Text></View> : null}
+              {cs === "accepted" ? <View style={[rd.tag, { backgroundColor: tc.mintSoft }]}><Text style={[TYPE.label, { color: tc.successText }]}>Connected</Text></View> : null}
             </View>
-            <Text style={[rm.modalName, { color: tc.textPrimary }]}>{roommate.name}</Text>
-            <Text style={[rm.modalOccupation, { color: tc.textSecondary }]}>
-              {roommate.occupation} · {roommate.age} · {roommate.gender}
-            </Text>
-            <View style={rm.modalLocationRow}>
-              <Ionicons name="location-sharp" size={12} color={Colors.brand.blue} />
-              <Text style={rm.modalLocationText}>{roommate.location}</Text>
+          </Reveal>
+
+          <Reveal i={1} style={[rd.card, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, marginTop: 16 }]}>
+            <MatchRing score={displayScore} />
+            <View style={{ flex: 1 }}>
+              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{displayScore >= 70 ? "Strong match" : displayScore >= 45 ? "Good match" : "Some things in common"}</Text>
+              <Text style={[TYPE.small, { color: tc.textSecondary }]}>{shared.length ? `You share ${shared.length} ${shared.length === 1 ? "thing" : "things"}.` : "Based on your preferences."}</Text>
             </View>
+          </Reveal>
 
-            {/* Connection status badge (compact; full UI in footer) */}
-            {cs === "pending_sent" && (
-              <View style={[rm.modalConnectionBadge, { backgroundColor: "#F59E0B" }]}>
-                <Ionicons name="time-outline" size={13} color="#FFF" />
-                <Text style={rm.modalConnectionText}>Request Sent</Text>
-              </View>
-            )}
-            {cs === "accepted" && (
-              <View style={[rm.modalConnectionBadge, { backgroundColor: Colors.brand.green }]}>
-                <Ionicons name="checkmark-circle" size={13} color="#FFF" />
-                <Text style={rm.modalConnectionText}>Connected</Text>
-              </View>
-            )}
+          {shared.length ? (
+            <Reveal i={2}>
+              {section("What you have in common")}
+              <View style={rd.wrap}>{shared.map((t) => <View key={t} style={[rd.chip, { backgroundColor: tc.mint }]}><Text style={[TYPE.label, { color: "#fff", fontSize: 13 }]}>{t}</Text></View>)}</View>
+            </Reveal>
+          ) : null}
 
-            {/* Score ring */}
-            <View style={[rm.modalScoreCard, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-              <View style={[rm.modalScoreRing, { borderColor: scoreColor }, isDark && { backgroundColor: tc.cardBg }]}>
-                <Text style={[rm.modalScoreNum, { color: scoreColor }]}>{displayScore}%</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[rm.modalScoreTitle, { color: tc.textPrimary }]}>Compatibility Score</Text>
-                <Text style={[rm.modalScoreSub, { color: tc.textSecondary }]}>
-                  {match.sharedCommunities.length} shared communities · {match.sharedVibes.length} shared vibes
-                </Text>
-              </View>
-            </View>
-          </View>
+          {roommate.bio ? (
+            <Reveal i={3}>
+              {section("About")}
+              <LinkifiedText text={roommate.bio} style={[TYPE.body, { color: tc.textSecondary }]} />
+            </Reveal>
+          ) : null}
 
-          {/* ── Bio ── */}
-          <View style={rm.modalSection}>
-            <Text style={[rm.modalSectionTitle, { color: tc.textPrimary }]}>About</Text>
-            <LinkifiedText text={roommate.bio} style={[rm.modalBio, { color: tc.textSecondary }]} />
-          </View>
+          {lookingFor.length ? (
+            <Reveal i={4}>
+              {section("Looking for")}
+              <View style={[rd.dl, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
+                {lookingFor.map(([k, v], i) => (
+                  <View key={k} style={[rd.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+                    <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+                  </View>
+                ))}
+              </View>
+            </Reveal>
+          ) : null}
 
-          {/* ── Housing Preferences ── */}
-          <View style={rm.modalSection}>
-            <Text style={[rm.modalSectionTitle, { color: tc.textPrimary }]}>Housing Preferences</Text>
-            <View style={rm.modalStatsRow}>
-              <View style={[rm.modalStatCard, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                <Ionicons name="cash-outline" size={20} color={Colors.brand.blue} />
-                <Text style={[rm.modalStatVal, { color: tc.textPrimary }]}>
-                  {formatPrice(roommate.budgetMin, currencyCode)}–{formatPrice(roommate.budgetMax, currencyCode)}
-                </Text>
-                <Text style={[rm.modalStatLabel, { color: tc.textTertiary }]}>Monthly Budget</Text>
+          {roommate.vibes.some((v) => !!VIBE_DISPLAY[v]) ? (
+            <Reveal i={5}>
+              {section("Their vibes")}
+              <View style={rd.wrap}>
+                {roommate.vibes.map((v) => {
+                  const d = VIBE_DISPLAY[v];
+                  if (!d) return null;
+                  const on = match.sharedVibes.includes(v);
+                  return <View key={v} style={[rd.chip, { backgroundColor: on ? tc.mintSoft : tc.cardBg, borderWidth: 1, borderColor: on ? tc.mint : tc.borderMedium }]}><Text style={[TYPE.label, { fontSize: 13, color: on ? tc.successText : tc.textPrimary }]}>{d.label}</Text></View>;
+                })}
               </View>
-              <View style={[rm.modalStatCard, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                <Ionicons name="calendar-outline" size={20} color={Colors.brand.green} />
-                <Text style={[rm.modalStatVal, { color: tc.textPrimary }]}>{roommate.moveInDate}</Text>
-                <Text style={[rm.modalStatLabel, { color: tc.textTertiary }]}>Move-in Date</Text>
-              </View>
-              <View style={[rm.modalStatCard, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                <Ionicons name="moon-outline" size={20} color={Colors.brand.blue} />
-                <Text style={[rm.modalStatVal, { color: tc.textPrimary }]}>{roommate.sleepSchedule}</Text>
-                <Text style={[rm.modalStatLabel, { color: tc.textTertiary }]}>Sleep Schedule</Text>
-              </View>
-            </View>
+            </Reveal>
+          ) : null}
 
-            {/* Lifestyle quick-glance chips */}
-            <View style={rm.modalLifestyleChips}>
-              {[
-                { icon: "sparkles" as const,         label: roommate.cleanliness,  bg: Colors.brand.blueLight,  color: Colors.brand.blue },
-                { icon: "volume-medium-outline" as const, label: roommate.noiseLevel, bg: Colors.brand.greenLight, color: Colors.brand.green },
-                { icon: "paw-outline" as const,      label: roommate.pets,         bg: Colors.brand.orangeLight, color: Colors.brand.orange },
-                { icon: "ban-outline" as const,      label: `Smoking: ${roommate.smoking}`, bg: "#FEE2E2", color: "#DC2626" },
-                { icon: "people-outline" as const,   label: `Guests: ${roommate.guestPolicy}`, bg: Colors.brand.blueLight, color: Colors.brand.blue },
-                { icon: "laptop-outline" as const,   label: roommate.workFromHome ? "WFH" : "Office", bg: Colors.brand.greenLight, color: Colors.brand.green },
-              ].map((chip) => (
-                <View key={chip.label} style={[rm.modalLifestyleChip, { backgroundColor: chip.bg }]}>
-                  <Ionicons name={chip.icon} size={12} color={chip.color} />
-                  <Text style={[rm.modalLifestyleChipText, { color: chip.color }]}>{chip.label}</Text>
+          <Reveal i={6}>
+            {section("Lifestyle")}
+            <View style={[rd.dl, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
+              {lifestyle.map(([k, v, same], i) => (
+                <View key={k} style={[rd.row, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
+                  <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{v}</Text>
+                    {same ? <Ionicons name="checkmark-circle" size={16} color={tc.mint} /> : null}
+                  </View>
                 </View>
               ))}
             </View>
-          </View>
-
-          {/* ── Shared Tags ── */}
-          {(match.sharedCommunities.length > 0 ||
-            match.sharedVibes.length > 0 ||
-            match.sharedInterests.length > 0) && (
-            <View style={rm.modalSection}>
-              <Text style={[rm.modalSectionTitle, { color: tc.textPrimary }]}>What You Have in Common</Text>
-              <View style={rm.sharedTagsWrap}>
-                {match.sharedCommunities.map((c) => {
-                  const d = COMMUNITY_DISPLAY[c];
-                  return d ? <SharedTagPill key={c} icon="globe-outline" label={d.label} /> : null;
-                })}
-                {match.sharedVibes.map((v) => {
-                  const d = VIBE_DISPLAY[v];
-                  return d ? <SharedTagPill key={v} icon={d.icon} label={d.label} /> : null;
-                })}
-                {match.sharedInterests.map((i) => {
-                  const d = INTEREST_DISPLAY[i];
-                  return d ? <SharedTagPill key={i} icon={d.icon} label={d.label} /> : null;
-                })}
-              </View>
-            </View>
-          )}
-
-          {/* ── All Vibes ── */}
-          <View style={rm.modalSection}>
-            <Text style={[rm.modalSectionTitle, { color: tc.textPrimary }]}>Their Vibes</Text>
-            <View style={rm.sharedTagsWrap}>
-              {roommate.vibes.map((v) => {
-                const d = VIBE_DISPLAY[v];
-                const isShared = match.sharedVibes.includes(v);
-                return d ? (
-                  <View
-                    key={v}
-                    style={[
-                      rm.sharedTagPill,
-                      isShared
-                        ? { backgroundColor: "#DCFCE7", borderColor: "#BBF7D0" }
-                        : { backgroundColor: "#F5F7FA", borderColor: "#E5EBF4" },
-                      !isShared && isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight },
-                    ]}
-                  >
-                    <Ionicons
-                      name={d.icon as any}
-                      size={12}
-                      color={isShared ? Colors.brand.green : (isDark ? tc.textTertiary as string : Colors.text.tertiary)}
-                    />
-                    <Text
-                      style={[
-                        rm.sharedTagText,
-                        isShared ? { color: Colors.brand.green } : { color: Colors.text.secondary },
-                        !isShared && isDark && { color: tc.textSecondary },
-                      ]}
-                    >
-                      {d.label}
-                    </Text>
-                    {isShared && <Ionicons name="checkmark" size={11} color={Colors.brand.green} />}
-                  </View>
-                ) : null;
-              })}
-            </View>
-          </View>
-
-          {/* ── Lifestyle Preferences ── */}
-          <View style={rm.modalSection}>
-            <Text style={[rm.modalSectionTitle, { color: tc.textPrimary }]}>Lifestyle</Text>
-            <View style={rm.prefGrid}>
-              <PrefRow
-                icon="sparkles"
-                label="Cleanliness"
-                value={roommate.cleanliness}
-                match={cu.cleanliness === roommate.cleanliness}
-              />
-              <PrefRow
-                icon="moon-outline"
-                label="Sleep Schedule"
-                value={roommate.sleepSchedule}
-                match={cu.sleepSchedule === roommate.sleepSchedule}
-              />
-              <PrefRow
-                icon="volume-medium-outline"
-                label="Noise Level"
-                value={roommate.noiseLevel}
-                match={cu.noiseLevel === roommate.noiseLevel}
-              />
-              <PrefRow
-                icon="people-outline"
-                label="Guest Policy"
-                value={roommate.guestPolicy}
-                match={cu.guestPolicy === roommate.guestPolicy}
-              />
-              <PrefRow
-                icon="ban-outline"
-                label="Smoking"
-                value={roommate.smoking}
-                match={cu.smoking === roommate.smoking}
-              />
-              <PrefRow
-                icon="paw-outline"
-                label="Pets"
-                value={roommate.pets}
-                match={
-                  cu.pets === roommate.pets ||
-                  roommate.pets === "Pet Friendly" ||
-                  cu.pets === "Pet Friendly"
-                }
-              />
-              <PrefRow
-                icon="laptop-outline"
-                label="Works from Home"
-                value={roommate.workFromHome ? "Yes" : "No"}
-                match={cu.workFromHome === roommate.workFromHome}
-              />
-            </View>
-          </View>
+          </Reveal>
         </ScrollView>
 
-        {/* ── Bottom CTA (connection state is mutually exclusive) ── */}
-        <View style={[rm.modalCtaBar, { paddingBottom: insets.bottom + 12 }, isDark && { backgroundColor: tc.cardBg, borderTopColor: tc.borderLight }]}>
-          {cs === null && (
-            <Pressable style={{ flex: 1, borderRadius: 14, overflow: "hidden" }} onPress={onConnect}>
-              <LinearGradient
-                colors={[Colors.brand.blue, Colors.brand.green]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={rm.modalCtaPrimary}
-              >
-                <Ionicons name="people" size={17} color="#FFF" />
-                <Text style={rm.modalCtaPrimaryText}>Connect</Text>
-              </LinearGradient>
-            </Pressable>
-          )}
-          {cs === "pending_sent" && (
-            <View style={{ flex: 1, gap: 8 }}>
-              <View style={[rm.modalCtaPrimary, { backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB" }]}>
-                <Ionicons name="time-outline" size={17} color="#9CA3AF" />
-                <Text style={[rm.modalCtaPrimaryText, { color: "#9CA3AF" }]}>Request Sent</Text>
-              </View>
-              <Pressable
-                onPress={() => {
-                  appAlert("Cancel Request", "Are you sure you want to cancel the connection request?", [
-                    { text: "Keep", style: "cancel" },
-                    { text: "Cancel Request", style: "destructive", onPress: onCancelRequest },
-                  ]);
-                }}
-                style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 6 }}
-              >
-                <Ionicons name="close-circle-outline" size={15} color="#EF4444" />
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#EF4444" }}>Cancel Request</Text>
-              </Pressable>
-            </View>
-          )}
-          {cs === "pending_received" && (
-            <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
-              <Pressable style={{ flex: 1, borderRadius: 14, overflow: "hidden" }} onPress={onAccept}>
-                <LinearGradient
-                  colors={[Colors.brand.green, "#16A34A"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={rm.modalCtaPrimary}
-                >
-                  <Ionicons name="checkmark-circle" size={17} color="#FFF" />
-                  <Text style={rm.modalCtaPrimaryText}>Accept Request</Text>
-                </LinearGradient>
-              </Pressable>
-              <Pressable
-                style={{
-                  flex: 1,
-                  borderRadius: 14,
-                  paddingVertical: 15,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexDirection: "row",
-                  gap: 6,
-                  backgroundColor: "#FEE2E2",
-                  borderWidth: 1,
-                  borderColor: "#FECACA",
-                }}
-                onPress={onDecline}
-              >
-                <Ionicons name="close-circle-outline" size={17} color="#DC2626" />
-                <Text style={[rm.modalCtaPrimaryText, { color: "#DC2626" }]}>Decline</Text>
-              </Pressable>
-            </View>
-          )}
-          {cs === "accepted" && (
-            <Pressable
-              style={{ flex: 1, borderRadius: 14, overflow: "hidden" }}
-              onPress={() => {
-                if (roommate.conversationId?.trim()) {
-                  router.push({
-                    pathname: "/chat",
-                    params: { conversationId: roommate.conversationId, returnTo: "housing" },
-                  } as any);
-                } else {
-                  // Fall back to recipientId — startOrGetConversation will find or create the thread
-                  router.push({
-                    pathname: "/chat",
-                    params: { recipientId: roommate.id, recipientName: roommate.name, recipientType: "roommate", returnTo: "housing" },
-                  } as any);
-                }
-              }}
-            >
-              <LinearGradient
-                colors={[Colors.brand.green, "#16A34A"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={rm.modalCtaPrimary}
-              >
-                <Ionicons name="chatbubble-ellipses-outline" size={17} color="#FFF" />
-                <Text style={rm.modalCtaPrimaryText}>Message</Text>
-              </LinearGradient>
-            </Pressable>
-          )}
+        {/* ── Glass bar: the next step for this connection ── */}
+        <View style={[rd.bar, { paddingBottom: insets.bottom + 12, backgroundColor: tc.glass, borderTopColor: tc.glassLine }]}>
+          {cs === null ? <GradientButton block label="Connect" outerStyle={{ flex: 1 }} onPress={onConnect} /> : null}
+          {cs === "pending_sent" ? (
+            <SoftButton block ghost label="Cancel request" outerStyle={{ flex: 1 }} onPress={() => appAlert("Cancel request", "Are you sure you want to cancel the connection request?", [
+              { text: "Keep", style: "cancel" },
+              { text: "Cancel request", style: "destructive", onPress: onCancelRequest },
+            ])} />
+          ) : null}
+          {cs === "pending_received" ? (
+            <>
+              <SoftButton block ghost label="Decline" outerStyle={{ flex: 1 }} onPress={onDecline} />
+              <GradientButton block label="Accept" outerStyle={{ flex: 1 }} onPress={onAccept} />
+            </>
+          ) : null}
+          {cs === "accepted" ? <GradientButton block label="Message" outerStyle={{ flex: 1 }} onPress={openChat} /> : null}
         </View>
       </DismissibleSheet>
     </Modal>
   );
 }
+
+const rd = StyleSheet.create({
+  tag: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
+  card: { flexDirection: "row", alignItems: "center", gap: 16, padding: 16, borderRadius: 24, borderWidth: 1 },
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
+  dl: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 14 },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 16, paddingVertical: 12 },
+  bar: { flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+});
