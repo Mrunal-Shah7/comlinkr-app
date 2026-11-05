@@ -79,7 +79,8 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
-import Reanimated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Reanimated, { Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, type SharedValue } from 'react-native-reanimated';
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { TYPE, display } from '../src/theme/d';
 import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton } from '../src/shared/d';
 const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
@@ -234,6 +235,23 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
 }
 
 // ── Conversation list (design D, plan 01: design screen "messages") ─────────
+/** The red action behind a swiped conversation row; the bin grows in as the row slides. */
+function SwipeRemove({ progress }: { progress: SharedValue<number> }) {
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: Math.min(1, 0.6 + progress.value * 0.4) }], opacity: Math.min(1, progress.value * 1.5) }));
+  return (
+    <View style={{ width: 96, alignItems: "center", justifyContent: "center", backgroundColor: "#C53030" }}>
+      <Reanimated.View style={[{ alignItems: "center", gap: 2 }, a]}>
+        <Ionicons name="trash-outline" size={22} color="#fff" />
+        <Text style={[TYPE.label, { color: "#fff" }]}>Remove</Text>
+      </Reanimated.View>
+    </View>
+  );
+}
+
+/** A new message pops in from its own side: yours from the right, theirs from the left (scale 0.9 to 1, 260 ms). */
+const POP_MINE = new Keyframe({ 0: { opacity: 0, transform: [{ translateX: 24 }, { scale: 0.9 }] }, 100: { opacity: 1, transform: [{ translateX: 0 }, { scale: 1 }] } }).duration(260);
+const POP_THEIRS = new Keyframe({ 0: { opacity: 0, transform: [{ translateX: -24 }, { scale: 0.9 }] }, 100: { opacity: 1, transform: [{ translateX: 0 }, { scale: 1 }] } }).duration(260);
+
 function ConvList({
   onSelect,
   page,
@@ -243,7 +261,9 @@ function ConvList({
   onRefresh,
   tab,
   setTab,
+  onRemove,
 }: {
+  onRemove: (id: string) => void;
   onSelect: (id: string) => void;
   page: DPageList;
   conversations: ChatListRow[];
@@ -308,6 +328,13 @@ function ConvList({
         const unread = item.unread > 0;
         return (
           <Reveal i={index}>
+            <ReanimatedSwipeable
+              friction={1.6}
+              rightThreshold={64}
+              overshootRight={false}
+              onSwipeableOpen={(dir) => { if (dir === "left") onRemove(item.id); }}
+              renderRightActions={(progress) => <SwipeRemove progress={progress} />}
+            >
             <Pressable
               onPress={() => onSelect(item.id)}
               accessibilityRole="button"
@@ -350,6 +377,7 @@ function ConvList({
                 </View>
               </View>
             </Pressable>
+            </ReanimatedSwipeable>
           </Reveal>
         );
       }}
@@ -527,6 +555,10 @@ function Thread({
   const isPending = conv?.status === "pending";
 
   const [threadMsgs, setThreadMsgs] = useState<ThreadMsg[]>([]);
+  // Messages on screen when the thread opens appear at once; later ones pop in from their own side.
+  const msgsShown = useRef(false);
+  const reduceMotion = useReducedMotion();
+  useEffect(() => { if (threadMsgs.length > 0) msgsShown.current = true; }, [threadMsgs.length]);
   const threadMsgsRef = useRef<ThreadMsg[]>([]); // SPRINT-40: cleanup retryable local recordings on thread exit
   threadMsgsRef.current = threadMsgs; // SPRINT-40:
   const conversationGenerationRef = useRef(0); // SPRINT-40: prevent async delivery from mutating a later thread
@@ -1000,6 +1032,27 @@ function Thread({
         </View>
       </View>
 
+      {/* What this chat is about, pinned under the bar (design D `chat`). */}
+      {!isGroupChat && conv.contextName && conv.contextName !== "Listing inquiry" && conv.contextName !== "Event inquiry" && (conv.listingId || conv.eventId) ? (
+        <Pressable
+          onPress={() => router.push((conv.listingId
+            ? { pathname: "/(tabs)/housing", params: { openListing: conv.listingId } }
+            : { pathname: "/(tabs)/feed", params: { exploreTab: "Events", openEvent: conv.eventId } }) as never)}
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${conv.contextName}`}
+          style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: pressed ? tc.inputBg : tc.cardBg, borderBottomWidth: 1, borderBottomColor: tc.borderLight }]}
+        >
+          <View style={{ width: 44, height: 44, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+            <Ionicons name={conv.listingId ? "home" : "calendar"} size={20} color={tc.accentText} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]} numberOfLines={1}>{conv.contextName}</Text>
+            <Text style={[TYPE.small, { color: tc.textSecondary }]}>{conv.listingId ? "Home" : "Event"}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
+        </Pressable>
+      ) : null}
+
       {/* ── Message Request Banner ── */}
       {isPending && (
         <Reveal style={{ margin: 12, padding: 14, borderRadius: 22, backgroundColor: tc.warningBg }}>
@@ -1194,7 +1247,7 @@ function Thread({
           const isHost = msg.isHost;
 
           return (
-            <AnimatedPressable key={msg.id} entering={FadeInDown.springify().damping(20).stiffness(220)} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: 8 }}>
+            <AnimatedPressable key={msg.id} entering={msgsShown.current && !reduceMotion ? (isMe ? POP_MINE : POP_THEIRS) : undefined} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: 8 }}>
               {!isMe && <Avatar name={msg.senderName} size={28} />}
               <View style={{ maxWidth: "74%", gap: rs(3) }}>
                 {isGroupChat && !isMe && (
@@ -2006,6 +2059,25 @@ export default function ChatScreen() {
             onRefresh={onRefreshList}
             tab={listTab}
             setTab={setListTab}
+            onRemove={(cid) => {
+              const row = conversations.find((c) => c.id === cid);
+              if (!row) return;
+              const at = conversations.findIndex((c) => c.id === cid);
+              setConversations((prev) => prev.filter((c) => c.id !== cid));
+              const timer = setTimeout(() => {
+                void deleteConversation(cid).catch((err) => {
+                  showToast(err instanceof ApiError ? err.message : "Could not remove the conversation.", "error");
+                  setConversations((prev) => (prev.some((c) => c.id === cid) ? prev : [row, ...prev]));
+                });
+              }, 4600);
+              showToast(`Removed ${row.name}`, "info", {
+                label: "Undo",
+                onPress: () => {
+                  clearTimeout(timer);
+                  setConversations((prev) => { const n = [...prev]; n.splice(Math.max(0, Math.min(at, n.length)), 0, row); return n; });
+                },
+              });
+            }}
           />
         )}
       />

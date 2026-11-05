@@ -66,6 +66,8 @@ export interface ChatListRow {
   isGroup: boolean;
   host?: string;
   eventId?: string;
+  /** The listing this chat is about (LISTING conversations). */
+  listingId?: string;
   members?: number;
   status: ConversationStatus;
   /** Resolved absolute URL for direct peer avatar, if any */
@@ -210,6 +212,7 @@ export function mapConversationToListRow(
     isGroup,
     host: admin?.name,
     eventId: c.contextType === "EVENT" && c.contextId ? c.contextId : undefined,
+    listingId: c.contextType === "LISTING" && c.contextId ? c.contextId : undefined,
     members: isGroup ? c.members.length : undefined,
     status: pending ? "pending" : "active",
     avatarUrl: peerAvatar,
