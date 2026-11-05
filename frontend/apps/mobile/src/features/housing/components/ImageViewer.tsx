@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, Animated, PanResponder, StyleSheet, Modal, Dimensions } from "react-native";
+import { createDTypeStyles } from "../../../theme/themedStyles";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -216,7 +217,7 @@ export function FullscreenImageViewer({
   );
 }
 
-export const cs = StyleSheet.create({
+export const cs = createDTypeStyles({
   dotRow: {
     position: "absolute",
     bottom: 12,

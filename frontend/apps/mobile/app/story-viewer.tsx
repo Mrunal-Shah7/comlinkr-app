@@ -21,6 +21,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { createDTypeStyles } from "../src/theme/themedStyles";
 import { Image } from "expo-image"; // SPRINT-31:
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -184,7 +185,7 @@ function StoryVideoLayer({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createDTypeStyles({
   videoBufferOverlay: { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.15)" },
 });
 
@@ -938,7 +939,7 @@ export default function StoryViewerScreen() {
   );
 }
 
-const st = StyleSheet.create({
+const st = createDTypeStyles({
   root: { flex: 1, backgroundColor: "#000" },
   center: { alignItems: "center", justifyContent: "center" },
 

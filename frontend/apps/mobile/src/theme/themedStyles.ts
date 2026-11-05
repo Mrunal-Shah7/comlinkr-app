@@ -128,3 +128,13 @@ export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSh
     },
   });
 }
+
+/** Fonts only (design D, plan 01): for screens that are dark on purpose in both themes (story viewer, gallery,
+ *  scanner), where mapping light surfaces to dark ones would break white-on-black controls. */
+export function createDTypeStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
+  styles: T | StyleSheet.NamedStyles<T>,
+): T {
+  const typed: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(styles)) typed[k] = dType(v);
+  return StyleSheet.create(typed as any) as T;
+}
