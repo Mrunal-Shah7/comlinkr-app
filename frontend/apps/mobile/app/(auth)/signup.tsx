@@ -425,7 +425,7 @@ export default function SignupScreen() {
               </View>
               ) : (
               <Reveal key="otp" style={{ marginTop: 4 }}>
-                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); setError(""); }} onComplete={() => void handleVerifyAndCreate()} autoFocus />
+                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); if (v) setError(""); }} onComplete={() => void handleVerifyAndCreate()} autoFocus />
                 <View style={{ marginTop: 18 }}><ResendCode onResend={handleSendCode} busy={loading} /></View>
                 <Pressable onPress={() => { setStep("form"); setCode(""); setError(""); }} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
                   <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Edit details</Text></Text>

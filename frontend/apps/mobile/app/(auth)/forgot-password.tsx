@@ -169,7 +169,7 @@ export default function ForgotPasswordScreen() {
           ) : step === "otp" ? (
             <View>
               <View style={{ marginTop: 6, marginBottom: 14 }}>
-                <OtpBoxes ref={otpRef} value={otp} onChange={(v) => { setOtp(v); setResetError(""); }} onComplete={() => go("password", 1)} autoFocus />
+                <OtpBoxes ref={otpRef} value={otp} onChange={(v) => { setOtp(v); if (v) setResetError(""); }} onComplete={() => go("password", 1)} autoFocus />
               </View>
               {resetError ? errorBox(resetError) : null}
               <View style={{ marginTop: 16 }}>
