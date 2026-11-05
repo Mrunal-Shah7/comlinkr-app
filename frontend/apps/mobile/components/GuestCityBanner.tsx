@@ -98,7 +98,7 @@ export function GuestCityPickerModal({
           windowSize={10}
           renderItem={({ item }) => (
             <Pressable
-              style={({ pressed }) => [styles.cityRow, pressed && { backgroundColor: "#F5F9FF" }]}
+              style={({ pressed }) => [styles.cityRow, pressed && { backgroundColor: "rgba(26,107,174,0.10)" }]}
               onPress={() => {
                 void setCity(item.city, { state: item.state, country: item.country });
                 onClose();

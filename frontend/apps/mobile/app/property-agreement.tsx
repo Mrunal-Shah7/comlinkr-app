@@ -44,6 +44,7 @@ import {
 import { ApiError } from "../src/api/client";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { TYPE } from '../src/theme/d';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -546,22 +547,24 @@ export default function PropertyAgreementScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
+      <View style={[styles.header, { backgroundColor: tc.glass, borderBottomColor: tc.glassLine }]}>
         <Pressable
           onPress={goBack}
-          style={({ pressed }) => [styles.backBtn, { backgroundColor: tc.pillBg }, pressed && { opacity: 0.7 }]}
+          style={({ pressed }) => [styles.backBtn, { backgroundColor: "transparent" }, pressed && { backgroundColor: tc.inputBg }]}
           hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
         >
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
+          <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: tc.textPrimary }]} numberOfLines={1}>
-            {dealType === "buy" ? "Purchase Agreement" : "Tenancy Agreement"}
+          <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>
+            {dealType === "buy" ? "Purchase agreement" : "Tenancy agreement"}
           </Text>
           <Text style={[styles.headerSub, { color: tc.textSecondary }]} numberOfLines={1}>{propertyTitle}</Text>
         </View>
-        <View style={[styles.marketPill, { backgroundColor: market === "UK" ? "#EEF5FF" : "#FFF0E6" }]}>
-          <Text style={[styles.marketPillText, { color: market === "UK" ? Colors.brand.blue : Colors.brand.orange }]}>
+        <View style={[styles.marketPill, { backgroundColor: tc.accentSoft }]}>
+          <Text style={[styles.marketPillText, { color: tc.accentText }]}>
             {market}
           </Text>
         </View>
@@ -586,7 +589,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.sectionIcon}>
                   <Ionicons name="document-text" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Your Application</Text>
@@ -783,7 +786,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#257A86", "#E56800"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.sectionIcon}>
                   <Ionicons name="document-attach" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Landlord's Offer</Text>
@@ -796,7 +799,7 @@ export default function PropertyAgreementScreen() {
 
             {/* Offer card */}
             <View style={[styles.offerCard, { borderColor: isDark ? tc.borderMedium : "#BFDBFE" }]}>
-              <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.offerCardHeader}>
+              <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.offerCardHeader}>
                 <Ionicons name="home" size={18} color="#FFF" />
                 <Text style={styles.offerCardTitle}>{dealType === "rent" ? "Rental Offer" : "Purchase Offer"}</Text>
               </LinearGradient>
@@ -914,7 +917,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#7C3AED", "#6D28D9"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.sectionIcon}>
                   <Ionicons name="document-text" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>
@@ -1002,7 +1005,7 @@ export default function PropertyAgreementScreen() {
           <View>
             <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#30855B", "#256B49"]} style={styles.sectionIcon}>
+                <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.sectionIcon}>
                   <Ionicons name="pencil" size={16} color="#FFF" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Sign the Agreement</Text>
@@ -1148,7 +1151,7 @@ export default function PropertyAgreementScreen() {
 
             {/* Document saved note */}
             <View style={[styles.docSavedCard, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF", borderColor: isDark ? tc.borderLight : "#BFDBFE" }]}>
-              <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.docSavedIcon}>
+              <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.docSavedIcon}>
                 <Ionicons name="cloud-done" size={20} color="#FFF" />
               </LinearGradient>
               <View style={{ flex: 1 }}>
@@ -1201,7 +1204,7 @@ export default function PropertyAgreementScreen() {
                     ? ["#30855B", "#256B49"]
                     : step === 2 && offerAccepted === "accepted"
                     ? ["#30855B", "#256B49"]
-                    : [Colors.brand.blue, "#0054CC"]
+                    : ["#1A6BAE", "#30855B"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}

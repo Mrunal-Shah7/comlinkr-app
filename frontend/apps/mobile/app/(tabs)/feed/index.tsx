@@ -2550,9 +2550,9 @@ export default function FeedScreen() {
         presentationStyle="pageSheet"
         statusBarTranslucent
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? tc.pageBg : "#F2F4F8" }} edges={["top"]}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
         <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: isDark ? tc.pageBg : "#F2F4F8" }}
+          style={{ flex: 1, backgroundColor: tc.pageBg }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
         >
@@ -2564,8 +2564,8 @@ export default function FeedScreen() {
               paddingHorizontal: rs(14),
               paddingVertical: rs(13),
               borderBottomWidth: StyleSheet.hairlineWidth,
-              borderBottomColor: tc.borderLight,
-              backgroundColor: tc.cardBg,
+              borderBottomColor: tc.glassLine,
+              backgroundColor: tc.glass,
             }}
           >
             <Pressable
@@ -2575,12 +2575,12 @@ export default function FeedScreen() {
                 setFeedCommentPostDetail(null);
               }}
               hitSlop={10}
-              style={{ width: rs(32), height: rs(32), borderRadius: rs(16), backgroundColor: isDark ? tc.inputBg : "#F3F4F6", alignItems: "center", justifyContent: "center" }}
+              style={{ width: rs(32), height: rs(32), borderRadius: rs(16), backgroundColor: tc.inputBg, alignItems: "center", justifyContent: "center" }}
             >
               <Ionicons name="chevron-back" size={20} color={tc.textPrimary} />
             </Pressable>
             <Text
-              style={{ flex: 1, textAlign: "center", fontWeight: "800", fontSize: rs(16), color: tc.textPrimary, marginHorizontal: rs(8) }}
+              style={{ flex: 1, textAlign: "center", fontFamily: "Manrope_800ExtraBold", fontSize: rs(16), color: tc.textPrimary, marginHorizontal: rs(8) }}
               numberOfLines={1}
             >
               {feedCommentPostDetail?.title?.trim() || "Post"}
@@ -2612,6 +2612,11 @@ export default function FeedScreen() {
                 <View
                   style={{
                     backgroundColor: tc.cardBg,
+                    marginHorizontal: 12,
+                    marginTop: 12,
+                    borderRadius: 24,
+                    borderWidth: 1,
+                    borderColor: tc.glassLine,
                     marginBottom: rs(8),
                     paddingHorizontal: rs(16),
                     paddingTop: rs(16),
@@ -2643,7 +2648,7 @@ export default function FeedScreen() {
                       {feedCommentPostDetail.category ? (
                         <View style={{ flexDirection: "row", marginBottom: rs(10) }}>
                           <View style={{ backgroundColor: Colors.brand.blue + "18", borderRadius: rs(6), paddingHorizontal: rs(10), paddingVertical: rs(4) }}>
-                            <Text style={{ fontSize: rs(10), fontWeight: "800", color: Colors.brand.blue, letterSpacing: 1, textTransform: "uppercase" }}>
+                            <Text style={{ fontSize: rs(10), fontFamily: "Manrope_800ExtraBold", color: Colors.brand.blue, letterSpacing: 1, textTransform: "uppercase" }}>
                               {String(feedCommentPostDetail.category).replace(/_/g, " ")}
                             </Text>
                           </View>
@@ -2663,11 +2668,11 @@ export default function FeedScreen() {
                       {feedCommentPostDetail.author && (
                         <View style={{ flexDirection: "row", alignItems: "center", gap: rs(6), marginTop: rs(12), paddingTop: rs(10), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }}>
                           <View style={{ width: rs(22), height: rs(22), borderRadius: rs(11), backgroundColor: Colors.brand.blue + "20", alignItems: "center", justifyContent: "center" }}>
-                            <Text style={{ fontSize: rs(10), fontWeight: "800", color: Colors.brand.blue }}>
+                            <Text style={{ fontSize: rs(10), fontFamily: "Manrope_800ExtraBold", color: Colors.brand.blue }}>
                               {(feedCommentPostDetail.author.name?.[0] ?? feedCommentPostDetail.author.username?.[0] ?? "U").toUpperCase()}
                             </Text>
                           </View>
-                          <Text style={{ fontSize: rs(12), color: tc.textTertiary, fontWeight: "600" }}>
+                          <Text style={{ fontSize: rs(12), color: tc.textTertiary, fontFamily: "Manrope_600SemiBold" }}>
                             {feedCommentPostDetail.author.name ?? feedCommentPostDetail.author.username ?? ""}
                           </Text>
                         </View>
@@ -2689,16 +2694,16 @@ export default function FeedScreen() {
                     paddingHorizontal: rs(16),
                     paddingTop: rs(14),
                     paddingBottom: rs(10),
-                    backgroundColor: isDark ? tc.pageBg : "#F2F4F8",
+                    backgroundColor: tc.pageBg,
                   }}
                 >
                   <Ionicons name="chatbubbles-outline" size={rs(15)} color={Colors.brand.blue} />
-                  <Text style={{ fontSize: rs(13), fontWeight: "800", color: tc.textPrimary, letterSpacing: 0.3 }}>
+                  <Text style={{ fontSize: rs(13), fontFamily: "Manrope_800ExtraBold", color: tc.textPrimary, letterSpacing: 0.3 }}>
                     Comments
                   </Text>
                   {feedComments.length > 0 ? (
                     <View style={{ backgroundColor: Colors.brand.blue + "18", borderRadius: rs(10), paddingHorizontal: rs(7), paddingVertical: rs(2) }}>
-                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: Colors.brand.blue }}>{feedComments.length}</Text>
+                      <Text style={{ fontSize: rs(11), fontFamily: "Manrope_700Bold", color: Colors.brand.blue }}>{feedComments.length}</Text>
                     </View>
                   ) : null}
                 </View>
@@ -2716,7 +2721,7 @@ export default function FeedScreen() {
                   <View style={{ width: rs(64), height: rs(64), borderRadius: rs(32), backgroundColor: Colors.brand.blue + "12", alignItems: "center", justifyContent: "center" }}>
                     <Ionicons name="chatbubble-ellipses-outline" size={rs(28)} color={Colors.brand.blue} />
                   </View>
-                  <Text style={{ color: tc.textPrimary, fontWeight: "700", fontSize: rs(15) }}>No comments yet</Text>
+                  <Text style={{ color: tc.textPrimary, fontFamily: "Manrope_700Bold", fontSize: rs(15) }}>No comments yet</Text>
                   <Text style={{ color: tc.textTertiary, fontSize: rs(13), textAlign: "center", lineHeight: rs(19) }}>
                     Be the first to share your thoughts!
                   </Text>
@@ -2733,12 +2738,12 @@ export default function FeedScreen() {
                     <FadeImage uri={avatar} style={{ width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: tc.inputBg, marginTop: rs(2) }} /> // SPRINT-42: render feed-comment avatars with FadeImage.
                   ) : (
                     <View style={{ width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: Colors.brand.blue + "20", alignItems: "center", justifyContent: "center", marginTop: rs(2) }}>
-                      <Text style={{ fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue }}>{initials}</Text>
+                      <Text style={{ fontSize: rs(12), fontFamily: "Manrope_700Bold", color: Colors.brand.blue }}>{initials}</Text>
                     </View>
                   )}
                   <View style={{ flex: 1, backgroundColor: tc.cardBg, borderRadius: rs(14), padding: rs(12), shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(5) }}>
-                      <Text style={{ fontWeight: "700", fontSize: rs(13), color: tc.textPrimary }}>{authorName}</Text>
+                      <Text style={{ fontFamily: "Manrope_700Bold", fontSize: rs(13), color: tc.textPrimary }}>{authorName}</Text>
                       <Text style={{ fontSize: rs(10), color: tc.textTertiary }}>
                         {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </Text>
@@ -2800,7 +2805,7 @@ export default function FeedScreen() {
                 {feedCommentSending ? (
                   <ActivityIndicator color="#FFF" size="small" />
                 ) : (
-                  <Text style={{ color: "#FFF", fontWeight: "800", fontSize: rs(14) }}>Send</Text>
+                  <Text style={{ color: "#FFF", fontFamily: "Manrope_800ExtraBold", fontSize: rs(14) }}>Send</Text>
                 )}
               </Pressable>
             </View>
