@@ -31,6 +31,9 @@ import { useBlockStore } from "../src/store/block.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { showToast } from '../src/shared/ui/Toast';
+import { TYPE, display } from '../src/theme/d';
+import { EmptyState, GradientButton, GradientFill, Reveal, SoftButton, TileIn } from '../src/shared/d';
+import { DPage, goBackOr } from '../src/shared/d/Page';
 
 const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
   homefinder:       { icon: "home",                 color: "#0060D0" },
@@ -46,7 +49,7 @@ const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
 };
 
 function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: number }) {
-  const colors = ["#0060D0", "#30855B", "#6D28D9", "#D97706", "#DC2626", "#0891B2", "#DB2777"];
+  const colors = ["#1A6BAE", "#257A86", "#30855B", "#155A93", "#256B49"];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   const bg = colors[Math.abs(h) % colors.length];
@@ -62,7 +65,7 @@ function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: n
           transition={200}
         />
       ) : (
-        <Text style={{ fontSize: size * 0.34, fontWeight: "800", color: "#FFF" }}>{initials}</Text>
+        <Text style={[display(800), { fontSize: size * 0.34, color: "#FFF" }]}>{initials}</Text>
       )}
     </View>
   );
@@ -188,175 +191,105 @@ export default function PublicProfileScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  const more = () => {
+    if (!profile) return;
+    appAlert(profile.name, undefined, [
+      { text: "Report", onPress: handleReport },
+      { text: "Block", style: "destructive", onPress: handleBlock },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+  const card = { borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg };
+  const h2 = (t: string) => <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 24, marginBottom: 10, marginHorizontal: 18 }]}>{t}</Text>;
+
   return (
-    <SafeAreaView style={[st.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      {/* Header */}
-      <View style={[st.header, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable style={st.backBtn} onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} hitSlop={10}>
-          <Ionicons name="chevron-back" size={rs(22)} color={tc.textPrimary} />
+    <DPage
+      title={profile?.name ?? "Profile"}
+      largeTitle="hidden"
+      onBack={() => goBackOr("/(tabs)/feed")}
+      right={!isOwnProfile && profile ? (
+        <Pressable onPress={more} hitSlop={8} accessibilityRole="button" accessibilityLabel="More options"
+          style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
+          <Ionicons name="ellipsis-horizontal" size={22} color={tc.textPrimary} />
         </Pressable>
-        <Text style={[st.headerTitle, { color: tc.textPrimary }]}>Profile</Text>
-        {!isOwnProfile && profile ? (
-          <Pressable style={st.moreBtn} onPress={handleReport} hitSlop={10}>
-            <Ionicons name="flag-outline" size={rs(20)} color="#DC2626" />
-          </Pressable>
-        ) : (
-          <View style={{ width: rs(38) }} />
-        )}
-      </View>
-
+      ) : null}
+    >
       {loading ? (
-        <View style={st.loadingWrap}>
-          <ActivityIndicator size="large" color={Colors.brand.green} />
-          <Text style={[st.loadingText, { color: tc.textTertiary }]}>Loading profile…</Text>
-        </View>
+        <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 80 }} />
       ) : error ? (
-        <View style={st.loadingWrap}>
-          <Ionicons name="person-outline" size={48} color="#CBD5E1" />
-          <Text style={[st.loadingText, { color: tc.textSecondary, marginTop: 12 }]}>{error}</Text>
-          <Pressable onPress={() => { loadedRef.current = false; void load(); }} style={st.retryBtn}>
-            <Text style={{ color: Colors.brand.green, fontWeight: "700" }}>Retry</Text>
-          </Pressable>
-        </View>
+        <EmptyState icon="person-outline" title="Could not load this profile" sub={error} actionLabel="Try again" onAction={() => { loadedRef.current = false; void load(); }} />
       ) : profile ? (
-        <ScrollView contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          {/* Hero gradient */}
-          <LinearGradient
-            colors={[Colors.brand.greenDark, Colors.brand.blue]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={st.heroBg}
-          />
-
-          {/* Avatar + basic info */}
-          <View style={st.avatarSection}>
-            <View style={st.avatarWrap}>
-              <Avatar
-                name={profile.name}
-                uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined}
-                size={88}
-              />
-              {profile.verified && (
-                <View style={st.verifiedBadge}>
-                  <Ionicons name="shield-checkmark" size={16} color="#FFF" />
-                </View>
-              )}
-            </View>
-            <Text style={[st.name, { color: tc.textPrimary }]}>{profile.name}</Text>
-            <Text style={[st.username, { color: tc.textTertiary }]}>@{profile.username}</Text>
-            {(profile.city || profile.country) && (
-              <View style={st.locationRow}>
-                <Ionicons name="location-outline" size={13} color={tc.textTertiary} />
-                <Text style={[st.locationText, { color: tc.textTertiary }]}>
-                  {[profile.city, profile.stateProvince, profile.country].filter(Boolean).join(", ")}
-                </Text>
+        <>
+          <Reveal i={0} style={{ alignItems: "center", paddingTop: 6, paddingHorizontal: 24 }}>
+            <GradientFill style={{ width: 98, height: 98, borderRadius: 49, alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 92, height: 92, borderRadius: 46, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden" }}>
+                <Avatar name={profile.name} uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined} size={86} />
               </View>
-            )}
-            {profile.bio ? (
-              <Text style={[st.bio, { color: tc.textSecondary }]}>{profile.bio}</Text>
-            ) : null}
-            <Text style={[st.joinedText, { color: tc.textTertiary }]}>
-              Joined {new Date(profile.joinedAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-            </Text>
-          </View>
-
-          {/* Action buttons */}
-          {!isOwnProfile ? (
-            <View style={st.actionRow}>
-              <Pressable
-                style={[st.followBtn, following && { backgroundColor: isDark ? tc.inputBg : "#F3F4F6", borderWidth: 1.5, borderColor: tc.borderLight }]}
-                onPress={handleFollow}
-                disabled={followLoading}
-              >
-                {following ? (
-                  <>
-                    <Ionicons name="checkmark" size={16} color={tc.textSecondary} />
-                    <Text style={[st.followBtnText, { color: tc.textSecondary }]}>Following</Text>
-                  </>
-                ) : (
-                  <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={st.followGrad}>
-                    <Ionicons name="person-add-outline" size={16} color="#FFF" />
-                    <Text style={[st.followBtnText, { color: "#FFF" }]}>Follow</Text>
-                  </LinearGradient>
-                )}
-              </Pressable>
-              <Pressable style={[st.messageBtn, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF", borderColor: Colors.brand.blue }]} onPress={handleMessage}>
-                <Ionicons name="chatbubble-outline" size={16} color={Colors.brand.blue} />
-                <Text style={[st.messageBtnText, { color: Colors.brand.blue }]}>Message</Text>
-              </Pressable>
-              <Pressable style={[st.blockBtn, { backgroundColor: isDark ? tc.inputBg : "#FEF2F2" }]} onPress={handleBlock} hitSlop={4}>
-                <Ionicons name="ban-outline" size={18} color="#DC2626" />
-              </Pressable>
+            </GradientFill>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 }}>
+              <Text style={[TYPE.pageTitle, { fontSize: 28, color: tc.textPrimary, textAlign: "center" }]}>{profile.name}</Text>
+              {profile.verified ? <Ionicons name="checkmark-circle" size={22} color={tc.mint} accessibilityLabel="Verified" /> : null}
             </View>
-          ) : null}
+            <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center", marginTop: 2 }]}>
+              {[profile.username ? `@${profile.username}` : "", [profile.city, profile.country].filter(Boolean).join(", "), profile.joinedAt ? `member since ${new Date(profile.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : ""].filter(Boolean).join(" · ")}
+            </Text>
+            {profile.bio ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>{profile.bio}</Text> : null}
+            {!isOwnProfile ? (
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
+                <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color="#fff" />} onPress={handleMessage} />
+                <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
+              </View>
+            ) : null}
+          </Reveal>
 
-          {/* Stats */}
-          <View style={[st.statsCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+          <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginHorizontal: 16, marginTop: 20 }}>
             {[
-              { label: "Posts", value: profile.stats.postsCount, icon: "document-text-outline" as const, color: Colors.brand.blue },
-              { label: "Saved", value: profile.stats.savedCount, icon: "bookmark-outline" as const, color: "#F59E0B" },
-              { label: "Events", value: profile.stats.eventsCount, icon: "calendar-outline" as const, color: "#8B5CF6" },
-              { label: "Neighbors", value: profile.stats.neighborsCount, icon: "people-outline" as const, color: Colors.brand.green },
-            ].map((s, i, arr) => (
-              <View key={s.label} style={[st.statItem, i < arr.length - 1 && { borderRightWidth: 1, borderRightColor: tc.borderLight }]}>
-                <Ionicons name={s.icon} size={18} color={s.color} />
-                <Text style={[st.statNum, { color: tc.textPrimary }]}>{s.value ?? 0}</Text>
-                <Text style={[st.statLabel, { color: tc.textTertiary }]}>{s.label}</Text>
+              { label: "Posts", value: profile.stats.postsCount },
+              { label: "Saved", value: profile.stats.savedCount },
+              { label: "Events", value: profile.stats.eventsCount },
+              { label: "Neighbours", value: profile.stats.neighborsCount },
+            ].map((s) => (
+              <View key={s.label} style={[card, { flex: 1, alignItems: "center", paddingVertical: 14, borderRadius: 18 }]}>
+                <Text style={[display(800), { fontSize: 22, color: tc.textPrimary }]}>{s.value ?? 0}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>{s.label}</Text>
               </View>
             ))}
-          </View>
+          </Reveal>
 
-          {/* Achievements */}
           {profile.achievements.filter((a) => a.earned).length > 0 ? (
-            <View style={[st.section, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <Text style={[st.sectionTitle, { color: tc.textPrimary }]}>Achievements</Text>
-              <View style={st.achievementsGrid}>
-                {profile.achievements.filter((a) => a.earned).map((a) => {
+            <>
+              {h2("Badges")}
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16 }}>
+                {profile.achievements.filter((a) => a.earned).map((a, i) => {
                   const meta = ACHIEVEMENT_ICONS[a.id] ?? { icon: "ribbon-outline", color: "#6B7280" };
                   return (
-                    <View key={a.id} style={[st.achievementChip, { backgroundColor: isDark ? tc.inputBg : `${meta.color}10` }]}>
-                      <Ionicons name={meta.icon as any} size={18} color={meta.color} />
-                      <Text style={[st.achievementLabel, { color: isDark ? tc.textSecondary : meta.color }]}>{a.label}</Text>
-                    </View>
+                    <TileIn key={a.id} i={i} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: tc.mintSoft }}>
+                      <Ionicons name={meta.icon as any} size={15} color={tc.successText} />
+                      <Text style={[TYPE.label, { fontSize: 13, color: tc.textPrimary }]}>{a.label}</Text>
+                    </TileIn>
                   );
                 })}
               </View>
-            </View>
+            </>
           ) : null}
 
-          {/* Recent posts */}
-          {posts.length > 0 ? (
-            <View style={[st.section, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <Text style={[st.sectionTitle, { color: tc.textPrimary }]}>Recent Posts</Text>
-              {posts.map((p) => (
-                <View key={p.id} style={[st.postCard, { backgroundColor: isDark ? tc.inputBg : "#F9FAFB", borderColor: tc.borderLight }]}>
-                  {p.title ? (
-                    <Text style={[st.postTitle, { color: tc.textPrimary }]} numberOfLines={1}>{p.title}</Text>
-                  ) : null}
-                  <Text style={[st.postContent, { color: tc.textSecondary }]} numberOfLines={3}>{p.content}</Text>
-                  <View style={st.postMeta}>
-                    <View style={st.postMetaChip}>
-                      <Ionicons name="heart-outline" size={12} color={tc.textTertiary} />
-                      <Text style={[st.postMetaText, { color: tc.textTertiary }]}>{p.likesCount ?? 0}</Text>
-                    </View>
-                    <View style={st.postMetaChip}>
-                      <Ionicons name="chatbubble-outline" size={12} color={tc.textTertiary} />
-                      <Text style={[st.postMetaText, { color: tc.textTertiary }]}>{p.commentsCount ?? 0}</Text>
-                    </View>
-                    <Text style={[st.postDate, { color: tc.textTertiary }]}>{new Date(p.createdAt).toLocaleDateString()}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={[st.section, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <Text style={[st.sectionTitle, { color: tc.textPrimary }]}>Recent Posts</Text>
-              <Text style={[st.emptyText, { color: tc.textTertiary }]}>{postsFailed ? "Posts are unavailable right now. Pull back later to retry." : "No public posts yet."}</Text>
-            </View>
+          {h2("Posts")}
+          {posts.length > 0 ? posts.map((p, i) => (
+            <Reveal key={p.id} i={i + 2} style={[card, { marginHorizontal: 16, marginBottom: 10, padding: 14 }]}>
+              {p.title ? <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{p.title}</Text> : null}
+              {p.content?.trim() ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: p.title ? 4 : 0 }]} numberOfLines={3}>{p.content}</Text> : null}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 10 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Ionicons name="heart-outline" size={14} color={tc.textTertiary} /><Text style={[TYPE.small, { color: tc.textTertiary }]}>{p.likesCount ?? 0}</Text></View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Ionicons name="chatbubble-outline" size={14} color={tc.textTertiary} /><Text style={[TYPE.small, { color: tc.textTertiary }]}>{p.commentsCount ?? 0}</Text></View>
+                <Text style={[TYPE.small, { color: tc.textTertiary, marginLeft: "auto" }]}>{new Date(p.createdAt).toLocaleDateString()}</Text>
+              </View>
+            </Reveal>
+          )) : (
+            <Text style={[TYPE.small, { color: tc.textTertiary, marginHorizontal: 18 }]}>{postsFailed ? "Posts are unavailable right now. Come back later." : "No public posts yet."}</Text>
           )}
-        </ScrollView>
+        </>
       ) : null}
-    </SafeAreaView>
+    </DPage>
   );
 }
 

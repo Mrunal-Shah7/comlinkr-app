@@ -140,7 +140,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | check-in | `app/events/[id]/check-in.tsx` | not started |
 | story-viewer | `app/story-viewer.tsx` | not started |
 | profile | `app/profile.tsx` (roommate-preferences sheet still base coat) | phone-checked |
-| public-profile | `app/public-profile.tsx` | not started |
+| public-profile | `app/public-profile.tsx` | phone-checked (Follow fails on the backend: TR-006) |
 | edit-profile | `app/edit-profile.tsx` | not started |
 | saved | `app/saved.tsx` (`interested.tsx` is not linked from anywhere: base coat; merging it is phase 2) | phone-checked |
 | settings | `app/settings.tsx` | phone-checked |
