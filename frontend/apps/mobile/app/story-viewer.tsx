@@ -30,6 +30,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEventListener } from "expo";
 import * as Haptics from "expo-haptics";
+import Reanimated, { Keyframe, useReducedMotion } from "react-native-reanimated";
+import { PersonAvatar } from "../src/shared/d";
+
+/** `.story .ph`: each photo cross-fades in with a slow zoom (scale 1.04 to 1, 380 ms). */
+const PHOTO_IN = new Keyframe({ 0: { opacity: 0, transform: [{ scale: 1.04 }] }, 100: { opacity: 1, transform: [{ scale: 1 }] } }).duration(380);
 import {
   getActiveStories,
   getStory,
@@ -191,6 +196,7 @@ const styles = createDTypeStyles({
 
 export default function StoryViewerScreen() {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const { width: W, height: H } = useWindowDimensions();
   const { tc, isDark } = useTheme();
   const user = useAuthStore((s) => s.user);
@@ -551,14 +557,16 @@ export default function StoryViewerScreen() {
 
       {/* ── Media layer ── */}
       {isPhoto && imgUrl ? (
-        <Image
-          source={{ uri: imgUrl }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          cachePolicy="disk"
-          transition={0}
-          onError={() => { setMediaError(true); advanceStory(); }}
-        />
+        <Reanimated.View key={currentStory.id} entering={reduceMotion ? undefined : PHOTO_IN} style={StyleSheet.absoluteFill}>
+          <Image
+            source={{ uri: imgUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={0}
+            onError={() => { setMediaError(true); advanceStory(); }}
+          />
+        </Reanimated.View>
       ) : isVideo && imgUrl ? (
         <StoryVideoLayer
           key={currentStory.id}
@@ -578,13 +586,13 @@ export default function StoryViewerScreen() {
 
       {/* ── Gradient overlays ── */}
       <LinearGradient
-        colors={["rgba(0,0,0,0.72)", "rgba(0,0,0,0.3)", "transparent"]}
-        style={[StyleSheet.absoluteFill, { height: H * 0.38 }]}
+        colors={["rgba(0,0,0,0.28)", "transparent"]}
+        style={[StyleSheet.absoluteFill, { height: insets.top + 90 }]}
         pointerEvents="none"
       />
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.88)"]}
-        style={[StyleSheet.absoluteFill, { top: H * 0.42 }]}
+        colors={["transparent", "rgba(0,0,0,0.7)"]}
+        style={[StyleSheet.absoluteFill, { top: H * 0.55 }]}
         pointerEvents="none"
       />
 
@@ -642,14 +650,12 @@ export default function StoryViewerScreen() {
                 transition={200}
               />
             ) : (
-              <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={[st.avatar, st.avatarPh]}>
-                <Text style={st.avatarPhText}>{(currentStory.author.username || "?").slice(0, 2).toUpperCase()}</Text>
-              </LinearGradient>
+              <PersonAvatar name={currentStory.author.username || "?"} size={34} />
             )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={st.authorName}>{currentStory.author.username}</Text>
-            <Text style={st.authorTime}>{timeAgoShort(currentStory.createdAt)}</Text>
+            <Text style={st.authorTime}>{timeAgoShort(currentStory.createdAt)} · {cat.label}</Text>
           </View>
         </View>
 
@@ -676,23 +682,8 @@ export default function StoryViewerScreen() {
         </View>
       </Animated.View>
 
-      {/* ── Pause hint ── */}
-      {isPaused && (
-        <View style={st.pauseHint} pointerEvents="none">
-          <View style={st.pauseCircle}>
-            <Ionicons name="pause" size={rs(32)} color="#FFF" />
-          </View>
-        </View>
-      )}
-
       {/* ── Footer ── */}
       <View style={[st.footer, { paddingBottom: insets.bottom + rs(20) }]}>
-        {/* Category pill */}
-        <View style={[st.catPill, { backgroundColor: cat.bg, borderColor: cat.color }]}>
-          <View style={[st.catDot, { backgroundColor: cat.color }]} />
-          <Text style={[st.catPillText, { color: cat.color }]}>{cat.label}</Text>
-        </View>
-
         {/* Title */}
         <Text style={st.footerTitle} numberOfLines={2}>{currentStory.title}</Text>
 
@@ -957,17 +948,17 @@ const st = createDTypeStyles({
 
   progressRow: {
     position: "absolute",
-    left: rs(12),
-    right: rs(12),
+    left: 10,
+    right: 10,
     flexDirection: "row",
-    gap: rs(4),
+    gap: 4,
     zIndex: 20,
   },
   progressTrack: {
     flex: 1,
-    height: rs(3),
-    borderRadius: rs(2),
-    backgroundColor: "rgba(255,255,255,0.3)",
+    height: 3,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.35)",
     overflow: "hidden",
   },
   progressFill: {
@@ -992,11 +983,9 @@ const st = createDTypeStyles({
   },
   authorRow: { flexDirection: "row", alignItems: "center", gap: rs(10), flex: 1 },
   avatarRing: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    borderWidth: 2,
-    borderColor: "#FFF",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     overflow: "hidden",
   },
   avatar: { width: "100%", height: "100%" },
@@ -1004,17 +993,17 @@ const st = createDTypeStyles({
   avatarPhText: { color: "#FFF", fontSize: rs(13), fontWeight: "900" },
   authorName: {
     color: "#FFF",
-    fontWeight: "900",
-    fontSize: rs(14),
+    fontWeight: "600",
+    fontSize: 15,
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
   authorTime: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: rs(11),
-    fontWeight: "600",
-    marginTop: rs(1),
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 12.5,
+    fontWeight: "500",
+    marginTop: 1,
   },
   headerControls: { flexDirection: "row", alignItems: "center", gap: rs(8) },
   headerIconBtn: {
@@ -1028,14 +1017,11 @@ const st = createDTypeStyles({
     borderColor: "rgba(255,255,255,0.18)",
   },
   closeBtn: {
-    width: rs(36),
-    height: rs(36),
-    borderRadius: rs(18),
-    backgroundColor: "rgba(0,0,0,0.55)",
+    width: 40,
+    height: 40,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
   },
 
   pauseHint: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center", zIndex: 8 },
@@ -1073,13 +1059,13 @@ const st = createDTypeStyles({
   catPillText: { fontSize: rs(11), fontWeight: "900", letterSpacing: 0.4 },
   footerTitle: {
     color: "#FFF",
-    fontSize: rs(22),
-    fontWeight: "900",
-    marginBottom: rs(6),
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
-    lineHeight: rs(28),
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 6,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
+    lineHeight: 27,
   },
   footerDetails: {
     color: "rgba(255,255,255,0.88)",
