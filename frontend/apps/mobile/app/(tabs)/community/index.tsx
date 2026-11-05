@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { tabBarClearance } from '../../../src/shared/navigation/DTabBar';
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton } from '../../../src/shared/d';
+import { DSheet } from '../../../src/shared/d/Sheet';
 import { TYPE } from '../../../src/theme/d';
 import {
   View,
@@ -1189,21 +1190,14 @@ export default function CommunityScreen() {
       </Reanimated.ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Ask Question Modal */}
-      <Modal visible={showAsk} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setShowAsk(false)}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={s.modalOverlay}
-        >
-          <View style={[s.modalSheet, { backgroundColor: tc.sheetBg, paddingBottom: Math.max(insets.bottom, 12) + rs(16) }]}>
-            <View style={s.modalHandle} />
-            <Text style={[s.modalTitle, { color: tc.textPrimary }]}>Ask the Community</Text>
-            <Text style={[s.modalSubtitle, { color: tc.textSecondary }]}>
-              Get answers from locals who know the area
-            </Text>
+      {/* Ask a question (design D sheet) */}
+      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask the people around you" grow>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
+            <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 12 }]}>Locals who know the area answer here.</Text>
             <TextInput
-              style={[s.modalInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-              placeholder="Type your question..."
+              style={[TYPE.body, { minHeight: 110, maxHeight: 200, borderRadius: 18, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
+              placeholder="What do you want to know?"
               placeholderTextColor={tc.textTertiary}
               value={newQ}
               onChangeText={setNewQ}
@@ -1213,29 +1207,14 @@ export default function CommunityScreen() {
               multiline
               autoFocus
             />
-            <Text style={{ alignSelf: "flex-end", fontSize: rs(11), color: tc.textTertiary, marginTop: rs(4) }}>
-              {newQ.length}/300
-            </Text>
-            <View style={s.modalActions}>
-              <Pressable onPress={() => setShowAsk(false)} disabled={posting} style={[s.modalCancel, { backgroundColor: tc.inputBg }]}>
-                <Text style={[s.modalCancelText, { color: tc.textSecondary }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSubmitQuestion}
-                disabled={!newQ.trim() || posting}
-                accessibilityRole="button"
-                accessibilityLabel="Post question"
-                accessibilityState={{ disabled: !newQ.trim() || posting, busy: posting }}
-                style={[s.modalSubmit, (!newQ.trim() || posting) && { opacity: 0.5 }]}
-              >
-                <View style={[s.modalSubmitGrad, { backgroundColor: Colors.brand.blue }]}>
-                  {posting ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={s.modalSubmitText}>Post Question</Text>}
-                </View>
-              </Pressable>
+            <Text style={[TYPE.small, { alignSelf: "flex-end", fontSize: 11.5, color: tc.textTertiary, marginTop: 6 }]}>{newQ.length}/300</Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>
+              <SoftButton ghost block label="Cancel" outerStyle={{ flex: 1 }} disabled={posting} onPress={() => setShowAsk(false)} />
+              <GradientButton block label="Post question" outerStyle={{ flex: 1.4 }} loading={posting} disabled={!newQ.trim()} onPress={handleSubmitQuestion} />
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </DSheet>
       <GuestCityPickerModal visible={cityPickerVisible} onClose={() => setCityPickerVisible(false)} />
     </SafeAreaView>
   );

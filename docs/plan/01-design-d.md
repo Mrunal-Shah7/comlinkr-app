@@ -130,7 +130,7 @@ the phone against the local backend). Only "phone-checked" counts as done.
 | listmenu | listing ··· menu | not started |
 | my-restaurants | `app/my-restaurants.tsx` (manage sheet still base coat) | rebuilt; empty state phone-checked, cards to check after a restaurant is made |
 | review (sheet) | rate and review in the restaurant modal | not started |
-| ask (sheet) | ask sheet in `app/(tabs)/community/index.tsx` | not started |
+| ask (sheet) | ask sheet in `app/(tabs)/community/index.tsx` | phone-checked (open, cancel; nothing posted) |
 | question-detail | answers in `app/(tabs)/community/index.tsx` | not started |
 | post-detail | post comments modal | not started |
 | event-detail | `EventDetailModal` | not started |
