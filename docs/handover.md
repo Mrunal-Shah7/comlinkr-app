@@ -10,13 +10,12 @@ else. Keep old entries short: what was done and where it is written._
   (done: `18788bb`, and the D: release script `3f8ba27`).
 - **Done:** [build note](build/2026-11-08-expo-review.md), [run log](device-runs/2026-11-08-expo-review.md), review 08
   "Update 2026-11-08". Commits `d414423` (bugs), `4a07c79` (unused files), `79babe3` (gestures and animations on
-  Gesture Handler / Reanimated), then the restored `app/app/*` bridge routes with these docs. Nothing pushed, no pull
-  request.
-- **Not checked:** pinch-to-zoom (adb has one finger), iOS, a release build. ESLint does not run in the mobile app (no
-  dev dependency).
+  Gesture Handler / Reanimated), `193be40` (the restored `app/app/*` bridge routes, with these docs), then a
+  docs-only commit. Nothing pushed, no pull request.
+- **Not checked:** pinch-to-zoom (adb has one finger), `ListingCard` (admin screen only), the news skeleton pulse,
+  iOS, a release build. ESLint does not run in the mobile app (no dev dependency).
 - **Next, if wanted:** `SignPad` off `PanResponder`; data fetching onto React Query; hard-coded colours onto theme
-  tokens; why `?openStory=` from an Expo Go link does not open the story. Full list under "Reported, not fixed" in the
-  build note.
+  tokens. Full list under "Reported, not fixed" in the build note.
 - **Left untracked on purpose:** `.claude/skills/` and `skills-lock.json` (the Expo skills install); the owner decides
   whether they belong in the repository.
 - **Servers:** Metro (port 8083) stopped at the end; the backend was already running before the session and was left

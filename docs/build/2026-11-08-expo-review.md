@@ -71,8 +71,8 @@ Mostly drift: the API client was rewritten without the query client's retry rule
 
 ## Commits
 
-On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79babe3` (refactor), and the commit
-that restores `app/app/*` with these docs.
+On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79babe3` (refactor), `193be40`
+(restores `app/app/*`, with these docs), then a docs-only commit with the second phone check.
 
 ## How it was checked
 
@@ -83,12 +83,16 @@ that restores `app/app/*` with these docs.
 - On the phone (OnePlus, Android 16, Expo Go, local backend), as `ui_tester`: gallery paging, short and long pull,
   flick, hardware Back; story viewer short and long pull, flick, Like and unlike inside the gesture area; the moved
   RSVP sheet (stepper, close); a chat message sent; photo reorder dragged and dragged back (the database order
-  followed both times), vertical scroll over the tiles. Details in the run log.
+  followed both times), vertical scroll over the tiles; the media picker sheet opened twice and closed with Cancel
+  and with the backdrop; an Expo Go `?openStory=` link opens the story. Details in the run log.
 - ESLint could not run: the mobile app has no `eslint` dev dependency (`eslint.config.js` needs `eslint/config`).
 
 ## Not checked
 
 - Pinch-to-zoom and panning a zoomed photo: adb input has one finger.
+- `ListingCard`'s save pop and burst: the card now renders only on the admin listings screen, which was not walked.
+- The Explore news skeleton pulse: not seen on screen (the news loaded before it could be looked at).
+- The chat send pop and the photo tiles' spring back: too quick to judge from screenshots.
 - iOS (no device).
 - A release build. Feel of the springs on a slow phone.
 - The "Uncaught (in promise" warnings now visible in development were not counted or chased.
@@ -104,8 +108,6 @@ that restores `app/app/*` with these docs.
 - `app/create-post.tsx` is 5 000 lines.
 - Staging builds allow cleartext traffic (`APP_ENV !== 'production'`).
 - `dist_baseline/` is tracked in git; build logs and one-off scripts sit in the app folder.
-- An Expo Go link with `?openStory=<id>` lands on Explore without opening the story (seen on the phone, not read in
-  code).
 - The design D tab pager (`SwipeTabs`) and the JS screen transitions (`ZoomStack`) go against the expo-animation and
   expo-router guidance (native tabs, platform transitions). They are deliberate design D choices (plan 01), so they
   were left alone.
