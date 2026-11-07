@@ -30,12 +30,9 @@ import {
   disconnectMessagingSocket,
 } from '../src/services/messagingSocket'; // SPRINT-39:
 
-// expo-video (3.x) internally calls expo-keep-awake which isn't registered
-// in Expo Go on SDK 54. The error is non-fatal — video still plays.
-LogBox.ignoreLogs([
-  'Unable to activate keep awake',
-  'Uncaught (in promise',
-]);
+// expo-video calls expo-keep-awake, which can fail to activate in Expo Go. Non-fatal: video still plays.
+// Unhandled promise rejections are deliberately not muted, so a failing API call shows up in development.
+LogBox.ignoreLogs(['Unable to activate keep awake']);
 
 export default function RootLayout() {
   const hydrate      = useAuthStore((s) => s.hydrate);
