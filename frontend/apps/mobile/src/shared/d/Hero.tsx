@@ -31,10 +31,10 @@ export function HeroExpand({ origin, height, onLanded, onDone }: { origin: HeroO
   useLayoutEffect(() => {
     if (reduce) { onLanded(); onDone(); return; }
     // The page starts fading in while the photo settles; the photo goes once the page is in.
-    const t1 = setTimeout(onLanded, 300);
-    const t2 = setTimeout(onDone, 600);
-    // The prototype's EASE_SHEET: cubic-bezier(.32, 1.18, .52, 1), a slight overshoot, 480 ms.
-    p.value = withTiming(1, { duration: 480, easing: Easing.bezier(0.32, 1.18, 0.52, 1) });
+    const t1 = setTimeout(onLanded, 230);
+    const t2 = setTimeout(onDone, 480);
+    // The prototype's EASE_SHEET: cubic-bezier(.32, 1.18, .52, 1), a slight overshoot; 380 ms (was 480).
+    p.value = withTiming(1, { duration: 380, easing: Easing.bezier(0.32, 1.18, 0.52, 1) });
     return () => { clearTimeout(t1); clearTimeout(t2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per origin
   }, []);

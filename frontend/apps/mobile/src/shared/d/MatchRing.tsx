@@ -1,5 +1,5 @@
 // src/shared/d/MatchRing.tsx — the match ring (design D, plan 01): the green arc sweeps from 0 to the score over
-// 900 ms (Easing.out(cubic)) and the number counts up with it. Reduce motion: shown at once.
+// 650 ms after a 120 ms pause (Easing.out(cubic)) and the number counts up with it. Reduce motion: shown at once.
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
@@ -18,7 +18,7 @@ export function MatchRing({ score, size = 72, stroke = 6 }: { score: number; siz
   const [shown, setShown] = useState(reduce ? score : 0);
 
   useEffect(() => {
-    p.value = reduce ? score : withDelay(250, withTiming(score, { duration: 900, easing: Easing.out(Easing.cubic) }));
+    p.value = reduce ? score : withDelay(120, withTiming(score, { duration: 650, easing: Easing.out(Easing.cubic) }));
   }, [score, reduce, p]);
   useAnimatedReaction(() => Math.round(p.value), (v, prev) => { if (v !== prev) runOnJS(setShown)(v); });
   const arc = useAnimatedProps(() => ({ strokeDashoffset: c * (1 - Math.max(0, Math.min(100, p.value)) / 100) }));

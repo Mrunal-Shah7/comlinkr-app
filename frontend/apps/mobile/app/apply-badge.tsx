@@ -1312,7 +1312,7 @@ export default function ApplyBadgeScreen() {
     >
       {step < 5 ? <StepDots total={adjustedTotal} current={adjustedStep} /> : null}
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <Animated.View key={step} style={{ paddingHorizontal: 16, paddingTop: 10 }} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200)}>
+        <Animated.View key={step} style={{ paddingHorizontal: 16, paddingTop: 10 }} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200).mass(1)}>
           {step === 0 && renderBadgeSelect()}
           {step === 1 && (
             <>

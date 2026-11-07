@@ -36,7 +36,8 @@ import { resolveApiAssetUrl } from "../src/api/feed.api";
 import { ApiError } from "../src/api/client";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
-import Animated, { FadeInDown, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeOut } from "react-native-reanimated";
+import { layoutEase, revealIn } from "../src/shared/motion/presets";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { TYPE } from "../src/theme/d";
@@ -396,13 +397,13 @@ export default function SavedScreen() {
             keyExtractor={(r: ExtraRow) => r.id}
             onScroll={onScroll}
             scrollEventThrottle={16}
-            itemLayoutAnimation={LinearTransition.springify().damping(20)}
+            itemLayoutAnimation={layoutEase}
             ListHeaderComponent={<>{header}{segmented}</>}
             ListEmptyComponent={extraEmpty}
             contentContainerStyle={{ paddingBottom: bottom, gap: 10 }}
             refreshControl={<RefreshControl refreshing={false} onRefresh={() => void loadExtra(seg)} tintColor={tc.accent} />}
             renderItem={({ item, index }: { item: ExtraRow; index: number }) => (
-              <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
+              <Animated.View entering={index < 8 ? revealIn(index) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
                 <PressableScale onPress={item.open} accessibilityRole="button" accessibilityLabel={item.title}
                   style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
                   {item.image ? <FadeImage uri={item.image} style={{ width: 72, height: 72, borderRadius: 16 }} /> : (
@@ -442,7 +443,7 @@ export default function SavedScreen() {
           keyExtractor={(item: Row) => pickId(item, active)}
           onScroll={onScroll}
           scrollEventThrottle={16}
-          itemLayoutAnimation={LinearTransition.springify().damping(20)}
+          itemLayoutAnimation={layoutEase}
           ListHeaderComponent={<>{header}{segmented}{chips}</>}
           ListEmptyComponent={empty}
           columnWrapperStyle={isStories ? { gap: 10, paddingHorizontal: 16 } : undefined}
@@ -457,7 +458,7 @@ export default function SavedScreen() {
               const uri = thumbUri(item, active);
               const expired = item.isExpired === true;
               return (
-                <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ flex: 1, maxWidth: "50%" }}>
+                <Animated.View entering={index < 8 ? revealIn(index) : undefined} exiting={FadeOut.duration(180)} style={{ flex: 1, maxWidth: "50%" }}>
                   <PressableScale onPress={() => openItem(item, active)} accessibilityRole="button" accessibilityLabel={titleLine(item, active)}
                     style={{ height: 230, borderRadius: 22, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
                     {uri ? <FadeImage uri={uri} style={StyleSheet.absoluteFill} /> : null}
@@ -478,7 +479,7 @@ export default function SavedScreen() {
             const uri = thumbUri(item, active);
             const sub = subtitleLine(item, active);
             return (
-              <Animated.View entering={index < 8 ? FadeInDown.delay(index * 45).springify().damping(18) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
+              <Animated.View entering={index < 8 ? revealIn(index) : undefined} exiting={FadeOut.duration(180)} style={{ marginHorizontal: 16 }}>
                 <PressableScale onPress={() => openItem(item, active)} accessibilityRole="button" accessibilityLabel={titleLine(item, active)}
                   style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
                   {uri ? (

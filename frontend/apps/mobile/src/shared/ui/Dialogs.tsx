@@ -160,7 +160,7 @@ export function DialogHost() {
         <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
           <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
             <AnimatedPressable
-              entering={reduce ? undefined : ZoomIn.springify().damping(18).stiffness(260).withInitialValues({ transform: [{ scale: 0.86 }] })}
+              entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
               style={[s.dialog, { backgroundColor: tc.sheetBg, borderColor: tc.borderLight }]}
               onPress={() => {}}
               accessibilityViewIsModal
@@ -203,7 +203,7 @@ export function DialogHost() {
       <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
         <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
           <AnimatedPressable
-            entering={reduce ? undefined : SlideInDown.springify().damping(22).stiffness(220)}
+            entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
             style={[
               s.sheet,
               { backgroundColor: tc.sheetBg, borderColor: tc.borderLight, paddingBottom: Math.max(insets.bottom, 12) + 8 },
@@ -252,7 +252,7 @@ export function DialogHost() {
       <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
         <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
           <AnimatedPressable
-            entering={reduce ? undefined : ZoomIn.springify().damping(18).stiffness(260).withInitialValues({ transform: [{ scale: 0.86 }] })}
+            entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
             style={[s.dialog, { backgroundColor: tc.sheetBg, borderColor: tc.borderLight }]}
             onPress={() => {}}
             accessibilityViewIsModal
@@ -296,7 +296,7 @@ export function DialogHost() {
     <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
       <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
         <AnimatedPressable
-          entering={reduce ? undefined : SlideInDown.springify().damping(22).stiffness(220)}
+          entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
           style={[
             s.sheet,
             { backgroundColor: tc.sheetBg, borderColor: tc.borderLight, paddingBottom: Math.max(insets.bottom, 12) + 8 },

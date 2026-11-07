@@ -18,9 +18,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../src/theme/useTheme";
 import { createThemedStyles } from '../src/theme/themedStyles';
-import Animated, { FadeInDown, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeOut, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { TYPE } from '../src/theme/d';
-import { SPRING } from '../src/shared/motion/presets';
+import { SPRING, layoutEase } from '../src/shared/motion/presets';
 import { Chip, EmptyState, Reveal } from '../src/shared/d';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
@@ -82,7 +82,7 @@ function FaqItem({ q, a, first, open, onToggle, helpful, onHelpful }: {
   useEffect(() => { turn.value = withSpring(open ? 1 : 0, SPRING.settle); }, [open, turn]);
   const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 90}deg` }] }));
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)} style={!first ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight } : undefined}>
+    <Animated.View layout={layoutEase} style={!first ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight } : undefined}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={q}
         style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 14 }, pressed && { backgroundColor: tc.inputBg }]}>
         <Text style={[TYPE.bodyStrong, { flex: 1, color: tc.textPrimary, fontFamily: "Manrope_600SemiBold" }]}>{q}</Text>

@@ -5,10 +5,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
 import { useAuthStore } from "../../../store/auth.store";
-import Reanimated, { FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Reanimated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { TYPE } from '../../../theme/d';
-import { SPRING } from '../../../shared/motion/presets';
+import { SPRING, layoutEase } from '../../../shared/motion/presets';
 import { useGuestLocationStore } from "../../../store/guestLocation.store";
 
 // ── Safe Renting Guide ───────────────────────────────────────────────────────
@@ -139,7 +139,7 @@ export function SafeRentingGuide() {
   );
 
   return (
-    <Reanimated.View layout={LinearTransition.springify().damping(20)} style={[sg.card, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderRadius: 22, overflow: "hidden" }]}>
+    <Reanimated.View layout={layoutEase} style={[sg.card, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderRadius: 22, overflow: "hidden" }]}>
       <Pressable
         onPress={() => setExpanded((v) => !v)}
         style={sg.header}

@@ -165,7 +165,7 @@ export function ListingQuestions(p: ListingQuestionsProps) {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 24 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Animated.View key={q} entering={reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200)}>
+        <Animated.View key={q} entering={reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200).mass(1)}>
         <Animated.View style={shakeStyle}>
           {q === 0 ? (
             <>

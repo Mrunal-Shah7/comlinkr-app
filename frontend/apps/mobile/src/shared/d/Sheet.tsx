@@ -1,5 +1,5 @@
 // src/shared/d/Sheet.tsx — design D bottom sheet (plan 01).
-// Rises with withSpring({ damping: 18, stiffness: 200 }); drag the handle or header down past 110 px (or flick)
+// Rises on SPRING.sheet; drag the handle or header down past 110 px (or flick)
 // to close, otherwise it springs back. `grow` makes it grow out of the bottom centre (the + button):
 // scale 0.25 → 1 with a fade. Reduce motion: a short fade only.
 import { useEffect, useState, type ReactNode } from 'react';
@@ -13,8 +13,12 @@ import { useTheme } from '../../theme/useTheme';
 import { RADIUS, TYPE } from '../../theme/d';
 import { SPRING } from '../motion/presets';
 
-export function DSheet({ visible, onClose, title, children, grow, full, style }: {
-  visible: boolean; onClose: () => void; title?: string; children: ReactNode; grow?: boolean; full?: boolean; style?: StyleProp<ViewStyle>;
+export function DSheet({ visible, onClose, title, children, grow, growFrom, full, style }: {
+  visible: boolean; onClose: () => void; title?: string; children: ReactNode; grow?: boolean;
+  /** With `grow`: the point the sheet grows out of and shrinks back into, as the distance from the screen's bottom edge
+   *  to the centre of the + button (it is horizontally centred). Without it the sheet grows from the bottom edge. */
+  growFrom?: { bottom: number };
+  full?: boolean; style?: StyleProp<ViewStyle>;
 }) {
   const { tc } = useTheme();
   const insets = useSafeAreaInsets();
@@ -23,6 +27,7 @@ export function DSheet({ visible, onClose, title, children, grow, full, style }:
   const [mounted, setMounted] = useState(visible);
   const p = useSharedValue(0); // 0 hidden → 1 shown
   const drag = useSharedValue(0);
+  const sheetH = useSharedValue(0); // measured height, for scaling about the + button's centre
 
   useEffect(() => {
     if (visible) {
@@ -30,7 +35,7 @@ export function DSheet({ visible, onClose, title, children, grow, full, style }:
       drag.value = 0;
       p.value = reduce ? withTiming(1, { duration: 150 }) : withSpring(1, SPRING.sheet);
     } else if (mounted) {
-      p.value = withTiming(0, { duration: reduce ? 120 : 260 }, (done) => { if (done) scheduleOnRN(setMounted, false); });
+      p.value = withTiming(0, { duration: reduce ? 120 : 240 }, (done) => { if (done) scheduleOnRN(setMounted, false); });
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps -- p, drag and reduce are stable for the sheet's life
 
@@ -45,6 +50,17 @@ export function DSheet({ visible, onClose, title, children, grow, full, style }:
   const backdrop = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) * (1 - Math.min(drag.value / 600, 0.6)) }));
   const sheet = useAnimatedStyle(() => {
     if (reduce) return { opacity: p.value, transform: [{ translateY: drag.value }] };
+    if (grow && growFrom) {
+      // Scale about the + button's centre: the view scales about its own centre, so shift it by (O − C)(1 − s),
+      // where O is the + centre and C the sheet's centre, both measured from the sheet's top. Until the sheet has
+      // been measured it stays hidden, so the first frame cannot show it in the wrong place.
+      const s = interpolate(p.value, [0, 1], [0.04, 1]);
+      const ty = (sheetH.value / 2 - growFrom.bottom) * (1 - s);
+      return {
+        opacity: sheetH.value ? interpolate(p.value, [0, 0.08], [0, 1], 'clamp') : 0,
+        transform: [{ translateY: ty + drag.value }, { scale: s }],
+      };
+    }
     if (grow) {
       return {
         opacity: interpolate(p.value, [0, 0.4], [0, 1], 'clamp'),
@@ -65,7 +81,8 @@ export function DSheet({ visible, onClose, title, children, grow, full, style }:
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         </Animated.View>
         <Animated.View
-          style={[s.sheet, { backgroundColor: tc.sheetBg, paddingBottom: insets.bottom + 16, maxHeight: '88%' }, full && { height: '94%', maxHeight: '94%' }, { transformOrigin: 'bottom' }, sheet, style]}
+          style={[s.sheet, { backgroundColor: tc.sheetBg, paddingBottom: insets.bottom + 16, maxHeight: '88%' }, full && { height: '94%', maxHeight: '94%' }, { transformOrigin: grow && growFrom ? 'center' : 'bottom' }, sheet, style]}
+          onLayout={growFrom ? (e) => { sheetH.value = e.nativeEvent.layout.height; } : undefined}
         >
           <GestureDetector gesture={pan}>
             <View>

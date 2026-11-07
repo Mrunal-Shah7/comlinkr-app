@@ -1,13 +1,14 @@
 // src/features/explore/components/ExploreBento.tsx — Explore's bento (design D, plan 01; layout from design C).
 //
-// Tiles pop in one after another (scale 0.96 → 1, 45 ms apart). Each tile shows only when it has data (B6):
+// Tiles pop in one after another (scale 0.96 → 1, 35 ms apart). Each tile shows only when it has data (B6):
 // greeting (gradient) · next event (photo, tall) · homes in the city (green) · the top question · stories ·
 // a quest · a poll. The greeting tile carries a slow floating glow (6 s loop), off with reduce motion.
 // Left out on purpose (plan 01): the temperature (no weather source).
-import { useEffect } from "react";
+import { useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
+import Animated, { Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../../../theme/useTheme";
@@ -44,10 +45,15 @@ type Props = {
 function Glow() {
   const reduce = useReducedMotion();
   const t = useSharedValue(0);
-  useEffect(() => {
-    if (reduce) return;
-    t.value = withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true);
-  }, [reduce, t]);
+  // Runs only while Explore is the focused screen: an endless loop otherwise keeps the phone redrawing at 60 fps
+  // behind the other tabs and under pushed screens (the tab pager keeps Explore mounted).
+  useFocusEffect(
+    useCallback(() => {
+      if (reduce) return;
+      t.value = withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true);
+      return () => cancelAnimation(t);
+    }, [reduce, t]),
+  );
   const st = useAnimatedStyle(() => ({ transform: [{ translateX: -14 * t.value }, { translateY: 10 * t.value }, { scale: 1 + 0.1 * t.value }] }));
   return <Animated.View pointerEvents="none" style={[s.glow, st]} />;
 }

@@ -162,8 +162,10 @@ export default function SignupScreen() {
     }
   }
 
-  async function handleVerifyAndCreate() {
-    const trimmed = code.replace(/\D/g, "");
+  // `typed` is the code the boxes just completed: onComplete fires in the same tick as setCode, so `code` here is
+  // still the previous render's five digits and the check below always failed (the boxes shook and emptied).
+  async function handleVerifyAndCreate(typed?: string) {
+    const trimmed = (typed ?? code).replace(/\D/g, "");
     if (trimmed.length !== 6) {
       setError("Enter the 6-digit code from your email");
       otpRef.current?.shake();
@@ -425,7 +427,7 @@ export default function SignupScreen() {
               </View>
               ) : (
               <Reveal key="otp" style={{ marginTop: 4 }}>
-                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); if (v) setError(""); }} onComplete={() => void handleVerifyAndCreate()} autoFocus />
+                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); if (v) setError(""); }} onComplete={(v) => void handleVerifyAndCreate(v)} autoFocus />
                 <View style={{ marginTop: 18 }}><ResendCode onResend={handleSendCode} busy={loading} /></View>
                 <Pressable onPress={() => { setStep("form"); setCode(""); setError(""); }} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
                   <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Edit details</Text></Text>
@@ -490,7 +492,7 @@ export default function SignupScreen() {
                 style={{ marginTop: 10 }}
                 loading={loading}
                 disabled={socialLoading || (step === "form" && !agreedToTerms)}
-                onPress={step === "form" ? handleSendCode : handleVerifyAndCreate}
+                onPress={step === "form" ? handleSendCode : () => void handleVerifyAndCreate()}
                 label={step === "form" ? "Email me a code" : "Create my account"}
               />
             </View>

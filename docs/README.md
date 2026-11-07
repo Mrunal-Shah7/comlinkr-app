@@ -120,6 +120,12 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-07: [Animation timing](build/2026-11-07-animation-timing.md): every spring now names mass (Reanimated 4's
+  default is 4), shorter reveals, ring, hero and back; no flicker on the guide card; the Explore glow stops off-screen;
+  the roommate profile opens at once. Measured on a phone from screen recordings.
+
+- 2026-11-06: [Release APK on D:](build/2026-11-06-release-apk-on-d-drive.md): `scripts/build-release-apk.cmd`
+  builds the standalone APK with the JDK, SDK, Gradle cache and build output on D:.
 - 2026-11-04: [TR-002 guest menu 401s](build/2026-11-04-TR-002-guest-menu-401s.md): the side menu refreshes its
   data only when signed in; guest menu opens now send no requests. Checked on the phone; not committed.
 - 2026-11-06: [Design D, full match](build/2026-11-06-design-d-full-match.md): the remaining screens,

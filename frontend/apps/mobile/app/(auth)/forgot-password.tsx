@@ -148,7 +148,7 @@ export default function ForgotPasswordScreen() {
     >
       <KeyboardAvoidingView behavior="padding">
         <View style={{ paddingHorizontal: 18 }}>
-          <Reanimated.View key={step} entering={reduceMotion ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200)}>
+          <Reanimated.View key={step} entering={reduceMotion ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200).mass(1)}>
           {step === "email" ? (
             <View>
               <Input

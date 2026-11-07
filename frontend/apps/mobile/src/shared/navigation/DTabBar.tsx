@@ -18,6 +18,8 @@ import { SPRING } from '../motion/presets';
 
 export const TAB_BAR_HEIGHT = 66;
 export const TAB_BAR_GAP = 12;
+/** Distance from the screen's bottom edge to the centre of the + button (it sits in the bar's middle), for the compose sheet to grow out of. */
+export const plusCenterFromBottom = (bottomInset: number) => Math.max(bottomInset, 10) + TAB_BAR_GAP + TAB_BAR_HEIGHT / 2;
 /** Space a tab screen must leave at the bottom of its scroll content so the last item clears the bar. */
 export const tabBarClearance = (bottomInset: number) => TAB_BAR_HEIGHT + Math.max(bottomInset, 10) + TAB_BAR_GAP + 16;
 
@@ -52,13 +54,17 @@ export function DTabBar({ state, descriptors, navigation, insets, offset, width,
     const a = c[i], b = c[i + 1];
     const x = a + (b - a) * f;
     const fr = Math.max(0, Math.min(1, raw.value - Math.floor(raw.value)));
-    const w = 22 + Math.sin(Math.PI * fr) * Math.abs(b - a) * 0.7;
+    // The stretch is sized by an ordinary tab-to-tab distance, not the gap it is crossing: from Listings to Food the
+    // gap includes the + button and is about twice as wide, which stretched the underline across it.
+    let unit = Math.abs(b - a);
+    for (let k = 0; k < count - 1; k++) unit = Math.min(unit, Math.abs(c[k + 1] - c[k]));
+    const w = 22 + Math.sin(Math.PI * fr) * unit * 0.7;
     return { opacity: 1, width: w, transform: [{ translateX: x - w / 2 }] };
   });
 
   const plusRot = useSharedValue(0);
   useEffect(() => {
-    plusRot.value = withTiming(plusOpen ? 45 : 0, { duration: reduce ? 0 : 350 });
+    plusRot.value = withTiming(plusOpen ? 45 : 0, { duration: reduce ? 0 : 240 });
   }, [plusOpen, reduce, plusRot]);
   const plusIcon = useAnimatedStyle(() => ({ transform: [{ rotate: `${plusRot.value}deg` }] }));
 

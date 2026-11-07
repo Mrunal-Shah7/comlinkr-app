@@ -52,7 +52,7 @@ export const ListingFeature = memo(function ListingFeature({ listing: l, saved, 
   const facts = listingFacts(l);
   return (
     <PressableScale onPress={() => onOpen(l)} style={[s.feat, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]} accessibilityRole="button" accessibilityLabel={`${l.title}, ${l.price} a month`}>
-      <View>
+      <View style={{ padding: 6 }}>
         <FadeImage uri={l.images[0]} style={s.featImg} />
         <View style={s.featTop}>{l.isNew ? <View style={[s.glassTag, { backgroundColor: tc.glass, borderColor: tc.glassLine }]}><Text style={[body(700), { fontSize: 12, color: tc.textPrimary }]}>✦ New</Text></View> : <View />}<SaveButton glass saved={saved} onPress={() => onToggleSaveId(l.id)} /></View>
       </View>
@@ -108,7 +108,8 @@ export const RoomTile = memo(function RoomTile({ room, onOpen }: { room: Availab
 
 const s = StyleSheet.create({
   feat: { marginHorizontal: 16, marginBottom: 14, borderRadius: 24, overflow: "hidden", shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
-  featImg: { margin: 6, borderRadius: 22, aspectRatio: 16 / 11 },
+  // Width set outright: margin plus aspectRatio alone left the photo about 22 dp short of the card on the right.
+  featImg: { width: "100%", borderRadius: 22, aspectRatio: 16 / 11 },
   featTop: { position: "absolute", top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   glassTag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderWidth: 1 },
   metaRow: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 10, marginTop: 6 },

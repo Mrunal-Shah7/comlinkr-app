@@ -268,7 +268,7 @@ export function EventDetailModal({
               <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{displayEvent.host}</Text>
               <Text style={[TYPE.small, { color: tc.textTertiary }]}>Organiser</Text>
             </View>
-            {displayEvent.authorId && !hasChat ? <SoftButton small label="Message" onPress={messageHost} /> : null}
+            {displayEvent.authorId && !hasChat && !owner ? <SoftButton small label="Message" onPress={messageHost} /> : null}
           </View>
 
           {displayEvent.isOwner ? (
@@ -317,6 +317,9 @@ export function EventDetailModal({
           </View>
           {isRegistered ? (
             <SoftButton ghost label="Cancel RSVP" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onToggleGoing(); }} />
+          ) : owner ? (
+            // The host cannot RSVP to their own event (the server refuses it), so say so instead of offering a button that fails.
+            <Text style={[TYPE.bodyStrong, { color: tc.textSecondary }]}>You're hosting</Text>
           ) : (
             <GradientButton label="RSVP" onPress={onRegister} style={{ paddingHorizontal: 12 }} icon={<Ionicons name="ticket-outline" size={17} color="#fff" />} />
           )}

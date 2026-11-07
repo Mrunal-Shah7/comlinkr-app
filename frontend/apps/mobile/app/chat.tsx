@@ -371,7 +371,7 @@ function ConvList({
                       <Text style={[TYPE.label, { color: tc.warningText, fontSize: 11 }]}>Pending</Text>
                     </View>
                   ) : unread ? (
-                    <Reanimated.View entering={ZoomIn.springify().damping(14)} style={{ minWidth: 22, height: 22, paddingHorizontal: 7, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent }}>
+                    <Reanimated.View entering={ZoomIn.springify().damping(14).stiffness(260).mass(1)} style={{ minWidth: 22, height: 22, paddingHorizontal: 7, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent }}>
                       <Text style={[TYPE.label, { color: "#fff", fontSize: 11.5 }]}>{item.unread > 99 ? "99+" : item.unread}</Text>
                     </Reanimated.View>
                   ) : null}

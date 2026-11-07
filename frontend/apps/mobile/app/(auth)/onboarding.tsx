@@ -510,7 +510,7 @@ export default function OnboardingScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Reanimated.View key={step} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200)}>
+          <Reanimated.View key={step} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200).mass(1)}>
           {/* ─── Step 0: Location ─── */}
           {step === 0 && (
             <View style={styles.stepWrap}>
@@ -816,7 +816,7 @@ export default function OnboardingScreen() {
           {/* ─── Step 4: User Agreement ─── */}
           {step === 4 && (
             <View style={[styles.stepWrap, { alignItems: "center", paddingTop: 40 }]}>
-              <Reanimated.View entering={reduceMotion ? undefined : ZoomIn.springify().damping(13).stiffness(220)} style={{ width: 90, height: 90, borderRadius: 30, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, marginBottom: 18 }}>
+              <Reanimated.View entering={reduceMotion ? undefined : ZoomIn.springify().damping(13).stiffness(220).mass(1)} style={{ width: 90, height: 90, borderRadius: 30, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, marginBottom: 18 }}>
                 <Ionicons name="checkmark" size={44} color="#06130D" />
               </Reanimated.View>
               <Text style={[TYPE.question, { color: tc.textPrimary, textAlign: "center" }]}>You're in{firstName ? `, ${firstName}` : ""} ✦</Text>

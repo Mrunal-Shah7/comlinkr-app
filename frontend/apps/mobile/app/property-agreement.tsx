@@ -486,7 +486,7 @@ export default function PropertyAgreementScreen() {
     startDate ? niceDate(startDate) : "", duration, market, dealType, "", selectedScheme,
   ), [landlordName, fullName, user?.name, propertyAddress, propertyTitle, price, deposit, startDate, duration, market, dealType, selectedScheme]);
 
-  const entering = reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200);
+  const entering = reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200).mass(1);
   const exiting = reduce ? undefined : (dir > 0 ? FadeOutLeft : FadeOutRight).duration(200);
   const title = part === "apply" ? "Apply" : part === "offer" ? "Your offer" : "Signed";
   const canSign = agreementRead && (typeInstead ? typedName.trim().length > 1 : signed);
@@ -670,7 +670,7 @@ export default function PropertyAgreementScreen() {
             </View>
           ) : (
             <View>
-              <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14).stiffness(220)} style={[st.doneMark, { backgroundColor: tc.mint }]}>
+              <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14).stiffness(220).mass(1)} style={[st.doneMark, { backgroundColor: tc.mint }]}>
                 <Ionicons name="checkmark" size={42} color="#fff" />
               </Animated.View>
               <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>You signed</Text>

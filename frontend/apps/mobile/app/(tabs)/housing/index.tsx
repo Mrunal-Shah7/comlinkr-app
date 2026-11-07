@@ -543,13 +543,16 @@ export default function HousingScreen() {
   );
 
   const openRoommateProfile = useCallback(async (id: string) => {
+    // Open at once with the card's data and fill in the full profile when it arrives: waiting for the request
+    // first left the tap doing nothing for the length of a round trip.
+    const local = roommates.find((x) => x.id === id);
+    if (local) setSelectedRoommate(local);
     try {
-      const full = await getRoommate(id);
-      setSelectedRoommate(toUiRoommate(full));
+      const full = toUiRoommate(await getRoommate(id));
+      // Only if that profile is still the one open (it may have been closed or another opened meanwhile).
+      setSelectedRoommate((prev) => (local ? (prev?.id === id ? full : prev) : full));
     } catch {
-      const local = roommates.find((x) => x.id === id);
-      if (local) setSelectedRoommate(local);
-      else showToast("Could not load this roommate.", "error");
+      if (!local) showToast("Could not load this roommate.", "error");
     }
   }, [roommates]);
 
@@ -1082,15 +1085,16 @@ export default function HousingScreen() {
                   </Text>
                 </View> */}
 
+                {/* Safe Renting Guide: above the loading placeholders, where it stays once the cards arrive
+                    (below them it jumped up when loading ended). */}
+                <SafeRentingGuide />
+
                 {listingsLoading ? (
                   <View style={{ paddingTop: 8 }} accessibilityLabel="Loading listings">
                     <SkeletonCard imageHeight={220} />
                     <SkeletonCard imageHeight={220} />
                   </View>
                 ) : null}
-
-                {/* Safe Renting Guide */}
-                <SafeRentingGuide />
               </>
             )}
 

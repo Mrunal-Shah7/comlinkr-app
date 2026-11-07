@@ -47,7 +47,7 @@ export function EdgeSwipeBack({
         tx.value = withTiming(width, { duration: 180 });
         scheduleOnRN(back);
       } else {
-        tx.value = withSpring(0, { damping: 22, stiffness: 260 });
+        tx.value = withSpring(0, { damping: 22, stiffness: 260, mass: 1 });
       }
     });
 

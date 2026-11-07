@@ -8,6 +8,8 @@ import { RADIUS, TYPE } from '../../theme/d';
 import { DSheet } from '../d/Sheet';
 import { GradientFill, PressableScale, Reveal } from '../d';
 import { useRequireAuth } from '../hooks/useRequireAuth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { plusCenterFromBottom } from './DTabBar';
 
 type Item = { icon: keyof typeof Ionicons.glyphMap; title: string; sub: string; href: any; auth: string };
 const ITEMS: Item[] = [
@@ -25,6 +27,7 @@ const ITEMS: Item[] = [
 export function ComposeSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { tc } = useTheme();
   const { requireAuth } = useRequireAuth();
+  const insets = useSafeAreaInsets();
   const open = (it: Item) => {
     onClose();
     if (!requireAuth(undefined, it.auth)) return;
@@ -35,7 +38,7 @@ export function ComposeSheet({ visible, onClose }: { visible: boolean; onClose: 
     }, 180);
   };
   return (
-    <DSheet visible={visible} onClose={onClose} title="Post something" grow>
+    <DSheet visible={visible} onClose={onClose} title="Post something" grow growFrom={{ bottom: plusCenterFromBottom(insets.bottom) }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
         {ITEMS.map((it, i) => (
           <Reveal key={it.title} i={i}>

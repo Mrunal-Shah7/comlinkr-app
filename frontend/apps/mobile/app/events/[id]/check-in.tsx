@@ -362,7 +362,7 @@ export default function EventCheckInScreen() {
             </Pressable>
           ) : null}
           {outcome && tone ? (
-            <Animated.View entering={ZoomIn.springify().damping(16).stiffness(220)} style={[StyleSheet.absoluteFill, { backgroundColor: tone.bg }]}>
+            <Animated.View entering={ZoomIn.springify().damping(16).stiffness(220).mass(1)} style={[StyleSheet.absoluteFill, { backgroundColor: tone.bg }]}>
               <Pressable style={[st.center, { padding: 18 }]} onPress={dismissOutcome} accessibilityRole="button" accessibilityLabel={`${sentence(outcome.title)}. Tap to scan the next ticket`}>
                 <Ionicons name={tone.icon} size={44} color="#fff" />
                 <Text style={[display(800), { color: "#fff", fontSize: 24, marginTop: 6, textAlign: "center" }]}>{sentence(outcome.title)}</Text>

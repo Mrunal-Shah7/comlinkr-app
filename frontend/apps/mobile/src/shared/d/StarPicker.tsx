@@ -19,7 +19,7 @@ function Star({ on, size }: { on: boolean; size: number }) {
   const sc = useSharedValue(1);
   const was = useRef(on);
   useEffect(() => {
-    if (on && !was.current && !reduce) sc.value = withSequence(withTiming(1.25, { duration: 110 }), withSpring(1, { damping: 9, stiffness: 260 }));
+    if (on && !was.current && !reduce) sc.value = withSequence(withTiming(1.25, { duration: 110 }), withSpring(1, { damping: 12, stiffness: 260, mass: 1 }));
     was.current = on;
   }, [on, reduce, sc]);
   const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));

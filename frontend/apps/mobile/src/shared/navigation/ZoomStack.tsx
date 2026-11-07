@@ -1,8 +1,7 @@
 // src/shared/navigation/ZoomStack.tsx — design D screen transitions (plan 01).
 //
-// A pushed screen zooms in from 0.88 with 44 px corners to full size on a spring with a little overshoot
-// (damping 18, stiffness 190); the screen behind scales to 0.94 and dims to about 60%. Back is the reverse in
-// 340 ms. An edge swipe from the left still goes back (on Android too). With the phone's reduce-motion setting
+// A pushed screen zooms in from 0.88 with 44 px corners to full size on a spring with a hint of overshoot
+// (SPRING.push); the screen behind scales to 0.94 and dims to about 60%. Back is the reverse in 280 ms. An edge swipe from the left still goes back (on Android too). With the phone's reduce-motion setting
 // on, screens cross-fade instead.
 //
 // This is the JS stack that ships inside expo-router (react-navigation/stack), so the transition can be drawn
@@ -62,7 +61,7 @@ export function zoomOptions(reduceMotion: boolean, bg: string): StackNavigationO
       ? { open: { animation: 'timing', config: { duration: 150 } }, close: { animation: 'timing', config: { duration: 150 } } }
       : {
           open: { animation: 'spring', config: { ...SPRING.push, overshootClamping: false, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01 } },
-          close: { animation: 'timing', config: { duration: 340 } },
+          close: { animation: 'timing', config: { duration: 280 } },
         },
   };
 }

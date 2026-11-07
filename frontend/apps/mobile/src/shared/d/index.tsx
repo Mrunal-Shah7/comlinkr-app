@@ -131,12 +131,12 @@ export function Segmented({ items, value, onChange, style }: { items: { key: str
 }
 
 /* ---------- entrance animations ---------- */
-/** Wrap list rows: rise and fade in, 45 ms apart. */
+/** Wrap list rows: rise and fade in, 35 ms apart. */
 export function Reveal({ i = 0, children, style }: { i?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
   // Only the first screenful animates in, so rows a virtualised list remounts while scrolling do not replay it.
   return <Animated.View entering={i < 14 ? revealIn(i) : undefined} style={style}>{children}</Animated.View>;
 }
-/** Wrap bento tiles: pop in from 0.96, 45 ms apart. */
+/** Wrap bento tiles: pop in from 0.96, 35 ms apart. */
 export function TileIn({ i = 0, children, style }: { i?: number; children: ReactNode; style?: StyleProp<ViewStyle> }) {
   return <Animated.View entering={tileIn(i)} style={style}>{children}</Animated.View>;
 }
@@ -376,7 +376,7 @@ export function ChipInput({ value, onChange, placeholder, icon, max = 10 }: { va
     <View style={[s.chipInput, { backgroundColor: tc.inputBg }]}>
       {icon ? <Ionicons name={icon} size={17} color={tc.textTertiary} /> : null}
       {chips.map((c) => (
-        <Animated.View key={c} entering={reduce ? undefined : ZoomIn.springify().damping(12).stiffness(300)} exiting={reduce ? undefined : ZoomOut.duration(180)}
+        <Animated.View key={c} entering={reduce ? undefined : ZoomIn.springify().damping(12).stiffness(300).mass(1)} exiting={reduce ? undefined : ZoomOut.duration(180)}
           style={[s.tagChip, { backgroundColor: tc.accentSoft }]}>
           <Text style={[body(600), { fontSize: 13.5, color: tc.accentText }]}>{c}</Text>
           <Pressable onPress={() => onChange(chips.filter((x) => x !== c).join(', '))} hitSlop={8} accessibilityLabel={`Remove ${c}`}>

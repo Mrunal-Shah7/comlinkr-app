@@ -1637,7 +1637,9 @@ export default function FeedScreen() {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const updated = await votePoll(poll.id, opt.id);
-      setWyrPolls((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      // Match on the id that was voted on: a template poll ("tpl:0:Los Angeles") comes back as a stored poll with a
+      // new id, so matching on updated.id never found it and the card kept saying "Be the first to vote".
+      setWyrPolls((prev) => prev.map((p) => (p.id === poll.id ? updated : p)));
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not submit your vote.";
       showToast(msg, "error");

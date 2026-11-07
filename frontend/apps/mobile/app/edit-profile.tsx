@@ -662,7 +662,7 @@ export default function EditProfileScreen() {
     if (!v) return null;
     if (v === "saving") return <ActivityIndicator size="small" color={tc.textTertiary} style={{ transform: [{ scale: 0.7 }] }} />;
     return (
-      <Reanimated.View key={v} entering={ZoomIn.springify().damping(14).stiffness(260)}>
+      <Reanimated.View key={v} entering={ZoomIn.springify().damping(14).stiffness(260).mass(1)}>
         <Ionicons name={v === "ok" ? "checkmark-circle" : "alert-circle"} size={16} color={v === "ok" ? tc.mint : tc.dangerText} accessibilityLabel={v === "ok" ? "Saved" : "Not saved"} />
       </Reanimated.View>
     );
