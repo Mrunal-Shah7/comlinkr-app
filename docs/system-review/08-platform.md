@@ -47,7 +47,8 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
 - **List cache:** `listFetchCache.store.ts`, a 10-minute "refetch on focus?" gate per section [code].
 - **Navigation:** expo-router. Bottom tabs are a horizontal pager (`src/shared/navigation/SwipeTabs.tsx`); all four
   tabs stay mounted, tabs two or more away from the focused one are frozen, direct neighbours stay live. Android
-  edge swipe-back (`EdgeSwipeBack`), pull-down-to-close sheets (`DismissibleSheet`) [code].
+  edge swipe-back through the stack itself (`EdgeSwipeBack` deleted 2026-11-08), pull-down-to-close sheets
+  (`DismissibleSheet`) [code].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
   colour [code].
 - Route map: [reference/Architecture.md](../reference/Architecture.md#route-map-expo-router).
@@ -67,11 +68,13 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
 | 1 | Legacy wildcard route `forRoutes('*')` logged `Unsupported route path "/api/*"` on every start (B9) | Fixed 2026-10-29, seen after a restart: no warning, logging still works. [Bug audit](../build/2026-10-29-bug-audit.md) |
 | 2 | Android back showed a full-screen white frame for about 120 ms when leaving a stack screen | Partly fixed 2026-10-29: the gap is now the page colour; the leaving screen still goes blank for a few frames. [UI changes](../build/2026-10-29-ui-navigation-gestures-theme.md) |
 | 3 | Tab switches janky | Improved 2026-10-29 (about 0.2 s blocked after a press, dev mode); not re-measured after the pager change. [Performance note](../build/2026-10-29-ui-performance-tab-jank.md) |
-| 4 | `app/_layout.tsx` hides every `Uncaught (in promise` warning, which hides unhandled API errors in development | Open, a decision for the team |
+| 4 | `app/_layout.tsx` hides every `Uncaught (in promise` warning, which hides unhandled API errors in development | Fixed 2026-11-08 at the owner's go-ahead: no longer hidden. [Expo review](../build/2026-11-08-expo-review.md) |
+| 5 | React Query retried every 4xx twice (`statusCode` read, `status` thrown) | Fixed 2026-11-08, checked against the library. [Expo review](../build/2026-11-08-expo-review.md) |
+| 6 | The fetch client had no timeout | Fixed 2026-11-08: 30 s, uploads 120 s. [Expo review](../build/2026-11-08-expo-review.md) |
 
 ## Questions
 
-1. Show the hidden `Uncaught (in promise` warnings again? [question]
+1. ~~Show the hidden `Uncaught (in promise` warnings again?~~ Yes, 2026-11-08.
 2. Move data fetching to React Query, which is already set up? [question]
 
 ## How to test it
@@ -97,3 +100,17 @@ and warm start); iOS gestures (no device); a release build's performance.
   (`HamburgerMenu.tsx:77-80` → `sidebar.store.ts:42-48`) [observed]. TR-002, fixed the same day: the menu
   refreshes its data only when signed in; checked on the phone ([build note](../build/2026-11-04-TR-002-guest-menu-401s.md)).
 - In light mode the Android navigation bar stays dark grey [observed]. TR-004.
+
+## Update 2026-11-08: Expo review (TR-010)
+
+[Build note](../build/2026-11-08-expo-review.md), [run log](../device-runs/2026-11-08-expo-review.md).
+
+- **HTTP:** `src/api/client.ts` requests time out after 30 s (`postFormData` 120 s) with `ApiError(0, "TIMEOUT")`;
+  React Query no longer retries a 4xx [observed for the rule, code for the screens].
+- **Routes:** nothing but routes under `app/`. `EventRegistrationModal` moved to `src/features/explore/components/`.
+  The `app/app/*` bridge routes stay: Expo Go links (`exp://…/--/app/...`) are not rewritten by `+native-intent.ts`
+  [observed].
+- **Gestures:** the photo gallery, the story viewer's pull-down and the listing photo reorder run on Gesture Handler
+  and Reanimated; a pull-down also closes on a flick [observed]. `SignPad` still uses `PanResponder` [code].
+- **Removed:** about 45 unused files (`src/_app_legacy/`, the Expo template components, the unused query persister,
+  legacy HTTP services) [code].

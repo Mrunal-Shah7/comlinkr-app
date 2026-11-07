@@ -3,7 +3,26 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-06 (latest) - design D full match on `feature/design-d` (plan 01)
+## 2026-11-08 (latest) - Expo review of the mobile app on `feature/design-d` (TR-010)
+
+- **Owner, 2026-11-08:** review `frontend/` against the Expo skills, fix the clear bugs and the clean-up, then start
+  the refactors; walk on the phone; continue unattended. First, commit the uncommitted animation-timing work
+  (done: `18788bb`, and the D: release script `3f8ba27`).
+- **Done:** [build note](build/2026-11-08-expo-review.md), [run log](device-runs/2026-11-08-expo-review.md), review 08
+  "Update 2026-11-08". Commits `d414423` (bugs), `4a07c79` (unused files), `79babe3` (gestures and animations on
+  Gesture Handler / Reanimated), then the restored `app/app/*` bridge routes with these docs. Nothing pushed, no pull
+  request.
+- **Not checked:** pinch-to-zoom (adb has one finger), iOS, a release build. ESLint does not run in the mobile app (no
+  dev dependency).
+- **Next, if wanted:** `SignPad` off `PanResponder`; data fetching onto React Query; hard-coded colours onto theme
+  tokens; why `?openStory=` from an Expo Go link does not open the story. Full list under "Reported, not fixed" in the
+  build note.
+- **Left untracked on purpose:** `.claude/skills/` and `skills-lock.json` (the Expo skills install); the owner decides
+  whether they belong in the repository.
+- **Servers:** Metro (port 8083) stopped at the end; the backend was already running before the session and was left
+  running.
+
+## 2026-11-06 - design D full match on `feature/design-d` (plan 01)
 
 - **Owner, 2026-11-05:** every screen must match design D, motion included, and the phase 2 behaviour changes
   are in ("Yes, include them now").

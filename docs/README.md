@@ -120,6 +120,9 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-08: [Expo review](build/2026-11-08-expo-review.md) (TR-010): no React Query retry on a 4xx, a 30 s request
+  timeout, no components under `app/`, about 45 unused files deleted, gallery / story / photo-reorder gestures on
+  Gesture Handler and Reanimated. Walked on the phone; pinch not testable over adb.
 - 2026-11-07: [Animation timing](build/2026-11-07-animation-timing.md): every spring now names mass (Reanimated 4's
   default is 4), shorter reveals, ring, hero and back; no flicker on the guide card; the Explore glow stops off-screen;
   the roommate profile opens at once. Measured on a phone from screen recordings.
