@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Alert,
   Platform,
-  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -107,18 +106,7 @@ export default function SignupScreen() {
   const otpRef = useRef<OtpHandle>(null);
   const [codeOk, setCodeOk] = useState(false);
 
-  const toastAnim = useRef(new Animated.Value(0)).current;
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const [passwordFocused, setPasswordFocused] = useState(false);
-  function showPasswordToast() {
-    if (password.length > 0) return;
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    Animated.spring(toastAnim, { toValue: 1, useNativeDriver: true, tension: 80, friction: 10 }).start();
-    toastTimer.current = setTimeout(() => {
-      Animated.timing(toastAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start();
-    }, 3500);
-  }
 
   async function handleSendCode() {
     if (!agreedToTerms) {

@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, Animated, PanResponder, StyleSheet, Modal, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from "react-native";
+import Reanimated, { Extrapolation, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { SPRING } from "../../../shared/motion/presets";
 import { createDTypeStyles } from "../../../theme/themedStyles";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
-import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeImage, resolveImageUri } from "../../../../components/FadeImage";
 import { rs } from "../../../utils/responsive";
@@ -73,95 +76,76 @@ export function ImageCarousel({
 }
 
 // ── Fullscreen image viewer with pinch-to-zoom ───────────────────────────────
-export function pinchDistance(touches: { pageX: number; pageY: number }[]): number {
-  if (touches.length < 2) return 0;
-  const [a, b] = touches;
-  return Math.sqrt((a.pageX - b.pageX) ** 2 + (a.pageY - b.pageY) ** 2);
-}
+// Gesture Handler + Reanimated: pinch, pan and the pull-down run on the UI thread. React only hears when a photo
+// becomes zoomed or not (so the pager stops paging while a photo is zoomed in).
+const MAX_ZOOM = 4;
+const SETTLE = { duration: 300, dampingRatio: 1 } as const;
 
 export function ZoomableImage({ uri, width, height, onZoom }: { uri: string; width: number; height: number; onZoom?: (zoomed: boolean) => void }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  const lastScale = useRef(1);
-  const lastTranslateX = useRef(0);
-  const lastTranslateY = useRef(0);
-  const pinchStartDist = useRef(0);
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const tx = useSharedValue(0);
+  const ty = useSharedValue(0);
+  const savedTx = useSharedValue(0);
+  const savedTy = useSharedValue(0);
+  const [zoomed, setZoomed] = useState(false);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        lastTranslateX.current = (translateX as any)._value;
-        lastTranslateY.current = (translateY as any)._value;
-        pinchStartDist.current = 0;
-      },
-      onPanResponderMove: (evt, gs) => {
-        const touches = evt.nativeEvent.touches;
-        if (touches.length === 2) {
-          // Pinch zoom via change in distance between the two touches
-          const dist = pinchDistance(touches as any);
-          if (pinchStartDist.current === 0) {
-            pinchStartDist.current = dist;
-            return;
-          }
-          const ratio = dist / pinchStartDist.current;
-          scale.setValue(Math.max(1, Math.min(4, lastScale.current * ratio)));
-        } else if (gs.numberActiveTouches === 1 && lastScale.current > 1) {
-          translateX.setValue(lastTranslateX.current + gs.dx);
-          translateY.setValue(lastTranslateY.current + gs.dy);
-        }
-      },
-      onPanResponderRelease: () => {
-        lastScale.current = Math.max(1, Math.min(4, (scale as any)._value));
-        onZoom?.(lastScale.current > 1);
-        pinchStartDist.current = 0;
-        if (lastScale.current === 1) {
-          Animated.parallel([
-            Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-            Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-          ]).start();
-          lastTranslateX.current = 0;
-          lastTranslateY.current = 0;
-        } else {
-          lastTranslateX.current = (translateX as any)._value;
-          lastTranslateY.current = (translateY as any)._value;
-        }
-      },
-    })
-  ).current;
+  const reportZoom = (z: boolean) => { setZoomed(z); onZoom?.(z); };
 
-  const resetZoom = () => {
-    lastScale.current = 1;
-    onZoom?.(false);
-    lastTranslateX.current = 0;
-    lastTranslateY.current = 0;
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-    ]).start();
+  const pinch = Gesture.Pinch()
+    .onUpdate((e) => { scale.set(Math.max(1, Math.min(MAX_ZOOM, savedScale.get() * e.scale))); })
+    .onEnd(() => {
+      savedScale.set(scale.get());
+      if (scale.get() <= 1.01) {
+        scale.set(withSpring(1, SETTLE));
+        savedScale.set(1);
+        tx.set(withSpring(0, SETTLE)); ty.set(withSpring(0, SETTLE));
+        savedTx.set(0); savedTy.set(0);
+        scheduleOnRN(reportZoom, false);
+      } else {
+        scheduleOnRN(reportZoom, true);
+      }
+    });
+
+  // Panning only moves a zoomed photo; unzoomed, the drag belongs to the pager and the pull-down.
+  const pan = Gesture.Pan()
+    .enabled(zoomed)
+    .onStart(() => { savedTx.set(tx.get()); savedTy.set(ty.get()); })
+    .onUpdate((e) => { tx.set(savedTx.get() + e.translationX); ty.set(savedTy.get() + e.translationY); });
+
+  const reset = () => {
+    scale.set(withSpring(1, SETTLE)); savedScale.set(1);
+    tx.set(withSpring(0, SETTLE)); ty.set(withSpring(0, SETTLE));
+    savedTx.set(0); savedTy.set(0);
+    reportZoom(false);
   };
+  const longPress = Gesture.LongPress().onStart(() => { scheduleOnRN(reset); });
+
+  const gesture = Gesture.Exclusive(Gesture.Simultaneous(pinch, pan), longPress);
+  const zoomStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.get() }, { translateX: tx.get() }, { translateY: ty.get() }],
+  }));
 
   return (
-    <Pressable onPress={undefined} onLongPress={resetZoom} style={{ width, height, alignItems: "center", justifyContent: "center" }} {...panResponder.panHandlers}>
-      <Animated.View style={{ transform: [{ scale }, { translateX }, { translateY }] }}>
-        <FadeImage
-          uri={resolveImageUri(uri)}
-          style={{ width, height: height * 0.85 }}
-          resizeMode="contain"
-          cachePolicy="disk"
-          transition={300}
-          placeholderBg="transparent"
-        />
-      </Animated.View>
-    </Pressable>
+    <GestureDetector gesture={gesture}>
+      <View style={{ width, height, alignItems: "center", justifyContent: "center" }}>
+        <Reanimated.View style={zoomStyle}>
+          <FadeImage
+            uri={resolveImageUri(uri)}
+            style={{ width, height: height * 0.85 }}
+            resizeMode="contain"
+            cachePolicy="disk"
+            transition={300}
+            placeholderBg="transparent"
+          />
+        </Reanimated.View>
+      </View>
+    </GestureDetector>
   );
 }
 
 /** Design D `gallery`: black, a bar with back and "1 of n", photos side by side, "Swipe for more · pinch to
- *  zoom" below. Swipe down (when not zoomed) drags the photo and fades the black; past 120 px it closes. */
+ *  zoom" below. Pull down (when not zoomed) drags the photo and fades the black; past 120 px, or a flick, closes. */
 export function FullscreenImageViewer({
   images,
   startIndex,
@@ -172,67 +156,75 @@ export function FullscreenImageViewer({
   onClose: () => void;
 }) {
   const [idx, setIdx] = useState(startIndex);
+  const [zoomed, setZoomed] = useState(false);
   const W = Dimensions.get("window").width;
   const H = Dimensions.get("window").height;
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
-  const zoomed = useRef(false);
-  const dragY = useRef(new Animated.Value(0)).current;
-  const enter = useRef(new Animated.Value(0)).current;
+  const reduce = useReducedMotion();
+  const scrollRef = useRef<GHScrollView>(null);
+  const dragY = useSharedValue(0);
+  const enter = useSharedValue(reduce ? 1 : 0);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ x: startIndex * W, animated: false });
-    Animated.spring(enter, { toValue: 1, damping: 18, stiffness: 200, mass: 1, useNativeDriver: true }).start();
-  }, [startIndex, W, enter]);
+    enter.set(reduce ? 1 : withSpring(1, SPRING.sheet));
+  }, [startIndex, W, enter, reduce]);
 
-  const dismiss = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponderCapture: (evt, g) =>
-        !zoomed.current && evt.nativeEvent.touches.length === 1 && g.dy > 12 && Math.abs(g.dy) > Math.abs(g.dx) * 1.5,
-      onPanResponderMove: (_, g) => dragY.setValue(Math.max(0, g.dy)),
-      onPanResponderRelease: (_, g) => {
-        if (g.dy > 120 || g.vy > 1) {
-          Animated.timing(dragY, { toValue: H, duration: 200, useNativeDriver: true }).start(onClose);
-        } else {
-          Animated.spring(dragY, { toValue: 0, damping: 18, stiffness: 200, mass: 1, useNativeDriver: true }).start();
-        }
-      },
-      onPanResponderTerminate: () => Animated.spring(dragY, { toValue: 0, useNativeDriver: true }).start(),
-    }),
-  ).current;
+  const dismiss = Gesture.Pan()
+    .enabled(!zoomed)
+    .maxPointers(1)
+    .activeOffsetY(12)
+    .failOffsetX([-12, 12])
+    .onUpdate((e) => { dragY.set(Math.max(0, e.translationY)); })
+    .onEnd((e) => {
+      if (e.translationY > 120 || e.velocityY > 1000) {
+        dragY.set(withTiming(H, { duration: 200 }, (done) => { if (done) scheduleOnRN(onClose); }));
+      } else {
+        dragY.set(withSpring(0, { duration: 300, dampingRatio: 0.8, velocity: e.velocityY }));
+      }
+    });
 
-  const bgOpacity = dragY.interpolate({ inputRange: [0, 300], outputRange: [1, 0.2], extrapolate: "clamp" });
-  const scaleIn = enter.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
+  const bgStyle = useAnimatedStyle(() => ({ opacity: interpolate(dragY.get(), [0, 300], [1, 0.2], Extrapolation.CLAMP) }));
+  const pageStyle = useAnimatedStyle(() => ({
+    opacity: enter.get(),
+    transform: [{ translateY: dragY.get() }, { scale: interpolate(enter.get(), [0, 1], [0.92, 1]) }],
+  }));
 
   return (
     <Modal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
-      <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#000", opacity: bgOpacity }]} />
-      <View style={{ flex: 1 }} {...dismiss.panHandlers}>
-        <Animated.View style={{ flex: 1, opacity: enter, transform: [{ translateY: dragY }, { scale: scaleIn }] }}>
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
-            style={{ flex: 1 }}
-          >
-            {images.map((uri, i) => (
-              <ZoomableImage key={i} uri={uri} width={W} height={H} onZoom={(z) => { zoomed.current = z; }} />
-            ))}
-          </ScrollView>
-        </Animated.View>
-        <Animated.View style={[gs.bar, { paddingTop: insets.top + 6, opacity: bgOpacity }]}>
+      {/* A React Native Modal is its own window: gestures inside it need their own root. */}
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <Reanimated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#000" }, bgStyle]} />
+        <GestureDetector gesture={dismiss}>
+          <View style={{ flex: 1 }}>
+            <Reanimated.View style={[{ flex: 1 }, pageStyle]}>
+              <GHScrollView
+                ref={scrollRef}
+                horizontal
+                pagingEnabled
+                scrollEnabled={!zoomed}
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))}
+                style={{ flex: 1 }}
+              >
+                {images.map((uri, i) => (
+                  <ZoomableImage key={i} uri={uri} width={W} height={H} onZoom={setZoomed} />
+                ))}
+              </GHScrollView>
+            </Reanimated.View>
+          </View>
+        </GestureDetector>
+        <Reanimated.View style={[gs.bar, { paddingTop: insets.top + 6 }, bgStyle]}>
           <Pressable onPress={onClose} hitSlop={12} style={gs.back} accessibilityLabel="Back">
             <Ionicons name="chevron-back" size={26} color="#FFF" />
           </Pressable>
           <Text style={gs.count}>{idx + 1} of {images.length}</Text>
           <View style={gs.back} />
-        </Animated.View>
-        <Animated.Text style={[gs.hint, { bottom: insets.bottom + 34, opacity: bgOpacity }]}>
+        </Reanimated.View>
+        <Reanimated.Text style={[gs.hint, { bottom: insets.bottom + 34 }, bgStyle]}>
           {images.length > 1 ? "Swipe for more · pinch to zoom" : "Pinch to zoom"}
-        </Animated.Text>
-      </View>
+        </Reanimated.Text>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

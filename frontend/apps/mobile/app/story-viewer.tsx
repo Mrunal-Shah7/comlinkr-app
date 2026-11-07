@@ -10,8 +10,6 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-  PanResponder,
-  Animated,
   ActivityIndicator,
   StatusBar,
   Modal,
@@ -30,7 +28,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEventListener } from "expo";
 import * as Haptics from "expo-haptics";
-import Reanimated, { Keyframe, useReducedMotion } from "react-native-reanimated";
+import Reanimated, { Keyframe, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { scheduleOnRN } from "react-native-worklets";
 import { PersonAvatar } from "../src/shared/d";
 
 /** `.story .ph`: each photo cross-fades in with a slow zoom (scale 1.04 to 1, 380 ms). */
@@ -233,9 +233,9 @@ export default function StoryViewerScreen() {
   // FIX 2: Added missing likedIds state
   const [likedIds, setLikedIds]                 = useState<Set<string>>(new Set());
 
-  const authorOpacity = useRef(new Animated.Value(1)).current;
+  const authorOpacity = useSharedValue(1);
   const prevAuthorRef = useRef(startAuthor);
-  const slideY        = useRef(new Animated.Value(0)).current;
+  const slideY        = useSharedValue(0);
 
   const closeViewer = useCallback(() => {
     if (router.canGoBack()) {
@@ -294,8 +294,8 @@ export default function StoryViewerScreen() {
   useEffect(() => {
     if (prevAuthorRef.current !== currentAuthorIndex) {
       prevAuthorRef.current = currentAuthorIndex;
-      authorOpacity.setValue(0);
-      Animated.timing(authorOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+      authorOpacity.set(0);
+      authorOpacity.set(withTiming(1, { duration: 220 }));
     }
   }, [currentAuthorIndex, authorOpacity]);
 
@@ -447,22 +447,27 @@ export default function StoryViewerScreen() {
     return () => clearInterval(id);
   }, [advanceStory, commentsOpen, currentStory?.id, isPhoto, isPaused, photoDurationSec]);
 
+  // Pull down to close: follows the finger on the UI thread; a pull past 80 dp or a downward flick closes.
+  const dismissFromPull = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    closeViewer();
+  }, [closeViewer]);
+  const closeDistance = rs(80);
   const pan = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) => g.dy > rs(8) && Math.abs(g.dy) > Math.abs(g.dx),
-        onPanResponderMove: (_, g) => { if (g.dy > 0) slideY.setValue(g.dy); },
-        onPanResponderRelease: (_, g) => {
-          if (g.dy > rs(80)) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            closeViewer();
-          } else {
-            Animated.spring(slideY, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
-          }
-        },
-      }),
-    [slideY, closeViewer],
+      Gesture.Pan()
+        .enabled(!commentsOpen)
+        .activeOffsetY(rs(8))
+        .failOffsetX([-rs(12), rs(12)])
+        .onUpdate((e) => { slideY.set(Math.max(0, e.translationY)); })
+        .onEnd((e) => {
+          if (e.translationY > closeDistance || e.velocityY > 800) scheduleOnRN(dismissFromPull);
+          else slideY.set(withSpring(0, { duration: 400, dampingRatio: 0.8, velocity: e.velocityY }));
+        }),
+    [slideY, commentsOpen, closeDistance, dismissFromPull],
   );
+  const rootSlide = useAnimatedStyle(() => ({ transform: [{ translateY: slideY.get() }] }));
+  const headerFade = useAnimatedStyle(() => ({ opacity: authorOpacity.get() }));
 
   const promptDeleteStory = useCallback(() => {
     if (!currentStory || !uid || currentStory.author.id !== uid) return;
@@ -552,7 +557,8 @@ export default function StoryViewerScreen() {
   const isOwner = uid && currentStory.author.id === uid;
 
   return (
-    <Animated.View style={[st.root, { width: W, height: H, transform: [{ translateY: slideY }] }]} {...pan.panHandlers}>
+    <GestureDetector gesture={pan}>
+    <Reanimated.View style={[st.root, { width: W, height: H }, rootSlide]}>
       <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
       <StatusBar barStyle="light-content" hidden />
 
@@ -638,7 +644,7 @@ export default function StoryViewerScreen() {
       </View>
 
       {/* ── Header: author + controls ── */}
-      <Animated.View style={[st.header, { paddingTop: insets.top + rs(28) }, { opacity: authorOpacity }]}>
+      <Reanimated.View style={[st.header, { paddingTop: insets.top + rs(28) }, headerFade]}>
         {/* Author */}
         <View style={st.authorRow}>
           <View style={st.avatarRing}>
@@ -681,7 +687,7 @@ export default function StoryViewerScreen() {
             <Ionicons name="close" size={rs(20)} color="#FFF" />
           </Pressable>
         </View>
-      </Animated.View>
+      </Reanimated.View>
 
       {/* ── Footer ── */}
       <View style={[st.footer, { paddingBottom: insets.bottom + rs(20) }]}>
@@ -927,7 +933,8 @@ export default function StoryViewerScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </Animated.View>
+    </Reanimated.View>
+    </GestureDetector>
   );
 }
 

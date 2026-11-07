@@ -1,7 +1,7 @@
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Animated, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView, LayoutAnimation, AccessibilityInfo } from "react-native";
-import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView, LayoutAnimation } from "react-native";
+import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
 import { Chip, EmptyState, Segmented, SoftButton } from "../../../src/shared/d";
@@ -311,7 +311,9 @@ export default function FeedScreen() {
   const [newsCommentsError, setNewsCommentsError] = useState<string | null>(null);
   const [expandedArticles, setExpandedArticles] = useState<Set<string>>(new Set());
   const [readArticles, setReadArticles] = useState<Set<string>>(new Set());
-  const newsSkeletonOpacity = useRef(new Animated.Value(0.4)).current;
+  const newsSkeletonOpacity = useSharedValue(0.4);
+  const reduceMotion = useReducedMotion();
+  const newsSkeletonStyle = useAnimatedStyle(() => ({ opacity: newsSkeletonOpacity.get() }));
   const userCountry = user?.country || guestCountry || "United States";
   const userState = user?.stateProvince?.trim() || guestState || undefined; // SPRINT-30
   const countryGeo = COUNTRY_NEWS_MAP[userCountry] || { gl: "US", hl: "en-US", flag: "🇺🇸" };
@@ -689,23 +691,10 @@ export default function FeedScreen() {
 
   useEffect(() => {
     // UI-11: respect the OS "remove animations" setting; keep a static skeleton instead of pulsing.
-    let loop: Animated.CompositeAnimation | null = null;
-    let cancelled = false;
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
-      if (cancelled || reduced) return;
-      loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(newsSkeletonOpacity, { toValue: 1, duration: 1200, useNativeDriver: true }),
-          Animated.timing(newsSkeletonOpacity, { toValue: 0.4, duration: 1200, useNativeDriver: true }),
-        ]),
-      );
-      loop.start();
-    });
-    return () => {
-      cancelled = true;
-      loop?.stop();
-    };
-  }, [newsSkeletonOpacity]);
+    if (reduceMotion) { newsSkeletonOpacity.set(0.4); return; }
+    newsSkeletonOpacity.set(withRepeat(withSequence(withTiming(1, { duration: 1200 }), withTiming(0.4, { duration: 1200 })), -1));
+    return () => cancelAnimation(newsSkeletonOpacity);
+  }, [newsSkeletonOpacity, reduceMotion]);
 
   useEffect(() => {
     if (newsArticles.length === 0) return;
@@ -2074,11 +2063,12 @@ export default function FeedScreen() {
                     {newsLoading && newsArticles.length === 0 && (
                       <View style={nw.loadingWrap}>
                         {Array.from({ length: 5 }).map((_, idx) => (
-                          <Animated.View
+                          <Reanimated.View
                             key={`news-skeleton-${idx}`}
                             style={[
                               nw.newsSkeletonCard,
-                              { backgroundColor: tc.cardBg, borderColor: tc.borderLight, opacity: newsSkeletonOpacity },
+                              { backgroundColor: tc.cardBg, borderColor: tc.borderLight },
+                              newsSkeletonStyle,
                             ]}
                           />
                         ))}

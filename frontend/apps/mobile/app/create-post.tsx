@@ -14,8 +14,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActionSheetIOS,
-  Animated,
-  PanResponder, // SPRINT-42: implement dependency-free drag-to-reorder for listing images.
 } from "react-native";
 
 const { width: SW } = Dimensions.get("window");
@@ -24,6 +22,10 @@ const GRID_GAP = 14;
 const GRID_PAD = 16;
 const GRID_CARD_W = Math.floor((SW - GRID_PAD * 2 - GRID_GAP) / 2);
 import { SafeAreaView } from "react-native-safe-area-context";
+import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { scheduleOnRN } from "react-native-worklets";
+import { SPRING } from "../src/shared/motion/presets";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -136,52 +138,35 @@ async function sprint42ImageError(asset: { uri: string; mimeType?: string | null
   return null; // SPRINT-42: accept a valid image.
 } // SPRINT-42: end listing image validation.
 
-function DraggableListingImage({ image, index, count, onMove, onRemove, busy }: { image: HousingListingImageRef; index: number; count: number; onMove: (from: number, to: number) => void; onRemove: () => void; busy: boolean }) { // SPRINT-42: horizontal PanResponder reorder tile.
-  const dragX = useRef(new Animated.Value(0)).current; // SPRINT-42: track the active drag translation.
-  const indexRef = useRef(index); // SPRINT-42: keep drop math on the latest index.
-  const countRef = useRef(count); // SPRINT-42: keep clamping on the latest complete length.
-  const busyRef = useRef(busy); // SPRINT-42: block concurrent drags while imageBusy.
-  const onMoveRef = useRef(onMove); // SPRINT-42: call the latest reorder handler.
-  indexRef.current = index; // SPRINT-42: sync index each render without recreating the responder.
-  countRef.current = count; // SPRINT-42: sync count each render.
-  busyRef.current = busy; // SPRINT-42: sync busy each render.
-  onMoveRef.current = onMove; // SPRINT-42: sync handler each render.
-  const responder = useRef(PanResponder.create({ // SPRINT-42: use the built-in gesture responder without a package.
-    onMoveShouldSetPanResponder: (_, gesture) => !busyRef.current && Math.abs(gesture.dx) > 6, // SPRINT-42: start only when idle and the drag is intentional.
-    onPanResponderGrant: () => { // SPRINT-42: abort grant if a mutation started between shouldSet and grant.
-      if (busyRef.current) dragX.setValue(0); // SPRINT-42: reset if busy won the race.
-    }, // SPRINT-42: finish grant guard.
-    onPanResponderMove: Animated.event([null, { dx: dragX }], { useNativeDriver: false }), // SPRINT-42: move the tile with the finger.
-    onPanResponderRelease: (_, gesture) => { // SPRINT-42: convert the drop distance into a complete-order mutation.
-      if (busyRef.current) { // SPRINT-42: ignore drops while another image mutation is in flight.
-        Animated.spring(dragX, { toValue: 0, useNativeDriver: true }).start(); // SPRINT-42: settle without mutating order.
-        return; // SPRINT-42: stop release handling.
-      } // SPRINT-42: finish busy release guard.
-      const from = indexRef.current; // SPRINT-42: use the live index for this tile.
-      const total = countRef.current; // SPRINT-42: use the live complete image count.
-      const delta = Math.round(gesture.dx / 98); // SPRINT-42: one thumbnail plus gap is approximately 98 points.
-      const target = Math.max(0, Math.min(total - 1, from + delta)); // SPRINT-42: clamp the destination to valid image positions.
-      Animated.spring(dragX, { toValue: 0, useNativeDriver: true }).start(); // SPRINT-42: settle the dragged tile after drop.
-      if (target !== from) onMoveRef.current(from, target); // SPRINT-42: optimistically reorder only when the index changed.
-    }, // SPRINT-42: finish drop handler.
-    onPanResponderTerminate: () => Animated.spring(dragX, { toValue: 0, useNativeDriver: true }).start(), // SPRINT-42: reset interrupted drags.
-  })).current; // SPRINT-42: keep one responder; refs supply fresh values.
-  return ( // SPRINT-42: render persisted image controls.
-    <Animated.View {...responder.panHandlers} style={{ width: 88, transform: [{ translateX: dragX }], zIndex: 2, opacity: busy ? 0.7 : 1 }}>
-    {/* SPRINT-42: expose drag gestures on the whole tile and dim while busy. */}
-      <FadeImage uri={image.url} style={{ width: 88, height: 88, borderRadius: 12 }} />
-      {/* SPRINT-42: shared FadeImage preserves the backend image order. */}
-      {index === 0 ? <View style={{ position: "absolute", left: 4, bottom: 4, backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "800" }}>Primary photo</Text></View> : null}
-      {/* SPRINT-42: clearly label the first persisted image. */}
-      <Pressable disabled={busy} onPress={onRemove} style={{ position: "absolute", right: -5, top: -5, borderRadius: 12, backgroundColor: "#111827", padding: 4, opacity: busy ? 0.5 : 1 }}>
-      {/* SPRINT-42: remove images independently from listing details. */}
-        <Ionicons name="trash-outline" size={13} color="#FFF" />
-        {/* SPRINT-42: identify the immediate remove action. */}
-      </Pressable>
-      {/* SPRINT-42: close remove control. */}
-    </Animated.View> // SPRINT-42: close draggable image tile.
-  ); // SPRINT-42: finish tile rendering.
-} // SPRINT-42: end drag image component.
+// Listing photo tile that drags sideways to reorder. Gesture Handler + Reanimated keep the drag on the UI thread;
+// the drop is turned into a move once, on release. A tile is about 98 points wide with its gap.
+const TILE_STEP = 98;
+function DraggableListingImage({ image, index, count, onMove, onRemove, busy }: { image: HousingListingImageRef; index: number; count: number; onMove: (from: number, to: number) => void; onRemove: () => void; busy: boolean }) {
+  const dragX = useSharedValue(0);
+  const drop = (dx: number) => {
+    const target = Math.max(0, Math.min(count - 1, index + Math.round(dx / TILE_STEP)));
+    if (target !== index) onMove(index, target);
+  };
+  const pan = Gesture.Pan()
+    .enabled(!busy)
+    .activeOffsetX([-6, 6])
+    .failOffsetY([-12, 12])
+    .onUpdate((e) => { dragX.set(e.translationX); })
+    .onEnd((e) => { scheduleOnRN(drop, e.translationX); })
+    .onFinalize(() => { dragX.set(withSpring(0, SPRING.settle)); });
+  const dragStyle = useAnimatedStyle(() => ({ transform: [{ translateX: dragX.get() }] }));
+  return (
+    <GestureDetector gesture={pan}>
+      <Reanimated.View style={[{ width: 88, zIndex: 2, opacity: busy ? 0.7 : 1 }, dragStyle]}>
+        <FadeImage uri={image.url} style={{ width: 88, height: 88, borderRadius: 12 }} />
+        {index === 0 ? <View style={{ position: "absolute", left: 4, bottom: 4, backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "800" }}>Primary photo</Text></View> : null}
+        <Pressable disabled={busy} onPress={onRemove} accessibilityLabel="Remove photo" hitSlop={8} style={{ position: "absolute", right: -5, top: -5, borderRadius: 12, backgroundColor: "#111827", padding: 4, opacity: busy ? 0.5 : 1 }}>
+          <Ionicons name="trash-outline" size={13} color="#FFF" />
+        </Pressable>
+      </Reanimated.View>
+    </GestureDetector>
+  );
+}
 
 // ── Canonical post type palette (matches AppHeader CREATE_OPTIONS) ─────────────
 const POST_TYPES = [
@@ -1748,19 +1733,23 @@ function MediaPickerSheet({
   title?: string;
 }) {
   const { tc } = useTheme();
-  const translateY = useRef(new Animated.Value(300)).current;
+  const translateY = useSharedValue(300);
 
-  const show = () => Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 180 }).start();
-  const hide = (cb?: () => void) => Animated.timing(translateY, { toValue: 300, duration: 200, useNativeDriver: true }).start(cb);
+  // Slide in when shown. Started from an effect: starting it during render restarted the spring on every render.
+  useEffect(() => {
+    if (visible) translateY.set(withSpring(0, SPRING.sheet));
+    else translateY.set(300);
+  }, [visible, translateY]);
+  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.get() }] }));
 
-  if (visible) show();
-
-  const dismiss = () => hide(onClose);
+  const dismiss = () => {
+    translateY.set(withTiming(300, { duration: 200 }, (done) => { if (done) scheduleOnRN(onClose); }));
+  };
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss} statusBarTranslucent>
       <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }} onPress={dismiss} />
-      <Animated.View style={[mps.sheet, { backgroundColor: tc.cardBg, transform: [{ translateY }] }]}>
+      <Reanimated.View style={[mps.sheet, { backgroundColor: tc.cardBg }, sheetStyle]}>
         <View style={mps.handle} />
         {title ? <Text style={[mps.title, { color: tc.textSecondary }]}>{title}</Text> : null}
         <Pressable
@@ -1786,7 +1775,7 @@ function MediaPickerSheet({
         <Pressable style={mps.cancelBtn} onPress={dismiss}>
           <Text style={mps.cancelText}>Cancel</Text>
         </Pressable>
-      </Animated.View>
+      </Reanimated.View>
     </Modal>
   );
 }

@@ -4,7 +4,7 @@ import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-nati
 import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
 import { Chip, Segmented, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
-import { View, Text, ScrollView, FlatList, Pressable, TextInput, Animated, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, FlatList, Pressable, TextInput, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -964,19 +964,10 @@ export default function HousingScreen() {
     ],
   );
 
-  // ── Tab indicator animation ──
-  const tabAnim = useRef(new Animated.Value(0)).current;
   const switchTab = (tab: HousingTab) => {
     if (tab === "roommates" && !requireAuth(undefined, "Sign in to find compatible roommates matched to you.")) {
       return;
     }
-    // Start the (native-driven) indicator first so it glides even while the segment re-renders.
-    Animated.spring(tabAnim, {
-      toValue: tab === "listings" ? 0 : 1,
-      useNativeDriver: true,
-      speed: 20,
-      bounciness: 0,
-    }).start();
     void Haptics.selectionAsync();
     setActiveTab(tab);
     setSearch("");
@@ -985,11 +976,6 @@ export default function HousingScreen() {
     }
   };
 
-  const [tabSwitcherWidth, setTabSwitcherWidth] = useState(0);
-  const tabSlide = tabAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, tabSwitcherWidth / 2],
-  });
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>

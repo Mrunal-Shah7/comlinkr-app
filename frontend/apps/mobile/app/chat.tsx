@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Animated,
   BackHandler,
   Pressable,
   ActivityIndicator,
@@ -79,7 +78,8 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
-import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, type SharedValue } from 'react-native-reanimated';
+import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import { SPRING } from '../src/shared/motion/presets';
 import { DSheet } from '../src/shared/d/Sheet';
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { TYPE, display } from '../src/theme/d';
@@ -575,7 +575,8 @@ function Thread({
   const [showMenu, setShowMenu] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
-  const sendAnim = useRef(new Animated.Value(1)).current;
+  const sendAnim = useSharedValue(1);
+  const sendStyle = useAnimatedStyle(() => ({ transform: [{ scale: sendAnim.get() }] }));
   const insets = useSafeAreaInsets();
 
   // Avoid double-counting the bottom safe-area inset: KeyboardAvoidingView already
@@ -863,10 +864,7 @@ function Thread({
         return [...prev, apiMessageToThreadMsg(sent, convRef.current)];
       });
       onConversationUpdated();
-      Animated.sequence([
-        Animated.timing(sendAnim, { toValue: 0.85, duration: 80, useNativeDriver: true }),
-        Animated.spring(sendAnim, { toValue: 1, useNativeDriver: true }),
-      ]).start();
+      sendAnim.set(withSequence(withTiming(0.85, { duration: 80 }), withSpring(1, SPRING.press)));
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not send message.";
       appAlert("Send failed", msg);
@@ -1354,7 +1352,7 @@ function Thread({
             onActiveChange={handleVoiceComposerActiveChange} // SPRINT-40:
           />
         </View>
-        <Animated.View style={{ display: text.trim() && !voiceComposerActive ? "flex" : "none", transform: [{ scale: sendAnim }] }}>
+        <Reanimated.View style={[{ display: text.trim() && !voiceComposerActive ? "flex" : "none" }, sendStyle]}>
           {/* SPRINT-40: mic replaces disabled send button when composer is empty */}
           <TouchableOpacity
             disabled={!text.trim()}
@@ -1365,7 +1363,7 @@ function Thread({
             <GradientFill style={StyleSheet.absoluteFill} />
             <Ionicons name="send" size={17} color="#FFF" />
           </TouchableOpacity>
-        </Animated.View>
+        </Reanimated.View>
       </View>
 
       {/* Emoji picker panel — categorized grid */}

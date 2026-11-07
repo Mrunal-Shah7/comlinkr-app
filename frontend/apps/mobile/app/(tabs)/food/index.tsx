@@ -25,8 +25,6 @@ import {
   Platform,
   KeyboardAvoidingView,
   Dimensions,
-  Animated,
-  PanResponder,
 } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
@@ -216,13 +214,6 @@ const REPORT_REASONS = [
 
 const CARD_WIDTH = Dimensions.get("window").width - rs(32);
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
-// ── Zoomable fullscreen image ─────────────────────────────────────────────────
-function pinchDistance(touches: { pageX: number; pageY: number }[]): number {
-  if (touches.length < 2) return 0;
-  const [a, b] = touches;
-  return Math.sqrt((a.pageX - b.pageX) ** 2 + (a.pageY - b.pageY) ** 2);
-}
 
 /** The shared design D gallery (black, 1 of n, swipe down to close). */
 function FoodFullscreenViewer({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) {
@@ -567,9 +558,7 @@ export default function FoodScreen() {
     }
   };
 
-  // ── Card gestures: double-tap photo → favorite (heart burst); long-press card → quick actions ──
-  const burstAnim = useRef(new Animated.Value(0)).current;
-  const [burstId, setBurstId] = useState<string | null>(null);
+  // ── Card gestures: double-tap photo → favorite; long-press card → quick actions ──
   const lastPhotoTapRef = useRef<{ id: string; at: number } | null>(null);
   const photoTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (photoTapTimerRef.current) clearTimeout(photoTapTimerRef.current); }, []);
@@ -581,13 +570,6 @@ export default function FoodScreen() {
       if (photoTapTimerRef.current) clearTimeout(photoTapTimerRef.current);
       if (!favorites.has(r.id)) void toggleFav(r.id);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setBurstId(r.id);
-      burstAnim.setValue(0);
-      Animated.sequence([
-        Animated.spring(burstAnim, { toValue: 1, useNativeDriver: true, speed: 24, bounciness: 12 }),
-        Animated.delay(380),
-        Animated.timing(burstAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-      ]).start(() => setBurstId(null));
       return;
     }
     lastPhotoTapRef.current = { id: r.id, at: now };
