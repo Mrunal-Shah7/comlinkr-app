@@ -4,19 +4,19 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"; // SPRINT-42:
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { Image } from "expo-image"; // SPRINT-31:
-import { FadeImage } from "../../../components/FadeImage"; // SPRINT-31:
+import { FadeImage } from "../../../../components/FadeImage"; // SPRINT-31:
 import Animated, { FadeIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import * as Brightness from "expo-brightness"; // SPRINT-42: raise screen brightness while QR is visible
-import { useTheme } from "../../../src/theme/useTheme";
-import { ApiError } from "../../../src/api/client";
-import { getMyTicket, type EventTicket } from "../../../src/api/events.api";
-import { appAlert } from "../../../src/shared/ui/Dialogs";
-import { DSheet } from "../../../src/shared/d/Sheet";
-import { GradientButton, Prefill, PressableScale, Stepper, Tag } from "../../../src/shared/d";
-import Input from "../../../src/shared/ui/Input";
-import { TYPE, body, display } from "../../../src/theme/d";
-import { SPRING } from "../../../src/shared/motion/presets";
-import { useAuthStore } from "../../../src/store/auth.store";
+import { useTheme } from "../../../theme/useTheme";
+import { ApiError } from "../../../api/client";
+import { getMyTicket, type EventTicket } from "../../../api/events.api";
+import { appAlert } from "../../../shared/ui/Dialogs";
+import { DSheet } from "../../../shared/d/Sheet";
+import { GradientButton, Prefill, PressableScale, Stepper, Tag } from "../../../shared/d";
+import Input from "../../../shared/ui/Input";
+import { TYPE, body, display } from "../../../theme/d";
+import { SPRING } from "../../../shared/motion/presets";
+import { useAuthStore } from "../../../store/auth.store";
 
 export default function EventRegistrationModal({
   visible,

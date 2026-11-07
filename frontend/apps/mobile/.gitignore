@@ -19,3 +19,6 @@ GoogleService-Info.plist
 google-play-key.json
 
 .expo
+# Signing keystores never belong in git
+*.jks
+*.keystore

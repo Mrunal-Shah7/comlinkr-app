@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import Animated, { Easing, runOnJS, useAnimatedProps, useAnimatedReaction, useReducedMotion, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedProps, useAnimatedReaction, useReducedMotion, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useTheme } from "../../theme/useTheme";
 import { display } from "../../theme/d";
 
@@ -20,7 +21,7 @@ export function MatchRing({ score, size = 72, stroke = 6 }: { score: number; siz
   useEffect(() => {
     p.value = reduce ? score : withDelay(120, withTiming(score, { duration: 650, easing: Easing.out(Easing.cubic) }));
   }, [score, reduce, p]);
-  useAnimatedReaction(() => Math.round(p.value), (v, prev) => { if (v !== prev) runOnJS(setShown)(v); });
+  useAnimatedReaction(() => Math.round(p.value), (v, prev) => { if (v !== prev) scheduleOnRN(setShown, v); });
   const arc = useAnimatedProps(() => ({ strokeDashoffset: c * (1 - Math.max(0, Math.min(100, p.value)) / 100) }));
 
   return (

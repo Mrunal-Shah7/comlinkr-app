@@ -41,7 +41,7 @@ import { appAlert } from '../src/shared/ui/Dialogs';
 import { TYPE, display } from '../src/theme/d';
 import { EmptyState, PressableScale, Reveal, Segmented } from '../src/shared/d';
 import { EventDetailModal } from '../src/features/explore/components/EventDetailModal';
-import EventRegistrationModal from './components/modals/EventRegistrationModal';
+import EventRegistrationModal from '../src/features/explore/components/EventRegistrationModal';
 import type { ExploreEventRow } from '../src/features/explore/models';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';

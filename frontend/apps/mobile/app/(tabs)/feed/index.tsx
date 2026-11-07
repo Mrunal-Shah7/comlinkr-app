@@ -40,7 +40,7 @@ import { LinkifiedText } from "../../../components/LinkifiedText";
 import { getPolls, votePoll, type Poll } from "../../../src/api/community.api";
 import { getChallenges, joinChallenge, type ApiChallenge } from "../../../src/api/challenges.api";
 import { ApiError } from "../../../src/api/client";
-import EventRegistrationModal from "../../components/modals/EventRegistrationModal";
+import EventRegistrationModal from "../../../src/features/explore/components/EventRegistrationModal";
 import { useNotificationStore } from "../../../src/store/notifications.store";
 import { useListFetchCacheStore } from "../../../src/store/listFetchCache.store";
 import { s, st } from "../../../src/styles/feedScreen.styles";

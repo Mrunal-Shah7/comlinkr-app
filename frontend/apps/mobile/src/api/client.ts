@@ -86,6 +86,26 @@ export async function clearSession(): Promise<void> {
 
 type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
+// A request the network never answers would otherwise leave its screen spinning forever.
+const REQUEST_TIMEOUT_MS = 30_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+/** fetch with a deadline; a timeout surfaces as ApiError(0, "TIMEOUT") so screens show their error state. */
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new ApiError(0, "TIMEOUT", "The server took too long to answer. Check your connection and try again.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 interface RequestOptions {
   method?: Method;
   body?: unknown;
@@ -175,12 +195,16 @@ export async function request<T = unknown>(path: string, options: RequestOptions
 
   let res: Response;
   try {
-    res = await fetch(url, {
-      method,
-      headers,
-      credentials: "include",
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    res = await fetchWithTimeout(
+      url,
+      {
+        method,
+        headers,
+        credentials: "include",
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      },
+      REQUEST_TIMEOUT_MS,
+    );
   } catch (error) {
     if (DEBUG_API) {
       // eslint-disable-next-line no-console
@@ -230,6 +254,10 @@ export async function postFormData<T = unknown>(path: string, formData: FormData
     : `${BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
   const headers: Record<string, string> = { Accept: "application/json" };
   if (cookie) headers["Cookie"] = cookie;
-  const res = await fetch(url, { method: "POST", headers, body: formData, credentials: "include" });
+  const res = await fetchWithTimeout(
+    url,
+    { method: "POST", headers, body: formData, credentials: "include" },
+    UPLOAD_TIMEOUT_MS,
+  );
   return parseResponse<T>(res, false);
 }
