@@ -3,6 +3,18 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
+## 2026-11-08 (latest) - on GitHub; signature pad walked and fixed
+
+- The repository is on GitHub (`Mrunal-Shah7/comlinkr-app`, public). `feature/design-d` went into `main` through
+  pull request 1 and the Expo skills (`.claude/skills/`, `skills-lock.json`) through pull request 2. No deploy runs
+  from this repository yet (`backend/.github/` is not read by GitHub).
+- Signature pad walked on the OnePlus: a tap left no dot; fixed on `fix/signpad-tap-dot` (first point in `onBegin`).
+  Explore news without `LayoutAnimation` walked. Run log: second section of
+  [device-runs/2026-11-08-expo-review.md](device-runs/2026-11-08-expo-review.md).
+- For the owner on GitHub: set the default branch to `main` (it is `feature/design-d`); decide public or private;
+  delete the merged branches.
+- Servers: Metro stopped; the backend left running as found.
+
 ## 2026-11-08 (later) - Expo review, second round; no pull request possible
 
 - **Owner:** "Open the PR and merge it as well. Once that is done, proceed with the next items."
