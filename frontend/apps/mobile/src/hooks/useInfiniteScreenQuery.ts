@@ -9,36 +9,49 @@ import { useRefetchOnFocus } from './useRefetchOnFocus';
 
 export type Page<T> = { items: T[]; hasMore: boolean };
 
-type Options<T> = {
+type Options<T, P extends Page<T>> = {
   queryKey: QueryKey;
   /** Pages start at 1. */
-  fetchPage: (page: number) => Promise<Page<T>>;
+  fetchPage: (page: number) => Promise<P>;
+  /** Drops later duplicates (a row that moved to the next page between requests). */
+  getId?: (item: T) => string;
   enabled?: boolean;
   staleTime?: number;
   refetchOnFocus?: boolean;
 };
 
-export function useInfiniteScreenQuery<T>({ queryKey, fetchPage, enabled = true, staleTime, refetchOnFocus = true }: Options<T>) {
+export function useInfiniteScreenQuery<T, P extends Page<T> = Page<T>>({ queryKey, fetchPage, getId, enabled = true, staleTime, refetchOnFocus = true }: Options<T, P>) {
   const qc = useQueryClient();
   const query = useInfiniteQuery({
     queryKey,
     queryFn: ({ pageParam }) => fetchPage(pageParam),
     initialPageParam: 1,
-    getNextPageParam: (last: Page<T>, _all, lastParam: number) => (last.hasMore ? lastParam + 1 : undefined),
+    getNextPageParam: (last: P, _all, lastParam: number) => (last.hasMore ? lastParam + 1 : undefined),
     enabled,
     staleTime,
   });
   const keyRef = useRef(queryKey);
   keyRef.current = queryKey;
 
-  useRefetchOnFocus(query.refetch, enabled && refetchOnFocus);
+  useRefetchOnFocus(queryKey, enabled && refetchOnFocus);
 
-  const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
+  const pages = query.data?.pages;
+  const items = useMemo(() => {
+    const all = pages?.flatMap((p) => p.items) ?? [];
+    if (!getId) return all;
+    const seen = new Set<string>();
+    return all.filter((x) => {
+      const id = getId(x);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [pages, getId]);
 
   /** Applies `fn` to the whole list, then spreads the result back over the loaded pages (page params unchanged). */
   const setItems = useCallback(
     (fn: (prev: T[]) => T[]) =>
-      qc.setQueryData<InfiniteData<Page<T>, number>>(keyRef.current, (old) => {
+      qc.setQueryData<InfiniteData<P, number>>(keyRef.current, (old) => {
         if (!old) return old;
         const next = fn(old.pages.flatMap((p) => p.items));
         let at = 0;
@@ -49,7 +62,7 @@ export function useInfiniteScreenQuery<T>({ queryKey, fetchPage, enabled = true,
           return { ...p, items: slice };
         });
         return { ...old, pages };
-      }),
+      }, { updatedAt: qc.getQueryState(keyRef.current)?.dataUpdatedAt }), // a local edit is not a fetch
     [qc],
   );
 
@@ -69,6 +82,8 @@ export function useInfiniteScreenQuery<T>({ queryKey, fetchPage, enabled = true,
 
   return {
     items,
+    pages,
+    dataUpdatedAt: query.dataUpdatedAt,
     setItems,
     loading: enabled && query.isPending,
     loadingMore: isFetchingNextPage,

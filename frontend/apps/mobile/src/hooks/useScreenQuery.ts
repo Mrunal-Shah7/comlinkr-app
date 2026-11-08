@@ -26,10 +26,14 @@ export function useScreenQuery<T>({ queryKey, queryFn, initial, enabled = true, 
   const keyRef = useRef(queryKey);
   keyRef.current = queryKey;
 
-  useRefetchOnFocus(query.refetch, enabled && refetchOnFocus);
+  useRefetchOnFocus(queryKey, enabled && refetchOnFocus);
 
   const setData = useCallback(
-    (fn: (prev: T) => T) => qc.setQueryData<T>(keyRef.current, (prev) => fn(prev ?? initialRef.current)),
+    (fn: (prev: T) => T) =>
+      qc.setQueryData<T>(keyRef.current, (prev) => fn(prev ?? initialRef.current), {
+        // A local edit is not a fetch: keep the fetch time so effects keyed on it don't fire.
+        updatedAt: qc.getQueryState(keyRef.current)?.dataUpdatedAt,
+      }),
     [qc],
   );
 
@@ -46,6 +50,8 @@ export function useScreenQuery<T>({ queryKey, queryFn, initial, enabled = true, 
 
   return {
     data: query.data ?? initial,
+    /** When the last fetch landed (0 before the first); changes on refetch, not on setData. */
+    dataUpdatedAt: query.dataUpdatedAt,
     setData,
     /** True only before the first answer (hide empty states while this is true). */
     loading: enabled && query.isPending,

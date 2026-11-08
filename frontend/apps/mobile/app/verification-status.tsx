@@ -204,7 +204,7 @@ export default function VerificationStatusScreen() {
     },
     staleTime: 0,
   });
-  useRefetchOnFocus(query.refetch);
+  useRefetchOnFocus(queryKeys.verification());
   const statusRows: MyBadgeStatusRow[] = query.data?.statusRows ?? [];
   const rejections: Partial<Record<UserBadge, string>> = query.data?.rejections ?? {};
   const loading = query.isPending;

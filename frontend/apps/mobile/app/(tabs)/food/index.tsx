@@ -62,7 +62,9 @@ import { ListState } from "../../../src/shared/ui/ListState";
 import { useAppCity } from "../../../src/utils/useAppCity";
 import { GuestCityPickerModal } from "../../../components/GuestCityBanner";
 import { getShareLink } from "../../../src/utils/shareLinks";
-import { useListFetchCacheStore } from "../../../src/store/listFetchCache.store"; // SPRINT-27
+import { queryKeys } from "../../../src/services/cache/queryKeys";
+import { LIST_STALE_MS } from "../../../src/services/cache/queryClient";
+import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuery";
 import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
@@ -281,6 +283,9 @@ const carouselSt = StyleSheet.create({
   counterText: { fontSize: rs(10), fontWeight: "700", color: "#FFF" },
 });
 
+const EMPTY_RESTAURANTS: Restaurant[] = [];
+const restaurantId = (r: Restaurant) => r.id;
+
 export default function FoodScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const foodScrollRef = useRef<ScrollView>(null);
@@ -302,17 +307,9 @@ export default function FoodScreen() {
   const [search, setSearch] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No restaurants") the first time the tab opens.
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const { city: appCity, hasCity, chooseCity } = useAppCity(() => setCityPickerVisible(true));
-  const requestGenRef = useRef(0);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
@@ -353,86 +350,45 @@ export default function FoodScreen() {
     }
   }, [requireAuth]);
 
-  const loadRestaurants = useCallback(async (opts?: { page?: number }) => {
-    if (!hasCity) {
-      setRestaurants([]);
-      setHasMore(false);
-      return;
-    }
-    const targetPage = opts?.page ?? 1;
-    const gen = ++requestGenRef.current;
-    const res = await getRestaurants({
-      page: targetPage,
-      limit: 20,
-      city: appCity,
-      ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      ...(cuisine && cuisine !== "All" ? { cuisine } : {}),
-    });
-    if (gen !== requestGenRef.current) return; // superseded by a newer search/city request
-    const list = Array.isArray(res?.data) ? res.data : [];
-    setRestaurants((prev) => (targetPage > 1 ? [...prev, ...list.filter((n) => !prev.some((o) => o.id === n.id))] : list));
-    setFavorites((prev) => {
-      const next = new Set(targetPage > 1 ? prev : []);
-      list.filter((x) => x.savedByMe).forEach((x) => next.add(x.id));
-      return next;
-    });
-    setBookmarkedIds((prev) => {
-      const next = new Set(targetPage > 1 ? prev : []);
-      list.filter((x) => x.isSaved === true).forEach((x) => next.add(x.id));
-      return next;
-    });
-    const meta = (res as any)?.meta;
-    setPage(targetPage);
-    setHasMore(meta ? targetPage < Number(meta.totalPages ?? 1) : list.length >= 20);
-    setLoadError(false);
-  }, [hasCity, appCity, debouncedSearch, cuisine]);
+  // Restaurants: one cached query per city, search and cuisine (the key replaces the old request-generation
+  // guard), kept for 10 minutes like the old fetch gate; pull to refresh refetches.
+  const foodQ = useInfiniteScreenQuery<Restaurant>({
+    queryKey: queryKeys.food(appCity, { search: debouncedSearch, cuisine: cuisine && cuisine !== "All" ? cuisine : null }),
+    enabled: hasCity,
+    staleTime: LIST_STALE_MS,
+    getId: restaurantId,
+    fetchPage: async (targetPage) => {
+      const res = await getRestaurants({
+        page: targetPage,
+        limit: 20,
+        city: appCity,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(cuisine && cuisine !== "All" ? { cuisine } : {}),
+      });
+      const list = Array.isArray(res?.data) ? res.data : [];
+      const meta = (res as any)?.meta;
+      return { items: list, hasMore: meta ? targetPage < Number(meta.totalPages ?? 1) : list.length >= 20 };
+    },
+  });
+  const restaurants = hasCity ? foodQ.items : EMPTY_RESTAURANTS;
+  const setRestaurants = foodQ.setItems;
+  const loading = foodQ.loading;
+  const loadError = !!foodQ.error;
+  const hasMore = foodQ.hasMore;
+  const loadingMore = foodQ.loadingMore;
+  // Hearts and bookmarks start from the server's flags each time a fetch lands; taps change them locally.
+  const foodFetchedAt = foodQ.dataUpdatedAt;
+  useEffect(() => {
+    if (!foodFetchedAt) return;
+    setFavorites(new Set(foodQ.items.filter((x) => x.savedByMe).map((x) => x.id)));
+    setBookmarkedIds(new Set(foodQ.items.filter((x) => x.isSaved === true).map((x) => x.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foodFetchedAt]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
     return () => clearTimeout(t);
   }, [search]);
-
-  const queryMountedRef = useRef(false);
-  useEffect(() => {
-    if (!queryMountedRef.current) {
-      queryMountedRef.current = true;
-      return;
-    }
-    setLoading(true);
-    loadRestaurants()
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
-  }, [loadRestaurants]);
-
-  const foodEverLoadedRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      // SPRINT-27: 10-minute stale-while-revalidate gate
-      // The gate only applies once this instance has data — a remounted screen must refetch.
-      if (foodEverLoadedRef.current && !useListFetchCacheStore.getState().shouldFetch("food")) return undefined;
-      let cancelled = false;
-      const silent = foodEverLoadedRef.current;
-      const cancelDefer = runAfterTransition(() => {
-        if (cancelled) return;
-        void (async () => {
-          try {
-            if (!silent) setLoading(true);
-            await loadRestaurants();
-            foodEverLoadedRef.current = true;
-            useListFetchCacheStore.getState().markFetched("food");
-          } catch {
-            setLoadError(true);
-          } finally {
-            if (!cancelled) setLoading(false);
-          }
-        })();
-      });
-      return () => {
-        cancelled = true;
-        cancelDefer();
-      };
-    }, [loadRestaurants]),
-  );
 
   useEffect(() => {
     const raw = params.openRestaurant;
@@ -475,7 +431,6 @@ export default function FoodScreen() {
   }, [selectedRestaurant?.id, user?.id]);
 
   const onRefresh = useCallback(() => {
-    useListFetchCacheStore.getState().clearFetchTimestamp("food"); // SPRINT-27
     (async () => {
       try {
         setRefreshing(true);
@@ -484,12 +439,12 @@ export default function FoodScreen() {
         setActiveTab("all");
         setSelectedRestaurant(null);
         setReviewText("");
-        await loadRestaurants();
+        await foodQ.refetch();
       } finally {
         setRefreshing(false);
       }
     })();
-  }, [loadRestaurants]);
+  }, [foodQ.refetch]);
 
   const confirmDeleteRestaurant = useCallback((id: string) => {
     appAlert("Delete this restaurant?", "This can’t be undone.", [
@@ -857,11 +812,7 @@ export default function FoodScreen() {
         {hasCity && loadError && restaurants.length === 0 && !loading ? (
           <ListState
             kind="error"
-            onAction={() => {
-              setLoadError(false);
-              setLoading(true);
-              loadRestaurants().catch(() => setLoadError(true)).finally(() => setLoading(false));
-            }}
+            onAction={() => { void foodQ.refetch(); }}
           />
         ) : null}
         {hasCity && loadError && restaurants.length > 0 ? (
@@ -966,12 +917,7 @@ export default function FoodScreen() {
             accessibilityRole="button"
             accessibilityLabel="Load more restaurants"
             disabled={loadingMore}
-            onPress={() => {
-              setLoadingMore(true);
-              loadRestaurants({ page: page + 1 })
-                .catch(() => showToast("Could not load more restaurants.", "error"))
-                .finally(() => setLoadingMore(false));
-            }}
+            onPress={foodQ.loadMore}
             style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8, minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: tc.borderLight, backgroundColor: tc.cardBg, alignItems: "center", justifyContent: "center" }}
           >
             {loadingMore ? <ActivityIndicator size="small" color={Colors.brand.green} /> : <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.brand.green }}>Load more</Text>}

@@ -55,7 +55,7 @@ export default function NotificationsScreen() {
     enabled: isAuthed,
     staleTime: 0,
   });
-  useRefetchOnFocus(query.refetch, isAuthed);
+  useRefetchOnFocus(queryKeys.notifications(), isAuthed);
   const items = query.data ?? [];
   const loading = query.isPending;
   const [refreshing, setRefreshing] = useState(false);
