@@ -122,6 +122,9 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
+  from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
+  No behaviour change; publish, delete and Undo walked on Android.
 - 2026-11-09: [React Query](build/2026-11-09-react-query.md) (TR-013, point 3): screens read server data through
   React Query keyed by city and filters; `listFetchCache` replaced by stale times and focus refetch. Feed and chat
   loaders use the cache; forms, timers and admin pages listed as not converted. Walked on Android.

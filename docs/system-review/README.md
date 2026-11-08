@@ -41,7 +41,8 @@ question from `docs/README.md`.
 | 08 | [Platform: sessions, guards, deep links, media, jobs](08-platform.md) | `app/_layout.tsx`, `src/api/`, `src/store/` | `common/`, `deep-links.ts`, `storage`, `files`, `*.cron.ts` |
 
 The cross-cutting composer `create-post.tsx` (news, listing, shared space, restaurant, event, story, challenge) is
-described in the module that owns each content type.
+described in the module that owns each content type. Its code lives in `src/features/compose/` (`PostForm.tsx`,
+`PreviewModal.tsx` and helpers); the route file holds only the screen.
 
 ## Status
 

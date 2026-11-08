@@ -19,6 +19,7 @@ Requests read from the backend log.
 | Q-11 | pass | Log out: Explore, Listings and Food as a guest show "Choose your city", nothing left from `ui_tester` |
 | Q-12 | pass | Guest picks Los Angeles: every tab refetches under the new key and shows its content |
 | Q-13 | pass | Sign back in: Explore fills in (hero, homes count, stories, poll) |
-| Q-14 | not checked | Load more (no seeded list is longer than one page) and my posts delete + Undo (no posts) |
+| Q-14 | not checked | Load more (no seeded list is longer than one page) |
+| Q-15 | pass | My posts delete + Undo, checked later on `chore/split-compose` (run log of that branch, P-04, P-05) |
 
 Put back: restaurant bookmark removed; signed in as `ui_tester` again.
