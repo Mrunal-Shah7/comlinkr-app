@@ -47,9 +47,6 @@ importers:
       '@tanstack/react-query-persist-client':
         specifier: ^5.94.5
         version: 5.104.5(@tanstack/react-query@5.104.5(@types/react@19.2.18)(react@19.2.3))(@types/react@19.2.18)(react@19.2.3)
-      axios:
-        specifier: ^1.20.0
-        version: 1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1)
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
@@ -1798,9 +1795,6 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  axios@1.20.0:
-    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
-
   babel-jest@29.7.0:
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -2617,6 +2611,7 @@ packages:
     resolution: {integrity: sha512-1SuRh1bCZfj/nRCUlgySyQ40uJ7Z1geeG1uAjqceVT16S0Ou9yE4U1AMTDWBz3hLPRRvjCneAJkf20630rmjAQ==}
     hasBin: true
     peerDependencies:
+      '@expo/dom-webview': '*'
       '@expo/metro-runtime': '*'
       react: '*'
       react-dom: '*'
@@ -2624,6 +2619,8 @@ packages:
       react-native-web: '*'
       react-native-webview: '*'
     peerDependenciesMeta:
+      '@expo/dom-webview':
+        optional: true
       '@expo/metro-runtime':
         optional: true
       react-dom:
@@ -2716,15 +2713,6 @@ packages:
   flow-parser@0.331.0:
     resolution: {integrity: sha512-vEZcHIlnKeN8JSVtYFczj8sWJfHIJOkz+YG00O/oul/Bete+t1ZhTi+O6JRRLFYvGW+yJkZ0YgL16iStnbkUqQ==}
     engines: {node: '>=0.4.0'}
-
-  follow-redirects@1.16.1:
-    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
 
   fontfaceobserver@2.3.0:
     resolution: {integrity: sha512-6FPvD/IVyT4ZlNe7Wcn5Fb/4ChigpucKYSvD6a+0iMoLn2inpo711eyIcKjmDtE5XNcgAkSH9uN/nfAeZzHEfg==}
@@ -3831,10 +3819,6 @@ packages:
   protobufjs@7.6.6:
     resolution: {integrity: sha512-dYDWdjSl5RNb7SgPxGQcRU+GtvP7s2fpkrY0r432PcOIaZ0/rBcxEZnQN67iJhFuQiVw754JDoPruPCNdGsbjg==}
     engines: {node: '>=12.0.0'}
-
-  proxy-from-env@2.1.0:
-    resolution: {integrity: sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==}
-    engines: {node: '>=10'}
 
   psl@1.15.0:
     resolution: {integrity: sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==}
@@ -6768,16 +6752,6 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.20.0(debug@4.4.3(supports-color@8.1.1))(supports-color@8.1.1):
-    dependencies:
-      follow-redirects: 1.16.1(debug@4.4.3(supports-color@8.1.1))
-      form-data: 4.0.6
-      https-proxy-agent: 5.0.1(supports-color@8.1.1)
-      proxy-from-env: 2.1.0
-    transitivePeerDependencies:
-      - debug
-      - supports-color
-
   babel-jest@29.7.0(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
@@ -7854,10 +7828,6 @@ snapshots:
   flow-parser@0.331.0:
     dependencies:
       flow-estree: 0.331.0
-
-  follow-redirects@1.16.1(debug@4.4.3(supports-color@8.1.1)):
-    optionalDependencies:
-      debug: 4.4.3(supports-color@8.1.1)
 
   fontfaceobserver@2.3.0: {}
 
@@ -9450,8 +9420,6 @@ snapshots:
       '@protobufjs/utf8': 1.1.2
       '@types/node': 26.6.5
       long: 5.3.2
-
-  proxy-from-env@2.1.0: {}
 
   psl@1.15.0:
     dependencies:

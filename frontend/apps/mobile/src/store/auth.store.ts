@@ -122,7 +122,7 @@ interface AuthState {
   pushToken: string | null;
   isAuthed: boolean;
   isLoading: boolean;
-  /** After Nest login/register — updates local user + session cookie for axios. */
+  /** After Nest login/register — updates local user + session cookie (SecureStore, read by the fetch client). */
   syncFromApiLogin: (profile: UserProfile, sessionCookie: SessionCookieHeader) => Promise<{ onboardingDone: boolean }>;
   login: (email: string, password: string) => Promise<{ onboardingDone: boolean }>;
   signup: (name: string, email: string, password: string, username: string) => Promise<void>;

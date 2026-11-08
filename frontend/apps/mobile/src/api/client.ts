@@ -111,6 +111,8 @@ interface RequestOptions {
   body?: unknown;
   headers?: Record<string, string>;
   public?: boolean;
+  /** Return the body as the server sent it, without unwrapping `{ success, data }` (auth and onboarding services). */
+  raw?: boolean;
 }
 
 async function buildHeaders(isPublic: boolean): Promise<Record<string, string>> {
@@ -146,7 +148,7 @@ function unwrapSuccess(json: Record<string, unknown>): unknown {
   return json;
 }
 
-async function parseResponse<T>(res: Response, isPublic = false): Promise<T> {
+async function parseResponse<T>(res: Response, isPublic = false, raw = false): Promise<T> {
   const text = await res.text();
   let json: Record<string, unknown> = {};
 
@@ -170,11 +172,11 @@ async function parseResponse<T>(res: Response, isPublic = false): Promise<T> {
     );
   }
 
-  return unwrapSuccess(json) as T;
+  return (raw ? json : unwrapSuccess(json)) as T;
 }
 
 export async function request<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, headers: extra = {}, public: isPublic = false } = options;
+  const { method = "GET", body, headers: extra = {}, public: isPublic = false, raw = false } = options;
   const url = path.startsWith("http") ? path : `${BASE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
   const startedAt = Date.now();
 
@@ -219,7 +221,7 @@ export async function request<T = unknown>(path: string, options: RequestOptions
   }
 
   try {
-    return await parseResponse<T>(res, isPublic);
+    return await parseResponse<T>(res, isPublic, raw);
   } catch (error) {
     if (DEBUG_API) {
       // eslint-disable-next-line no-console
