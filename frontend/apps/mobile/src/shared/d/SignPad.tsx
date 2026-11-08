@@ -1,64 +1,82 @@
 // src/shared/d/SignPad.tsx — design D `canvas.sign`: sign with a finger on a soft panel (150 px high).
-// The strokes are drawn with react-native-svg while signing. `toPng()` rasterises them into an 8-bit
-// greyscale PNG (stored deflate, no extra library) and returns a data URI that the server accepts as a drawn
-// signature (`signatureType: "drawn"`, under its 100 000-character limit).
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { PanResponder, View, type LayoutChangeEvent } from 'react-native';
+// The strokes are drawn with react-native-svg while signing. The finger is tracked by a Gesture Handler pan and
+// the path grows on the UI thread (Reanimated animated props), so React does not re-render per touch move; each
+// finished stroke is handed to JS once. `toPng()` rasterises the strokes into an 8-bit greyscale PNG (stored
+// deflate, no extra library) and returns a data URI that the server accepts as a drawn signature
+// (`signatureType: "drawn"`, under its 100 000-character limit).
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { useAnimatedProps, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 import { useTheme } from '../../theme/useTheme';
 import { RADIUS } from '../../theme/d';
 
 type Pt = [number, number];
 export type SignPadHandle = { clear: () => void; isEmpty: () => boolean; toPng: () => string | null };
 
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 export const SignPad = forwardRef<SignPadHandle, { onChange?: (signed: boolean) => void; onDrawing?: (drawing: boolean) => void; height?: number }>(function SignPad({ onChange, onDrawing, height = 150 }, ref) {
   const { tc } = useTheme();
-  const [strokes, setStrokes] = useState<Pt[][]>([]);
-  const live = useRef<Pt[][]>([]);
+  const strokes = useRef<Pt[][]>([]); // finished strokes, for toPng
   const size = useRef({ w: 0, h: height });
+  const doneD = useSharedValue('');   // path of the finished strokes
+  const liveD = useSharedValue('');   // path of the stroke being drawn
+  const livePts = useSharedValue<number[]>([]); // x, y, x, y… of the stroke being drawn
 
-  const pan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      // Claim the touch before a parent ScrollView can.
-      onStartShouldSetPanResponderCapture: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (e) => {
-        onDrawing?.(true);
-        live.current = [...live.current, [[e.nativeEvent.locationX, e.nativeEvent.locationY]]];
-        setStrokes(live.current);
-      },
-      onPanResponderMove: (e) => {
-        const last = live.current[live.current.length - 1];
-        if (!last) return;
-        last.push([e.nativeEvent.locationX, e.nativeEvent.locationY]);
-        setStrokes([...live.current]);
-      },
-      onPanResponderRelease: () => { onDrawing?.(false); onChange?.(live.current.length > 0); },
-      onPanResponderTerminate: () => onDrawing?.(false),
-    }),
-  ).current;
+  const finishStroke = (flat: number[]) => {
+    const s: Pt[] = [];
+    for (let i = 0; i + 1 < flat.length; i += 2) s.push([flat[i], flat[i + 1]]);
+    if (s.length) strokes.current = [...strokes.current, s];
+    onDrawing?.(false);
+    onChange?.(strokes.current.length > 0);
+  };
+  const startStroke = () => onDrawing?.(true);
+
+  const pan = Gesture.Pan()
+    .minDistance(0) // a tap leaves a dot, and the pad claims the touch before the page can scroll
+    .maxPointers(1)
+    .shouldCancelWhenOutside(false)
+    .onStart((e) => {
+      livePts.set([e.x, e.y]);
+      liveD.set(`M${e.x.toFixed(1)} ${e.y.toFixed(1)} l0.1 0`);
+      scheduleOnRN(startStroke);
+    })
+    .onUpdate((e) => {
+      livePts.modify((v) => { 'worklet'; v.push(e.x, e.y); return v; });
+      liveD.set(`${liveD.get()} L${e.x.toFixed(1)} ${e.y.toFixed(1)}`);
+    })
+    .onFinalize(() => {
+      const pts = livePts.get();
+      if (!pts.length) return;
+      doneD.set(`${doneD.get()} ${liveD.get()}`);
+      liveD.set('');
+      livePts.set([]);
+      scheduleOnRN(finishStroke, pts.slice());
+    });
 
   useImperativeHandle(ref, () => ({
-    clear: () => { live.current = []; setStrokes([]); onChange?.(false); },
-    isEmpty: () => live.current.length === 0,
-    toPng: () => (live.current.length ? rasterPng(live.current, size.current.w, size.current.h) : null),
+    clear: () => { strokes.current = []; doneD.set(''); liveD.set(''); livePts.set([]); onChange?.(false); },
+    isEmpty: () => strokes.current.length === 0,
+    toPng: () => (strokes.current.length ? rasterPng(strokes.current, size.current.w, size.current.h) : null),
   }));
 
-  const d = strokes.map((s) => s.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ') + (s.length === 1 ? ' l0.1 0' : '')).join(' ');
+  const pathProps = useAnimatedProps(() => ({ d: `${doneD.get()} ${liveD.get()}`.trim() || 'M0 0' }));
   return (
-    <View
-      {...pan.panHandlers}
-      onLayout={(e: LayoutChangeEvent) => { size.current = { w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }; }}
-      accessibilityLabel="Signature pad. Sign with your finger."
-      style={{ height, borderRadius: RADIUS.input, backgroundColor: tc.inputBg, overflow: 'hidden' }}
-    >
-      <Svg width="100%" height="100%">
-        <Path d={d} stroke={tc.textPrimary} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-      </Svg>
-    </View>
+    <GestureDetector gesture={pan}>
+      <View
+        collapsable={false}
+        onLayout={(e: LayoutChangeEvent) => { size.current = { w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height }; }}
+        accessibilityLabel="Signature pad. Sign with your finger."
+        style={{ height, borderRadius: RADIUS.input, backgroundColor: tc.inputBg, overflow: 'hidden' }}
+      >
+        <Svg width="100%" height="100%">
+          <AnimatedPath animatedProps={pathProps} stroke={tc.textPrimary} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </Svg>
+      </View>
+    </GestureDetector>
   );
 });
 

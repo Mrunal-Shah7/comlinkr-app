@@ -1,6 +1,6 @@
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView, LayoutAnimation } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView } from "react-native";
 import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
@@ -384,7 +384,6 @@ export default function FeedScreen() {
         const fullArticles = Array.isArray(fullRes?.data) && fullRes.data.length > 0 ? fullRes.data : existingPrimary;
         const firstPage = fullArticles.slice(0, LIVE_NEWS_PAGE_SIZE);
         if (firstPage.length > 0) {
-          LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
           setNewsArticles(firstPage);
         }
         const t = fullRes.cachedAt ? new Date(fullRes.cachedAt).getTime() : NaN;
@@ -427,7 +426,6 @@ export default function FeedScreen() {
         return;
       }
 
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setNewsArticles(primaryArticles);
       setNewsCurrentPage(1);
       setNewsHasMore(false);
@@ -491,7 +489,6 @@ export default function FeedScreen() {
       });
       const nextArticles = Array.isArray(nextRes?.data) ? nextRes.data : [];
       if (nextArticles.length > 0) {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setNewsArticles((prev) => {
           const next = [
             ...prev,

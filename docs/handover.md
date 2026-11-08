@@ -3,7 +3,20 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-08 (latest) - Expo review of the mobile app on `feature/design-d` (TR-010)
+## 2026-11-08 (later) - Expo review, second round; no pull request possible
+
+- **Owner:** "Open the PR and merge it as well. Once that is done, proceed with the next items."
+- **Blocked:** this repository has no `origin` remote and `gh` is not installed, so nothing was pushed and no pull
+  request exists. Nothing was merged (no `development` branch exists; `main` takes changes only through a pull
+  request). To do: create the GitHub repository, add it as `origin`, push `main` and `feature/design-d`, then open the
+  pull request into `development` (or `main` if `development` is not created).
+- **Done:** `SignPad` on Gesture Handler with the path on the UI thread; `LayoutAnimation` removed from Explore.
+  "Second round" in [the build note](build/2026-11-08-expo-review.md). Committed on `feature/design-d`.
+- **Not checked:** the signature pad on a phone (the Motorola connected this time was PIN-locked). Steps are in the
+  build note.
+- **Servers:** Metro stopped; the backend was left running as found.
+
+## 2026-11-08 - Expo review of the mobile app on `feature/design-d` (TR-010)
 
 - **Owner, 2026-11-08:** review `frontend/` against the Expo skills, fix the clear bugs and the clean-up, then start
   the refactors; walk on the phone; continue unattended. First, commit the uncommitted animation-timing work

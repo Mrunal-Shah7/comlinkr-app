@@ -99,15 +99,34 @@ On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79ba
 
 ## Reported, not fixed
 
-- `SignPad` (tenancy agreement signature) still uses `PanResponder` and a `setState` per move.
-- `LayoutAnimation` in Explore (three places).
 - About 2 000 hard-coded hex colours in screens instead of theme tokens (expo-design-system).
 - About 200 `useEffect` fetches against 2 `useQuery` uses; React Query is set up but barely used (review 08, Q2).
 - Two HTTP clients (fetch and axios) with different error types.
-- About 40 list keys built from the array index.
+- About 40 list keys built from the array index. Looked at in the second round: they are fixed lists (dots, steps,
+  requirement rows, the six photo slots) or photo lists where the same photo can be picked twice, so a `uri` key
+  could repeat. Left as they are.
 - `app/create-post.tsx` is 5 000 lines.
 - Staging builds allow cleartext traffic (`APP_ENV !== 'production'`).
 - `dist_baseline/` is tracked in git; build logs and one-off scripts sit in the app folder.
 - The design D tab pager (`SwipeTabs`) and the JS screen transitions (`ZoomStack`) go against the expo-animation and
   expo-router guidance (native tabs, platform transitions). They are deliberate design D choices (plan 01), so they
   were left alone.
+
+## Second round (same day, owner: "proceed with the next items")
+
+- **`SignPad`** (`src/shared/d/SignPad.tsx`, the tenancy agreement signature): `PanResponder` with a `setState` per
+  touch move is replaced by a `Gesture.Pan` (`minDistance(0)`, so a tap leaves a dot and the pad claims the touch
+  at once; one finger). The path grows on the UI thread through an animated `d` prop on the SVG `Path`; each finished
+  stroke is handed to JS once (`scheduleOnRN`) for `toPng()`. `clear`, `isEmpty`, `toPng`, `onChange` and
+  `onDrawing` (which stops the page scrolling) keep their meaning.
+- **`LayoutAnimation` in Explore** removed (three `configureNext` calls on news load, phase 2 and "load more"). It
+  animated every layout change in the next frame, not only the news list, and news loads each time Explore opens
+  (expo-animation: something that happens many times a day does not animate). Unused `LayoutAnimation`,
+  `UIManager` and `Platform` imports removed from `app/saved.tsx`.
+- **Checked:** `tsc --noEmit`; `npx expo export --platform android`.
+- **Not checked on the phone:** the phone connected this time (Motorola edge 40 neo) was locked with a PIN, so the
+  signature pad was not drawn on. To check: open `exp://127.0.0.1:8083/--/property-agreement?propertyTitle=Test`
+  (no `listingId`, so nothing is sent to the server), fill part 1, then draw, tap for a dot, clear, draw while the
+  page is scrolled, and check that the page does not scroll under the finger; then "Type instead" and back. iOS:
+  whether the page's scroll view can take a vertical stroke before `onDrawing` turns scrolling off is not known.
+- **The pull request was not opened:** the repository has no GitHub remote and the `gh` CLI is not installed.

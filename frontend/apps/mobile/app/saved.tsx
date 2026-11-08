@@ -7,9 +7,7 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  LayoutAnimation,
   Platform,
-  UIManager,
   RefreshControl,
   Alert,
 } from "react-native";
