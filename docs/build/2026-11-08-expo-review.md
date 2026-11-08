@@ -90,8 +90,11 @@ On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79ba
 ## Not checked
 
 - Pinch-to-zoom and panning a zoomed photo: adb input has one finger.
-- `ListingCard`'s save pop and burst: the card now renders only on the admin listings screen, which was not walked.
-- The Explore news skeleton pulse: not seen on screen (the news loaded before it could be looked at).
+- `ListingCard`'s save pop and burst: corrected in the third round. The shared card is rendered nowhere (the admin
+  listings screen has its own local `ListingCard`), so it and its unused `MemoListingCard` wrapper were deleted
+  (`chore/remove-unused-listingcard`).
+- The Explore news skeleton pulse: not seen on screen. It shows below the fold for about a second, and screen
+  recording over adb is refused on the test phone.
 - The chat send pop and the photo tiles' spring back: too quick to judge from screenshots.
 - iOS (no device).
 - A release build. Feel of the springs on a slow phone.
@@ -129,6 +132,6 @@ On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79ba
   with no move never activates a pan, so the first point now goes in `onBegin` instead of `onStart`
   (`fix/signpad-tap-dot`). Explore's news loads and "Load More" appends without `LayoutAnimation`.
 - Not checked: iOS, where the page's scroll view might take a vertical stroke before `onDrawing` turns scrolling
-  off; "Type instead".
+  off. "Type instead" and back was walked in the third round.
 - **Pull requests:** the work went into `main` through Mrunal-Shah7/comlinkr-app#1 once the GitHub remote existed;
   the tap fix through its own pull request.

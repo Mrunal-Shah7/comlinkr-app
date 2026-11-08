@@ -52,5 +52,18 @@ Backend and account as above (`ui_tester`; the "UT" avatar on the tabs). Metro w
 | N-01 | pass | Explore opens; news loads (phase "full", 200) and the cards render |
 | N-02 | pass | "Load More" requests page 2 and appends the cards |
 
-Not checked: "Type instead"; the pad in dark mode; iOS.
+Not checked: the pad in dark mode; iOS.
 Put back: nothing was written to the database. Metro stopped.
+
+## Third round: the checks left over (later the same day)
+
+Build: Expo Go, `main` at `c49c034`. Same device, backend, account and Metro set-up as the second round.
+
+| ID | Result | Note |
+|---|---|---|
+| T-01 | pass | Stroke drawn, then "Type instead": a name field replaces the pad; "UI Tester" typed and "I have read" on turn "Sign and accept" on |
+| T-02 | pass | "Draw instead": the pad comes back empty and "Sign and accept" turns off (switching clears `signed`); one stroke turns it on again. Left with Back, nothing signed |
+| K-01 | not checked | Explore's news skeleton pulse: it shows only below the fold, for about a second (the first news request took 956 ms), while the list is empty. `adb shell screenrecord` is refused on this phone ("Permission denied"), and slowing the network would mean changing phone settings |
+| L-01 | not applicable | `ListingCard`'s save pop and burst: the shared component is rendered nowhere. The admin listings screen has its own local `ListingCard`, and `MemoListingCard` (the only user of the shared one) was imported by Listings but never rendered. Both deleted on `chore/remove-unused-listingcard` |
+
+Put back: nothing written. Metro stopped.
