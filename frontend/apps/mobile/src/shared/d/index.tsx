@@ -144,20 +144,20 @@ export function TileLabel({ children, light, style }: { children: ReactNode; lig
 }
 
 export const dStyles = StyleSheet.create({
-  card: { borderRadius: RADIUS.card, overflow: 'hidden' },
+  card: { borderRadius: RADIUS.card, borderCurve: "continuous", overflow: 'hidden' },
 });
 
 const s = StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   glow: { shadowColor: '#1A6BAE', shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 7, borderRadius: RADIUS.chip, borderWidth: 1 },
-  tile: { borderRadius: RADIUS.tile, padding: 14, overflow: 'hidden', minHeight: 118 },
-  stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 7, borderRadius: RADIUS.chip, borderCurve: "continuous", borderWidth: 1 },
+  tile: { borderRadius: RADIUS.tile, borderCurve: "continuous", padding: 14, overflow: 'hidden', minHeight: 118 },
+  stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 , borderCurve: "continuous"},
   stepCtl: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   stepBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', shadowColor: '#0F283C', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  prefill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 },
+  prefill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 , borderCurve: "continuous"},
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, alignSelf: 'flex-start' },
-  chipInput: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, minHeight: 50, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.input },
+  chipInput: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, minHeight: 50, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.input , borderCurve: "continuous"},
   tagChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingLeft: 11, paddingRight: 8, borderRadius: 99 },
   tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });

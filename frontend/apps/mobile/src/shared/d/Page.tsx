@@ -118,11 +118,11 @@ export function DRow({ icon, label, value, onPress, danger, first, right }: {
 
 const s = StyleSheet.create({
   bar: { height: 56, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, zIndex: 10 },
-  ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  ib: { width: 42, height: 42, borderRadius: 14, borderCurve: "continuous", alignItems: "center", justifyContent: "center" },
   title: { position: "absolute", left: 64, right: 64, alignItems: "center" },
   right: { marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 2 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, minHeight: 52 },
-  icon: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  icon: { width: 32, height: 32, borderRadius: 10, borderCurve: "continuous", alignItems: "center", justifyContent: "center" },
 });
 
 /** `.stick`: the glass bar pinned under a page's content, for the page's main actions. */

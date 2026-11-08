@@ -122,6 +122,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [iOS conventions](build/2026-11-09-ios-conventions.md) (TR-013, point 8): `Link.Preview` and
+  `Link.Menu` on listing, room, event and restaurant cards (iOS only), continuous corners. Not walked on iOS.
 - 2026-11-09: [Detail routes](build/2026-11-09-detail-routes.md) (TR-013, point 7, plan 03): listing, roommate,
   shared space, restaurant and event details are routes (`/listing/[id]` and the rest) seeded from the list cache;
   `DismissibleSheet` and the event hero flight deleted. Walked on Android.

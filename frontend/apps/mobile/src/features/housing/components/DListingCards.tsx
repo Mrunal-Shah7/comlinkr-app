@@ -2,12 +2,14 @@
 // The first home is a feature card; the rest are two-column tiles with the price in a glass chip on the photo.
 // Missing values are hidden, never shown as "N/A" (TR-001, rule B6).
 import { memo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../theme/useTheme";
 import { TYPE, body, display } from "../../../theme/d";
 import { PressableScale } from "../../../shared/d";
+import { DetailLink, detailHref, type DetailLinkAction } from "../../../shared/d/DetailLink";
+import { getShareLink } from "../../../utils/shareLinks";
 import { SPRING } from "../../../shared/motion/presets";
 import { FadeImage } from "../../../../components/FadeImage";
 import type { Listing } from "../listingModel";
@@ -45,12 +47,20 @@ function SaveButton({ saved, onPress, glass }: { saved: boolean; onPress: () => 
   );
 }
 
+function listingActions(l: Listing, saved: boolean, onToggleSaveId: (id: string) => void): DetailLinkAction[] {
+  return [
+    { title: saved ? "Remove from saved" : "Save", icon: saved ? "bookmark.slash" : "bookmark", onPress: () => onToggleSaveId(l.id) },
+    { title: "Share", icon: "square.and.arrow.up", onPress: () => { void Share.share({ message: `${l.title}\n${getShareLink("listing", l.id)}` }).catch(() => {}); } },
+  ];
+}
+
 export const ListingFeature = memo(function ListingFeature({ listing: l, saved, onToggleSaveId, onOpen }: {
   listing: Listing; saved: boolean; onToggleSaveId: (id: string) => void; onOpen: (l: Listing) => void;
 }) {
   const { tc, isDark } = useTheme();
   const facts = listingFacts(l);
   return (
+    <DetailLink href={detailHref.listing(l.id)} actions={listingActions(l, saved, onToggleSaveId)}>
     <PressableScale onPress={() => onOpen(l)} style={[s.feat, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]} accessibilityRole="button" accessibilityLabel={`${l.title}, ${l.price} a month`}>
       <View style={{ padding: 6 }}>
         <FadeImage uri={l.images[0]} style={s.featImg} />
@@ -65,6 +75,7 @@ export const ListingFeature = memo(function ListingFeature({ listing: l, saved, 
         </View>
       </View>
     </PressableScale>
+    </DetailLink>
   );
 });
 
@@ -73,6 +84,7 @@ export const ListingTile = memo(function ListingTile({ listing: l, saved, onTogg
 }) {
   const { tc } = useTheme();
   return (
+    <DetailLink href={detailHref.listing(l.id)} style={{ flex: 1 }} actions={listingActions(l, saved, onToggleSaveId)}>
     <PressableScale onPress={() => onOpen(l)} outerStyle={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={`${l.title}, ${l.price} a month`}>
       <View>
         <FadeImage uri={l.images[0]} style={s.tileImg} />
@@ -82,6 +94,7 @@ export const ListingTile = memo(function ListingTile({ listing: l, saved, onTogg
       <Text style={[display(700), { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={1}>{l.title}</Text>
       {has(l.location) ? <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{l.location}</Text> : null}
     </PressableScale>
+    </DetailLink>
   );
 });
 
@@ -95,6 +108,7 @@ export const RoomTile = memo(function RoomTile({ room, onOpen }: { room: Availab
     room.currentResidents > 0 ? `${room.currentResidents} living there` : "",
   ].filter(Boolean).join(" · ");
   return (
+    <DetailLink href={detailHref.room(room.id)} style={{ flex: 1 }}>
     <PressableScale onPress={() => onOpen(room)} outerStyle={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={title}>
       <View>
         <FadeImage uri={room.images[0]} style={s.tileImg} />
@@ -103,17 +117,18 @@ export const RoomTile = memo(function RoomTile({ room, onOpen }: { room: Availab
       <Text style={[display(700), { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={2}>{title}</Text>
       {meta ? <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{meta}</Text> : null}
     </PressableScale>
+    </DetailLink>
   );
 });
 
 const s = StyleSheet.create({
-  feat: { marginHorizontal: 16, marginBottom: 14, borderRadius: 24, overflow: "hidden", shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  feat: { marginHorizontal: 16, marginBottom: 14, borderRadius: 24, borderCurve: "continuous", overflow: "hidden", shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
   // Width set outright: margin plus aspectRatio alone left the photo about 22 dp short of the card on the right.
-  featImg: { width: "100%", borderRadius: 22, aspectRatio: 16 / 11 },
+  featImg: { width: "100%", borderRadius: 22, borderCurve: "continuous", aspectRatio: 16 / 11 },
   featTop: { position: "absolute", top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   glassTag: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderWidth: 1 },
   metaRow: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", columnGap: 10, marginTop: 6 },
   save: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  tileImg: { width: "100%", aspectRatio: 1, borderRadius: 22 },
-  price: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1 },
+  tileImg: { width: "100%", aspectRatio: 1, borderRadius: 22 , borderCurve: "continuous"},
+  price: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderCurve: "continuous", borderWidth: 1 },
 });
