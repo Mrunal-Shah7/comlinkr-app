@@ -3,7 +3,16 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-08 (latest) - on GitHub; signature pad walked and fixed
+## 2026-11-08 (latest) - last Expo review checks
+
+- Walked "Type instead" on the signature pad (pass). `ListingCard` turned out to be rendered nowhere; it and
+  `MemoListingCard` are deleted (`chore/remove-unused-listingcard`). The news skeleton pulse could not be seen
+  (below the fold for about a second; adb screen recording refused on the OnePlus). Third section of
+  [the run log](device-runs/2026-11-08-expo-review.md).
+- Still not checked anywhere: pinch-to-zoom (needs two fingers), iOS, a release build. ESLint does not run.
+- Metro stopped; backend left running as found.
+
+## 2026-11-08 (later) - on GitHub; signature pad walked and fixed
 
 - The repository is on GitHub (`Mrunal-Shah7/comlinkr-app`, public). `feature/design-d` went into `main` through
   pull request 1 and the Expo skills (`.claude/skills/`, `skills-lock.json`) through pull request 2. No deploy runs

@@ -37,7 +37,7 @@ import { type Listing, propertyFilterLabelToApi, toUiListing, FILTERS } from "..
 import { type Roommate, type AvailableRoom, RM_DEFAULT_PREFS, toUiRoommate, toUiAvailableRoom, buildCurrentUserForMatch, computeMatch, ROOMMATE_FILTERS, RM_SLEEP_OPTIONS, RM_CLEAN_OPTIONS, RM_NOISE_OPTIONS, RM_GUEST_OPTIONS } from "../../../src/features/housing/roommateModel";
 import { s } from "../../../src/features/housing/styles/housingScreen.styles";
 import { SafeRentingGuide } from "../../../src/features/housing/components/SafeRentingGuide";
-import { MemoListingCard, MemoRoommateCard } from "../../../src/features/housing/components/MemoRows";
+import { MemoRoommateCard } from "../../../src/features/housing/components/MemoRows";
 import { ar } from "../../../src/features/housing/styles/availableRoom.styles";
 import { AvailableRoomCard } from "../../../src/features/housing/components/AvailableRoomCard";
 import { PropertyDetailModal } from "../../../src/features/housing/components/PropertyDetailModal";
@@ -884,7 +884,7 @@ export default function HousingScreen() {
     return list;
   }, [search, rmFilter, roommates, user]);
 
-  // ── Stable row handlers (keep MemoListingCard / MemoRoommateCard from re-rendering) ──
+  // ── Stable row handlers (keep MemoRoommateCard from re-rendering) ──
   const onToggleListingSave = useStableCallback((id: string) => void toggleSave(id));
   const openListingImages = useStableCallback((images: string[], idx: number) => {
     setFullscreenImages(images);
