@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { tabBarClearance } from '../../../src/shared/navigation/DTabBar';
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag, VoteButton } from '../../../src/shared/d';
 import { DSheet } from '../../../src/shared/d/Sheet';
@@ -510,7 +509,7 @@ export default function CommunityScreen() {
   const isBlocked = useBlockStore((s) => s.isBlocked);
   const [filter, setFilter] = useState<string | null>(null);
   const [questions, setQuestions] = useState<UIQuestion[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not an empty state) when it peeks in during a tab swipe.
+  // Starts true so a tab that hasn't fetched yet shows skeletons (not an empty state) the first time the tab opens.
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -1001,7 +1000,7 @@ export default function CommunityScreen() {
         onScroll={onCommunityScroll}
         scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={

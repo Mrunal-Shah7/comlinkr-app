@@ -7,7 +7,6 @@ import { ExploreBento } from "../../../src/features/explore/components/ExploreBe
 import { Chip, EmptyState, Segmented, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
 import { revealIn } from "../../../src/shared/motion/presets";
-import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { runAfterTransition } from "../../../src/utils/afterTransition";
@@ -1863,7 +1862,7 @@ export default function FeedScreen() {
         onScroll={onExploreScroll}
         scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={[s.content, { paddingBottom: tabBarClearance(exploreInsets.bottom) }]}
+        contentContainerStyle={[s.content, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.brand.blue} />}
         data={feedRows}

@@ -1,5 +1,4 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
 import { Chip, Segmented, SoftButton } from "../../../src/shared/d";
@@ -99,7 +98,7 @@ export default function HousingScreen() {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [listings, setListings] = useState<Listing[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No listings") when it peeks in during a tab swipe.
+  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No listings") the first time the tab opens.
   const [listingsLoading, setListingsLoading] = useState(true);
   const [listingsError, setListingsError] = useState(false);
   const [listingsHasMore, setListingsHasMore] = useState(false);
@@ -985,7 +984,7 @@ export default function HousingScreen() {
         onScroll={onHousingScroll}
         scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
