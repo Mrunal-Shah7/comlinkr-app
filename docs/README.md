@@ -103,6 +103,8 @@ Each gets a plan in `plan/` when it is picked up.
 ## Plans (`plan/`)
 
 - [01. Build design D](plan/01-design-d.md) (TR-005): Building, phase 1 (look and motion).
+- [02. Native tabs, screen transitions and controls](plan/02-native-navigation.md) (TR-012): built; replaces plan 01's tab
+  pager, floating tab bar, zoom transitions and custom controls.
 
 ## Reviews (`review/`)
 
@@ -120,6 +122,9 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [Native navigation](build/2026-11-09-native-navigation.md) (TR-012, plan 02): `NativeTabs` with a Post
+  trigger for the compose sheet, the native stack, `@expo/ui` switches, segmented control and bottom sheet. Tab swipe,
+  zoom transitions and tab long-press are gone. Walked on Android; iOS not checked.
 - 2026-11-08: [Expo skills audit](build/2026-11-08-expo-skills-audit.md) (TR-011): every rule of the installed Expo
   skills checked; one lock file, SDK 57 patch bumps, shared values on `.get()`/`.set()`, `expo-image` and
   `expo-status-bar` everywhere, 120 fps key for iOS. Reported: `Dimensions.get`, `Platform.OS`, forms without

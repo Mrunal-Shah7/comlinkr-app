@@ -1,6 +1,6 @@
 # 02. Native tabs, native screen transitions and native controls
 
-**Status: building (2026-11-09) on `feature/native-navigation`.** Owner, 2026-11-09: "implement the changes even if
+**Status: Building (built 2026-11-09) on `feature/native-navigation`; Android walked, iOS not checked.** [Build note](../build/2026-11-09-native-navigation.md). Owner, 2026-11-09: "implement the changes even if
 they deviate from the original design D". Triage [TR-012](../triage.md). Follows the
 [Expo skills audit](../build/2026-11-08-expo-skills-audit.md), which listed these as design D deviations.
 Supersedes the navigation part of [plan 01](01-design-d.md) (phase 1, item 3) and its `Segmented`, `Sheet` and

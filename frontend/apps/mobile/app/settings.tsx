@@ -1,3 +1,4 @@
+import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
@@ -6,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   TouchableOpacity,
-  Switch,
   StyleSheet,
   Alert,
   TextInput,
@@ -195,7 +195,7 @@ function ToggleRow({
         <Text style={[TYPE.body, { color: tc.textPrimary }]} numberOfLines={1}>{title}</Text>
         {desc ? <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{desc}</Text> : null}
       </View>
-      <Switch value={enabled} onValueChange={onToggle} disabled={disabled} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor="#FFF" accessibilityLabel={title} />
+      <Switch value={enabled} onValueChange={onToggle} disabled={disabled} accessibilityLabel={title} />
     </View>
   );
 }

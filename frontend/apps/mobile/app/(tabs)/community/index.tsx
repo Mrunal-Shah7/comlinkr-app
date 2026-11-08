@@ -1201,7 +1201,7 @@ export default function CommunityScreen() {
       </KeyboardAvoidingView>
 
       {/* Ask a question (design D sheet) */}
-      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours" grow>
+      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
             <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Your question</Text>

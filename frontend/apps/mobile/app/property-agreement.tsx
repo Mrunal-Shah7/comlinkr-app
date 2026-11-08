@@ -8,8 +8,9 @@
  * Parts slide in from the side they come from. Route params: propertyTitle, propertyAddress, price, deposit,
  * landlordName, listingId, country ("UK" | "US"), dealType ("rent" | "buy").
  */
+import { Switch } from "../src/shared/ui/Switch";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { View, Text, TextInput, Switch, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ScrollView } from "react-native";
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ScrollView } from "react-native";
 import Animated, { FadeInLeft, FadeInRight, FadeOutLeft, FadeOutRight, ZoomIn, useAnimatedStyle, useReducedMotion, withSpring } from "react-native-reanimated";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -590,9 +591,9 @@ export default function PropertyAgreementScreen() {
               </Reveal>
               {moreOpen ? (
                 <Animated.View entering={reduce ? undefined : FadeInRight.duration(260)} style={{ marginTop: 12 }}>
-                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Pets</Text><Switch value={hasPets} onValueChange={setHasPets} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" /></View>
+                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Pets</Text><Switch value={hasPets} onValueChange={setHasPets} /></View>
                   {hasPets ? <Input label="About your pets" value={petDetails} onChangeText={setPetDetails} placeholder="For example, one small dog" /> : null}
-                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I smoke</Text><Switch value={smokes} onValueChange={setSmokes} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" /></View>
+                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I smoke</Text><Switch value={smokes} onValueChange={setSmokes} /></View>
                   <FieldLabel>Have you seen the place?</FieldLabel>
                   <View style={[st.chips, { marginBottom: 14 }]}>
                     {VIEWING.map((v) => <Chip key={v.k} label={v.l} on={viewingStatus === v.k} onPress={() => setViewingStatus(viewingStatus === v.k ? "" : v.k)} />)}
@@ -660,7 +661,7 @@ export default function PropertyAgreementScreen() {
               </Reveal>
               <Reveal i={5}>
                 <View style={[st.switchRow, { paddingHorizontal: 16, marginTop: 12 }]}>
-                  <Switch value={agreementRead} onValueChange={setAgreementRead} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel="I have read the full agreement" />
+                  <Switch value={agreementRead} onValueChange={setAgreementRead} accessibilityLabel="I have read the full agreement" />
                   <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I have read the full agreement</Text>
                 </View>
                 <Text style={[TYPE.small, { color: tc.textTertiary, paddingHorizontal: 16, marginTop: 6 }]}>

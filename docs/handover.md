@@ -3,7 +3,16 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-08 (latest) - Expo skills audit (TR-011)
+## 2026-11-09 (latest) - native navigation and controls (TR-012)
+
+- Owner: replace design D's tab pager, floating tab bar, zoom transitions and custom controls with the native ones.
+  [Plan 02](plan/02-native-navigation.md), [build note](build/2026-11-09-native-navigation.md), walked on the
+  OnePlus ([run log](device-runs/2026-11-09-native-navigation.md)).
+- New rule in `CLAUDE.md`: no `GestureHandlerRootView` or gesture-handler gestures inside the native sheet (`DSheet`).
+- Not checked: iOS, a release build, the other sheets one by one, the story viewer animation.
+- Servers: backend and Metro started this session; Metro stopped at the end, backend left running.
+
+## 2026-11-08 (earlier) - Expo skills audit (TR-011)
 
 - GitHub default branch switched to `main` (owner asked; done in the browser).
 - Every rule of the installed Expo skills checked: [build note](build/2026-11-08-expo-skills-audit.md). Fixed on

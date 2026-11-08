@@ -60,15 +60,16 @@ comlinkr-app/                one git repository
 - **UI kit**: `src/shared/ui` — `Button`, `Input`, `ListState`, `Toast` (`showToast`), `Dialogs` (`appAlert`).
 - **Animation/gestures**: `react-native-reanimated` 4 + `react-native-gesture-handler` 2. The root is
   wrapped in `GestureHandlerRootView` (painted with `pageBg`; a transparent root lets the white Android
-  window show during stack pops). Shared gesture components: `src/shared/navigation/SwipeTabs.tsx`
-  (the bottom-tab navigator — tabs in a horizontal pager strip), `EdgeSwipeBack` (Stack `screenLayout` —
-  Android edge swipe-back), `DismissibleSheet`/`SheetDragArea` (pull-down-to-close for modals; also
-  supplies the in-Modal `GestureHandlerRootView`), `Skeleton`. Horizontal scrollers inside tab screens
-  must be gesture-handler `ScrollView`/`FlatList`, or the tab swipe steals their drags. Older screens
-  still use RN `Animated` internally.
+  window show during stack pops). Navigation is native since plan 02: `NativeTabs`
+  for the tab bar, expo-router's `Stack` (native stack) for screens. Shared gesture components:
+  `DismissibleSheet`/`SheetDragArea` (pull-down-to-close for modals; also
+  supplies the in-Modal `GestureHandlerRootView`), `Skeleton`. Controls come from `@expo/ui` (plan 02): `src/shared/ui/Switch.tsx`,
+  `src/shared/d/Segmented.{ios,android}.tsx`, and `DSheet` (`src/shared/d/Sheet.tsx`) on the native `BottomSheet`.
+  Gesture-handler gestures do not run inside that sheet (it has no gesture-handler root, and adding
+  `GestureHandlerRootView` there crashes): use `Pressable` or the React Native responder props.
   See [build/2026-10-29-ui-navigation-gestures-theme.md](../build/2026-10-29-ui-navigation-gestures-theme.md).
-- **Tabs**: all four stay mounted; tabs two or more positions from the focused one are frozen (no
-  re-renders), direct neighbours stay live so they can be drawn while swiping.
+- **Tabs**: `NativeTabs` (react-native-screens) keeps each tab's screen once it has been opened; tabs do not
+  slide (plan 02).
   Defer post-focus work with `runAfterTransition()` (`src/utils/afterTransition.ts`), not the deprecated
   `InteractionManager`.
 - **Native modules not available in Expo Go**: `@react-native-firebase/*`, Google Sign-In. The app is
@@ -80,7 +81,7 @@ app/_layout.tsx            Root Stack (slide_from_right), QueryClientProvider, T
                            auth/theme hydration, push registration, chat socket
 app/index.tsx              entry redirect (auth → tabs / onboarding / login)
 app/(auth)/                login, signup, forgot-password, onboarding
-app/(tabs)/_layout.tsx     Bottom tabs (SwipeTabs): feed (Explore), housing (Listings), food, community
+app/(tabs)/_layout.tsx     Bottom tabs (NativeTabs): feed (Explore), housing (Listings), post (opens the compose sheet), food, community
 app/create-post.tsx        universal composer (news, listing, shared_space, restaurant, event, story…)
 app/chat.tsx               conversations + thread
 app/profile.tsx, public-profile.tsx, edit-profile.tsx, settings.tsx, notifications.tsx

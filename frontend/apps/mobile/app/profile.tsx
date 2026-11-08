@@ -1,3 +1,4 @@
+import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -48,7 +49,6 @@ import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { TYPE, display } from "../src/theme/d";
 import { Chip, GradientButton, GradientFill, PressableScale, Reveal, SoftButton, TileIn } from "../src/shared/d";
 import { DSheet } from "../src/shared/d/Sheet";
-import { Switch } from "react-native";
 import { DPage, DRow, goBackOr } from "../src/shared/d/Page";
 
 // ─── Country Flags & Dial Codes ─────────────────────────
@@ -856,7 +856,7 @@ export default function ProfileScreen() {
                   <View key={item.key} style={[{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: tc.borderLight }]}>
                     <Ionicons name={item.icon} size={19} color={tc.textSecondary} />
                     <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>{item.label}</Text>
-                    <Switch value={item.val} onValueChange={item.set} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel={item.label} />
+                    <Switch value={item.val} onValueChange={item.set} accessibilityLabel={item.label} />
                   </View>
                 ))}
               </View>
