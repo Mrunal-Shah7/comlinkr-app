@@ -130,8 +130,8 @@ export interface CreateRestaurantPayload {
 
 export interface ReviewPayload {
   rating: number;
-  /** Nest `CreateReviewDto.content` */
-  content: string;
+  /** Nest `CreateReviewDto.content`; optional, a rating alone is a review. */
+  content?: string;
 }
 
 // ─── API calls ────────────────────────────────────────────────────────────────

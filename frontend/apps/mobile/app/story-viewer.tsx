@@ -10,8 +10,6 @@ import {
   Pressable,
   StyleSheet,
   useWindowDimensions,
-  PanResponder,
-  Animated,
   ActivityIndicator,
   StatusBar,
   Modal,
@@ -21,6 +19,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { createDTypeStyles } from "../src/theme/themedStyles";
 import { Image } from "expo-image"; // SPRINT-31:
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, Stack, useLocalSearchParams } from "expo-router";
@@ -29,6 +28,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEventListener } from "expo";
 import * as Haptics from "expo-haptics";
+import Reanimated, { Keyframe, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { scheduleOnRN } from "react-native-worklets";
+import { PersonAvatar } from "../src/shared/d";
+
+/** `.story .ph`: each photo cross-fades in with a slow zoom (scale 1.04 to 1, 380 ms). */
+const PHOTO_IN = new Keyframe({ 0: { opacity: 0, transform: [{ scale: 1.04 }] }, 100: { opacity: 1, transform: [{ scale: 1 }] } }).duration(380);
 import {
   getActiveStories,
   getStory,
@@ -61,11 +67,12 @@ function mediaUri(url: string | null | undefined): string {
 
 function categoryUi(cat: string): { label: string; color: string; bg: string } {
   const c = (cat || "").toUpperCase();
-  if (c === "EVENTS")     return { label: "Events",     color: "#FF7B00", bg: "rgba(255,123,0,0.2)" };
-  if (c === "FOOD")       return { label: "Food",       color: "#26B324", bg: "rgba(38,179,36,0.2)" };
-  if (c === "HOUSING")    return { label: "Housing",    color: "#0076EB", bg: "rgba(0,118,235,0.2)" };
+  if (c === "EVENTS")     return { label: "Events",     color: "#257A86", bg: "rgba(37,122,134,0.2)" };
+  if (c === "FOOD")       return { label: "Food",       color: "#30855B", bg: "rgba(48,133,91,0.2)" };
+  if (c === "HOUSING")    return { label: "Housing",    color: "#1A6BAE", bg: "rgba(26,107,174,0.2)" };
   if (c === "CULTURE")    return { label: "Culture",    color: "#A78BFA", bg: "rgba(167,139,250,0.2)" };
   if (c === "LOCAL_NEWS") return { label: "Local News", color: "#F87171", bg: "rgba(248,113,113,0.2)" };
+  if (c === "GENERAL" || !c) return { label: "Story", color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
   return { label: cat, color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
 }
 
@@ -184,12 +191,13 @@ function StoryVideoLayer({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createDTypeStyles({
   videoBufferOverlay: { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.15)" },
 });
 
 export default function StoryViewerScreen() {
   const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
   const { width: W, height: H } = useWindowDimensions();
   const { tc, isDark } = useTheme();
   const user = useAuthStore((s) => s.user);
@@ -225,9 +233,9 @@ export default function StoryViewerScreen() {
   // FIX 2: Added missing likedIds state
   const [likedIds, setLikedIds]                 = useState<Set<string>>(new Set());
 
-  const authorOpacity = useRef(new Animated.Value(1)).current;
+  const authorOpacity = useSharedValue(1);
   const prevAuthorRef = useRef(startAuthor);
-  const slideY        = useRef(new Animated.Value(0)).current;
+  const slideY        = useSharedValue(0);
 
   const closeViewer = useCallback(() => {
     if (router.canGoBack()) {
@@ -286,8 +294,8 @@ export default function StoryViewerScreen() {
   useEffect(() => {
     if (prevAuthorRef.current !== currentAuthorIndex) {
       prevAuthorRef.current = currentAuthorIndex;
-      authorOpacity.setValue(0);
-      Animated.timing(authorOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+      authorOpacity.set(0);
+      authorOpacity.set(withTiming(1, { duration: 220 }));
     }
   }, [currentAuthorIndex, authorOpacity]);
 
@@ -439,22 +447,27 @@ export default function StoryViewerScreen() {
     return () => clearInterval(id);
   }, [advanceStory, commentsOpen, currentStory?.id, isPhoto, isPaused, photoDurationSec]);
 
+  // Pull down to close: follows the finger on the UI thread; a pull past 80 dp or a downward flick closes.
+  const dismissFromPull = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    closeViewer();
+  }, [closeViewer]);
+  const closeDistance = rs(80);
   const pan = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) => g.dy > rs(8) && Math.abs(g.dy) > Math.abs(g.dx),
-        onPanResponderMove: (_, g) => { if (g.dy > 0) slideY.setValue(g.dy); },
-        onPanResponderRelease: (_, g) => {
-          if (g.dy > rs(80)) {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            closeViewer();
-          } else {
-            Animated.spring(slideY, { toValue: 0, useNativeDriver: true, friction: 8 }).start();
-          }
-        },
-      }),
-    [slideY, closeViewer],
+      Gesture.Pan()
+        .enabled(!commentsOpen)
+        .activeOffsetY(rs(8))
+        .failOffsetX([-rs(12), rs(12)])
+        .onUpdate((e) => { slideY.set(Math.max(0, e.translationY)); })
+        .onEnd((e) => {
+          if (e.translationY > closeDistance || e.velocityY > 800) scheduleOnRN(dismissFromPull);
+          else slideY.set(withSpring(0, { duration: 400, dampingRatio: 0.8, velocity: e.velocityY }));
+        }),
+    [slideY, commentsOpen, closeDistance, dismissFromPull],
   );
+  const rootSlide = useAnimatedStyle(() => ({ transform: [{ translateY: slideY.get() }] }));
+  const headerFade = useAnimatedStyle(() => ({ opacity: authorOpacity.get() }));
 
   const promptDeleteStory = useCallback(() => {
     if (!currentStory || !uid || currentStory.author.id !== uid) return;
@@ -544,20 +557,23 @@ export default function StoryViewerScreen() {
   const isOwner = uid && currentStory.author.id === uid;
 
   return (
-    <Animated.View style={[st.root, { width: W, height: H, transform: [{ translateY: slideY }] }]} {...pan.panHandlers}>
+    <GestureDetector gesture={pan}>
+    <Reanimated.View style={[st.root, { width: W, height: H }, rootSlide]}>
       <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
       <StatusBar barStyle="light-content" hidden />
 
       {/* ── Media layer ── */}
       {isPhoto && imgUrl ? (
-        <Image
-          source={{ uri: imgUrl }}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          cachePolicy="disk"
-          transition={0}
-          onError={() => { setMediaError(true); advanceStory(); }}
-        />
+        <Reanimated.View key={currentStory.id} entering={reduceMotion ? undefined : PHOTO_IN} style={StyleSheet.absoluteFill}>
+          <Image
+            source={{ uri: imgUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={0}
+            onError={() => { setMediaError(true); advanceStory(); }}
+          />
+        </Reanimated.View>
       ) : isVideo && imgUrl ? (
         <StoryVideoLayer
           key={currentStory.id}
@@ -570,20 +586,20 @@ export default function StoryViewerScreen() {
         />
       ) : (
         <LinearGradient
-          colors={["#0C1A2E", "#0076EB", "#001A40"]}
+          colors={["#0C1A2E", "#1A6BAE", "#001A40"]}
           style={StyleSheet.absoluteFill}
         />
       )}
 
       {/* ── Gradient overlays ── */}
       <LinearGradient
-        colors={["rgba(0,0,0,0.72)", "rgba(0,0,0,0.3)", "transparent"]}
-        style={[StyleSheet.absoluteFill, { height: H * 0.38 }]}
+        colors={["rgba(0,0,0,0.28)", "transparent"]}
+        style={[StyleSheet.absoluteFill, { height: insets.top + 90 }]}
         pointerEvents="none"
       />
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.88)"]}
-        style={[StyleSheet.absoluteFill, { top: H * 0.42 }]}
+        colors={["transparent", "rgba(0,0,0,0.7)"]}
+        style={[StyleSheet.absoluteFill, { top: H * 0.55 }]}
         pointerEvents="none"
       />
 
@@ -628,7 +644,7 @@ export default function StoryViewerScreen() {
       </View>
 
       {/* ── Header: author + controls ── */}
-      <Animated.View style={[st.header, { paddingTop: insets.top + rs(28) }, { opacity: authorOpacity }]}>
+      <Reanimated.View style={[st.header, { paddingTop: insets.top + rs(28) }, headerFade]}>
         {/* Author */}
         <View style={st.authorRow}>
           <View style={st.avatarRing}>
@@ -641,14 +657,12 @@ export default function StoryViewerScreen() {
                 transition={200}
               />
             ) : (
-              <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={[st.avatar, st.avatarPh]}>
-                <Text style={st.avatarPhText}>{(currentStory.author.username || "?").slice(0, 2).toUpperCase()}</Text>
-              </LinearGradient>
+              <PersonAvatar name={currentStory.author.username || "?"} size={34} />
             )}
           </View>
           <View style={{ flex: 1 }}>
             <Text style={st.authorName}>{currentStory.author.username}</Text>
-            <Text style={st.authorTime}>{timeAgoShort(currentStory.createdAt)}</Text>
+            <Text style={st.authorTime}>{timeAgoShort(currentStory.createdAt)} · {cat.label}</Text>
           </View>
         </View>
 
@@ -673,25 +687,10 @@ export default function StoryViewerScreen() {
             <Ionicons name="close" size={rs(20)} color="#FFF" />
           </Pressable>
         </View>
-      </Animated.View>
-
-      {/* ── Pause hint ── */}
-      {isPaused && (
-        <View style={st.pauseHint} pointerEvents="none">
-          <View style={st.pauseCircle}>
-            <Ionicons name="pause" size={rs(32)} color="#FFF" />
-          </View>
-        </View>
-      )}
+      </Reanimated.View>
 
       {/* ── Footer ── */}
       <View style={[st.footer, { paddingBottom: insets.bottom + rs(20) }]}>
-        {/* Category pill */}
-        <View style={[st.catPill, { backgroundColor: cat.bg, borderColor: cat.color }]}>
-          <View style={[st.catDot, { backgroundColor: cat.color }]} />
-          <Text style={[st.catPillText, { color: cat.color }]}>{cat.label}</Text>
-        </View>
-
         {/* Title */}
         <Text style={st.footerTitle} numberOfLines={2}>{currentStory.title}</Text>
 
@@ -934,11 +933,12 @@ export default function StoryViewerScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </Animated.View>
+    </Reanimated.View>
+    </GestureDetector>
   );
 }
 
-const st = StyleSheet.create({
+const st = createDTypeStyles({
   root: { flex: 1, backgroundColor: "#000" },
   center: { alignItems: "center", justifyContent: "center" },
 
@@ -956,17 +956,17 @@ const st = StyleSheet.create({
 
   progressRow: {
     position: "absolute",
-    left: rs(12),
-    right: rs(12),
+    left: 10,
+    right: 10,
     flexDirection: "row",
-    gap: rs(4),
+    gap: 4,
     zIndex: 20,
   },
   progressTrack: {
     flex: 1,
-    height: rs(3),
-    borderRadius: rs(2),
-    backgroundColor: "rgba(255,255,255,0.3)",
+    height: 3,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.35)",
     overflow: "hidden",
   },
   progressFill: {
@@ -991,11 +991,9 @@ const st = StyleSheet.create({
   },
   authorRow: { flexDirection: "row", alignItems: "center", gap: rs(10), flex: 1 },
   avatarRing: {
-    width: rs(40),
-    height: rs(40),
-    borderRadius: rs(20),
-    borderWidth: 2,
-    borderColor: "#FFF",
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     overflow: "hidden",
   },
   avatar: { width: "100%", height: "100%" },
@@ -1003,17 +1001,17 @@ const st = StyleSheet.create({
   avatarPhText: { color: "#FFF", fontSize: rs(13), fontWeight: "900" },
   authorName: {
     color: "#FFF",
-    fontWeight: "900",
-    fontSize: rs(14),
+    fontWeight: "600",
+    fontSize: 15,
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
   authorTime: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: rs(11),
-    fontWeight: "600",
-    marginTop: rs(1),
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 12.5,
+    fontWeight: "500",
+    marginTop: 1,
   },
   headerControls: { flexDirection: "row", alignItems: "center", gap: rs(8) },
   headerIconBtn: {
@@ -1027,14 +1025,11 @@ const st = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.18)",
   },
   closeBtn: {
-    width: rs(36),
-    height: rs(36),
-    borderRadius: rs(18),
-    backgroundColor: "rgba(0,0,0,0.55)",
+    width: 40,
+    height: 40,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
   },
 
   pauseHint: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center", zIndex: 8 },
@@ -1072,13 +1067,13 @@ const st = StyleSheet.create({
   catPillText: { fontSize: rs(11), fontWeight: "900", letterSpacing: 0.4 },
   footerTitle: {
     color: "#FFF",
-    fontSize: rs(22),
-    fontWeight: "900",
-    marginBottom: rs(6),
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
-    lineHeight: rs(28),
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 6,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
+    lineHeight: 27,
   },
   footerDetails: {
     color: "rgba(255,255,255,0.88)",

@@ -1,0 +1,129 @@
+// Gradle init script used by build-release-apk.cmd. No app source changes.
+//
+// 1. Every project's build folder, CMake staging folder and the Kotlin data go under CL_BUILD_BASE
+//    (default D:/cl), so build output lands on D:.
+// 2. Native libraries are built from short junction paths under CL_LINK_BASE (default C:/cl/pkg/<library>,
+//    C:/cl/p/...) instead of their pnpm paths under node_modules/.pnpm, which are long enough to break
+//    CMake/ninja on Windows. The junctions take no space but must be on the same drive as node_modules:
+//    codegen computes relative paths between the two, and Windows has none across drives. They are
+//    recreated on every run, so a reinstall with new versions is picked up.
+
+def base = (System.getenv('CL_BUILD_BASE') ?: 'D:/cl').replace('\\', '/')
+def links = (System.getenv('CL_LINK_BASE') ?: 'C:/cl').replace('\\', '/')
+def originalDirs = [:]
+
+def junction = { String link, File target ->
+    def l = new File(link)
+    // rmdir on a junction removes the link only, never the target's files (also clears a dangling one).
+    ['cmd', '/c', 'rmdir', l.absolutePath].execute().waitFor()
+    l.parentFile.mkdirs()
+    def p = ['cmd', '/c', 'mklink', '/J', l.absolutePath, target.absolutePath].execute()
+    p.waitFor()
+    if (p.exitValue() != 0) throw new GradleException("Could not create junction ${l} -> ${target}: ${p.errorStream.text}")
+}
+
+// Build folders are addressed through C:/cl/d, a junction to CL_BUILD_BASE: the files live on D:, but
+// Gradle and codegen see the same drive as the sources (they compute relative paths between them).
+// Created once at the top level, since this script also runs for each included build.
+def out = links + '/d'
+if (!new File(out + '/.').exists()) junction(out, new File(base))
+
+def store = null
+def rn = null
+
+gradle.settingsEvaluated { settings ->
+    // Only the main build (frontend/apps/mobile/android) sets up the aliases.
+    if (!new File(settings.rootDir, 'app/build.gradle').exists()) return
+    def mobile = settings.rootDir.parentFile
+    store = new File(mobile, 'node_modules/.pnpm').canonicalPath.replace('\\', '/')
+    junction(links + '/p', new File(store))
+    def rnReal = new File(mobile, 'node_modules/react-native').toPath().toRealPath().toFile()
+    junction(links + '/pkg/react-native', rnReal)
+    rn = new File(links + '/pkg/react-native')
+
+    def visit
+    visit = { d ->
+        def source = d.projectDir.absolutePath.replace('\\', '/')
+        originalDirs[d.path] = source
+        if (d.parent != null && source.contains('node_modules')) {
+            if (d.name.startsWith('react-native-') && !d.name.startsWith('react-native-firebase') && d.projectDir.name == 'android') {
+                def pkgRoot = d.projectDir.toPath().toRealPath().toFile().parentFile
+                junction(links + '/pkg/' + d.name, pkgRoot)
+                d.projectDir = new File(links + '/pkg/' + d.name + '/android')
+            } else {
+                def real = d.projectDir.toPath().toRealPath().toString().replace('\\', '/')
+                if (real.startsWith(store + '/')) d.projectDir = new File(links + '/p' + real.substring(store.length()))
+            }
+        }
+        d.children.each { visit(it) }
+    }
+    visit(settings.rootProject)
+}
+
+gradle.beforeProject { p ->
+    def isApp = p.path == ':app' && new File(p.rootDir, 'app/build.gradle').exists()
+    // Each subproject keeps the default <project>/build path, which some CMake files hard-code
+    // (Reanimated: ${CMAKE_SOURCE_DIR}/build), but that folder is a junction to D:. Root projects only
+    // hold small files written before this hook runs (autolinking.json), so they stay as they are.
+    if (p.path != ':') {
+        def target = new File(isApp ? out + '/app' : out + '/b/' + p.rootProject.name + p.path.replace(':', '/'))
+        target.mkdirs()
+        def build = new File(p.projectDir, 'build')
+        def attrs = build.exists() ? java.nio.file.Files.readAttributes(build.toPath(), java.nio.file.attribute.BasicFileAttributes, java.nio.file.LinkOption.NOFOLLOW_LINKS) : null
+        def isLink = attrs != null && (attrs.isOther() || attrs.isSymbolicLink())
+        if (attrs != null && !isLink) {
+            // A real folder (Expo writes a file here while settings are read): move its contents to D:.
+            p.copy { from build; into target }
+            def real = build.toPath().toRealPath().toString()
+            ['cmd', '/c', 'rmdir', '/s', '/q', '\\\\?\\' + real].execute().waitFor()
+            if (build.exists()) throw new GradleException("Could not remove ${real} to link it to ${target}.")
+        }
+        if (!isLink || build.toPath().toRealPath() != target.toPath().toRealPath()) junction(build.absolutePath, target)
+    }
+    if (isApp && rn != null) p.ext.REACT_NATIVE_NODE_MODULES_DIR = rn.absolutePath
+    p.plugins.withId('com.android.library') {
+        p.extensions.getByName('android').externalNativeBuild.cmake.buildStagingDirectory = new File(out + '/c/' + Integer.toHexString(p.path.hashCode()))
+    }
+    p.plugins.withId('com.android.application') {
+        p.extensions.getByName('android').externalNativeBuild.cmake.buildStagingDirectory = new File(out + '/c/app')
+    }
+    p.afterEvaluate {
+        if (rn != null && p.plugins.hasPlugin('com.facebook.react')) p.extensions.getByName('react').reactNativeDir.set(rn)
+    }
+}
+
+gradle.projectsEvaluated {
+    def app = gradle.rootProject.findProject(':app')
+    if (app == null || rn == null) return
+    // Public Expo variables are compiled into the JavaScript bundle: rebuild it on every run and clear
+    // Metro's transform cache, so a changed .env always reaches the APK.
+    app.extensions.getByName('react').extraPackagerArgs.add('--reset-cache')
+    app.tasks.matching { it.name == 'createBundleReleaseJsAndAssets' }.configureEach {
+        inputs.file(new File(app.rootDir.parentFile, '.env')).withPropertyName('mobileEnvironmentFile')
+        inputs.property('buildApiBaseUrl', System.getenv('EXPO_PUBLIC_API_BASE_URL') ?: '')
+        outputs.upToDateWhen { false }
+    }
+    // The generated autolinking CMake file names the original (long) library paths; point it at the
+    // short aliases and the relocated build folders.
+    def shorten = app.tasks.register('shortenLocalAutolinkingPaths') {
+        dependsOn app.tasks.named('generateAutolinkingNewArchitectureFiles')
+        doLast {
+            def generated = new File(app.layout.buildDirectory.get().asFile, 'generated/autolinking/src/main/jni/Android-autolinking.cmake')
+            if (!generated.exists()) return
+            def content = generated.getText('UTF-8')
+            gradle.rootProject.subprojects.each { lib ->
+                if (lib == app) return
+                def alias = lib.projectDir.absolutePath.replace('\\', '/')
+                def original = originalDirs[lib.path]
+                def output = lib.layout.buildDirectory.get().asFile.absolutePath.replace('\\', '/')
+                if (original != null) {
+                    content = content.replace(original + '/build/generated/', output + '/generated/')
+                    content = content.replace(original + '/', alias + '/')
+                }
+                content = content.replace(alias + '/build/generated/', output + '/generated/')
+            }
+            generated.setText(content, 'UTF-8')
+        }
+    }
+    app.tasks.matching { it.name.startsWith('configureCMake') }.configureEach { dependsOn shorten }
+}

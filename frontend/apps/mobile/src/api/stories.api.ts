@@ -5,7 +5,7 @@
 import { api, postFormData } from "./client";
 
 export type StoryMediaTypeApi = "REEL" | "PHOTO" | "VIDEO";
-export type StoryCategoryApi = "EVENTS" | "FOOD" | "HOUSING" | "CULTURE" | "LOCAL_NEWS";
+export type StoryCategoryApi = "EVENTS" | "FOOD" | "HOUSING" | "CULTURE" | "LOCAL_NEWS" | "GENERAL";
 
 /** Shape returned by Nest `StoriesService.formatStory` (list + create + view). */
 export interface ApiStory {
@@ -70,9 +70,11 @@ export function buildStoryAuthorGroups(
 }
 
 export interface CreateStoryPayload {
-  title: string;
+  /** Optional (design D: photo or video first). */
+  title?: string;
   mediaType: StoryMediaTypeApi;
-  category: StoryCategoryApi;
+  /** Optional; the server stores GENERAL. */
+  category?: StoryCategoryApi;
   details?: string;
   hashtags?: string[];
   durationSeconds?: number;
@@ -109,9 +111,9 @@ export function toggleStorySave(id: string): Promise<{ saved: boolean; isSaved: 
 
 export async function createStory(payload: CreateStoryPayload): Promise<CreatedStory> {
   const fd = new FormData();
-  fd.append("title", payload.title);
+  if (payload.title) fd.append("title", payload.title);
   fd.append("mediaType", payload.mediaType);
-  fd.append("category", payload.category);
+  if (payload.category) fd.append("category", payload.category);
   if (payload.details) fd.append("details", payload.details);
   if (payload.hashtags?.length) {
     fd.append("hashtags", JSON.stringify(payload.hashtags));

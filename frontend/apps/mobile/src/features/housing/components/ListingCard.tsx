@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, Animated, Share, Platform } from "react-native";
+import { View, Text, Pressable, Share, Platform } from "react-native";
+import Reanimated, { interpolate, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming } from "react-native-reanimated";
+import { SPRING } from "../../../shared/motion/presets";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,21 +34,23 @@ export function ListingCard({
 }) {
   const { tc, isDark } = useTheme();
   const { requireAuth } = useRequireAuth();
-  const bookmarkScale = useRef(new Animated.Value(1)).current;
+  const bookmarkScale = useSharedValue(1);
+  const bookmarkStyle = useAnimatedStyle(() => ({ transform: [{ scale: bookmarkScale.get() }] }));
   const [currentImg, setCurrentImg] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const handleSave = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Animated.sequence([
-      Animated.spring(bookmarkScale, { toValue: 1.35, useNativeDriver: true, speed: 300, bounciness: 18 }),
-      Animated.spring(bookmarkScale, { toValue: 1, useNativeDriver: true, speed: 200, bounciness: 6 }),
-    ]).start();
+    bookmarkScale.set(withSequence(withTiming(1.25, { duration: 110 }), withSpring(1, SPRING.press)));
     onToggleSave();
   };
 
   // Double-tap the photo to save (single tap still opens the fullscreen viewer).
-  const heartAnim = useRef(new Animated.Value(0)).current;
+  const heartAnim = useSharedValue(0);
+  const burstStyle = useAnimatedStyle(() => ({
+    opacity: heartAnim.get(),
+    transform: [{ scale: interpolate(heartAnim.get(), [0, 1], [0.5, 1]) }],
+  }));
   const lastImageTapRef = useRef(0);
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current); }, []);
@@ -57,12 +61,8 @@ export function ListingCard({
       if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
       if (saved) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       else handleSave();
-      heartAnim.setValue(0);
-      Animated.sequence([
-        Animated.spring(heartAnim, { toValue: 1, useNativeDriver: true, speed: 24, bounciness: 12 }),
-        Animated.delay(380),
-        Animated.timing(heartAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-      ]).start();
+      heartAnim.set(0);
+      heartAnim.set(withSequence(withSpring(1, SPRING.press), withDelay(380, withTiming(0, { duration: 220 }))));
       return;
     }
     lastImageTapRef.current = now;
@@ -135,7 +135,7 @@ ${link}`,
           pointerEvents="none"
         >
           <View style={s.scrimBadgeRow}>
-            <View style={[s.typePill, { backgroundColor: "rgba(0,118,235,0.88)" }]}>
+            <View style={[s.typePill, { backgroundColor: "rgba(26,107,174,0.88)" }]}>
               <Text style={s.typePillText}>{listing.type.toUpperCase()}</Text>
             </View>
             {listing.available === "Immediate" && (
@@ -188,27 +188,21 @@ ${link}`,
             </View>
           )}
           <Pressable onPress={handleSave} hitSlop={10}>
-            <Animated.View style={[s.saveBtn, { transform: [{ scale: bookmarkScale }] }]}>
+            <Reanimated.View style={[s.saveBtn, bookmarkStyle]}>
               <Ionicons
                 name={saved ? "bookmark" : "bookmark-outline"}
                 size={19}
-                color={saved ? "#FF7B00" : "#FFF"}
+                color={saved ? "#257A86" : "#FFF"}
               />
-            </Animated.View>
+            </Reanimated.View>
           </Pressable>
         </View>
       </View>
 
       {/* Double-tap save burst */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          s.saveBurst,
-          { opacity: heartAnim, transform: [{ scale: heartAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }] },
-        ]}
-      >
+      <Reanimated.View pointerEvents="none" style={[s.saveBurst, burstStyle]}>
         <Ionicons name="bookmark" size={64} color="#FFFFFF" />
-      </Animated.View>
+      </Reanimated.View>
 
       {/* ── CARD BODY — Pressable opens detail modal; long-press for quick actions ── */}
       <Pressable
@@ -301,8 +295,8 @@ ${link}`,
         <View style={[s.statsGrid, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
           {[
             { icon: "bed-outline" as const,      val: listing.beds === 0 ? "Studio" : String(listing.beds), lbl: "Beds",  bg: "#EEF5FF", color: Colors.brand.blue },
-            { icon: "water-outline" as const,     val: String(listing.baths),                                lbl: "Baths", bg: "#EAFBE9", color: Colors.brand.green },
-            { icon: "resize-outline" as const,    val: listing.sqft,                                         lbl: "Sqft",  bg: "#FFF3E6", color: "#FF7B00" },
+            { icon: "water-outline" as const,     val: String(listing.baths),                                lbl: "Baths", bg: "#E3F1EA", color: Colors.brand.green },
+            { icon: "resize-outline" as const,    val: listing.sqft,                                         lbl: "Sqft",  bg: "#E2F0F1", color: "#257A86" },
             { icon: "business-outline" as const,  val: listing.floor === "Ground Floor" ? "G" : listing.floor.split(" ")[0],                         lbl: "Floor", bg: Colors.brand.blueLight, color: Colors.brand.blue },
           ].map((st, idx) => (
             <View key={st.lbl} style={[s.statCell, idx < 3 && s.statCellBorder, idx < 3 && isDark && { borderRightColor: tc.borderLight }]}>

@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsString,
-  IsNotEmpty,
   MaxLength,
   IsEnum,
   IsOptional,
@@ -46,19 +45,22 @@ function parseHashtagsInput(value: unknown): string[] | undefined {
 }
 
 export class CreateStoryDto {
-  @ApiProperty({ maxLength: 120 })
+  /** Optional (design D: photo or video first). Stored as an empty string when left out. */
+  @ApiPropertyOptional({ maxLength: 120 })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(120)
-  title: string;
+  title?: string;
 
   @ApiProperty({ enum: StoryMediaType })
   @IsEnum(StoryMediaType)
   mediaType: StoryMediaType;
 
-  @ApiProperty({ enum: StoryCategory })
+  /** Optional; GENERAL when left out. */
+  @ApiPropertyOptional({ enum: StoryCategory })
+  @IsOptional()
   @IsEnum(StoryCategory)
-  category: StoryCategory;
+  category?: StoryCategory;
 
   @ApiPropertyOptional({ maxLength: 500 })
   @IsOptional()

@@ -8,7 +8,9 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 2,
       gcTime: 1000 * 60 * 10,
       retry: (failureCount, error: any) => {
-        if (error?.statusCode >= 400 && error?.statusCode < 500) return false;
+        // ApiError and HttpApiError carry the HTTP code as `status`; `statusCode` is the raw backend body's name.
+        const status = error?.status ?? error?.statusCode;
+        if (status >= 400 && status < 500) return false;
         return failureCount < 2;
       },
       refetchOnWindowFocus: false,

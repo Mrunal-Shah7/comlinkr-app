@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, TextInput, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import { DSheet } from "../src/shared/d/Sheet";
+import { TYPE } from "../src/theme/d";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -63,31 +65,20 @@ export function GuestCityPickerModal({
     ? ALL_CITY_OPTIONS.filter((opt) => opt.label.toLowerCase().includes(search.trim().toLowerCase()))
     : ALL_CITY_OPTIONS;
 
+  const current = useGuestLocationStore((s) => s.city);
+  // Design D `city`: "Your city" in the D sheet; search, then rows with a pin; the current city has a check.
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={styles.modalSafe} edges={["top", "bottom"]}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <View style={styles.modalHeader}>
-          <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close city picker">
-            <Ionicons name="close" size={24} color={tcTheme.textPrimary} />
-          </Pressable>
-          <Text style={styles.modalTitle}>Choose your city</Text>
-          <View style={{ width: 24 }} />
-        </View>
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color={Colors.text.tertiary} />
+    <DSheet visible={visible} onClose={onClose} title="Your city" full>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 18, marginBottom: 12, height: 50, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tcTheme.inputBg }}>
+          <Ionicons name="search" size={18} color={tcTheme.textTertiary} />
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search for your city"
-            placeholderTextColor={Colors.text.tertiary}
+            style={[TYPE.body, { flex: 1, color: tcTheme.textPrimary, paddingVertical: 0 }]}
+            placeholder="Search a city"
+            placeholderTextColor={tcTheme.textTertiary}
             value={search}
             onChangeText={setSearch}
-            autoFocus
+            accessibilityLabel="Search a city"
           />
         </View>
         <FlatList
@@ -96,26 +87,32 @@ export function GuestCityPickerModal({
           keyboardShouldPersistTaps="handled"
           initialNumToRender={30}
           windowSize={10}
-          renderItem={({ item }) => (
-            <Pressable
-              style={({ pressed }) => [styles.cityRow, pressed && { backgroundColor: "#F5F9FF" }]}
-              onPress={() => {
-                void setCity(item.city, { state: item.state, country: item.country });
-                onClose();
-                setSearch("");
-              }}
-            >
-              <Ionicons name="location-outline" size={16} color={Colors.brand.blue} />
-              <Text style={styles.cityRowText}>{item.label}</Text>
-            </Pressable>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>No cities found — try a different search.</Text>
-          }
+          contentContainerStyle={{ paddingBottom: 24 }}
+          renderItem={({ item }) => {
+            const on = current === item.city;
+            return (
+              <Pressable
+                style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 18, paddingVertical: 12 }, pressed && { backgroundColor: tcTheme.inputBg }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                onPress={() => {
+                  void setCity(item.city, { state: item.state, country: item.country });
+                  onClose();
+                  setSearch("");
+                }}
+              >
+                <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: tcTheme.accentSoft }}>
+                  <Ionicons name="location-outline" size={18} color={tcTheme.accentText} />
+                </View>
+                <Text style={[TYPE.body, { flex: 1, color: tcTheme.textPrimary }]}>{item.label}</Text>
+                {on ? <Ionicons name="checkmark" size={20} color={tcTheme.mint} /> : null}
+              </Pressable>
+            );
+          }}
+          ListEmptyComponent={<Text style={[TYPE.body, { color: tcTheme.textSecondary, paddingHorizontal: 18, paddingTop: 12 }]}>No city matches that. Try another spelling.</Text>}
         />
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+      </KeyboardAvoidingView>
+    </DSheet>
   );
 }
 

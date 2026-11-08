@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Alert,
   Platform,
-  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -34,11 +33,15 @@ import { rs } from "../../src/utils/responsive";
 import { Image } from "expo-image";
 import { appAlert } from '../../src/shared/ui/Dialogs';
 import { showToast } from '../../src/shared/ui/Toast';
+import { TYPE, display } from '../../src/theme/d';
+import { GradientButton, Reveal, SoftButton } from '../../src/shared/d';
+import { PasswordRules } from '../../src/shared/d/PasswordRules';
+import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#0076EB", "#26B324"],
+  colors = ["#1A6BAE", "#30855B"],
   style,
 }: {
   text: string;
@@ -100,18 +103,10 @@ export default function SignupScreen() {
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const codeRef = useRef<TextInput>(null);
+  const otpRef = useRef<OtpHandle>(null);
+  const [codeOk, setCodeOk] = useState(false);
 
-  const toastAnim = useRef(new Animated.Value(0)).current;
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showPasswordToast() {
-    if (password.length > 0) return;
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    Animated.spring(toastAnim, { toValue: 1, useNativeDriver: true, tension: 80, friction: 10 }).start();
-    toastTimer.current = setTimeout(() => {
-      Animated.timing(toastAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start();
-    }, 3500);
-  }
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   async function handleSendCode() {
     if (!agreedToTerms) {
@@ -155,11 +150,13 @@ export default function SignupScreen() {
     }
   }
 
-  async function handleVerifyAndCreate() {
-    const trimmed = code.replace(/\D/g, "");
+  // `typed` is the code the boxes just completed: onComplete fires in the same tick as setCode, so `code` here is
+  // still the previous render's five digits and the check below always failed (the boxes shook and emptied).
+  async function handleVerifyAndCreate(typed?: string) {
+    const trimmed = (typed ?? code).replace(/\D/g, "");
     if (trimmed.length !== 6) {
       setError("Enter the 6-digit code from your email");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      otpRef.current?.shake();
       return;
     }
     setError("");
@@ -176,10 +173,12 @@ export default function SignupScreen() {
       const { onboardingDone } = await syncFromApiLogin(profile, sessionCookie);
       void useSidebarStore.getState().fetchSidebarData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCodeOk(true);
+      await new Promise((r) => setTimeout(r, 520));
       router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
     } catch (e: unknown) {
       setError(formatSignupError(e));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      otpRef.current?.shake();
     } finally {
       setLoading(false);
     }
@@ -280,31 +279,11 @@ export default function SignupScreen() {
     : password.length < 10 ? 2
     : 3;
 
-  const strengthColors = ["#E5E7EB", "#EF4444", "#FF7B00", "#26B324"];
+  const strengthColors = ["#E5E7EB", "#EF4444", "#257A86", "#30855B"];
   const strengthLabels = ["", "Weak", "Good", "Strong"];
 
   return (
     <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
-      {/* Password rules toast */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.toast,
-          {
-            opacity: toastAnim,
-            transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }],
-          },
-        ]}
-      >
-        <Ionicons name="lock-closed" size={15} color="#FFFFFF" />
-        <View style={styles.toastTextWrap}>
-          <Text style={styles.toastTitle}>Password must have:</Text>
-          <Text style={styles.toastLine}>· At least 8 characters</Text>
-          <Text style={styles.toastLine}>· 1 uppercase letter (A–Z)</Text>
-          <Text style={styles.toastLine}>· 1 number (0–9)</Text>
-        </View>
-      </Animated.View>
-
       <OAuthUsernamePickerModal
         visible={usernamePickerVisible}
         tempToken={oauthTempToken}
@@ -322,10 +301,7 @@ export default function SignupScreen() {
           setOauthTempToken("");
         }}
       />
-      <LinearGradient
-        colors={isDark ? ["#080F1E", "#0D1526"] : ["#EEF6FF", "#F5FAF5"]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={isDark ? ["rgba(26,107,174,0.30)", "rgba(48,133,91,0.10)", "transparent"] : ["rgba(26,107,174,0.16)", "rgba(48,133,91,0.06)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} pointerEvents="none" />
 
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
@@ -337,76 +313,37 @@ export default function SignupScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo */}
-            <View style={styles.logoSection}>
-              <View style={styles.logoWrap}>
-                <Image
-                  source={require("../../assets/images/brand/app_icon_1024.png")}
-                  style={styles.logo}
-                  contentFit="contain"
-                  transition={200}
-                />
-              </View>
-            </View>
+            <Reveal i={0} style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 22 }}>
+              <Pressable onPress={() => (step === "verify" ? (setStep("form"), setCode(""), setError("")) : router.back())} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+                style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginLeft: -10 }}>
+                <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
+              </Pressable>
+              <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 32, height: 32, borderRadius: 10 }} contentFit="contain" />
+              <Text style={[display(800), { fontSize: 19, color: tc.textPrimary, letterSpacing: -0.4 }]}>comlinkr</Text>
+            </Reveal>
 
-            {/* Card */}
-            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(0,118,235,0.06)" }]}>
-              <GradientText
-                text={step === "form" ? "Create account" : "Verify email"}
-                style={styles.heading}
-                colors={["#0076EB", "#26B324"]}
-              />
-              <Text style={[styles.subheading, { color: tc.textSecondary }]}>
-                {step === "form"
-                  ? "Sign up to discover your neighborhood"
-                  : `Enter the code sent to ${email.trim() || "your email"}`}
-              </Text>
+            <View>
+              <Reveal i={1}>
+                <Text style={[TYPE.pageTitle, { color: tc.textPrimary }]}>{step === "form" ? "Create account" : "Check your email"}</Text>
+                <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 4, marginBottom: 20 }]}>
+                  {step === "form" ? "Takes a minute. We email you a 6-digit code." : `Sent to ${email.trim() || "your email"}`}
+                </Text>
+              </Reveal>
 
               {/* Social Sign Up */}
               {step === "form" ? (
-              <View style={styles.socialGroup}>
-                <Pressable
-                  onPress={() => handleSocialSignup("Google")}
-                  style={({ pressed }) => [
-                    styles.socialBtn,
-                    { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                  ]}
-                >
-                  <View style={styles.socialBtnInner}>
-                    <Ionicons name="logo-google" size={rs(20)} color="#4285F4" />
-                    <GradientText
-                      text="Continue with Google"
-                      style={styles.socialLabel}
-                      colors={["#4285F4", "#0076EB"]}
-                    />
-                  </View>
-                </Pressable>
-
-                {Platform.OS === "ios" ? (
-                  <Pressable
-                    onPress={() => void handleSocialSignup("Apple")}
-                    style={({ pressed }) => [
-                      styles.socialBtn,
-                      { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                      pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                    ]}
-                  >
-                    <View style={styles.socialBtnInner}>
-                      <Ionicons name="logo-apple" size={22} color={isDark ? "#FFFFFF" : "#000000"} />
-                      <Text style={[styles.socialLabel, { color: tc.textPrimary }]}>Continue with Apple</Text>
-                    </View>
-                  </Pressable>
-                ) : null}
-              </View>
+              <Reveal i={2} style={{ flexDirection: "row", gap: 10 }}>
+                <SoftButton ghost block outerStyle={{ flex: 1 }} label={Platform.OS === "ios" ? "Google" : "Sign up with Google"} onPress={() => void handleSocialSignup("Google")} icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
+                {Platform.OS === "ios" ? <SoftButton ghost block outerStyle={{ flex: 1 }} label="Apple" onPress={() => void handleSocialSignup("Apple")} icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} /> : null}
+              </Reveal>
               ) : null}
 
               {/* Divider */}
               {step === "form" ? (
-              <View style={styles.dividerRow}>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
-                <Text style={[styles.dividerText, { color: tc.textTertiary }]}>or sign up with email</Text>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 20 }}>
+                <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
+                <Text style={[TYPE.small, { color: tc.textTertiary }]}>or with email</Text>
+                <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
               </View>
               ) : null}
 
@@ -459,7 +396,8 @@ export default function SignupScreen() {
                   autoCapitalize="none"
                   autoComplete="new-password"
                   returnKeyType="go"
-                  onFocus={showPasswordToast}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   onSubmitEditing={handleSendCode}
                   rightIcon={
                     <Pressable
@@ -476,80 +414,32 @@ export default function SignupScreen() {
                 />
               </View>
               ) : (
-              <View style={styles.form}>
-                <Pressable
-                  onPress={() => {
-                    setStep("form");
-                    setCode("");
-                    setError("");
-                  }}
-                  hitSlop={8}
-                  style={({ pressed }) => [{ marginBottom: 12, opacity: pressed ? 0.7 : 1, flexDirection: "row", alignItems: "center", gap: 4, alignSelf: "flex-start" }]}
-                >
-                  <Ionicons name="arrow-back" size={17} color="#0076EB" />
-                  <Text style={{ color: "#0076EB", fontWeight: "600", fontSize: 15, lineHeight: 20 }}>Edit details</Text>
+              <Reveal key="otp" style={{ marginTop: 4 }}>
+                <OtpBoxes ref={otpRef} value={code} ok={codeOk} onChange={(v) => { setCode(v); if (v) setError(""); }} onComplete={(v) => void handleVerifyAndCreate(v)} autoFocus />
+                <View style={{ marginTop: 18 }}><ResendCode onResend={handleSendCode} busy={loading} /></View>
+                <Pressable onPress={() => { setStep("form"); setCode(""); setError(""); }} hitSlop={8} style={{ alignSelf: "center", marginTop: 18 }} accessibilityRole="button">
+                  <Text style={[TYPE.small, { color: tc.textSecondary }]}>Wrong email? <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }}>Edit details</Text></Text>
                 </Pressable>
-                <Input
-                  ref={codeRef}
-                  label="6-digit code"
-                  placeholder="000000"
-                  value={code}
-                  onChangeText={(t) => setCode(t.replace(/\D/g, "").slice(0, 6))}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  returnKeyType="go"
-                  onSubmitEditing={handleVerifyAndCreate}
-                />
-              </View>
+              </Reveal>
               )}
 
-              {/* Password Strength */}
-              {step === "form" && password.length > 0 && (
-                <View style={styles.strengthRow}>
-                  {[1, 2, 3].map((i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.strengthBar,
-                        {
-                          backgroundColor:
-                            strengthLevel >= i
-                              ? strengthColors[strengthLevel]
-                              : tc.borderLight,
-                        },
-                      ]}
-                    />
-                  ))}
-                  <Text
-                    style={[
-                      styles.strengthLabel,
-                      {
-                        color:
-                          strengthLevel > 0
-                            ? strengthColors[strengthLevel]
-                            : tc.textTertiary,
-                      },
-                    ]}
-                  >
-                    {strengthLabels[strengthLevel]}
-                  </Text>
-                </View>
-              )}
+              {/* Password rules, live (design D `signup`) */}
+              {step === "form" && (passwordFocused || password.length > 0) ? <PasswordRules password={password} /> : null}
 
               {/* Username hint */}
               {step === "form" && username.length > 0 && username.length < 3 && (
                 <View style={styles.hintBox}>
-                  <Ionicons name="information-circle-outline" size={rs(14)} color="#0076EB" />
+                  <Ionicons name="information-circle-outline" size={rs(14)} color="#1A6BAE" />
                   <Text style={styles.hintText}>Username needs at least 3 characters</Text>
                 </View>
               )}
 
               {/* Error */}
               {error ? (
-                <View style={[styles.errorBox, { backgroundColor: isDark ? "#2D0F0F" : "#FEF2F2" }]}>
-                  <Ionicons name="alert-circle" size={rs(16)} color="#EF4444" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
+                <Reveal style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.12)" }}>
+                  <Ionicons name="alert-circle" size={17} color={tc.dangerText} />
+                  <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{error}</Text>
+                </Reveal>
               ) : null}
 
               {/* Spacer */}
@@ -564,8 +454,8 @@ export default function SignupScreen() {
                   <View
                     style={[
                       styles.checkbox,
-                      { borderColor: agreedToTerms ? "#0076EB" : tc.borderLight },
-                      agreedToTerms && { backgroundColor: "#0076EB" },
+                      { borderColor: agreedToTerms ? tc.accent : tc.borderMedium, borderRadius: 7 },
+                      agreedToTerms && { backgroundColor: tc.accent },
                     ]}
                   >
                     {agreedToTerms ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
@@ -585,43 +475,21 @@ export default function SignupScreen() {
               ) : null}
 
               {/* Create Account / Verify Button */}
-              <Pressable
-                onPress={step === "form" ? handleSendCode : handleVerifyAndCreate}
-                disabled={loading || socialLoading || (step === "form" && !agreedToTerms)}
-                style={({ pressed }) => [
-                  styles.signupBtn,
-                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  (loading || socialLoading || (step === "form" && !agreedToTerms)) && { opacity: 0.5 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.signupBtnGradient}
-                >
-                  <Text style={styles.signupBtnText}>
-                    {loading || socialLoading
-                      ? step === "form"
-                        ? "Sending code..."
-                        : "Creating account..."
-                      : step === "form"
-                        ? "Send verification code"
-                        : "Verify & create account"}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
+              <GradientButton
+                block
+                style={{ marginTop: 10 }}
+                loading={loading}
+                disabled={socialLoading || (step === "form" && !agreedToTerms)}
+                onPress={step === "form" ? handleSendCode : () => void handleVerifyAndCreate()}
+                label={step === "form" ? "Email me a code" : "Create my account"}
+              />
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: tc.textSecondary }]}>Already have an account? </Text>
-              <Pressable onPress={() => router.back()}>
-                <GradientText
-                  text="Sign in"
-                  style={styles.footerLink}
-                  colors={["#0076EB", "#26B324"]}
-                />
+              <Text style={[TYPE.body, { color: tc.textSecondary }]}>Already on Comlinkr? </Text>
+              <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Sign in</Text>
               </Pressable>
             </View>
           </ScrollView>
@@ -640,11 +508,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: rs(20),
-    paddingTop: rs(6),
-    paddingBottom: rs(16),
-    justifyContent: "center",
-    alignItems: "center",
+    paddingHorizontal: 22,
+    paddingTop: 36,
+    paddingBottom: 32,
+    justifyContent: "flex-start",
+    alignItems: "stretch",
   },
 
   /* Decorative */
@@ -653,7 +521,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(0, 118, 235, 0.08)",
+    backgroundColor: "rgba(26,107,174, 0.08)",
     top: -60,
     right: -80,
   },
@@ -662,7 +530,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: "rgba(38, 179, 36, 0.07)",
+    backgroundColor: "rgba(48,133,91, 0.07)",
     bottom: 80,
     left: -60,
   },
@@ -679,13 +547,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 9,
     borderWidth: 2,
-    borderColor: "rgba(0,118,235,0.12)",
+    borderColor: "rgba(26,107,174,0.12)",
   },
   logo: {
     width: rs(80),
@@ -791,8 +659,10 @@ const styles = StyleSheet.create({
     left: rs(20),
     right: rs(20),
     zIndex: 999,
-    backgroundColor: "#1A1A2E",
-    borderRadius: rs(14),
+    backgroundColor: "#12303A",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    borderRadius: 18,
     paddingHorizontal: rs(14),
     paddingVertical: rs(12),
     flexDirection: "row",
@@ -806,13 +676,14 @@ const styles = StyleSheet.create({
   },
   toastTextWrap: { flex: 1, gap: rs(2) },
   toastTitle: {
-    fontSize: rs(13),
-    fontWeight: "700",
+    ...TYPE.bodyStrong,
+    fontSize: 14,
     color: "#FFFFFF",
     marginBottom: rs(3),
   },
   toastLine: {
-    fontSize: rs(12),
+    ...TYPE.small,
+    fontSize: 12.5,
     color: "rgba(255,255,255,0.8)",
     lineHeight: rs(18),
   },
@@ -873,7 +744,7 @@ const styles = StyleSheet.create({
     borderRadius: rs(14),
     overflow: "hidden",
     marginTop: rs(10),
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,

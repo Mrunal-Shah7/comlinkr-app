@@ -177,7 +177,7 @@ export const md = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#EAFBE9",
+    backgroundColor: "#E3F1EA",
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 9,

@@ -1,5 +1,5 @@
 import { rs } from "../src/utils/responsive";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,9 +18,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "../src/theme/useTheme";
 import { createThemedStyles } from '../src/theme/themedStyles';
+import Animated, { FadeInDown, FadeOut, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { TYPE } from '../src/theme/d';
+import { SPRING, layoutEase } from '../src/shared/motion/presets';
+import { Chip, EmptyState, Reveal } from '../src/shared/d';
+import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
-const BRAND_BLUE = "#0076EB";
-const BRAND_GREEN = "#26B324";
+const BRAND_BLUE = "#1A6BAE";
+const BRAND_GREEN = "#30855B";
 
 // ── FAQ Data ──
 const FAQ_SECTIONS = [
@@ -63,23 +68,44 @@ const FAQ_SECTIONS = [
 ];
 
 const CONTACT_OPTIONS = [
-  { id: "email", icon: "mail-outline" as const, label: "Email Us", desc: "support@comlinkr.com", color: BRAND_BLUE, action: () => Linking.openURL("mailto:support@comlinkr.com") },
+  { id: "email", icon: "mail-outline" as const, label: "Email us", desc: "support@comlinkr.com", color: BRAND_BLUE, action: () => Linking.openURL("mailto:support@comlinkr.com") },
   { id: "instagram", icon: "logo-instagram" as const, label: "Instagram", desc: "@comlinkr", color: "#E1306C", action: () => Linking.openURL("https://www.instagram.com/comlinkr?igsh=czM3bmtsMmdtM3dr") },
   { id: "linkedin", icon: "logo-linkedin" as const, label: "LinkedIn", desc: "ComLinkr", color: "#0A66C2", action: () => Linking.openURL("https://www.linkedin.com/company/comlinkr/") },
 ];
 
+/** One question: tap to open; the chevron turns and the answer slides in (design D, plan 01). */
+function FaqItem({ q, a, first, open, onToggle, helpful, onHelpful }: {
+  q: string; a: string; first: boolean; open: boolean; onToggle: () => void; helpful: boolean; onHelpful: () => void;
+}) {
+  const { tc } = useTheme();
+  const turn = useSharedValue(open ? 1 : 0);
+  useEffect(() => { turn.value = withSpring(open ? 1 : 0, SPRING.settle); }, [open, turn]);
+  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 90}deg` }] }));
+  return (
+    <Animated.View layout={layoutEase} style={!first ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight } : undefined}>
+      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={q}
+        style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 14, paddingVertical: 14 }, pressed && { backgroundColor: tc.inputBg }]}>
+        <Text style={[TYPE.bodyStrong, { flex: 1, color: tc.textPrimary, fontFamily: "Manrope_600SemiBold" }]}>{q}</Text>
+        <Animated.View style={chev}><Ionicons name="chevron-forward" size={16} color={tc.textTertiary} /></Animated.View>
+      </Pressable>
+      {open ? (
+        <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOut.duration(120)} style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
+          <Text style={[TYPE.body, { color: tc.textSecondary }]}>{a}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 10 }}>
+            <Text style={[TYPE.small, { color: tc.textTertiary }]}>Was this helpful?</Text>
+            <Chip label="Yes" on={helpful} onPress={onHelpful} icon={<Ionicons name={helpful ? "thumbs-up" : "thumbs-up-outline"} size={14} color={helpful ? "#fff" : tc.textSecondary} />} />
+          </View>
+        </Animated.View>
+      ) : null}
+    </Animated.View>
+  );
+}
+
 export default function HelpSupportScreen() {
-  const router = useRouter();
-  const { isDark, tc } = useTheme();
-  const [expandedSection, setExpandedSection] = useState<number | null>(0);
+  const { tc } = useTheme();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [helpfulIds, setHelpfulIds] = useState<Set<string>>(new Set());
-
-  const toggleSection = (idx: number) => {
-    setExpandedSection(expandedSection === idx ? null : idx);
-    setExpandedItem(null);
-  };
 
   const toggleItem = (key: string) => {
     setExpandedItem(expandedItem === key ? null : key);
@@ -109,190 +135,64 @@ export default function HelpSupportScreen() {
     return sections;
   })();
 
-  const totalFaqs = filteredSections.reduce((sum, s) => sum + s.items.length, 0);
+  const card = { borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" as const };
 
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]}>
-      {/* Header */}
-      <View style={[s.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={({ pressed }) => [s.backBtn, { backgroundColor: tc.sectionBg }, pressed && { opacity: 0.8, transform: [{ scale: 0.9 }] }]}>
-          <Ionicons name="chevron-back" size={20} color={BRAND_BLUE} />
-        </Pressable>
-        <Text style={[s.headerTitle, { color: tc.textPrimary }]}>Help & Support</Text>
-        <View style={{ width: rs(40) }} />
-      </View>
+    <DPage title="Help" onBack={() => goBackOr("/(tabs)/feed")}>
+      <Reveal i={0} style={{ marginHorizontal: 16, marginBottom: 16, flexDirection: "row", alignItems: "center", gap: 10, height: 50, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tc.inputBg }}>
+        <Ionicons name="search" size={18} color={tc.textTertiary} />
+        <TextInput
+          style={[TYPE.body, { flex: 1, color: tc.textPrimary, padding: 0 }]}
+          placeholder="Search help"
+          placeholderTextColor={tc.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+          accessibilityLabel="Search help"
+        />
+        {searchQuery.length > 0 ? (
+          <Pressable onPress={() => setSearchQuery("")} hitSlop={8} accessibilityLabel="Clear search">
+            <Ionicons name="close-circle" size={18} color={tc.textTertiary} />
+          </Pressable>
+        ) : null}
+      </Reveal>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView
-        style={[s.scroll, { backgroundColor: tc.pageBg }]}
-        contentContainerStyle={[s.content, { backgroundColor: tc.pageBg }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Hero banner */}
-        <LinearGradient
-          colors={[BRAND_BLUE, "#005BE0", BRAND_GREEN]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.hero}
-        >
-          <View style={s.heroBg1} />
-          <View style={s.heroBg2} />
-          <View style={s.heroIconContainer}>
-            <View style={s.heroIconRing}>
-              <Ionicons name="help-buoy-outline" size={36} color="#FFF" />
-            </View>
+      {filteredSections.length === 0 ? (
+        <EmptyState icon="search-outline" title="No answers found" sub={`Nothing matches “${searchQuery.trim()}”. Try other words, or ask the team below.`} actionLabel="Clear search" onAction={() => setSearchQuery("")} />
+      ) : null}
+
+      {filteredSections.map((section, sIdx) => (
+        <Reveal key={section.title} i={sIdx + 1} style={{ marginHorizontal: 16, marginBottom: 18 }}>
+          <Text style={[TYPE.overline, { color: tc.textTertiary, marginLeft: 14, marginBottom: 6 }]}>{section.title.replace(" & ", " and ")}</Text>
+          <View style={card}>
+            {section.items.map((item, iIdx) => {
+              const key = `${section.title}-${iIdx}`;
+              return (
+                <FaqItem key={key} q={item.q} a={item.a} first={iIdx === 0} open={expandedItem === key} onToggle={() => toggleItem(key)}
+                  helpful={helpfulIds.has(key)} onHelpful={() => markHelpful(key)} />
+              );
+            })}
           </View>
-          <Text style={s.heroTitle}>How can we help?</Text>
-          <Text style={s.heroSub}>Find answers to common questions or get in touch with our team.</Text>
-          {/* Inline Search */}
-          <View style={s.heroSearch}>
-            <Ionicons name="search" size={18} color="rgba(255,255,255,0.6)" />
-            <TextInput
-              style={s.heroSearchInput}
-              placeholder="Search for help..."
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery("")}>
-                <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.6)" />
-              </Pressable>
-            )}
-          </View>
-        </LinearGradient>
+        </Reveal>
+      ))}
 
-        {/* FAQ Sections */}
-        <View style={s.faqContainer}>
-          <View style={s.faqHeaderRow}>
-            <Text style={[s.sectionHeader, { color: tc.textPrimary }]}>Frequently Asked Questions</Text>
-            <View style={s.faqCountPill}>
-              <Text style={s.faqCountPillText}>{totalFaqs} FAQs</Text>
-            </View>
-          </View>
-
-          {filteredSections.length === 0 && (
-            <View style={s.emptyState}>
-              <View style={[s.emptyIconWrap, { backgroundColor: tc.sectionBg }]}>
-                <Ionicons name="search-outline" size={36} color="#D1D5DB" />
-              </View>
-              <Text style={[s.emptyText, { color: tc.textSecondary }]}>No results found{searchQuery ? ` for "${searchQuery}"` : ""}</Text>
-              <Text style={[s.emptySubtext, { color: tc.textTertiary }]}>Try a different search or browse by topic above</Text>
-              <Pressable onPress={() => { setSearchQuery(""); }} style={s.emptyBtn}>
-                <Text style={s.emptyBtnText}>Clear Filters</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {filteredSections.map((section, sIdx) => (
-            <View key={section.title} style={[s.faqSection, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, expandedSection === sIdx && s.faqSectionActive]}>
-              <TouchableOpacity activeOpacity={0.8} onPress={() => toggleSection(sIdx)}>
-                <View style={s.faqSectionHeader}>
-                  <View style={s.faqSectionLeft}>
-                    <View style={[s.faqIconBox, { backgroundColor: expandedSection === sIdx ? BRAND_BLUE : BRAND_BLUE + "14" }]}>
-                      <Ionicons name={section.icon} size={18} color={expandedSection === sIdx ? "#FFF" : BRAND_BLUE} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[s.faqSectionTitle, { color: tc.textPrimary }, expandedSection === sIdx && { color: BRAND_BLUE }]}>{section.title}</Text>
-                      <Text style={[s.faqSectionSub, { color: tc.textTertiary }]}>{section.items.length} question{section.items.length !== 1 ? "s" : ""}</Text>
-                    </View>
-                  </View>
-                  <View style={[s.chevronCircle, { backgroundColor: tc.sectionBg }, expandedSection === sIdx && s.chevronCircleActive]}>
-                    <Ionicons name={expandedSection === sIdx ? "chevron-up" : "chevron-down"} size={14} color={expandedSection === sIdx ? BRAND_BLUE : "#B0B7C3"} />
-                  </View>
-                </View>
-              </TouchableOpacity>
-
-              {expandedSection === sIdx && (
-                <View style={[s.faqItems, { borderTopColor: tc.borderLight }]}>
-                  {section.items.map((item, iIdx) => {
-                    const key = `${sIdx}-${iIdx}`;
-                    const isOpen = expandedItem === key;
-                    return (
-                      <View key={key}>
-                        <TouchableOpacity activeOpacity={0.8} onPress={() => toggleItem(key)}>
-                          <View style={[s.faqItem, { borderBottomColor: tc.borderLight }, isOpen && s.faqItemActive]}>
-                            <View style={[s.faqDot, isOpen && { backgroundColor: BRAND_BLUE }]} />
-                            <Text style={[s.faqQuestion, { color: tc.textSecondary }, isOpen && { color: BRAND_BLUE, fontWeight: "700" }]}>{item.q}</Text>
-                            <View style={[s.chevronSmall, { backgroundColor: tc.sectionBg }, isOpen && s.chevronSmallActive]}>
-                              <Ionicons name={isOpen ? "chevron-up" : "chevron-down"} size={12} color={isOpen ? BRAND_BLUE : "#B0B7C3"} />
-                            </View>
-                          </View>
-                        </TouchableOpacity>
-                        {isOpen && (
-                          <View style={[s.faqAnswer, { borderBottomColor: tc.borderLight }]}>
-                            <Text style={[s.faqAnswerText, { color: tc.textSecondary }]}>{item.a}</Text>
-                            <View style={[s.helpfulRow, { borderTopColor: tc.borderLight }]}>
-                              <Text style={[s.helpfulLabel, { color: tc.textTertiary }]}>Was this helpful?</Text>
-                              <TouchableOpacity
-                                activeOpacity={0.75}
-                                style={[s.helpfulBtn, { borderColor: tc.borderLight }, helpfulIds.has(key) && s.helpfulBtnActive]}
-                                onPress={() => markHelpful(key)}
-                              >
-                                <Ionicons name={helpfulIds.has(key) ? "thumbs-up" : "thumbs-up-outline"} size={14} color={helpfulIds.has(key) ? BRAND_GREEN : "#9CA3AF"} />
-                                <Text style={[s.helpfulBtnText, helpfulIds.has(key) && { color: BRAND_GREEN }]}>Yes</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        )}
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
+      <Reveal i={filteredSections.length + 1} style={{ marginHorizontal: 16, marginBottom: 18 }}>
+        <Text style={[TYPE.overline, { color: tc.textTertiary, marginLeft: 14, marginBottom: 6 }]}>Still stuck?</Text>
+        <View style={card}>
+          {CONTACT_OPTIONS.map((opt, i) => (
+            <DRow key={opt.id} first={i === 0} icon={opt.icon} label={opt.label} value={opt.desc} onPress={opt.action} />
           ))}
         </View>
+      </Reveal>
 
-        {/* Contact Us */}
-        <View style={[s.contactContainer, { backgroundColor: tc.pageBg }]}>
-          <Text style={[s.sectionHeader, { color: tc.textPrimary }]}>Still need help?</Text>
-          <Text style={[s.contactSubtext, { color: tc.textSecondary }]}>Our support team is always happy to assist you.</Text>
-
-          {CONTACT_OPTIONS.map((opt) => (
-            <TouchableOpacity key={opt.id} onPress={opt.action} activeOpacity={0.75} style={[s.contactCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={s.contactCardInner}>
-                <View style={[s.contactIconBox, { backgroundColor: opt.color + "14" }]}>
-                  <Ionicons name={opt.icon} size={22} color={opt.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.contactLabel, { color: tc.textPrimary }]}>{opt.label}</Text>
-                  <Text style={[s.contactDesc, { color: tc.textSecondary }]}>{opt.desc}</Text>
-                </View>
-                <View style={s.contactArrow}>
-                  <Ionicons name="arrow-forward" size={13} color={BRAND_BLUE} />
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+      <Reveal i={filteredSections.length + 2} style={{ marginHorizontal: 16, flexDirection: "row", gap: 12, padding: 16, borderRadius: 22, backgroundColor: tc.mintSoft }}>
+        <Ionicons name="bulb-outline" size={22} color={tc.successText} />
+        <View style={{ flex: 1 }}>
+          <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>Ask the people around you</Text>
+          <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>You can also ask in Community: fellow members often have great local tips.</Text>
         </View>
-
-        {/* Community tip */}
-        <View style={[s.tipCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <LinearGradient
-            colors={isDark ? [tc.cardBg, tc.cardBg] : [BRAND_BLUE + "08", BRAND_GREEN + "08"]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={s.tipGrad}
-          >
-            <View style={[s.tipIconWrap, isDark && { backgroundColor: "#2A1A00" }]}>
-              <Ionicons name="bulb-outline" size={24} color="#FF7B00" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[s.tipTitle, { color: tc.textPrimary }]}>Community Tip</Text>
-              <Text style={[s.tipText, { color: tc.textSecondary }]}>You can also ask questions in the Community tab — fellow members often have great local tips!</Text>
-            </View>
-          </LinearGradient>
-        </View>
-
-        {/* App info footer */}
-        <View style={s.footer}>
-          <Text style={[s.footerText, { color: tc.textTertiary }]}>ComLinkr v1.0.0</Text>
-          <Text style={[s.footerSub, { color: tc.textTertiary }]}>Made with ❤️ for communities</Text>
-        </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </Reveal>
+    </DPage>
   );
 }
 
@@ -310,7 +210,7 @@ const s = createThemedStyles({
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(0,118,235,0.15)",
+    backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center", justifyContent: "center",
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
   },
@@ -459,7 +359,7 @@ const s = createThemedStyles({
   tipGrad: { flexDirection: "row", alignItems: "center", gap: rs(14), padding: rs(16) },
   tipIconWrap: {
     width: rs(44), height: rs(44), borderRadius: rs(14),
-    backgroundColor: "#FFF3E6", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#E2F0F1", alignItems: "center", justifyContent: "center",
   },
   tipTitle: { fontSize: rs(14), fontWeight: "700", color: "#0A1628", marginBottom: rs(2) },
   tipText: { fontSize: rs(12), color: "#6B7280", lineHeight: rs(18), fontWeight: "500" },

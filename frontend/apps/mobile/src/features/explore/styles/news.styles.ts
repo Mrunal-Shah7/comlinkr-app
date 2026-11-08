@@ -22,7 +22,7 @@ export const nw = StyleSheet.create({
 
   // Category pills
   catRow: { paddingHorizontal: rs(6), paddingVertical: rs(8), paddingBottom: rs(14), gap: rs(6) },
-  catPill: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "#FFF", borderRadius: rs(999), paddingHorizontal: rs(11), paddingVertical: rs(6), borderWidth: 1, borderColor: "#E7EFFA", shadowColor: "#0076EB", shadowOpacity: 0.06, shadowRadius: rs(4), elevation: 1 },
+  catPill: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "#FFF", borderRadius: rs(999), paddingHorizontal: rs(11), paddingVertical: rs(6), borderWidth: 1, borderColor: "#E7EFFA", shadowColor: "#1A6BAE", shadowOpacity: 0.06, shadowRadius: rs(4), elevation: 1 },
   catPillActive: { backgroundColor: Colors.brand.blue, borderColor: Colors.brand.blue, shadowOpacity: 0.2, elevation: 3 },
   catEmoji: { fontSize: rs(11) },
   catText: { fontSize: rs(11), fontWeight: "800", color: Colors.text.secondary },
@@ -87,7 +87,7 @@ export const nw = StyleSheet.create({
   sectionDivider: { height: rs(8), backgroundColor: "#F3F5F8", marginVertical: rs(8) },
 
   // ── News Card ──
-  newsCard: { backgroundColor: "#FFF", borderRadius: rs(16), marginHorizontal: rs(6), marginBottom: rs(10), borderWidth: 1, borderColor: "#ECEEF1", shadowColor: "#0076EB", shadowOpacity: 0.07, shadowRadius: rs(10), shadowOffset: { width: 0, height: rs(3) }, elevation: 3, overflow: "hidden" },
+  newsCard: { backgroundColor: "#FFF", borderRadius: rs(16), marginHorizontal: rs(6), marginBottom: rs(10), borderWidth: 1, borderColor: "#ECEEF1", shadowColor: "#1A6BAE", shadowOpacity: 0.07, shadowRadius: rs(10), shadowOffset: { width: 0, height: rs(3) }, elevation: 3, overflow: "hidden" },
   newsCardInner: { flexDirection: "row" },
   newsAccentBar: { position: "absolute", left: 0, top: 0, bottom: 0, width: rs(4) },
   newsCardImg: { width: "100%", height: rs(105) },

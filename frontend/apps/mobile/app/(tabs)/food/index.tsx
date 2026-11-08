@@ -1,4 +1,12 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
+import { FullscreenImageViewer } from "../../../src/features/housing/components/ImageViewer";
+import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { BentoTile, Chip, GradientButton, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
+import { DSheet } from "../../../src/shared/d/Sheet";
+import { StarPicker } from "../../../src/shared/d/StarPicker";
+import { GRADIENT, TYPE } from "../../../src/theme/d";
 import { DatePickerField, TimePickerField } from "../../../components/DateTimePickerField";
 import {
   View,
@@ -17,8 +25,6 @@ import {
   Platform,
   KeyboardAvoidingView,
   Dimensions,
-  Animated,
-  PanResponder,
 } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
@@ -209,105 +215,9 @@ const REPORT_REASONS = [
 const CARD_WIDTH = Dimensions.get("window").width - rs(32);
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
-// ── Zoomable fullscreen image ─────────────────────────────────────────────────
-function pinchDistance(touches: { pageX: number; pageY: number }[]): number {
-  if (touches.length < 2) return 0;
-  const [a, b] = touches;
-  return Math.sqrt((a.pageX - b.pageX) ** 2 + (a.pageY - b.pageY) ** 2);
-}
-
-function FoodZoomableImage({ uri, width, height }: { uri: string; width: number; height: number }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-  const lastScale = useRef(1);
-  const lastTX = useRef(0);
-  const lastTY = useRef(0);
-  const pinchStartDist = useRef(0);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        lastTX.current = (translateX as any)._value;
-        lastTY.current = (translateY as any)._value;
-        pinchStartDist.current = 0;
-      },
-      onPanResponderMove: (evt, gs) => {
-        const touches = evt.nativeEvent.touches;
-        if (touches.length === 2) {
-          const dist = pinchDistance(touches as any);
-          if (pinchStartDist.current === 0) {
-            pinchStartDist.current = dist;
-            return;
-          }
-          const ratio = dist / pinchStartDist.current;
-          scale.setValue(Math.max(1, Math.min(4, lastScale.current * ratio)));
-        } else if (gs.numberActiveTouches === 1 && lastScale.current > 1) {
-          translateX.setValue(lastTX.current + gs.dx);
-          translateY.setValue(lastTY.current + gs.dy);
-        }
-      },
-      onPanResponderRelease: () => {
-        lastScale.current = Math.max(1, Math.min(4, (scale as any)._value));
-        pinchStartDist.current = 0;
-        if (lastScale.current === 1) {
-          Animated.parallel([
-            Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-            Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-          ]).start();
-          lastTX.current = 0; lastTY.current = 0;
-        } else { lastTX.current = (translateX as any)._value; lastTY.current = (translateY as any)._value; }
-      },
-    })
-  ).current;
-
-  const resetZoom = () => {
-    lastScale.current = 1; lastTX.current = 0; lastTY.current = 0;
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
-      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }),
-      Animated.spring(translateY, { toValue: 0, useNativeDriver: true }),
-    ]).start();
-  };
-
-  return (
-    <Pressable onLongPress={resetZoom} style={{ width, height, alignItems: "center", justifyContent: "center" }} {...panResponder.panHandlers}>
-      <Animated.View style={{ transform: [{ scale }, { translateX }, { translateY }] }}>
-        <FadeImage uri={uri} style={{ width, height: height * 0.85 }} cachePolicy="disk" transition={300} />
-      </Animated.View>
-    </Pressable>
-  );
-}
-
+/** The shared design D gallery (black, 1 of n, swipe down to close). */
 function FoodFullscreenViewer({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) {
-  const [idx, setIdx] = useState(startIndex);
-  const W = Dimensions.get("window").width;
-  const H = Dimensions.get("window").height;
-  const ref = useRef<any>(null);
-  useEffect(() => { ref.current?.scrollTo({ x: startIndex * W, animated: false }); }, [startIndex, W]);
-  return (
-    <Modal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose} onDismiss={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.97)" }}>
-        <Pressable onPress={onClose} hitSlop={12} style={{ position: "absolute", top: 52, right: 20, zIndex: 20, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="close" size={22} color="#FFF" />
-        </Pressable>
-        {images.length > 1 && (
-          <View style={{ position: "absolute", top: 58, left: 0, right: 0, zIndex: 15, alignItems: "center" }}>
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "700" }}>{idx + 1} / {images.length}</Text>
-          </View>
-        )}
-        <View style={{ position: "absolute", bottom: 40, left: 0, right: 0, zIndex: 15, alignItems: "center" }}>
-          <Text style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Pinch to zoom · Long press to reset</Text>
-        </View>
-        <ScrollView ref={ref} horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / W))} style={{ flex: 1 }}>
-          {images.map((uri, i) => <FoodZoomableImage key={i} uri={uri} width={W} height={H} />)}
-        </ScrollView>
-      </View>
-    </Modal>
-  );
+  return <FullscreenImageViewer images={images} startIndex={startIndex} onClose={onClose} />;
 }
 
 function ImageCarousel({ images, height = rs(165), itemWidth, onImagePress }: { images: string[]; height?: number; itemWidth?: number; onImagePress?: (idx: number) => void }) {
@@ -378,6 +288,9 @@ export default function FoodScreen() {
   const foodScrollRef = useRef<ScrollView>(null);
   useScrollToTop(foodScrollRef); // re-tap the Food tab → back to top
   const insets = useSafeAreaInsets();
+  // Design D (plan 01): the header title fades in as the large title scrolls away.
+  const foodScrollY = useSharedValue(0);
+  const onFoodScroll = useAnimatedScrollHandler((e) => { foodScrollY.value = e.contentOffset.y; });
   const { isDark, tc } = useTheme();
   const user = useAuthStore((s) => s.user);
   const { requireAuth } = useRequireAuth();
@@ -645,9 +558,7 @@ export default function FoodScreen() {
     }
   };
 
-  // ── Card gestures: double-tap photo → favorite (heart burst); long-press card → quick actions ──
-  const burstAnim = useRef(new Animated.Value(0)).current;
-  const [burstId, setBurstId] = useState<string | null>(null);
+  // ── Card gestures: double-tap photo → favorite; long-press card → quick actions ──
   const lastPhotoTapRef = useRef<{ id: string; at: number } | null>(null);
   const photoTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (photoTapTimerRef.current) clearTimeout(photoTapTimerRef.current); }, []);
@@ -659,13 +570,6 @@ export default function FoodScreen() {
       if (photoTapTimerRef.current) clearTimeout(photoTapTimerRef.current);
       if (!favorites.has(r.id)) void toggleFav(r.id);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setBurstId(r.id);
-      burstAnim.setValue(0);
-      Animated.sequence([
-        Animated.spring(burstAnim, { toValue: 1, useNativeDriver: true, speed: 24, bounciness: 12 }),
-        Animated.delay(380),
-        Animated.timing(burstAnim, { toValue: 0, duration: 220, useNativeDriver: true }),
-      ]).start(() => setBurstId(null));
       return;
     }
     lastPhotoTapRef.current = { id: r.id, at: now };
@@ -781,12 +685,14 @@ export default function FoodScreen() {
     setReservationSubmitting(false);
   };
 
+  const [rateFor, setRateFor] = useState<string | null>(null);
+
   const submitReviewForRestaurant = async (r: Restaurant) => {
-    if (!reviewText.trim()) return;
+    const rating = userRatings[r.id] || 0;
+    if (!rating) return;
     if (!requireAuth(undefined, "Sign in to share your review.")) return;
-    const rating = userRatings[r.id] || 5;
     try {
-      const created = await submitReview(r.id, { rating, content: reviewText.trim() });
+      const created = await submitReview(r.id, { rating, content: reviewText.trim() || undefined });
       const [fresh, remote] = await Promise.all([getRestaurant(r.id), getReviews(r.id)]);
       setSelectedRestaurant(fresh);
       setReviewsList((prev) => ({ ...prev, [r.id]: remote }));
@@ -909,11 +815,13 @@ export default function FoodScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
-      <AppHeader />
-      <ScrollView
-        ref={foodScrollRef}
+      <AppHeader title="Food" scrollY={foodScrollY} />
+      <Reanimated.ScrollView
+        ref={foodScrollRef as any}
+        onScroll={onFoodScroll}
+        scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -924,27 +832,12 @@ export default function FoodScreen() {
           />
         }
       >
-        {/* Hero */}
-        <LinearGradient
-          colors={[Colors.brand.greenDark, Colors.brand.green]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.hero}
-        >
-          <View style={s.heroRow}>
-            <Ionicons name="restaurant-outline" size={rs(12)} color="#86EFAC" />
-            <Text style={s.heroLabel}>FOOD & DINING</Text>
-          </View>
-          <Text style={s.heroTitle}>
-            {user?.name?.split(" ")[0] ? `Hi ${user.name.split(" ")[0]},` : "Discover"} Local Flavors
-          </Text>
-          <Text style={s.heroSub}>
-            {hasCity ? `Restaurants, cafes & eateries in ${appCity}` : "Restaurants, cafes & eateries near you"}
-          </Text>
-        </LinearGradient>
+        {/* ── Design D: large title and city ── */}
+        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Food</Text>
+        {user?.city ? <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 12 }]}>{user.city}</Text> : <View style={{ height: 12 }} />}
 
         {/* Search */}
-        <View style={[s.searchWrap, { backgroundColor: tc.cardBg, borderColor: tc.borderLight, paddingRight: rs(8) }]}>
+        <View style={[s.searchWrap, { backgroundColor: tc.inputBg, borderColor: "transparent", borderRadius: 16 }]}>
           <Ionicons name="search-outline" size={rs(16)} color={tc.textTertiary} />
           <TextInput
             style={[s.searchInput, { color: tc.textPrimary }]}
@@ -953,23 +846,6 @@ export default function FoodScreen() {
             value={search}
             onChangeText={setSearch}
           />
-          <Pressable
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              if (!user?.id) {
-                appAlert("Sign in required", "Log in to list your restaurant on ComLinkr.");
-                return;
-              }
-              router.push({ pathname: "/create-post" as any, params: { type: "restaurant" } });
-            }}
-            style={[s.addRestaurantFab, { width: "auto", minWidth: rs(34), height: rs(34), borderRadius: rs(10), paddingHorizontal: rs(10), flexDirection: "row", gap: rs(4), backgroundColor: Colors.brand.green }]}
-            hitSlop={10}
-            accessibilityLabel="Add restaurant listing"
-            accessibilityRole="button"
-          >
-            <Ionicons name="add" size={rs(18)} color="#FFF" />
-            <Text style={{ color: "#FFF", fontSize: rs(12), fontWeight: "800" }}>Add</Text>
-          </Pressable>
         </View>
 
         {/* View Tabs — hidden */}
@@ -1002,155 +878,90 @@ export default function FoodScreen() {
           </Pressable>
         ) : null}
 
-        {/* Restaurant Cards */}
-        {filtered.map((r) => (
-          <Pressable key={r.id} onPress={() => setSelectedRestaurant(r)} onLongPress={() => void openCardActions(r)} delayLongPress={350} style={({ pressed }) => [s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, pressed && { opacity: 0.95 }]}>
-            {/* ── Full-width image carousel ── */}
-            <View>
-              <ImageCarousel images={r.images && r.images.length > 0 ? r.images : [r.image]} height={rs(165)}
-                onImagePress={(idx) => onCardPhotoPress(r, idx)} />
-              {burstId === r.id ? (
-                <Animated.View
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute", top: 0, left: 0, right: 0, height: rs(165), alignItems: "center", justifyContent: "center",
-                    opacity: burstAnim,
-                    transform: [{ scale: burstAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
-                  }}
-                >
-                  <Ionicons name="heart" size={64} color="#FFFFFF" />
-                </Animated.View>
+        {/* ── Design D: bento, filter chips, two-column tiles ── */}
+        {hasCity && filtered.length > 0 ? (() => {
+          const pick = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
+          const openCount = restaurants.filter((r) => restaurantIsOpen(r)).length;
+          const topCount = restaurants.filter((r) => r.rating >= 4.5).length;
+          return (
+            <View style={{ paddingHorizontal: 16, gap: 10, marginBottom: 14 }}>
+              {pick ? (
+                <TileIn i={0}>
+                  <BentoTile onPress={() => setSelectedRestaurant(pick)} style={{ minHeight: 190, justifyContent: "flex-end" }} accessibilityLabel={`Pick of the week: ${pick.name}`}>
+                    <FadeImage uri={(pick.images && pick.images[0]) || pick.image} style={StyleSheet.absoluteFill} />
+                    <GradientFill colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"] as const} style={[StyleSheet.absoluteFill, { top: "30%" }]} />
+                    <TileLabel light>PICK OF THE WEEK{pick.city ? ` · ${String(pick.city).toUpperCase()}` : ""}</TileLabel>
+                    <Text style={[TYPE.cardTitle, { color: "#fff", fontSize: 22, lineHeight: 25, marginTop: 4 }]} numberOfLines={2}>{pick.name}</Text>
+                    <TileLabel light style={{ marginTop: 2 }}>{[(pick.reviews ?? 0) > 0 ? `★ ${pick.rating}` : "", pick.cuisine, pick.price ? getDisplayPrice(pick, countryCode) : ""].filter(Boolean).join(" · ")}</TileLabel>
+                  </BentoTile>
+                </TileIn>
               ) : null}
-              {/* Availability — only claims open/closed when hours and timezone are known */}
-              {(() => {
-                const av = getAvailability(r);
-                return (
-                  <View style={[s.statusBadge, av.state === "open" ? s.statusOpen : av.state === "closed" ? s.statusClosed : s.statusNeutral]}>
-                    <View style={s.statusDot} />
-                    <Text style={s.statusText}>{av.label}</Text>
-                  </View>
-                );
-              })()}
-              {/* Bookmark (Saved) + favorite heart */}
-              <Pressable style={s.bookmarkIconBtn} accessibilityRole="button" accessibilityLabel={bookmarkedIds.has(r.id) || r.isSaved ? "Remove from saved" : "Save restaurant"} accessibilityState={{ selected: bookmarkedIds.has(r.id) || !!r.isSaved }} onPress={(e) => { e.stopPropagation?.(); void toggleBookmark(r.id); }}>
-                <Ionicons
-                  name={bookmarkedIds.has(r.id) || r.isSaved ? "bookmark" : "bookmark-outline"}
-                  size={18}
-                  color={bookmarkedIds.has(r.id) || r.isSaved ? "#FF7B00" : "#FFF"}
-                />
-              </Pressable>
-              <Pressable style={s.favIconBtn} accessibilityRole="button" accessibilityLabel={favorites.has(r.id) ? "Remove from favorites" : "Add to favorites"} accessibilityState={{ selected: favorites.has(r.id) }} onPress={(e) => { e.stopPropagation?.(); void toggleFav(r.id); }}>
-                <Ionicons
-                  name={favorites.has(r.id) ? "heart" : "heart-outline"}
-                  size={18}
-                  color={favorites.has(r.id) ? "#EF4444" : "#FFF"}
-                />
-              </Pressable>
-              {/* Price badge removed — dollar signs were visually noisy */}
-            </View>
-
-            {/* ── Card body ── */}
-            <View style={s.cardBody}>
-              {/* Name + verified */}
-              <View style={s.cardNameRow}>
-                <Text style={[s.cardName, isDark && { color: tc.textPrimary }]}>{r.name}</Text>
-                {r.verified && (
-                  <View style={[s.vBadge, isDark && { backgroundColor: Colors.brand.green + "25" }]}>
-                    <Ionicons name="shield-checkmark" size={10} color={Colors.brand.green} />
-                    <Text style={[s.vText, isDark && { color: Colors.brand.green }]}>Verified</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[s.cardCuisine, { color: tc.textSecondary }]}>{r.cuisine}</Text>
-
-              {/* Rating + price + distance + wait */}
-              <View style={s.infoRow}>
-                <View style={[s.ratingChip, { backgroundColor: isDark ? tc.inputBg : "#FFF8E6" }]}>
-                  <Ionicons name="star" size={12} color={(r.reviews ?? 0) > 0 ? "#F59E0B" : tc.textTertiary} />
-                  {(r.reviews ?? 0) > 0 ? (
-                    <>
-                      <Text style={[s.ratingNum, isDark && { color: tc.textPrimary }]}>{r.rating}</Text>
-                      <Text style={[s.reviewCount, isDark && { color: tc.textTertiary }]}>({r.reviews})</Text>
-                    </>
-                  ) : (
-                    <Text style={[s.reviewCount, { color: tc.textTertiary }]}>No reviews yet</Text>
-                  )}
-                </View>
-                {r.price ? (
-                  <View style={[s.priceChip, { backgroundColor: isDark ? tc.inputBg : "#F0FDF4" }]}>
-                    <Text style={[s.priceText, isDark && { color: Colors.brand.green }]}>{getDisplayPrice(r, countryCode)}</Text>
-                  </View>
-                ) : null}
-                {hasDistance(r) ? (
-                  <View style={[s.distChip, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6" }]}>
-                    <Ionicons name="location-outline" size={11} color={isDark ? tc.textTertiary : Colors.text.tertiary} />
-                    <Text style={[s.metaText, isDark && { color: tc.textSecondary }]}>{r.distance}</Text>
-                  </View>
-                ) : null}
-                {r.waitTime && (
-                  <View style={[s.waitChip, { backgroundColor: isDark ? "#2A1A00" : "#FFF3E6" }]}>
-                    <Ionicons name="time-outline" size={11} color="#FF7B00" />
-                    <Text style={s.waitText}>{r.waitTime} wait</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Service options */}
-              <View style={s.servicesRow}>
-                {safeList(r.services).map((sv, i) => (
-                  <View key={`${r.id}-service-${i}-${itemLabel(sv)}`} style={[s.serviceChip, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                    <Text style={[s.serviceText, isDark && { color: Colors.brand.green }]}>{itemLabel(sv)}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Popular dishes */}
-              {safeList(r.popularDishes).length > 0 ? (
-                <View style={s.dishesRow}>
-                  <Ionicons name="flame-outline" size={12} color="#FF7B00" />
-                  <Text style={s.dishesLabel}>Popular: </Text>
-                  <Text style={[s.dishesText, { color: tc.textSecondary }]} numberOfLines={1}>
-                    {safeList(r.popularDishes).map(itemLabel).join(" · ")}
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Tags + action buttons */}
-              <View style={[s.cardMeta, { borderTopColor: tc.borderLight }]}>
-                <View style={s.cardTags}>
-                  {safeList(r.tags).slice(0, 2).map((t, i) => (
-                    <View key={`${r.id}-tag-${i}-${itemLabel(t)}`} style={[s.cardTag, isDark && { backgroundColor: Colors.brand.greenDark + "25", borderWidth: 1, borderColor: Colors.brand.greenDark + "40" }]}><Text style={[s.cardTagText, isDark && { color: Colors.brand.green }]}>{itemLabel(t)}</Text></View>
-                  ))}
-                </View>
-                <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-                  {!restaurantIsMine(r, user?.id) ? (
-                  <Pressable
-                    style={[s.reportBtn, isDark && { backgroundColor: tc.inputBg }]}
-                    onPress={(e) => {
-                      e.stopPropagation?.();
-                      setReportSheetId(r.id);
-                    }}
-                  >
-                    <Ionicons name="flag-outline" size={16} color="#DC2626" />
-                  </Pressable>
+              {openCount > 0 || topCount > 0 ? (
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  {openCount > 0 ? (
+                    <TileIn i={1} style={{ flex: 1 }}>
+                      <BentoTile tone="mint" onPress={() => setActiveTab("open")} accessibilityLabel={`${openCount} open now`}>
+                        <TileLabel style={{ color: "rgba(255,255,255,0.85)" }}>OPEN NOW</TileLabel>
+                        <Text style={[TYPE.tileBig, { color: "#fff", marginTop: "auto" }]}>{openCount}</Text>
+                      </BentoTile>
+                    </TileIn>
                   ) : null}
-                  <Pressable style={[s.chatBtn, isDark && { backgroundColor: Colors.brand.blue + "25", borderWidth: 1, borderColor: Colors.brand.blue + "40" }]} onPress={(e) => { e.stopPropagation?.(); handleDirections(r); }}>
-                    <Ionicons name="navigate-outline" size={14} color={isDark ? "#60A5FA" : Colors.brand.blue} />
-                  </Pressable>
-                  {hasReservations(r) && (
-                    <Pressable
-                      style={[s.orderBtn, { backgroundColor: Colors.brand.green }]}
-                      onPress={(e) => { e.stopPropagation?.(); handleReserve(r); }}
-                    >
-                      <Ionicons name="calendar-outline" size={rs(12)} color="#FFF" />
-                      <Text style={s.orderBtnText}>Reserve</Text>
-                    </Pressable>
-                  )}
+                  {topCount > 0 ? (
+                    <TileIn i={2} style={{ flex: 1 }}>
+                      <BentoTile onPress={() => setActiveTab("top")} accessibilityLabel={`${topCount} rated 4.5 or more`}>
+                        <TileLabel>RATED 4.5+</TileLabel>
+                        <Text style={[TYPE.tileBig, { color: tc.textPrimary, marginTop: "auto" }]}>{topCount}</Text>
+                      </BentoTile>
+                    </TileIn>
+                  ) : null}
                 </View>
-              </View>
+              ) : null}
             </View>
-          </Pressable>
-        ))}
+          );
+        })() : null}
+
+        {hasCity ? (
+          <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
+            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].map(([k, label]) => (
+              <Chip key={k} label={label} on={activeTab === k} onPress={() => setActiveTab(k)} />
+            ))}
+          </GHScrollView>
+        ) : null}
+
+        {(() => {
+          const rows: Restaurant[][] = [];
+          for (let i = 0; i < filtered.length; i += 2) rows.push(filtered.slice(i, i + 2));
+          return rows.map((pair, ri) => (
+            <Reveal key={pair.map((r) => r.id).join("+")} i={ri} style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
+              {pair.map((r) => {
+                const saved = bookmarkedIds.has(r.id) || !!r.isSaved;
+                return (
+                  <PressableScale key={r.id} outerStyle={{ flex: 1 }} onPress={() => setSelectedRestaurant(r)} onLongPress={() => void openCardActions(r)} delayLongPress={350} accessibilityRole="button" accessibilityLabel={r.name}>
+                    <View>
+                      <FadeImage uri={(r.images && r.images[0]) || r.image} style={{ width: "100%", aspectRatio: 1, borderRadius: 22 }} />
+                      {(r.reviews ?? 0) > 0 ? (
+                        <View style={{ position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, backgroundColor: tc.glass, borderColor: tc.glassLine }}>
+                          <Text style={[TYPE.bodyStrong, { fontSize: 13.5, color: tc.textPrimary }]}>★ {r.rating}</Text>
+                        </View>
+                      ) : null}
+                      <Pressable
+                        hitSlop={8}
+                        onPress={(e) => { e.stopPropagation?.(); void toggleBookmark(r.id); }}
+                        style={{ position: "absolute", right: 8, top: 8, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", borderWidth: 1, backgroundColor: tc.glass, borderColor: tc.glassLine }}
+                        accessibilityRole="button" accessibilityLabel={saved ? "Remove from saved" : "Save restaurant"} accessibilityState={{ selected: saved }}
+                      >
+                        <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={17} color={saved ? tc.accentText : tc.textPrimary} />
+                      </Pressable>
+                    </View>
+                    <Text style={[TYPE.cardTitle, { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={1}>{r.name}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{[r.cuisine, r.price ? getDisplayPrice(r, countryCode) : ""].filter(Boolean).join(" · ")}</Text>
+                  </PressableScale>
+                );
+              })}
+              {pair.length === 1 ? <View style={{ flex: 1 }} /> : null}
+            </Reveal>
+          ));
+        })()}
 
         {hasCity && hasMore && filtered.length > 0 ? (
           <Pressable
@@ -1200,7 +1011,7 @@ export default function FoodScreen() {
         )}
 
         <View style={{ height: 20 }} />
-      </ScrollView>
+      </Reanimated.ScrollView>
 
       {/* ── Restaurant Detail Modal ── */}
       {selectedRestaurant && (
@@ -1220,326 +1031,192 @@ export default function FoodScreen() {
           onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); }}
           statusBarTranslucent
         >
-          <DismissibleSheet onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ backgroundColor: tc.cardBg }}>
-            {/* Hero */}
-            <SheetDragArea style={{ height: 280, position: "relative" }}>
+          <DismissibleSheet onDismiss={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ backgroundColor: tc.pageBg }}>
+            {/* ── Photos with glass buttons (design D, plan 01) ── */}
+            <SheetDragArea style={{ height: 350, position: "relative" }}>
               <ImageCarousel
                 images={selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]}
-                height={280}
+                height={350}
                 itemWidth={SCREEN_WIDTH}
                 onImagePress={(idx) => { const imgs = selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]; setFsImages(imgs); setFsStartIdx(idx); setFsVisible(true); }}
               />
-              <LinearGradient colors={["rgba(0,0,0,0.5)", "transparent", "rgba(0,0,0,0.75)"]} style={StyleSheet.absoluteFill} />
-              <Pressable style={rdm.backBtn} onPress={() => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); }}>
-                <Ionicons name="chevron-back" size={22} color="#FFF" />
-              </Pressable>
-              <View style={rdm.heroTopRight}>
-                {restaurantIsMine(selectedRestaurant, user?.id) ? (
-                  <Pressable
-                    style={rdm.heroActionBtn}
-                    onPress={() => confirmDeleteRestaurant(selectedRestaurant.id)}
-                    accessibilityLabel="Delete restaurant"
-                  >
-                    <Ionicons name="trash-outline" size={18} color="#FCA5A5" />
+              {(() => {
+                const r = selectedRestaurant;
+                const saved = bookmarkedIds.has(r.id) || !!r.isSaved;
+                const mine = restaurantIsMine(r, user?.id);
+                const btn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color: string = tc.textPrimary) => (
+                  <Pressable key={label} onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
+                    style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.glass, borderWidth: 1, borderColor: tc.glassLine }}>
+                    <Ionicons name={icon} size={19} color={color} />
                   </Pressable>
-                ) : null}
-                <Pressable style={rdm.heroActionBtn} onPress={() => handleShare(selectedRestaurant)}>
-                  <Ionicons name="share-outline" size={18} color="#FFF" />
-                </Pressable>
-                <Pressable style={rdm.heroActionBtn} onPress={() => void toggleBookmark(selectedRestaurant.id)}>
-                  <Ionicons
-                    name={bookmarkedIds.has(selectedRestaurant.id) || selectedRestaurant.isSaved ? "bookmark" : "bookmark-outline"}
-                    size={18}
-                    color={bookmarkedIds.has(selectedRestaurant.id) || selectedRestaurant.isSaved ? "#FF7B00" : "#FFF"}
-                  />
-                </Pressable>
-                <Pressable style={rdm.heroActionBtn} onPress={() => void toggleFav(selectedRestaurant.id)}>
-                  <Ionicons name={favorites.has(selectedRestaurant.id) ? "heart" : "heart-outline"} size={18} color={favorites.has(selectedRestaurant.id) ? "#EF4444" : "#FFF"} />
-                </Pressable>
-                {!restaurantIsMine(selectedRestaurant, user?.id) ? (
-                  <Pressable
-                    style={rdm.heroActionBtn}
-                    onPress={() => setReportSheetId(selectedRestaurant.id)}
-                  >
-                    <Ionicons name="flag-outline" size={18} color="#FCA5A5" />
-                  </Pressable>
-                ) : null}
-              </View>
-              <View style={rdm.heroBottom}>
-                <View style={{ flexDirection: "row", gap: 7, marginBottom: 8 }}>
-                  {(() => {
-                    const av = getAvailability(selectedRestaurant);
-                    if (av.state === "unknown") return null;
-                    const bg = av.state === "open" ? "rgba(22,163,74,0.9)" : av.state === "closed" ? "rgba(220,38,38,0.9)" : "rgba(0,0,0,0.5)";
-                    const txt = av.state === "open" ? "Open Now" : av.state === "closed" ? "Closed" : av.label;
-                    return (
-                      <View style={[rdm.badge, { backgroundColor: bg }]}>
-                        <Text style={rdm.badgeText}>{txt}</Text>
-                      </View>
-                    );
-                  })()}
-                  <View style={[rdm.badge, { backgroundColor: "rgba(0,0,0,0.5)" }]}>
-                    <Text style={rdm.badgeText}>{selectedRestaurant.price}</Text>
+                );
+                const close = () => { setSelectedRestaurant(null); setReviewText(""); setReservationRestaurant(null); setReservationSubmitted(false); setReservationErrors({}); };
+                return (
+                  <View style={{ position: "absolute", top: insets.top + 10, left: 14, right: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    {btn("chevron-back", "Back", close)}
+                    <View style={{ flex: 1 }} />
+                    {mine ? btn("trash-outline", "Delete restaurant", () => confirmDeleteRestaurant(r.id), tc.dangerText) : null}
+                    {btn(saved ? "bookmark" : "bookmark-outline", saved ? "Remove from saved" : "Save restaurant", () => void toggleBookmark(r.id), saved ? tc.accentText : tc.textPrimary)}
+                    {btn(favorites.has(r.id) ? "heart" : "heart-outline", favorites.has(r.id) ? "Remove from favourites" : "Add to favourites", () => void toggleFav(r.id), favorites.has(r.id) ? "#F0457E" : tc.textPrimary)}
+                    {btn("ellipsis-horizontal", "More options", () => appAlert(r.name, undefined, [
+                      { text: "Share", onPress: () => handleShare(r) },
+                      ...(!mine ? [{ text: "Report", style: "destructive" as const, onPress: () => setReportSheetId(r.id) }] : []),
+                      { text: "Cancel", style: "cancel" },
+                    ]))}
                   </View>
-                  {selectedRestaurant.verified && (
-                    <View style={[rdm.badge, { backgroundColor: "rgba(22,163,74,0.9)" }]}>
-                      <Ionicons name="shield-checkmark" size={10} color="#FFF" />
-                      <Text style={rdm.badgeText}>Verified</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={rdm.heroTitle}>{selectedRestaurant.name}</Text>
-                <Text style={rdm.heroCuisine}>{selectedRestaurant.cuisine} Cuisine{hasDistance(selectedRestaurant) ? ` · ${selectedRestaurant.distance}` : ""}</Text>
-              </View>
+                );
+              })()}
             </SheetDragArea>
 
             <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 80 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              {/* Stats row */}
-              <View style={[rdm.statsRow, { backgroundColor: isDark ? tc.inputBg : "#F9FAFB" }]}>
-                <View style={rdm.statItem}>
-                  <Ionicons name="star" size={20} color="#F59E0B" />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{(selectedRestaurant.reviews ?? 0) > 0 ? selectedRestaurant.rating : "—"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>{(selectedRestaurant.reviews ?? 0) > 0 ? `${selectedRestaurant.reviews} reviews` : "No reviews yet"}</Text>
-                </View>
-                <View style={[rdm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
-                <View style={rdm.statItem}>
-                  <Ionicons name="location" size={20} color={Colors.brand.blue} />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{hasDistance(selectedRestaurant) ? selectedRestaurant.distance : "—"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>{hasDistance(selectedRestaurant) ? "Distance" : "Distance unavailable"}</Text>
-                </View>
-                <View style={[rdm.statDiv, isDark && { backgroundColor: tc.borderLight }]} />
-                <View style={rdm.statItem}>
-                  <Ionicons name="time" size={20} color="#FF7B00" />
-                  <Text style={[rdm.statNum, isDark && { color: tc.textPrimary }]}>{selectedRestaurant.waitTime || "N/A"}</Text>
-                  <Text style={[rdm.statLbl, isDark && { color: tc.textTertiary }]}>Wait Time</Text>
-                </View>
-              </View>
-
-              {/* Quick Actions */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Quick Actions</Text>
-                <View style={rdm.quickActionsRow}>
-                  <Pressable style={rdm.quickAction} onPress={() => handleDirections(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#EBF5FF" }]}>
-                      <Ionicons name="navigate-outline" size={20} color={Colors.brand.blue} />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Directions</Text>
-                  </Pressable>
-                  <Pressable style={rdm.quickAction} onPress={() => handleCall(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#F0FDF4" }]}>
-                      <Ionicons name="call-outline" size={20} color="#16A34A" />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Call</Text>
-                  </Pressable>
-                  <Pressable style={rdm.quickAction} onPress={() => handleShare(selectedRestaurant)}>
-                    <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#FFF7ED" }]}>
-                      <Ionicons name="share-social-outline" size={20} color="#FF7B00" />
-                    </View>
-                    <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Share</Text>
-                  </Pressable>
-                  {hasReservations(selectedRestaurant) && !reservationRestaurant && (
-                    <Pressable style={rdm.quickAction} onPress={() => handleReserve(selectedRestaurant)}>
-                      <View style={[rdm.quickActionIcon, { backgroundColor: isDark ? tc.inputBg : "#F3E8FF" }]}>
-                        <Ionicons name="calendar-outline" size={20} color="#8B5CF6" />
+          <ScrollView style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }} contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 80 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {(() => {
+                const r = selectedRestaurant;
+                const av = getAvailability(r);
+                const meta = [(r.reviews ?? 0) > 0 ? `★ ${r.rating} (${r.reviews})` : "", r.cuisine, r.price ? getDisplayPrice(r, countryCode) : "", hasDistance(r) ? r.distance : ""].filter(Boolean).join(" · ");
+                const details = [
+                  av.state !== "unknown" ? ["Hours", av.label] : null,
+                  r.waitTime ? ["Typical wait", String(r.waitTime)] : null,
+                  safeList(r.services).length ? ["Services", safeList(r.services).map(itemLabel).join(" · ")] : null,
+                ].filter(Boolean) as [string, string][];
+                const actions: [keyof typeof Ionicons.glyphMap, string, () => void][] = [
+                  ["navigate-outline", "Directions", () => handleDirections(r)],
+                  ["call-outline", "Call", () => handleCall(r)],
+                  ["share-social-outline", "Share", () => handleShare(r)],
+                  ...(hasReservations(r) && !reservationRestaurant ? [["calendar-outline", "Reserve", () => handleReserve(r)] as [keyof typeof Ionicons.glyphMap, string, () => void]] : []),
+                ];
+                return (
+                  <>
+                    <Reveal i={0}>
+                      <Text style={[TYPE.pageTitle, { fontSize: 26, color: tc.textPrimary }]}>{r.name}</Text>
+                      {meta ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 4 }]}>{meta}</Text> : null}
+                      {av.state === "open" ? <Text style={[TYPE.bodyStrong, { color: tc.mint, marginTop: 6 }]}>{av.label}</Text> : av.state === "closed" ? <Text style={[TYPE.bodyStrong, { color: tc.dangerText, marginTop: 6 }]}>{av.label}</Text> : null}
+                      {r.verified ? <View style={{ marginTop: 8, alignSelf: "flex-start", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.mintSoft }}><Text style={[TYPE.label, { color: tc.successText }]}>Verified owner</Text></View> : null}
+                    </Reveal>
+                    <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
+                      {actions.map(([icon, label, onPress]) => (
+                        <PressableScale key={label} onPress={onPress} outerStyle={{ flex: 1 }} style={{ height: 64, borderRadius: 18, alignItems: "center", justifyContent: "center", gap: 3, backgroundColor: tc.accentSoft }} accessibilityRole="button" accessibilityLabel={label}>
+                          <Ionicons name={icon} size={20} color={tc.accentText} />
+                          <Text style={[TYPE.label, { color: tc.accentText }]}>{label}</Text>
+                        </PressableScale>
+                      ))}
+                    </Reveal>
+                    {safeList(r.popularDishes).length ? (
+                      <Reveal i={2}>
+                        <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Popular here</Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                          {safeList(r.popularDishes).map((dish, i) => (
+                            <View key={`${r.id}-dish-${i}`} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.borderMedium }}>
+                              <Text style={[TYPE.label, { color: tc.accentText }]}>{i + 1}</Text>
+                              <Text style={[TYPE.bodyStrong, { fontSize: 14, color: tc.textPrimary }]}>{itemLabel(dish)}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </Reveal>
+                    ) : null}
+                    {details.length ? (
+                      <Reveal i={3}>
+                        <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Details</Text>
+                        <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, paddingHorizontal: 14 }}>
+                          {details.map(([k, v], i) => (
+                            <View key={k} style={{ flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 12, borderTopWidth: i ? StyleSheet.hairlineWidth : 0, borderTopColor: tc.borderLight }}>
+                              <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </Reveal>
+                    ) : null}
+                    {safeList(r.tags).length ? (
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
+                        {safeList(r.tags).map((t, i) => (
+                          <View key={`${r.id}-tag-${i}`} style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.accentSoft }}><Text style={[TYPE.label, { color: tc.accentText }]}>{itemLabel(t)}</Text></View>
+                        ))}
                       </View>
-                      <Text style={[rdm.quickActionLabel, { color: tc.textSecondary }]}>Reserve</Text>
-                    </Pressable>
-                  )}
-                </View>
-              </View>
-
-              {/* Details */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Restaurant Details</Text>
-                <View style={rdm.detailGrid}>
-                  {[
-                    {
-                      icon: "time-outline" as const,
-                      label: "Hours",
-                      value: getAvailability(selectedRestaurant).label,
-                      color: getAvailability(selectedRestaurant).state === "open" ? "#16A34A" : getAvailability(selectedRestaurant).state === "closed" ? "#DC2626" : "#6B7280",
-                    },
-                    {
-                      icon: "pricetag-outline" as const,
-                      label: typeof selectedRestaurant.avgPricePerPerson === "number" && selectedRestaurant.avgPricePerPerson > 0 ? "Avg Price / Person" : "Price range",
-                      value: getDisplayPrice(selectedRestaurant, countryCode),
-                      color: Colors.brand.blue,
-                    },
-                    ...(hasDistance(selectedRestaurant) ? [{ icon: "location-outline" as const, label: "Distance", value: selectedRestaurant.distance, color: "#16A34A" }] : []),
-                    { icon: "restaurant-outline" as const, label: "Cuisine", value: selectedRestaurant.cuisine, color: "#8B5CF6" },
-                  ].map((d) => (
-                    <View key={d.label} style={rdm.detailRow}>
-                      <View style={[rdm.detailIconBox, { backgroundColor: `${d.color}15` }]}>
-                        <Ionicons name={d.icon} size={16} color={d.color} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[rdm.detailLabel, { color: tc.textTertiary }]}>{d.label}</Text>
-                        <Text style={[rdm.detailValue, { color: tc.textPrimary }]}>{d.value}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Services */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Available Services</Text>
-                {safeList(selectedRestaurant.services).length === 0 ? (
-                  <Text style={{ fontSize: 13, color: tc.textTertiary }}>No services listed.</Text>
-                ) : (
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    {safeList(selectedRestaurant.services).map((sv, i) => {
-                      const label = itemLabel(sv);
-                      const iconName = label === "Dine-in" ? "restaurant-outline" : label === "Takeout" ? "bag-handle-outline" : label === "Delivery" ? "bicycle-outline" : "checkmark-circle-outline";
-                      const isReserve = label.toLowerCase().includes("reserv");
-                      return (
-                        <Pressable
-                          key={`${selectedRestaurant.id}-service-${i}-${label}`}
-                          style={({ pressed }) => [rdm.serviceChip, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, pressed && { opacity: 0.7 }]}
-                          onPress={isReserve ? () => handleReserve(selectedRestaurant) : undefined}
-                        >
-                          <Ionicons name={iconName as any} size={14} color={Colors.brand.green} />
-                          <Text style={[rdm.serviceChipText, isDark && { color: Colors.brand.green }]}>{label}</Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-
-              {/* Popular Dishes */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Popular Dishes</Text>
-                <View style={{ gap: 8 }}>
-                  {safeList(selectedRestaurant.popularDishes).map((dish, i) => (
-                    <View key={`${selectedRestaurant.id}-dish-${i}-${itemLabel(dish)}`} style={[rdm.dishRow, { backgroundColor: isDark ? tc.inputBg : "#FFFBF5" }]}>
-                      <View style={rdm.dishNum}><Text style={rdm.dishNumText}>{i + 1}</Text></View>
-                      <Text style={[rdm.dishName, { color: tc.textPrimary }]}>{itemLabel(dish)}</Text>
-                      <Ionicons name="flame" size={14} color="#FF7B00" />
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Tags */}
-              <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Tags</Text>
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  {safeList(selectedRestaurant.tags).map((t, i) => (
-                    <View key={`${selectedRestaurant.id}-tag-${i}-${itemLabel(t)}`} style={[rdm.tagChip, isDark && { backgroundColor: tc.inputBg }]}><Text style={[rdm.tagChipText, isDark && { color: tc.textSecondary }]}>{itemLabel(t)}</Text></View>
-                  ))}
-                </View>
-              </View>
+                    ) : null}
+                  </>
+                );
+              })()}
 
               {/* Rate & Review */}
               <View style={rdm.section}>
-                <Text style={[rdm.sectionTitle, { color: tc.textPrimary }]}>Rate & Review</Text>
+                <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>Rate and review</Text>
                 {!restaurantIsMine(selectedRestaurant, user?.id) ? (
                   <>
                     {(() => {
                       const rid = selectedRestaurant.id;
                       const my = myRestaurantReviews[rid];
-                      const editing = reviewEditMode[rid] === true;
-                      if (my && !editing) {
+                      const openSheet = () => {
+                        if (!requireAuth(undefined, "Sign in to rate this place.")) return;
+                        if (my) {
+                          setReviewEditMode((p) => ({ ...p, [rid]: true }));
+                          setEditRating((p) => ({ ...p, [rid]: my.rating }));
+                          setEditText((p) => ({ ...p, [rid]: my.text || my.content || "" }));
+                        }
+                        setRateFor(rid);
+                      };
+                      if (my) {
                         const full = Math.min(5, Math.max(0, Math.floor(my.rating)));
                         return (
-                          <View style={[rdm.userReview, { backgroundColor: isDark ? tc.sectionBg : "#F9FAFB", paddingTop: 36 }]}>
-                            <View style={{ position: "absolute", top: 10, right: 10, flexDirection: "row", gap: 12 }}>
-                              <Pressable
-                                accessibilityLabel="Edit review"
-                                onPress={() => {
-                                  setReviewEditMode((p) => ({ ...p, [rid]: true }));
-                                  setEditRating((p) => ({ ...p, [rid]: my.rating }));
-                                  setEditText((p) => ({ ...p, [rid]: my.text || my.content || "" }));
-                                }}
-                                hitSlop={8}
-                              >
-                                <Ionicons name="pencil" size={18} color={Colors.brand.blue} />
-                              </Pressable>
-                              <Pressable accessibilityLabel="Delete review" onPress={() => confirmDeleteMyReview(selectedRestaurant)} hitSlop={8}>
-                                <Ionicons name="trash-outline" size={18} color="#DC2626" />
-                              </Pressable>
+                          <View style={[rdm.userReview, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: 1 }]}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                              <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flex: 1 }]}>Your rating</Text>
+                              <Pressable accessibilityLabel="Edit review" onPress={openSheet} hitSlop={8}><Ionicons name="create-outline" size={20} color={tc.accentText} /></Pressable>
+                              <Pressable accessibilityLabel="Delete review" onPress={() => confirmDeleteMyReview(selectedRestaurant)} hitSlop={8}><Ionicons name="trash-outline" size={20} color={tc.dangerText} /></Pressable>
                             </View>
-                            <Text style={{ color: "#F59E0B", marginBottom: 4 }}>
-                              {"★".repeat(full)}
-                              {"☆".repeat(5 - full)}
-                            </Text>
-                            <Text style={[rdm.reviewText, { color: tc.textSecondary, marginBottom: 6 }]}>{my.text || my.content}</Text>
-                            <Text style={[rdm.reviewTime, { color: tc.textTertiary }]}>{new Date(my.createdAt).toLocaleString()}</Text>
+                            <View style={{ flexDirection: "row", gap: 2, marginVertical: 6 }}>
+                              {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name={n <= full ? "star" : "star-outline"} size={18} color={n <= full ? "#F5B300" : tc.surface3} />)}
+                            </View>
+                            {my.text || my.content ? <Text style={[TYPE.body, { color: tc.textSecondary, marginBottom: 6 }]}>{my.text || my.content}</Text> : null}
+                            <Text style={[TYPE.small, { color: tc.textTertiary }]}>{new Date(my.createdAt).toLocaleDateString()}</Text>
                           </View>
-                        );
-                      }
-                      if (my && editing) {
-                        const er = editRating[rid] ?? my.rating;
-                        return (
-                          <>
-                            <View style={rdm.rateRow}>
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Pressable key={star} onPress={() => setEditRating((p) => ({ ...p, [rid]: star }))}>
-                                  <Ionicons name={er >= star ? "star" : "star-outline"} size={32} color="#F59E0B" />
-                                </Pressable>
-                              ))}
-                            </View>
-                            <View style={[rdm.reviewInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                              <TextInput
-                                style={[rdm.reviewInput, { color: tc.textPrimary }]}
-                                placeholder="Write your review..."
-                                placeholderTextColor={tc.textTertiary}
-                                value={editText[rid] ?? ""}
-                                onChangeText={(t) => setEditText((p) => ({ ...p, [rid]: t }))}
-                                multiline
-                              />
-                            </View>
-                            <Pressable style={rdm.reviewSubmitBtn} onPress={() => void saveReviewEdits(selectedRestaurant)}>
-                              <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} style={rdm.reviewSubmitGrad}>
-                                <Ionicons name="save-outline" size={14} color="#FFF" />
-                                <Text style={rdm.reviewSubmitText}>Save Changes</Text>
-                              </LinearGradient>
-                            </Pressable>
-                            <Pressable style={{ marginBottom: 12 }} onPress={() => setReviewEditMode((p) => ({ ...p, [rid]: false }))}>
-                              <Text style={{ color: tc.textTertiary, textAlign: "center", fontSize: 13 }}>Cancel</Text>
-                            </Pressable>
-                          </>
                         );
                       }
                       return (
-                        <>
-                          <View style={rdm.rateRow}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Pressable key={star} onPress={() => setUserRatings((p) => ({ ...p, [rid]: star }))}>
-                                <Ionicons
-                                  name={(userRatings[rid] || 0) >= star ? "star" : "star-outline"}
-                                  size={32}
-                                  color="#F59E0B"
-                                />
-                              </Pressable>
-                            ))}
+                        <PressableScale onPress={openSheet} accessibilityRole="button" accessibilityLabel={`Rate ${selectedRestaurant.name}`}
+                          style={[rdm.userReview, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: 1, alignItems: "center" }]}>
+                          <View style={{ flexDirection: "row", gap: 6 }}>
+                            {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name="star-outline" size={30} color={tc.surface3} />)}
                           </View>
-                          <View style={[rdm.reviewInputWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                            <TextInput
-                              style={[rdm.reviewInput, { color: tc.textPrimary }]}
-                              placeholder="Write your review..."
-                              placeholderTextColor={tc.textTertiary}
-                              value={reviewText}
-                              onChangeText={setReviewText}
-                              multiline
-                            />
-                          </View>
-                          <Pressable
-                            style={[rdm.reviewSubmitBtn, !reviewText.trim() && { opacity: 0.5 }]}
-                            onPress={() => void submitReviewForRestaurant(selectedRestaurant)}
-                          >
-                            <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} style={rdm.reviewSubmitGrad}>
-                              <Ionicons name="send" size={14} color="#FFF" />
-                              <Text style={rdm.reviewSubmitText}>Submit Review</Text>
-                            </LinearGradient>
-                          </Pressable>
-                        </>
+                          <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 6 }]}>Been here? Tap to rate it</Text>
+                        </PressableScale>
                       );
                     })()}
                   </>
                 ) : null}
+
+                <DSheet visible={rateFor === selectedRestaurant.id} onClose={() => { setRateFor(null); setReviewEditMode((p) => ({ ...p, [selectedRestaurant.id]: false })); }} title={`Rate ${selectedRestaurant.name}`}>
+                  {(() => {
+                    const rid = selectedRestaurant.id;
+                    const my = myRestaurantReviews[rid];
+                    const rating = my ? (editRating[rid] ?? my.rating) : (userRatings[rid] || 0);
+                    const text = my ? (editText[rid] ?? "") : reviewText;
+                    return (
+                      <View style={{ paddingHorizontal: 18, paddingBottom: 8 }}>
+                        <StarPicker value={rating} onChange={(v) => (my ? setEditRating((p) => ({ ...p, [rid]: v })) : setUserRatings((p) => ({ ...p, [rid]: v })))} />
+                        <Text style={[TYPE.label, { color: tc.textSecondary, marginTop: 16, marginBottom: 6 }]}>Tell people more (optional)</Text>
+                        <TextInput
+                          style={[TYPE.body, { minHeight: 96, textAlignVertical: "top", borderRadius: 16, padding: 12, backgroundColor: tc.inputBg, color: tc.textPrimary }]}
+                          placeholder="What should people order?"
+                          placeholderTextColor={tc.textTertiary}
+                          value={text}
+                          onChangeText={(t) => (my ? setEditText((p) => ({ ...p, [rid]: t })) : setReviewText(t))}
+                          multiline
+                        />
+                        <GradientButton
+                          block
+                          label={my ? "Save changes" : "Post rating"}
+                          disabled={!rating}
+                          outerStyle={{ marginTop: 16 }}
+                          onPress={() => {
+                            setRateFor(null);
+                            void (my ? saveReviewEdits(selectedRestaurant) : submitReviewForRestaurant(selectedRestaurant));
+                          }}
+                        />
+                      </View>
+                    );
+                  })()}
+                </DSheet>
 
                 {(reviewsList[selectedRestaurant.id] || [])
                   .filter((rv) => String(rv.author.id) !== String(user?.id))
@@ -1960,9 +1637,9 @@ const s = StyleSheet.create({
   metaText: { fontSize: rs(11), fontWeight: "600", color: Colors.text.secondary },
   waitChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    backgroundColor: "#FFF3E6", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
+    backgroundColor: "#E2F0F1", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
-  waitText: { fontSize: rs(11), fontWeight: "600", color: "#FF7B00" },
+  waitText: { fontSize: rs(11), fontWeight: "600", color: "#257A86" },
   priceChip: {
     borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
     backgroundColor: "#F0FDF4",
@@ -1980,7 +1657,7 @@ const s = StyleSheet.create({
 
   // Popular dishes
   dishesRow: { flexDirection: "row", alignItems: "center", gap: rs(4), marginBottom: rs(10) },
-  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: "#FF7B00" },
+  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: "#257A86" },
   dishesText: { fontSize: rs(11), color: Colors.text.secondary, flex: 1 },
 
   // Bottom row: tags + actions
@@ -2078,7 +1755,7 @@ const rdm = StyleSheet.create({
     backgroundColor: "#FFFBF5", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
   },
   dishNum: {
-    width: 24, height: 24, borderRadius: 8, backgroundColor: "#FF7B00",
+    width: 24, height: 24, borderRadius: 8, backgroundColor: "#257A86",
     alignItems: "center", justifyContent: "center",
   },
   dishNumText: { fontSize: 12, fontWeight: "700", color: "#FFF" },

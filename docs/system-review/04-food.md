@@ -77,3 +77,13 @@ boundary; restaurant create and edit with images; report.
 - Every seeded restaurant shows "Hours not provided", so open or closed could not be checked [observed].
 - Detail: rating with review count, "Distance unavailable", "N/A Wait Time" (TR-001), quick actions Directions,
   Call, Share; no Website or Reserve for this restaurant [observed].
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- Rate and review is a sheet; drag across the stars; a rating alone can be posted (server: `content` optional, stored empty). **[phone]**
+- Review composer: pick the restaurant from a search list of your city; the fields that were never sent (cuisine, price, visit, dishes) are gone.
+- Restaurant composer: $$ and Dine-in chosen by default; one line about badges.
+- My restaurants: manage sheet in D; views, likes and reservations (not in the data) are no longer shown as 0.

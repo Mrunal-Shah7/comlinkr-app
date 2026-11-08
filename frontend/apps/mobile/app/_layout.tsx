@@ -2,14 +2,16 @@
 
 import { useEffect, useRef } from 'react';
 import { LogBox, useWindowDimensions } from 'react-native';
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useReducedMotion } from 'react-native-reanimated';
+import { useFonts, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
+import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque';
 import { DARK_THEME, LIGHT_THEME } from '../src/theme/useTheme';
-import { EdgeSwipeBack } from '../src/shared/ui/EdgeSwipeBack';
+import { ZoomStack, zoomOptions } from '../src/shared/navigation/ZoomStack';
 
-// Screens that own horizontal edge gestures (or are roots) don't get Android edge swipe-back.
+// Screens that own horizontal edge gestures (or are roots) don't get the edge swipe-back.
 const NO_EDGE_SWIPE = new Set(['index', '(tabs)', '(auth)', 'story-viewer']);
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../src/services/cache/queryClient';
@@ -28,12 +30,9 @@ import {
   disconnectMessagingSocket,
 } from '../src/services/messagingSocket'; // SPRINT-39:
 
-// expo-video (3.x) internally calls expo-keep-awake which isn't registered
-// in Expo Go on SDK 54. The error is non-fatal — video still plays.
-LogBox.ignoreLogs([
-  'Unable to activate keep awake',
-  'Uncaught (in promise',
-]);
+// expo-video calls expo-keep-awake, which can fail to activate in Expo Go. Non-fatal: video still plays.
+// Unhandled promise rejections are deliberately not muted, so a failing API call shows up in development.
+LogBox.ignoreLogs(['Unable to activate keep awake']);
 
 export default function RootLayout() {
   const hydrate      = useAuthStore((s) => s.hydrate);
@@ -46,6 +45,13 @@ export default function RootLayout() {
   const setPushToken = useAuthStore((s) => s.setPushToken);
   const wasAuthedRef = useRef(false);
   const pushRegisteredRef = useRef(false);
+
+  // Design D fonts (plan 01): Manrope for text, Bricolage Grotesque for headings.
+  const [fontsLoaded, fontError] = useFonts({
+    Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold,
+    BricolageGrotesque_500Medium, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold,
+  });
+  const reduceMotion = useReducedMotion();
 
   // Root listener to recalculate dimensions on rotate/resize
   useWindowDimensions();
@@ -91,7 +97,9 @@ export default function RootLayout() {
   }, [isAuthed]);
 
   // UI-10: wait for the persisted theme so the app never flashes the wrong palette on start.
-  if (!themeHydrated) return null;
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  if (!themeHydrated || (!fontsLoaded && !fontError)) return null;
+  const pageBg = isDark ? DARK_THEME.pageBg : LIGHT_THEME.pageBg;
 
   return (
     // The root must be painted: during a stack pop the leaving screen can go blank before its slide-out
@@ -101,22 +109,12 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <ErrorBoundary>
-            <Stack
-              screenLayout={({ children, route, navigation }) => (
-                <EdgeSwipeBack
-                  enabled={!NO_EDGE_SWIPE.has(route.name) && navigation.canGoBack()}
-                  onBack={() => navigation.goBack()}
-                >
-                  {children}
-                </EdgeSwipeBack>
-              )}
-              screenOptions={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                animationDuration: 260,
-                // iOS keeps its native edge swipe-back; Android gets EdgeSwipeBack (screenLayout above).
-                contentStyle: { backgroundColor: isDark ? DARK_THEME.pageBg : LIGHT_THEME.pageBg },
-              }}
+            {/* Design D: pushed screens zoom in; edge swipe goes back on both platforms (ZoomStack). */}
+            <ZoomStack
+              screenOptions={({ route }) => ({
+                ...zoomOptions(reduceMotion, pageBg),
+                gestureEnabled: !NO_EDGE_SWIPE.has(route.name),
+              })}
             />
             <ToastHost />
             <DialogHost />

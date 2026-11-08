@@ -6,6 +6,7 @@
 import { StyleSheet } from 'react-native';
 import { useThemeStore } from '../store/theme.store';
 import { DARK_THEME } from './useTheme';
+import { body, display } from './d';
 
 const norm = (v: string) => v.trim().toLowerCase();
 
@@ -27,6 +28,12 @@ const SURFACE: Record<string, string> = {
   '#ebf5ff': DARK_THEME.pillBg,
   '#eef5ff': DARK_THEME.pillBg,
   '#e6f4fe': DARK_THEME.pillBg,
+  // Design D's light brand tints (plan 01).
+  '#e3edf6': DARK_THEME.accentSoft,
+  '#e3f1ea': DARK_THEME.mintSoft,
+  '#e2f0f1': DARK_THEME.accentSoft,
+  '#f2f6f8': DARK_THEME.pageBg,
+  '#e7eff2': DARK_THEME.inputBg,
   '#f0f9ff': DARK_THEME.pillBg,
   '#fef2f2': '#2A1517',
   '#fee2e2': '#2A1517',
@@ -44,6 +51,10 @@ const SURFACE: Record<string, string> = {
 
 const TEXT: Record<string, string> = {
   '#111827': DARK_THEME.textPrimary,
+  // Design D's light text colours (Colors.text.*, plan 01).
+  '#0f1a21': DARK_THEME.textPrimary,
+  '#4f6470': DARK_THEME.textSecondary,
+  '#8a9da8': DARK_THEME.textTertiary,
   '#111': DARK_THEME.textPrimary,
   '#1f2937': DARK_THEME.textPrimary,
   '#0a2540': DARK_THEME.textPrimary,
@@ -58,7 +69,7 @@ const TEXT: Record<string, string> = {
   '#b45309': DARK_THEME.warningText,
 };
 
-const BORDER = new Set(['#e5e7eb', '#f0f2f5', '#f3f4f6', '#e8edf4', '#f0f3f8', '#e2e8f0', '#f1f5f9']);
+const BORDER = new Set(['#e1e9ed', '#cfdbe1', '#e5e7eb', '#f0f2f5', '#f3f4f6', '#e8edf4', '#f0f3f8', '#e2e8f0', '#f1f5f9']);
 
 function mapValue(prop: string, value: unknown): unknown {
   if (typeof value !== 'string') return value;
@@ -84,10 +95,29 @@ function mapStyle(style: any): any {
   return out;
 }
 
+/** Design D base coat (plan 01), both themes: text styles take Manrope (Bricolage for large bold headings) in the
+ *  weight they asked for. Android cannot pick a weight of a custom font from fontWeight, so fontWeight goes. */
+function toWeight(w: unknown): 400 | 500 | 600 | 700 | 800 {
+  const n = w === 'bold' ? 700 : w === 'normal' || w == null ? 400 : Number(w);
+  if (!Number.isFinite(n) || n <= 400) return 400;
+  if (n >= 800) return 800;
+  return (Math.round(n / 100) * 100) as 500 | 600 | 700;
+}
+function dType(style: any): any {
+  if (!style || typeof style !== 'object' || Array.isArray(style)) return style;
+  if (style.fontFamily || (style.fontSize == null && style.fontWeight == null)) return style;
+  const { fontWeight, ...rest } = style;
+  const w = toWeight(fontWeight);
+  const big = typeof style.fontSize === 'number' && style.fontSize >= 22 && w >= 700;
+  return { ...rest, ...(big ? display(w >= 800 ? 800 : 700) : body(w)) };
+}
+
 export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
   styles: T | StyleSheet.NamedStyles<T>,
 ): T {
-  const base = StyleSheet.create(styles) as T;
+  const typed: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(styles)) typed[k] = dType(v);
+  const base = StyleSheet.create(typed as any) as T;
   let darkCache: Partial<Record<keyof T, any>> = {};
   return new Proxy(base, {
     get(target, prop: string | symbol) {
@@ -97,4 +127,14 @@ export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSh
       return (darkCache as any)[prop];
     },
   });
+}
+
+/** Fonts only (design D, plan 01): for screens that are dark on purpose in both themes (story viewer, gallery,
+ *  scanner), where mapping light surfaces to dark ones would break white-on-black controls. */
+export function createDTypeStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
+  styles: T | StyleSheet.NamedStyles<T>,
+): T {
+  const typed: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(styles)) typed[k] = dType(v);
+  return StyleSheet.create(typed as any) as T;
 }

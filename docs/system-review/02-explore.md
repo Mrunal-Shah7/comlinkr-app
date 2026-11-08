@@ -92,3 +92,15 @@ news engagement; the composer for news posts, events, stories and challenges; a 
   with no city, the phone's time ("Good morning") [observed].
 - After sign-out with no city chosen, the "Recent activity" ticker still shows Los Angeles posts [observed]
   [question: TR-003].
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- RSVP: one sheet; name and email come from the profile (Change opens the fields); ticket count stepper; the ticket flips in with the QR. **[phone]**
+- Door check-in: D page; counts roll up after an admission; outcomes show over the scanner. Scanning not walked.
+- All events opens the shared event detail and RSVP sheet (its own older copies are removed).
+- Stories can be posted without a title or a category (server: empty title, category `GENERAL`, shown as General / Story). The story composer is a black screen, media first. **[phone]** (not posted)
+- Quest composer: Start from templates fill the title, goal, reward and length.
+- News composer: tags as chips; your city as a location chip.

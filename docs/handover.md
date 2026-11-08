@@ -3,6 +3,113 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
+## 2026-11-08 (later) - Expo review, second round; no pull request possible
+
+- **Owner:** "Open the PR and merge it as well. Once that is done, proceed with the next items."
+- **Blocked:** this repository has no `origin` remote and `gh` is not installed, so nothing was pushed and no pull
+  request exists. Nothing was merged (no `development` branch exists; `main` takes changes only through a pull
+  request). To do: create the GitHub repository, add it as `origin`, push `main` and `feature/design-d`, then open the
+  pull request into `development` (or `main` if `development` is not created).
+- **Done:** `SignPad` on Gesture Handler with the path on the UI thread; `LayoutAnimation` removed from Explore.
+  "Second round" in [the build note](build/2026-11-08-expo-review.md). Committed on `feature/design-d`.
+- **Not checked:** the signature pad on a phone (the Motorola connected this time was PIN-locked). Steps are in the
+  build note.
+- **Servers:** Metro stopped; the backend was left running as found.
+
+## 2026-11-08 - Expo review of the mobile app on `feature/design-d` (TR-010)
+
+- **Owner, 2026-11-08:** review `frontend/` against the Expo skills, fix the clear bugs and the clean-up, then start
+  the refactors; walk on the phone; continue unattended. First, commit the uncommitted animation-timing work
+  (done: `18788bb`, and the D: release script `3f8ba27`).
+- **Done:** [build note](build/2026-11-08-expo-review.md), [run log](device-runs/2026-11-08-expo-review.md), review 08
+  "Update 2026-11-08". Commits `d414423` (bugs), `4a07c79` (unused files), `79babe3` (gestures and animations on
+  Gesture Handler / Reanimated), `193be40` (the restored `app/app/*` bridge routes, with these docs), then a
+  docs-only commit. Nothing pushed, no pull request.
+- **Not checked:** pinch-to-zoom (adb has one finger), `ListingCard` (admin screen only), the news skeleton pulse,
+  iOS, a release build. ESLint does not run in the mobile app (no dev dependency).
+- **Next, if wanted:** `SignPad` off `PanResponder`; data fetching onto React Query; hard-coded colours onto theme
+  tokens. Full list under "Reported, not fixed" in the build note.
+- **Left untracked on purpose:** `.claude/skills/` and `skills-lock.json` (the Expo skills install); the owner decides
+  whether they belong in the repository.
+- **Servers:** Metro (port 8083) stopped at the end; the backend was already running before the session and was left
+  running.
+
+## 2026-11-06 - design D full match on `feature/design-d` (plan 01)
+
+- **Owner, 2026-11-05:** every screen must match design D, motion included, and the phase 2 behaviour changes
+  are in ("Yes, include them now").
+- **Done:** see [the build note](build/2026-11-06-design-d-full-match.md) and the tracker in
+  [plan 01](plan/01-design-d.md). Two optional API fields and migration `20261105000000_story_general_category`
+  (applied to the local databases only). One commit per screen; nothing pushed, no pull request.
+- **Partly built:** card-to-detail expand on Explore event tiles only; the guest city picker is rebuilt but not walked.
+- **Not walked:** listed in the build note (onboarding, badges, most composers, landlord, My posts Undo, gallery,
+  story viewer, scanning, Ask, upvotes, All events). Light mode not checked on anything new. No screen-by-screen
+  comparison with the prototype.
+- **Before a pull request:** check the production PostgreSQL version (12 or later for the enum migration);
+  update the system reviews (`docs/system-review/`, sections "Update 2026-11-06" added with the moved
+  interactions, still to be read through by the owner); walk the screens not walked; confirm
+  `frontend/apps/mobile/.env` still points at production; the owner's go-ahead to push.
+- **Known failing test, not from this branch:** `test/sprint54/stories-listing-reason.e2e-spec.ts` (listing
+  moderation) fails with `main`'s code too.
+- **Servers:** stopped at the end.
+
+## 2026-11-05 (latest) - design D phase 1 built on `feature/design-d` (plan 01)
+
+- **State:** of the plan's 57 tracker rows, 40 are rebuilt and seen on the phone, 9 rebuilt but not walked, 2
+  partly rebuilt (Apply for a badge, the tenancy agreement) and 6 on the base coat (RSVP sheet and ticket, city
+  picker, and the dark-on-purpose gallery, story viewer and door check-in). One commit per screen, nothing pushed,
+  no pull request. Build note (with the motion the design has and phase 1 lacks):
+  [build/2026-11-05-design-d-phase-1.md](build/2026-11-05-design-d-phase-1.md). Run log: the second section of
+  [device-runs/2026-11-05-design-d.md](device-runs/2026-11-05-design-d.md).
+- **Not walked:**
+  - the seven composers other than News;
+  - the RSVP ticket and the sign-up step of the RSVP sheet;
+  - restaurant review, the question answers view, the story viewer (no stories in the seed);
+  - badge upload and send;
+  - the sign-up code step (same `OtpBoxes` as reset password, which was walked).
+- **Still on the base coat inside rebuilt screens:**
+  - the roommate-preferences sheet in My profile;
+  - My posts' detail and edit sheets;
+  - My restaurants' manage sheet;
+  - a conversation's group info and emoji picker;
+  - the step bodies of Apply for a badge and the tenancy agreement;
+  - the detail sheet in `app/events.tsx`.
+- **Next:**
+  - the owner reviews on the phone;
+  - then phase 2, the behaviour changes in the plan;
+  - triage TR-006 to TR-009, found on the way and none caused by this work.
+- **Before a pull request:** check that `frontend/apps/mobile/.env` still points at production (it was not
+  edited); walk the journeys not yet walked; check a detail page, a sheet and sign-in in light mode; update the system
+  reviews in `docs/system-review/` for the interactions that moved (edit, delete and report in ··· menus, the Dark
+  mode row in Settings, fewer profile shortcuts, "Show results" in filters, the composer chooser without tips); get the
+  owner's go-ahead to push.
+- **Servers:** backend and Metro were stopped at the end. To walk again, start them as in
+  [device-testing.md](device-testing.md) (backend with `RESEND_API_KEY=` empty and `NODE_ENV=development`; Metro with
+  `EXPO_PUBLIC_API_BASE_URL` set to the local API for the process, port 8083).
+- **Lesson:** build `RegExp` patterns in a script file with escaped `|`; an unescaped one put text at the top of the
+  plan (repaired in `d7fb062`).
+
+## 2026-11-05 (earlier) - building design D, phase 1 in progress (plan 01)
+
+- **Stopped here (usage limit).** Done and checked on the phone: foundation, navigation (zoom stack, floating tab bar, + sheet), Explore tab (all five sub-tabs), Listings tab (homes, rooms, roommates). Food tab restyled and type-checked but **not yet checked on the phone** (last commit). Not started: Community tab, all detail screens and modals, the You screens, sign-in and onboarding, the composers. Backend and Metro were stopped.
+
+- **Where:** branch `feature/design-d` (from base commit `6720646` on `main`). Commits so far: `bb696fe`
+  foundation (palette, fonts, motion kit, ZoomStack, floating tab bar, + sheet), `fb739c8` Explore part 1
+  (header, bento, chips, news cards), then Explore fixes and tab-bar clearance on the other tabs.
+- **Checked on the phone:** foundation, navigation, Explore header, bento, News. Log:
+  [device-runs/2026-11-05-design-d.md](device-runs/2026-11-05-design-d.md) (includes an accidental Play Store
+  visit, nothing changed).
+- **Next, in order:** Explore's Events, Stories, Quests, Polls and neighbour-post cards, then the event detail,
+  RSVP, ticket and story viewer; then Listings, Food, Community, the "You" screens, the composers (phase 1 =
+  restyle only). Check light mode once per section. Build note in `docs/build/` when phase 1 is finished.
+- **How screens are restyled:** use `src/shared/d` (PressableScale, GradientButton, SoftButton, Chip,
+  Segmented, BentoTile, Reveal/TileIn, useShake, DSheet), `src/theme/d.ts` (TYPE, body(), display(), RADIUS,
+  GRADIENT) and `tc.*` tokens; scroll lists in tabs add `tabBarClearance(insets.bottom)`. Decisions are in the
+  plan's "Decided while building".
+- **Running:** backend (`pnpm start:dev`, email off) and Metro (port 8083, local API, Fast Refresh on) in this
+  session's background; phone has `adb reverse` 4000/8083, Expo Go signed in as `ui_tester`. Driving helpers
+  (`shot.sh`, `t.sh`, `app.sh`) live in the session scratchpad.
+
 ## 2026-11-05 (later) - design D is C in the brand gradient
 
 - The owner likes C best. The first D (a new design from the brand colours) was deleted. The new D,

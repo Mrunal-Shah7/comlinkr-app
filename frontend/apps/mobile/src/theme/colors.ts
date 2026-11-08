@@ -1,38 +1,42 @@
-// ComLinkr brand colors — matches web app
+// ComLinkr brand colors — design D (plan 01): the app's blue→green gradient replaces the old bright blue and
+// green. Names are kept so every screen that reads Colors.brand.* picks up the new palette.
 export const Colors = {
   brand: {
-    blue: "#0076EB",
-    blueDark: "#0062CC",
-    blueLight: "#E6F4FE",
-    green: "#26B324",
-    greenDark: "#1a8a18",
-    greenLight: "#EAFBE9",
-    orange: "#FF7B00",
-    orangeLight: "#FFF3E6",
+    blue: "#1A6BAE",
+    blueDark: "#155A93",
+    blueLight: "#E3EDF6",
+    green: "#30855B",
+    greenDark: "#256B49",
+    greenLight: "#E3F1EA",
+    // The old orange becomes the gradient's middle teal (design D has no orange).
+    orange: "#257A86",
+    orangeLight: "#E2F0F1",
   },
   text: {
-    primary: "#111827",
-    secondary: "#6B7280",
-    tertiary: "#9CA3AF",
+    primary: "#0F1A21",
+    secondary: "#4F6470",
+    tertiary: "#8A9DA8",
     inverse: "#FFFFFF",
-    link: "#0076EB",
+    link: "#1A6BAE",
     error: "#EF4444",
   },
   bg: {
     primary: "#FFFFFF",
-    secondary: "#F9FAFB",
-    tertiary: "#F3F4F6",
-    overlay: "rgba(0,0,0,0.5)",
+    secondary: "#F2F6F8",
+    tertiary: "#E7EFF2",
+    overlay: "rgba(0,0,0,0.42)",
   },
   border: {
-    light: "#E5E7EB",
-    medium: "#D1D5DB",
-    focus: "#0076EB",
+    light: "#E1E9ED",
+    medium: "#CFDBE1",
+    focus: "#1A6BAE",
   },
   gradient: {
-    blueGreen: ["#0076EB", "#26B324"] as const,
-    blueDeep: ["#0062CC", "#0076EB"] as const,
-    greenFresh: ["#1a8a18", "#26B324"] as const,
+    blueGreen: ["#1A6BAE", "#30855B"] as const,
+    blueDeep: ["#155A93", "#1A6BAE"] as const,
+    greenFresh: ["#256B49", "#30855B"] as const,
+    // The full band sampled from the app: blue → teal → green.
+    brand: ["#1A6BAE", "#257A86", "#30855B"] as const,
   },
 } as const;
 

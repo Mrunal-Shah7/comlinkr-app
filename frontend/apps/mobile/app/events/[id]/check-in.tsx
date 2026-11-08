@@ -1,20 +1,11 @@
-// SPRINT-42: organiser door check-in — industrial/utilitarian QR scanner + status totals.
+// Door check-in (design D `check-in`): the scanner in a rounded box with a sweeping line, live counts that roll
+// up on each admission, and the list of who is in. SPRINT-42 rules kept: owner gate before the camera, one scan at a time.
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-  Linking,
-  FlatList,
-  Alert,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, Pressable, StyleSheet, ActivityIndicator, Linking } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../../src/theme/colors";
+import Animated, { Easing, ZoomIn, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { useTheme } from "../../../src/theme/useTheme";
 import { ApiError } from "../../../src/api/client";
 import {
@@ -26,8 +17,11 @@ import {
   type EventCheckInReasonCode,
   type EventCheckInResult,
 } from "../../../src/api/events.api";
-import { rs } from "../../../src/utils/responsive";
-import { appAlert } from '../../../src/shared/ui/Dialogs';
+import { appAlert } from "../../../src/shared/ui/Dialogs";
+import { showToast } from "../../../src/shared/ui/Toast";
+import { DPage } from "../../../src/shared/d/Page";
+import { Chip, EmptyState, PersonAvatar, PressableScale, Reveal, RollNumber, Tag } from "../../../src/shared/d";
+import { TYPE, body, display } from "../../../src/theme/d";
 
 type OutcomeKind = EventCheckInReasonCode | "NETWORK_ERROR" | "PARSE_ERROR"; // SPRINT-42:
 
@@ -68,12 +62,6 @@ function formatCheckedInAt(value: string | Date | null | undefined): string {
   }
 }
 
-function formatTotalDisplay(value: number | null, available: boolean): string {
-  // SPRINT-42: never show fake zeros when totals were stripped from the envelope
-  if (!available || value == null) return "Unavailable"; // SPRINT-42:
-  return String(value); // SPRINT-42:
-}
-
 export default function EventCheckInScreen() {
   // SPRINT-42:
   const { id, title } = useLocalSearchParams<{ id: string; title?: string }>();
@@ -101,6 +89,7 @@ export default function EventCheckInScreen() {
   const [attendees, setAttendees] = useState<EventCheckInAttendee[]>([]);
   const [statusLoading, setStatusLoading] = useState(false);
   const [statusError, setStatusError] = useState("");
+  const knownRef = useRef<Set<string> | null>(null); // rows seen so far; null until the first list arrives
 
   useEffect(() => {
     // SPRINT-42: detail authority before camera/status — never mount CameraView for non-owners
@@ -150,6 +139,7 @@ export default function EventCheckInScreen() {
         totalsAvailable: res.totalsAvailable, // SPRINT-42:
       });
       setAttendees(res.data);
+      if (knownRef.current == null) knownRef.current = new Set(res.data.map((x) => `${x.ticketId ?? x.id}:${x.checkedIn ? 1 : 0}`));
     } catch (err) {
       setStatusError(err instanceof ApiError ? err.message : "Could not load check-in status.");
     } finally {
@@ -165,6 +155,7 @@ export default function EventCheckInScreen() {
     // SPRINT-42:
     setOutcome(next);
     setScanning(false);
+    if (next.kind === "ADMITTED" && next.name) showToast(`${next.name.split(" ")[0]} checked in`, "success");
   };
 
   const dismissOutcome = () => {
@@ -293,364 +284,203 @@ export default function EventCheckInScreen() {
     }
   };
 
+  const sentence = (t: string) => t.charAt(0) + t.slice(1).toLowerCase();
+  const outcomeTone = (k: OutcomeKind) =>
+    k === "ADMITTED" ? { bg: tc.mint, icon: "checkmark-circle" as const }
+    : k === "ALREADY_CHECKED_IN" || k === "WRONG_EVENT" ? { bg: "#B7791F", icon: "alert-circle" as const }
+    : k === "NETWORK_ERROR" ? { bg: "#4F6470", icon: "cloud-offline" as const }
+    : { bg: "#C53030", icon: "close-circle" as const };
+
   if (!eventId || ownerGate === "error") {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: tc.pageBg }]}>
-        <Text style={{ color: tc.textPrimary, padding: 24 }}>{ownerError || "Missing event id."}</Text>
-        <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 24 }}>
-          <Text style={{ color: Colors.brand.blue, fontWeight: "700" }}>Go back</Text>
-        </Pressable>
-      </SafeAreaView>
+      <DPage title="Door check-in" onBack={() => router.back()}>
+        <EmptyState icon="alert-circle-outline" title="Could not open check-in" sub={ownerError || "Missing event id."} actionLabel="Go back" onAction={() => router.back()} />
+      </DPage>
     );
   }
 
-  if (ownerGate === "loading" || ownerGate === "denied") {
+  if (ownerGate === "loading" || ownerGate === "denied" || !permission) {
     // SPRINT-42: loading/denied — never mount CameraView
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14", justifyContent: "center", alignItems: "center" }]}>
-        {ownerGate === "loading" ? (
-          <ActivityIndicator color="#FFF" />
+      <DPage title="Door check-in" sub={eventTitle} onBack={() => router.back()}>
+        {ownerGate === "denied" ? (
+          <EmptyState icon="lock-closed-outline" title="Organiser only" sub="Only the event organiser can use door check-in." actionLabel="Go back" onAction={() => router.back()} />
         ) : (
-          <>
-            <Text style={{ color: "#FFF", fontWeight: "800", paddingHorizontal: 28, textAlign: "center" }}>
-              Only the event organiser can use door check-in.
-            </Text>
-            <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
-              <Text style={{ color: "#9CA3AF", fontWeight: "700" }}>Go back</Text>
-            </Pressable>
-          </>
+          <ActivityIndicator color={tc.accent} style={{ marginTop: 40 }} />
         )}
-      </SafeAreaView>
-    );
-  }
-
-  if (!permission) {
-    return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14", justifyContent: "center", alignItems: "center" }]}>
-        <ActivityIndicator color="#FFF" />
-      </SafeAreaView>
+      </DPage>
     );
   }
 
   if (!permission.granted) {
     const permanent = permission.canAskAgain === false;
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14" }]}>
-        <View style={styles.permWrap}>
-          <Ionicons name="camera-outline" size={48} color="#9CA3AF" />
-          <Text style={styles.permTitle}>Camera access needed</Text>
-          <Text style={styles.permBody}>
-            ComLinkr uses your camera to scan event ticket QR codes at check-in.
-          </Text>
-          {permanent ? (
-            <Pressable style={styles.permBtn} onPress={() => void Linking.openSettings()}>
-              <Text style={styles.permBtnText}>Open Settings</Text>
-            </Pressable>
-          ) : (
-            <Pressable style={styles.permBtn} onPress={() => void requestPermission()}>
-              <Text style={styles.permBtnText}>Allow Camera</Text>
-            </Pressable>
-          )}
-          <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
-            <Text style={{ color: "#9CA3AF", fontWeight: "700" }}>Go back</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+      <DPage title="Door check-in" sub={eventTitle} onBack={() => router.back()}>
+        <EmptyState
+          icon="camera-outline"
+          title="Camera access needed"
+          sub="Comlinkr uses the camera to scan ticket QR codes at the door."
+          actionLabel={permanent ? "Open settings" : "Allow camera"}
+          onAction={() => (permanent ? void Linking.openSettings() : void requestPermission())}
+        />
+      </DPage>
     );
   }
 
   const totalsAvailable = totals.totalsAvailable; // SPRINT-42:
+  const tone = outcome ? outcomeTone(outcome.kind) : null;
+  const numStyle = [display(700), { fontSize: 18, color: tc.textPrimary, textAlign: "center" as const }];
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: "#0B0F14" }]} edges={["top", "bottom"]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={22} color="#FFF" />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerEyebrow}>DOOR CHECK-IN</Text>
-          <Text style={styles.headerTitle} numberOfLines={1}>{eventTitle}</Text>
-        </View>
-        <Pressable onPress={() => void refreshStatus()} hitSlop={10}>
-          <Ionicons name="refresh" size={20} color="#FFF" />
-        </Pressable>
-      </View>
-
-      {/* Totals — ticket quantities (Unavailable when envelope strips siblings) */}
-      <View style={styles.totalsRow}>
-        <View style={styles.totalBox}>
-          <Text style={[styles.totalNum, !totalsAvailable && styles.totalUnavailable]}>
-            {formatTotalDisplay(totals.totalRegistered, totalsAvailable)}
-          </Text>
-          <Text style={styles.totalLbl}>Registered</Text>
-        </View>
-        <View style={styles.totalBox}>
-          <Text style={[styles.totalNum, { color: totalsAvailable ? "#4ADE80" : "#9CA3AF" }, !totalsAvailable && styles.totalUnavailable]}>
-            {formatTotalDisplay(totals.checkedIn, totalsAvailable)}
-          </Text>
-          <Text style={styles.totalLbl}>Checked in</Text>
-        </View>
-        <View style={styles.totalBox}>
-          <Text style={[styles.totalNum, { color: totalsAvailable ? "#FBBF24" : "#9CA3AF" }, !totalsAvailable && styles.totalUnavailable]}>
-            {formatTotalDisplay(totals.remaining, totalsAvailable)}
-          </Text>
-          <Text style={styles.totalLbl}>Remaining</Text>
-        </View>
-      </View>
-      {!totalsAvailable ? (
-        <Text style={styles.totalsLimitNote}>
-          {/* SPRINT-42: */}
-          Totals unavailable — backend TransformInterceptor drops top-level totals from check-in status responses that also include data/meta.
-        </Text>
-      ) : null}
-
+    <DPage
+      title="Door check-in"
+      sub={eventTitle}
+      onBack={() => router.back()}
+      right={
+        <PressableScale onPress={() => void refreshStatus()} hitSlop={10} accessibilityLabel="Refresh" style={[st.iconBtn, { backgroundColor: tc.glass, borderColor: tc.glassLine }]}>
+          <Ionicons name="refresh" size={19} color={tc.textPrimary} />
+        </PressableScale>
+      }
+    >
       {/* Scanner — only after owner gate */}
-      <View style={styles.scannerWrap}>
-        {scanning && !outcome ? (
-          <CameraView
-            style={StyleSheet.absoluteFill}
-            facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ["qr"] }} // SPRINT-42:
-            onBarcodeScanned={handleBarcode}
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: "#111827", alignItems: "center", justifyContent: "center" }]}>
-            {busy ? <ActivityIndicator color="#FFF" size="large" /> : null}
-          </View>
-        )}
-        <View style={styles.scanFrame} pointerEvents="none" />
-        {!scanning && !outcome && !busy ? (
-          <Pressable style={styles.resumeBtn} onPress={() => setScanning(true)}>
-            <Text style={styles.resumeText}>Tap to resume scanning</Text>
-          </Pressable>
-        ) : null}
-      </View>
-
-      {/* Outcome overlay */}
-      {outcome ? (
-        <Pressable style={[styles.outcomeOverlay, { backgroundColor: outcome.color }]} onPress={dismissOutcome}>
-          <Text style={styles.outcomeKind}>{outcome.title}</Text>
-          {outcome.name ? <Text style={styles.outcomeName}>{outcome.name}</Text> : null}
-          {outcome.quantity != null ? (
-            <Text style={styles.outcomeMeta}>{outcome.quantity} ticket{outcome.quantity === 1 ? "" : "s"}</Text>
+      <Reveal i={0}>
+        <View style={st.scanbox}>
+          {scanning && !outcome ? (
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ["qr"] }} // SPRINT-42:
+              onBarcodeScanned={handleBarcode}
+            />
           ) : null}
-          {outcome.checkedInAt ? (
-            <Text style={styles.outcomeMeta}>Checked in: {outcome.checkedInAt}</Text>
-          ) : null}
-          <Text style={styles.outcomeSub}>{outcome.subtitle}</Text>
-          {outcome.kind === "NETWORK_ERROR" ? (
-            <Pressable
-              style={styles.retryChip}
-              onPress={(e) => {
-                e.stopPropagation?.();
-                dismissOutcome();
-              }}
-            >
-              <Text style={styles.retryText}>Retry scan</Text>
+          <ScanCorners />
+          {scanning && !outcome && !busy ? <ScanLine color={tc.mint} /> : null}
+          {busy ? <ActivityIndicator color="#FFF" size="large" style={StyleSheet.absoluteFill} /> : null}
+          {!scanning && !outcome && !busy ? (
+            <Pressable style={st.center} onPress={() => setScanning(true)}>
+              <Text style={[body(700), { color: "#fff" }]}>Tap to scan again</Text>
             </Pressable>
-          ) : (
-            <Text style={styles.tapDismiss}>Tap anywhere to continue</Text>
-          )}
-        </Pressable>
+          ) : null}
+          {outcome && tone ? (
+            <Animated.View entering={ZoomIn.springify().damping(16).stiffness(220).mass(1)} style={[StyleSheet.absoluteFill, { backgroundColor: tone.bg }]}>
+              <Pressable style={[st.center, { padding: 18 }]} onPress={dismissOutcome} accessibilityRole="button" accessibilityLabel={`${sentence(outcome.title)}. Tap to scan the next ticket`}>
+                <Ionicons name={tone.icon} size={44} color="#fff" />
+                <Text style={[display(800), { color: "#fff", fontSize: 24, marginTop: 6, textAlign: "center" }]}>{sentence(outcome.title)}</Text>
+                {outcome.name ? <Text style={[body(700), { color: "#fff", fontSize: 16, marginTop: 4 }]} numberOfLines={1}>{outcome.name}</Text> : null}
+                {outcome.quantity != null ? <Text style={[body(500), st.outMeta]}>{outcome.quantity} ticket{outcome.quantity === 1 ? "" : "s"}</Text> : null}
+                {outcome.checkedInAt ? <Text style={[body(500), st.outMeta]}>Checked in {outcome.checkedInAt}</Text> : null}
+                <Text style={[body(500), st.outMeta, { textAlign: "center" }]}>{outcome.subtitle}</Text>
+                <Text style={[body(700), { color: "#fff", marginTop: 10 }]}>{outcome.kind === "NETWORK_ERROR" ? "Tap to try again" : "Tap for the next ticket"}</Text>
+              </Pressable>
+            </Animated.View>
+          ) : null}
+        </View>
+      </Reveal>
+
+      {totalsAvailable ? (
+        <Reveal i={1}>
+          <View style={[st.stats, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]}>
+            {[
+              { v: totals.checkedIn ?? 0, k: "Checked in" },
+              { v: totals.totalRegistered ?? 0, k: "Registered" },
+              { v: totals.remaining ?? 0, k: "Remaining" },
+            ].map((x, i) => (
+              <View key={x.k} style={[st.stat, i > 0 && { borderLeftWidth: 1, borderLeftColor: tc.borderLight }]}>
+                <RollNumber value={x.v} style={numStyle} />
+                <Text style={[TYPE.small, { color: tc.textSecondary }]}>{x.k}</Text>
+              </View>
+            ))}
+          </View>
+        </Reveal>
       ) : null}
 
-      {/* Filter + lookup list */}
-      <View style={[styles.listPanel, { backgroundColor: isDark ? tc.cardBg : "#F3F4F6" }]}>
-        <View style={styles.filterRow}>
-          {([
-            { key: undefined, label: "All" },
-            { key: "checked_in" as const, label: "Checked in" },
-            { key: "remaining" as const, label: "Remaining" },
-          ]).map((f) => {
-            const on = filter === f.key;
-            return (
-              <Pressable
-                key={String(f.key)}
-                onPress={() => setFilter(f.key)}
-                style={[styles.filterChip, on && { backgroundColor: "#111827" }]}
-              >
-                <Text style={[styles.filterText, on && { color: "#FFF" }]}>{f.label}</Text>
-              </Pressable>
-            );
-          })}
+      <Reveal i={2} style={st.chips}>
+        {([
+          { key: undefined, label: "All" },
+          { key: "checked_in" as const, label: "Checked in" },
+          { key: "remaining" as const, label: "Remaining" },
+        ]).map((f) => (
+          <Chip key={String(f.key)} label={f.label} on={filter === f.key} onPress={() => setFilter(f.key)} />
+        ))}
+      </Reveal>
+
+      {statusLoading && attendees.length === 0 ? (
+        <ActivityIndicator color={tc.accent} style={{ marginVertical: 16 }} />
+      ) : statusError ? (
+        <Text style={[TYPE.body, { color: tc.dangerText, paddingHorizontal: 16 }]}>{statusError}</Text>
+      ) : attendees.length === 0 ? (
+        <Text style={[TYPE.body, { color: tc.textSecondary, paddingHorizontal: 16, paddingVertical: 12 }]}>No one here yet.</Text>
+      ) : (
+        <View>
+          {attendees.map((item, i) => (
+            <AttendeeRow key={`${item.ticketId ?? item.id}-${i}`} i={i} item={item} known={knownRef} />
+          ))}
         </View>
-        <Text style={[styles.lookupNote, { color: tc.textTertiary }]}>
-          Lookup list for verification only — manual lookup check-in is unavailable (no endpoint route).
-        </Text>
-        {statusLoading ? (
-          <ActivityIndicator color={Colors.brand.blue} style={{ marginVertical: 12 }} />
-        ) : statusError ? (
-          <Text style={{ color: "#DC2626", padding: 12 }}>{statusError}</Text>
-        ) : (
-          <FlatList
-            data={attendees}
-            keyExtractor={(a, i) => `${a.ticketId ?? a.id}-${i}`}
-            style={{ maxHeight: rs(180) }}
-            renderItem={({ item }) => (
-              <View style={styles.attendeeRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.attendeeName, { color: tc.textPrimary }]} numberOfLines={1}>
-                    {item.name}
-                  </Text>
-                  <Text style={{ color: tc.textTertiary, fontSize: 11 }}>
-                    {item.ticketCount} ticket{item.ticketCount === 1 ? "" : "s"}
-                    {item.checkedIn ? ` · in ${formatCheckedInAt(item.checkedInAt)}` : " · remaining"}
-                  </Text>
-                </View>
-                <Ionicons
-                  name={item.checkedIn ? "checkmark-circle" : "ellipse-outline"}
-                  size={18}
-                  color={item.checkedIn ? "#16A34A" : tc.textTertiary}
-                />
-              </View>
-            )}
-            ListEmptyComponent={
-              <Text style={{ color: tc.textTertiary, padding: 12, fontSize: 13 }}>No registrations in this filter.</Text>
-            }
-          />
-        )}
-      </View>
-    </SafeAreaView>
+      )}
+    </DPage>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1 }, // SPRINT-42:
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  }, // SPRINT-42:
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  }, // SPRINT-42:
-  headerEyebrow: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#9CA3AF",
-    letterSpacing: 1.2,
-  }, // SPRINT-42:
-  headerTitle: { fontSize: 16, fontWeight: "900", color: "#FFF" }, // SPRINT-42:
-  totalsRow: {
-    flexDirection: "row",
-    paddingHorizontal: 14,
-    gap: 8,
-    marginBottom: 6,
-  }, // SPRINT-42:
-  totalBox: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-  }, // SPRINT-42:
-  totalNum: { fontSize: 20, fontWeight: "900", color: "#FFF" }, // SPRINT-42:
-  totalUnavailable: { fontSize: 11, fontWeight: "800", color: "#9CA3AF" }, // SPRINT-42:
-  totalLbl: { fontSize: 10, fontWeight: "700", color: "#9CA3AF", marginTop: 2, textTransform: "uppercase" }, // SPRINT-42:
-  totalsLimitNote: {
-    // SPRINT-42:
-    marginHorizontal: 14,
-    marginBottom: 10,
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#FBBF24",
-    lineHeight: 15,
-  }, // SPRINT-42:
-  scannerWrap: {
-    marginHorizontal: 14,
-    height: rs(260),
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: "#111",
-    borderWidth: 2,
-    borderColor: "#374151",
-  }, // SPRINT-42:
-  scanFrame: {
-    position: "absolute",
-    top: "18%",
-    left: "18%",
-    right: "18%",
-    bottom: "18%",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.55)",
-    borderRadius: 12,
-  }, // SPRINT-42:
-  resumeBtn: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
-  }, // SPRINT-42:
-  resumeText: { color: "#FFF", fontWeight: "800", fontSize: 15 }, // SPRINT-42:
-  outcomeOverlay: {
-    marginHorizontal: 14,
-    marginTop: 10,
-    borderRadius: 16,
-    padding: 20,
-    minHeight: rs(140),
-    justifyContent: "center",
-  }, // SPRINT-42:
-  outcomeKind: {
-    fontSize: 28,
-    fontWeight: "900",
-    color: "#FFF",
-    letterSpacing: 0.5,
-  }, // SPRINT-42:
-  outcomeName: { fontSize: 18, fontWeight: "800", color: "#FFF", marginTop: 8 }, // SPRINT-42:
-  outcomeMeta: { fontSize: 14, fontWeight: "700", color: "rgba(255,255,255,0.9)", marginTop: 4 }, // SPRINT-42:
-  outcomeSub: { fontSize: 14, fontWeight: "600", color: "rgba(255,255,255,0.85)", marginTop: 8 }, // SPRINT-42:
-  tapDismiss: { marginTop: 14, fontSize: 12, fontWeight: "700", color: "rgba(255,255,255,0.75)" }, // SPRINT-42:
-  retryChip: {
-    marginTop: 14,
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(0,0,0,0.25)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-  }, // SPRINT-42:
-  retryText: { color: "#FFF", fontWeight: "800" }, // SPRINT-42:
-  listPanel: {
-    flex: 1,
-    marginTop: 12,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    paddingTop: 12,
-    paddingHorizontal: 12,
-  }, // SPRINT-42:
-  filterRow: { flexDirection: "row", gap: 8, marginBottom: 8 }, // SPRINT-42:
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
-    backgroundColor: "rgba(0,0,0,0.06)",
-  }, // SPRINT-42:
-  filterText: { fontSize: 12, fontWeight: "800", color: "#374151" }, // SPRINT-42:
-  lookupNote: { fontSize: 11, fontWeight: "600", marginBottom: 8, lineHeight: 15 }, // SPRINT-42:
-  attendeeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(0,0,0,0.08)",
-    gap: 10,
-  }, // SPRINT-42:
-  attendeeName: { fontSize: 14, fontWeight: "700" }, // SPRINT-42:
-  permWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 28 }, // SPRINT-42:
-  permTitle: { color: "#FFF", fontSize: 18, fontWeight: "900", marginTop: 14 }, // SPRINT-42:
-  permBody: { color: "#9CA3AF", textAlign: "center", marginTop: 8, lineHeight: 20 }, // SPRINT-42:
-  permBtn: {
-    marginTop: 20,
-    backgroundColor: Colors.brand.blue,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  }, // SPRINT-42:
-  permBtnText: { color: "#FFF", fontWeight: "900" }, // SPRINT-42:
+/** The four corner brackets of `.scanbox::before`. */
+function ScanCorners() {
+  const c = { position: "absolute" as const, width: 46, height: 46, borderColor: "rgba(255,255,255,0.85)" };
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View style={[c, { top: 18, left: 18, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 20 }]} />
+      <View style={[c, { top: 18, right: 18, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 20 }]} />
+      <View style={[c, { bottom: 18, left: 18, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 20 }]} />
+      <View style={[c, { bottom: 18, right: 18, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 20 }]} />
+    </View>
+  );
+}
+
+/** The green scan line that sweeps from 30 px to 206 px and back (2.2 s, ease-in-out). */
+function ScanLine({ color }: { color: string }) {
+  const reduce = useReducedMotion();
+  const y = useSharedValue(30);
+  useEffect(() => {
+    if (reduce) return;
+    y.value = withRepeat(withTiming(206, { duration: 2200, easing: Easing.inOut(Easing.ease) }), -1, true);
+    return () => cancelAnimation(y);
+  }, [reduce, y]);
+  const a = useAnimatedStyle(() => ({ top: y.value }));
+  return <Animated.View pointerEvents="none" style={[st.line, { backgroundColor: color, shadowColor: color }, reduce ? { top: 118 } : a]} />;
+}
+
+/** A row in the list. Rows that arrive after the first load slide down with a green flash (600 ms). */
+function AttendeeRow({ item, i, known }: { item: EventCheckInAttendee; i: number; known: React.MutableRefObject<Set<string> | null> }) {
+  const { tc } = useTheme();
+  const key = `${item.ticketId ?? item.id}:${item.checkedIn ? 1 : 0}`;
+  const [isNew] = useState(() => known.current != null && !known.current.has(key));
+  useEffect(() => { known.current?.add(key); }, [known, key]);
+  const flash = useSharedValue(isNew ? 1 : 0);
+  useEffect(() => { if (isNew) flash.value = withTiming(0, { duration: 600 }); }, [isNew, flash]);
+  const a = useAnimatedStyle(() => ({ backgroundColor: `rgba(48,133,91,${0.18 * flash.value})`, transform: [{ translateY: -12 * flash.value }] }));
+  return (
+    <Reveal i={i + 3}>
+      <Animated.View style={[st.row, a]}>
+        <PersonAvatar name={item.name} size={40} />
+        <View style={{ flex: 1 }}>
+          <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{item.name}</Text>
+          <Text style={[TYPE.small, { color: tc.textSecondary }]}>
+            {item.ticketCount} ticket{item.ticketCount === 1 ? "" : "s"}
+            {item.checkedIn ? ` · ${formatCheckedInAt(item.checkedInAt)}` : " · not here yet"}
+          </Text>
+        </View>
+        {item.checkedIn ? <Tag label="In" ok icon="checkmark" /> : null}
+      </Animated.View>
+    </Reveal>
+  );
+}
+
+const st = StyleSheet.create({
+  iconBtn: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  scanbox: { width: 240, height: 240, alignSelf: "center", marginVertical: 20, borderRadius: 28, overflow: "hidden", backgroundColor: "#0B0F16" },
+  center: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
+  line: { position: "absolute", left: 24, right: 24, height: 2, shadowOpacity: 1, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
+  outMeta: { color: "rgba(255,255,255,0.9)", fontSize: 13, marginTop: 2 },
+  stats: { flexDirection: "row", marginHorizontal: 16, marginBottom: 18, borderRadius: 24, shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  stat: { flex: 1, alignItems: "center", paddingVertical: 12 },
+  chips: { flexDirection: "row", gap: 8, paddingHorizontal: 16, marginBottom: 6 },
+  row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 16 },
 });

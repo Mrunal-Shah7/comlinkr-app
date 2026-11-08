@@ -1,168 +1,76 @@
-import { rs } from "../src/utils/responsive";
 /**
- * Property Agreement Flow — ComLinkr
- *
- * 5-step wizard covering Steps 4–7 of the Marketplace Authorization Plan:
- *   Step 1 – Rental / Purchase Application Form
- *   Step 2 – Offer Review (landlord's offer pre-populated)
- *   Step 3 – Digital Agreement (UK AST / US Lease)
- *   Step 4 – E-Signature
- *   Step 5 – Deposit Protection + Move-in Confirmation
- *
- * Accessible from the PropertyDetailModal ("Apply for Property" CTA).
- * Route params: propertyTitle, propertyAddress, price, deposit, landlordName,
- *               country ("UK" | "US"), dealType ("rent" | "buy")
+ * Apply and sign (design D `apply` + `agreement`), three parts with a progress bar:
+ *   1. Apply — what the owner needs, with name, email, phone and city from your profile (step 1 on the server).
+ *   2. Your offer — rent, deposit, start and length; "Change a term" chips that really change the terms sent
+ *      (step 4 on the server: leaseTerm, moveInDate, termsRead, termsAgreed); the full agreement in a sheet;
+ *      sign with your finger (a drawn PNG) or type your name; Decline withdraws the application.
+ *   3. Signed — the deposit rules for your market and the move-in checklist.
+ * Parts slide in from the side they come from. Route params: propertyTitle, propertyAddress, price, deposit,
+ * landlordName, listingId, country ("UK" | "US"), dealType ("rent" | "buy").
  */
-
-import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  TextInput,
-  StyleSheet,
-  Alert,
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { View, Text, TextInput, Switch, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ScrollView } from "react-native";
+import Animated, { FadeInLeft, FadeInRight, FadeOutLeft, FadeOutRight, ZoomIn, useAnimatedStyle, useReducedMotion, withSpring } from "react-native-reanimated";
 import { router, useLocalSearchParams } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
 import { useAuthStore } from "../src/store/auth.store";
 import { DatePickerField } from "../components/DateTimePickerField";
 import {
   createApplication,
+  getMyApplications,
   saveStep,
   submitApplication,
   signApplication,
+  withdrawApplication,
 } from "../src/api/property-agreement.api";
 import { ApiError } from "../src/api/client";
-import { appAlert } from '../src/shared/ui/Dialogs';
-import { createThemedStyles } from '../src/theme/themedStyles';
+import { appAlert, confirmDialog } from "../src/shared/ui/Dialogs";
+import { showToast } from "../src/shared/ui/Toast";
+import { TYPE, body, display, RADIUS } from "../src/theme/d";
+import { SPRING } from "../src/shared/motion/presets";
+import { DPage, DStick } from "../src/shared/d/Page";
+import { DSheet } from "../src/shared/d/Sheet";
+import { SignPad, type SignPadHandle } from "../src/shared/d/SignPad";
+import { Chip, GradientButton, Prefill, PressableScale, Reveal, SoftButton, Stepper } from "../src/shared/d";
+import Input from "../src/shared/ui/Input";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type DealType = "rent" | "buy";
 type Market   = "UK" | "US";
-type Step     = 1 | 2 | 3 | 4 | 5;
+type Part     = "apply" | "offer" | "done";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const EMPLOYMENT_OPTIONS = ["Employed", "Self-employed", "Student", "Retired", "Other"];
-const INCOME_BANDS_UK    = ["Under £15k", "£15k–25k", "£25k–35k", "£35k–50k", "£50k–75k", "Over £75k"];
-const INCOME_BANDS_US    = ["Under $25k", "$25k–40k", "$40k–60k", "$60k–85k", "$85k–120k", "Over $120k"];
 const EMPLOYMENT_API_VALUES: Record<string, string> = {
   "Employed": "full_time", "Self-employed": "self_employed", "Student": "student", "Retired": "other", "Other": "other",
 };
-/** Approximate monthly income (number) from an annual band label such as "£25k–35k" / "Over $120k". */
-function incomeBandToMonthly(band: string): number {
-  const nums = (band.match(/\d+/g) ?? []).map(Number);
-  if (nums.length === 0) return 0;
-  const annual = (/under/i.test(band) ? nums[0] * 0.5
-    : /over/i.test(band) ? nums[0]
-    : (nums[0] + nums[1]) / 2) * 1000;
-  return Math.round(annual / 12);
-}
 const DEPOSIT_SCHEMES_UK = ["Deposit Protection Service (DPS)", "MyDeposits", "Tenancy Deposit Scheme (TDS)"];
 const DEPOSIT_SCHEMES_US = ["Held in escrow", "Landlord held account", "Third-party escrow service"];
+const VIEWING = [
+  { k: "in_person", l: "Seen in person" },
+  { k: "video_tour", l: "Video tour" },
+  { k: "none", l: "Not yet" },
+] as const;
 
-const STEP_LABELS: Record<Step, string> = {
-  1: "Application",
-  2: "Review Offer",
-  3: "Agreement",
-  4: "E-Signature",
-  5: "Move-in",
-};
-
-function StepIndicator({ current, total }: { current: Step; total: number }) {
-  return (
-    <View style={styles.stepRow}>
-      {Array.from({ length: total }, (_, i) => {
-        const n = (i + 1) as Step;
-        const done    = n < current;
-        const active  = n === current;
-        return (
-          <View key={n} style={styles.stepItem}>
-            <View style={[
-              styles.stepCircle,
-              done   && styles.stepCircleDone,
-              active && styles.stepCircleActive,
-            ]}>
-              {done
-                ? <Ionicons name="checkmark" size={12} color="#FFF" />
-                : <Text style={[styles.stepNum, active && { color: "#FFF" }]}>{n}</Text>
-              }
-            </View>
-            <Text style={[styles.stepLabel, active && { color: Colors.brand.blue, fontWeight: "800" }]}>
-              {STEP_LABELS[n]}
-            </Text>
-            {n < total && (
-              <View style={[styles.stepLine, done && { backgroundColor: Colors.brand.blue }]} />
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
+/** Calendar dates stay calendar dates (YYYY-MM-DD): read the parts, never convert through a time zone. */
+function isoParts(iso: string): [number, number, number] | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 }
-
-function ChipRow({
-  options, value, onChange,
-}: { options: string[]; value: string; onChange: (v: string) => void }) {
-  const { isDark, tc } = useTheme();
-  return (
-    <View style={styles.chipRow}>
-      {options.map((opt) => (
-        <Pressable
-          key={opt}
-          style={[styles.chip, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, value === opt && styles.chipActive]}
-          onPress={() => onChange(opt)}
-        >
-          <Text style={[styles.chipText, { color: tc.textSecondary }, value === opt && styles.chipTextActive]}>{opt}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
+function addDays(iso: string, days: number): string {
+  const p = isoParts(iso);
+  if (!p) return iso;
+  const d = new Date(Date.UTC(p[0], p[1] - 1, p[2] + days));
+  return d.toISOString().slice(0, 10);
 }
-
-function FieldLabel({ label, required }: { label: string; required?: boolean }) {
-  const { tc } = useTheme();
-  return (
-    <Text style={[styles.fieldLabel, { color: tc.textPrimary }]}>
-      {label}{required && <Text style={{ color: "#DC2626" }}> *</Text>}
-    </Text>
-  );
+function niceDate(iso: string): string {
+  const p = isoParts(iso);
+  if (!p) return iso;
+  return new Date(Date.UTC(p[0], p[1] - 1, p[2])).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
-
-function InputField({
-  label, value, onChange, placeholder, keyboardType, required, multiline,
-}: {
-  label: string; value: string; onChange: (v: string) => void;
-  placeholder?: string; keyboardType?: any; required?: boolean; multiline?: boolean;
-}) {
-  const { tc } = useTheme();
-  return (
-    <View style={styles.field}>
-      <FieldLabel label={label} required={required} />
-      <TextInput
-        style={[styles.input, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }, multiline && { height: rs(80), textAlignVertical: "top" }]}
-        value={value}
-        onChangeText={onChange}
-        placeholder={placeholder}
-        placeholderTextColor={tc.textTertiary}
-        keyboardType={keyboardType}
-        multiline={multiline}
-      />
-    </View>
-  );
-}
-
-// ── UK AST Agreement text ─────────────────────────────────────────────────────
 
 function buildAgreementText(
   landlordName: string,
@@ -348,9 +256,59 @@ ComLinkr is a platform facilitating connections between landlords and tenants. C
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
+// ── Small pieces ──────────────────────────────────────────────────────────────
+
+/** `.progress`: 4 px track, the gradient fill springs to the new width. */
+function Progress({ frac }: { frac: number }) {
+  const { tc } = useTheme();
+  const reduce = useReducedMotion();
+  const a = useAnimatedStyle(() => ({ transform: [{ scaleX: reduce ? frac : withSpring(frac, SPRING.settle) }] }));
+  return (
+    <View style={[st.progress, { backgroundColor: tc.surface3 }]} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: Math.round(frac * 100) }}>
+      <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: "left" }, a]}>
+        <View style={{ flex: 1, backgroundColor: tc.accent }} />
+      </Animated.View>
+    </View>
+  );
+}
+
+/** `.dl`: a card of label / value rows; rows without a value are not drawn. */
+function DList({ rows }: { rows: [string, string | undefined][] }) {
+  const { tc, isDark } = useTheme();
+  const r = rows.filter((x) => !!x[1]);
+  if (!r.length) return null;
+  return (
+    <View style={[st.dl, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]}>
+      {r.map(([k, v], i) => (
+        <View key={k} style={[st.dlRow, i > 0 && { borderTopWidth: 1, borderTopColor: tc.borderLight }]}>
+          <Text style={[body(400), { fontSize: 14.5, color: tc.textSecondary }]}>{k}</Text>
+          <Text style={[body(600), { fontSize: 14.5, color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function H2({ children }: { children: string }) {
+  const { tc } = useTheme();
+  return <Text style={[TYPE.section, { color: tc.textPrimary, paddingHorizontal: 16, marginTop: 8, marginBottom: 10 }]}>{children}</Text>;
+}
+
+function FieldLabel({ children, hint }: { children: string; hint?: string }) {
+  const { tc } = useTheme();
+  return (
+    <View style={{ marginBottom: 6 }}>
+      <Text style={[TYPE.label, { color: tc.textSecondary }]}>{children}</Text>
+      {hint ? <Text style={[TYPE.small, { color: tc.textTertiary }]}>{hint}</Text> : null}
+    </View>
+  );
+}
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 export default function PropertyAgreementScreen() {
   const { isDark, tc } = useTheme();
-  const insets = useSafeAreaInsets();
+  const reduce = useReducedMotion();
   const params = useLocalSearchParams<{
     propertyTitle?: string;
     propertyAddress?: string;
@@ -365,29 +323,32 @@ export default function PropertyAgreementScreen() {
 
   const user = useAuthStore((s) => s.user);
 
-  const propertyTitle  = params.propertyTitle  || "Property";
-  const propertyAddress= params.propertyAddress|| "Address not specified";
-  const price          = params.price          || "£1,500";
-  const deposit        = params.deposit        || "£1,730";
-  const landlordName   = params.landlordName   || "Landlord";
-  const listingId      = params.listingId      || "";
-  const market: Market = (params.country === "US" ? "US" : "UK");
-  const dealType: DealType = (params.dealType === "buy" ? "buy" : "rent");
+  const propertyTitle   = params.propertyTitle   || "Property";
+  const propertyAddress = params.propertyAddress || "";
+  // Missing values are hidden, not shown as "N/A" (rule B6); the listing passes "N/A" when it has none.
+  const missing = (v?: string) => !v || /^(n\/?a|—|-|\$?0)$/i.test(v.trim());
+  const price           = missing(params.price) ? "" : params.price!;
+  const deposit         = missing(params.deposit) ? "" : params.deposit!;
+  const landlordName    = params.landlordName    || "the owner";
+  const listingId       = params.listingId       || "";
+  const market: Market  = params.country === "US" ? "US" : "UK";
+  const dealType: DealType = params.dealType === "buy" ? "buy" : "rent";
+  const depositSchemes  = market === "UK" ? DEPOSIT_SCHEMES_UK : DEPOSIT_SCHEMES_US;
+  const currency        = market === "UK" ? "£" : "$";
 
-  const incomeBands = market === "UK" ? INCOME_BANDS_UK : INCOME_BANDS_US;
-  const depositSchemes = market === "UK" ? DEPOSIT_SCHEMES_UK : DEPOSIT_SCHEMES_US;
-  const currency = market === "UK" ? "£" : "$";
+  const [part, setPart] = useState<Part>("apply");
+  const [dir, setDir] = useState<1 | -1>(1);
+  const go = (p: Part, d: 1 | -1 = 1) => { setDir(d); setPart(p); scrollRef.current?.scrollTo?.({ y: 0, animated: false }); };
 
-  // ── Step state ───────────────────────────────────────────────────────────────
-  const [step, setStep] = useState<Step>(1);
-
-  // Step 1 — Application fields
+  // Part 1 — what the owner needs. Name, email, phone and city come from the profile.
+  const profileAddress = user?.city ? [user.city, user.stateProvince, user.country].filter(Boolean).join(", ") : "";
   const [fullName,       setFullName]       = useState(user?.name || "");
-  const [currentAddress, setCurrentAddress] = useState(user?.city ? `${user.city}, ${user.stateProvince || ""}, ${user.country || ""}` : "");
+  const [phone,          setPhone]          = useState(user?.phone || "");
+  const [currentAddress, setCurrentAddress] = useState(profileAddress);
   const [employment,     setEmployment]     = useState("");
   const [employer,       setEmployer]       = useState("");
   const [income,         setIncome]         = useState("");
-  const [occupants,      setOccupants]      = useState("1");
+  const [occupants,      setOccupants]      = useState(1);
   const [hasPets,        setHasPets]        = useState(false);
   const [petDetails,     setPetDetails]     = useState("");
   const [smokes,         setSmokes]         = useState(false);
@@ -395,1225 +356,384 @@ export default function PropertyAgreementScreen() {
   const [landlordRef,    setLandlordRef]    = useState("");
   const [notes,          setNotes]          = useState("");
   const [viewingStatus,  setViewingStatus]  = useState<"in_person" | "video_tour" | "none" | "">("");
+  const [moreOpen,       setMoreOpen]       = useState(false);
+  const profileComplete = !!(user?.name && user?.email && user?.phone && profileAddress);
+  const [editProfile, setEditProfile] = useState(!profileComplete);
 
-  // Step 2 — Offer review
-  const [offerAccepted,  setOfferAccepted]  = useState<"accepted" | "negotiate" | null>(null);
-  const [negotiateNote,  setNegotiateNote]  = useState("");
+  // Part 2 — the offer, its terms and the signature.
+  const [laterStart,   setLaterStart]   = useState(false);
+  const [shortLease,   setShortLease]   = useState(false);
+  const [agreementRead, setAgreementRead] = useState(false);
+  const [readerOpen,   setReaderOpen]   = useState(false);
+  const [signed,       setSigned]       = useState(false);
+  const [typeInstead,  setTypeInstead]  = useState(false);
+  const [typedName,    setTypedName]    = useState("");
+  const pad = useRef<SignPadHandle>(null);
+  const [drawing, setDrawing] = useState(false);
+  const scrollRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any -- Animated.ScrollView ref
+  const startDate = laterStart ? addDays(moveInDate, 7) : moveInDate;
+  const duration  = shortLease ? "6 months" : "12 months";
+  const selectedScheme = depositSchemes[0];
 
-  // Step 3 — Agreement
-  const [agreementRead,  setAgreementRead]  = useState(false);
-  const [startDate,      setStartDateRaw]   = useState(moveInDate || (market === "UK" ? "01/04/2026" : "04/01/2026"));
-  const startDateTouchedRef = useRef(false);
-  const setStartDate = (v: string) => { startDateTouchedRef.current = true; setStartDateRaw(v); };
-  // Suggest the move-in date as the lease start date by default, but only until the user
-  // edits the lease start date field itself — after that, the two fields are independent.
-  useEffect(() => {
-    if (!startDateTouchedRef.current && moveInDate) setStartDateRaw(moveInDate);
-  }, [moveInDate]);
-  const [duration,       setDuration]       = useState(market === "UK" ? "12 months" : "12 months");
-  const [conditions,     setConditions]     = useState("");
-  const [selectedScheme, setSelectedScheme] = useState(depositSchemes[0]);
-
-  // Step 4 — E-Signature
-  const [tenantSigned,   setTenantSigned]   = useState(false);
-  const [signatureName,  setSignatureName]  = useState("");
-
-  // Step 5 — Done
-  const [moveInConfirmed, setMoveInConfirmed] = useState(false);
-
-  // ── API state ────────────────────────────────────────────────────────────────
   const [applicationId, setApplicationId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Navigation ───────────────────────────────────────────────────────────────
-
-  const goNext = useCallback(async () => {
-    if (step === 1) {
-      if (!fullName.trim() || !employment || !income || !moveInDate.trim()) {
-        appAlert("Missing Information", "Please fill in all required fields before continuing.");
-        return;
-      }
-      // Create application on backend when Step 1 is completed
-      if (listingId) {
-        let stage = "create";
-        try {
-          setSubmitting(true);
-          let appId = applicationId;
-          if (!appId) {
+  const sendApplication = useCallback(async () => {
+    const monthly = Number(income.replace(/[^\d.]/g, ""));
+    if (!fullName.trim() || !employment || !monthly || !moveInDate || !phone.trim() || !currentAddress.trim()) {
+      appAlert("A few things are missing", "Add your move-in date, monthly income, work and contact details.");
+      return;
+    }
+    if (listingId) {
+      let stage = "create";
+      try {
+        setSubmitting(true);
+        let appId = applicationId;
+        if (!appId) {
+          try {
             const app = await createApplication(listingId);
             appId = app.id;
-            setApplicationId(app.id);
+          } catch (err) {
+            // Already applied: pick up your unfinished application for this listing instead of stopping.
+            if (!(err instanceof ApiError && err.status === 409)) throw err;
+            const mine = (await getMyApplications()).find((a) => a.listingId === listingId && a.status === "draft");
+            if (!mine) throw err;
+            appId = mine.id;
           }
-          stage = "save";
-          // Always (re)save step 1 so a failed save is retried instead of skipped.
-          await saveStep(appId, 1, {
-            fullName, currentAddress,
-            email: user?.email, phone: (user as any)?.phone,
-            employmentType: EMPLOYMENT_API_VALUES[employment] ?? "other",
-            employerName: employer || undefined,
-            monthlyIncome: incomeBandToMonthly(income),
-            incomeBand: income,
-            additionalOccupants: parseInt(occupants, 10) || 1,
-            hasPets, petDescription: petDetails, smoking: smokes,
-            moveInDate, previousLandlordReference: landlordRef || undefined,
-            notes, viewingStatus: viewingStatus || undefined,
-          });
-        } catch (e) {
-          setSubmitting(false);
-          const status = e instanceof ApiError ? e.status : 0;
-          const reason = e instanceof ApiError
-            ? (status === 401 ? "Your session has expired. Please sign in again."
-              : status === 404 ? (e.message.startsWith("Cannot ")
-                ? "Tenancy applications aren't available on the server yet. Please contact support."
-                : "This listing is no longer available.")
-              : status === 409 ? "You have already applied for this property."
-              : e.message || `Server error (${status}).`)
-            : "We couldn't reach the server. Please check your connection and try again.";
-          if (__DEV__) console.warn(`[property-agreement] step-1 ${stage} failed`, e);
-          appAlert(
-            stage === "create" ? "Could Not Start Application" : "Could Not Save Application",
-            reason,
-          );
-          return;
+          setApplicationId(appId);
         }
+        stage = "save";
+        // Always (re)save step 1 so a failed save is retried instead of skipped.
+        await saveStep(appId, 1, {
+          fullName: fullName.trim(), currentAddress: currentAddress.trim(),
+          email: user?.email, phone: phone.trim(),
+          employmentType: EMPLOYMENT_API_VALUES[employment] ?? "other",
+          employerName: employer.trim() || undefined,
+          monthlyIncome: Math.round(monthly),
+          additionalOccupants: occupants,
+          hasPets, petDescription: hasPets ? petDetails : undefined, smoking: smokes,
+          moveInDate, previousLandlordReference: landlordRef || undefined,
+          notes: notes || undefined, viewingStatus: viewingStatus || undefined,
+        });
+      } catch (e) {
         setSubmitting(false);
-      }
-    }
-    if (step === 2 && offerAccepted === null) {
-      appAlert("Decision Required", "Please accept, negotiate, or decline the offer.");
-      return;
-    }
-    if (step === 2 && offerAccepted === "negotiate") {
-      appAlert(
-        "Negotiation Sent",
-        `Your note has been sent to ${landlordName}. The landlord will respond via chat. For this demo, we'll proceed to the agreement.`,
-        [{ text: "Continue", onPress: () => setStep(3) }],
-      );
-      return;
-    }
-    if (step === 3 && !agreementRead) {
-      appAlert("Please Read the Agreement", "Scroll through the full agreement before proceeding to sign.");
-      return;
-    }
-    if (step === 4) {
-      if (!signatureName.trim()) {
-        appAlert("Signature Required", "Please type your full legal name to sign.");
+        const status = e instanceof ApiError ? e.status : 0;
+        const reason = e instanceof ApiError
+          ? (status === 401 ? "Your session has expired. Please sign in again."
+            : status === 404 ? (e.message.startsWith("Cannot ")
+              ? "Tenancy applications aren't available on the server yet. Please contact support."
+              : "This listing is no longer available.")
+            : status === 409 ? "You have already applied for this property."
+            : e.message || `Server error (${status}).`)
+          : "We couldn't reach the server. Check your connection and try again.";
+        if (__DEV__) console.warn(`[property-agreement] step-1 ${stage} failed`, e);
+        appAlert(stage === "create" ? "Could not start the application" : "Could not save the application", reason);
         return;
       }
-      // Submit and sign — this notifies the landlord via backend
-      if (applicationId) {
-        try {
-          setSubmitting(true);
-          await submitApplication(applicationId);
-          await signApplication(applicationId, {
-            signature: signatureName.trim(),
-            signatureType: "typed",
-            signedAt: new Date().toISOString(),
-          });
-        } catch {
-          setSubmitting(false);
-          appAlert(
-            "Could Not Sign Agreement",
-            "We couldn't save your signature. Please check your connection and try again — your agreement has not been signed yet.",
-          );
-          return;
-        }
-        setSubmitting(false);
-      }
-      setTenantSigned(true);
+      setSubmitting(false);
     }
-    if (step < 5) setStep((s) => (s + 1) as Step);
-  }, [step, fullName, employment, income, moveInDate, listingId, applicationId,
-      currentAddress, employer, occupants, hasPets, petDetails, smokes, notes,
-      offerAccepted, landlordName, agreementRead, signatureName, landlordRef, viewingStatus, user]);
+    go("offer");
+  }, [income, fullName, employment, moveInDate, phone, currentAddress, listingId, applicationId, user, employer, occupants, hasPets, petDetails, smokes, landlordRef, notes, viewingStatus]);
 
-  const goBack = () => {
-    if (step === 1) {
-      if (router.canGoBack()) router.back(); else router.replace("/(tabs)/housing" as any);
-    } else {
-      setStep((s) => (s - 1) as Step);
+  const signAndAccept = useCallback(async () => {
+    const png = typeInstead ? null : pad.current?.toPng() ?? null;
+    const signature = typeInstead ? typedName.trim() : png;
+    if (!agreementRead || !signature) return;
+    if (applicationId) {
+      try {
+        setSubmitting(true);
+        await saveStep(applicationId, 4, { leaseTerm: duration, moveInDate: startDate, termsRead: true, termsAgreed: true });
+        await submitApplication(applicationId);
+        await signApplication(applicationId, {
+          signature,
+          signatureType: typeInstead ? "typed" : "drawn",
+          signedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        setSubmitting(false);
+        appAlert("Could not sign", e instanceof ApiError && e.message ? e.message : "We couldn't save your signature. Check your connection and try again. Nothing has been signed yet.");
+        return;
+      }
+      setSubmitting(false);
     }
+    go("done");
+  }, [typeInstead, typedName, agreementRead, applicationId, duration, startDate]);
+
+  const decline = useCallback(async () => {
+    const ok = await confirmDialog({
+      title: "Decline this offer?",
+      message: `Your application is withdrawn and ${landlordName} is told.`,
+      confirmLabel: "Decline",
+      destructive: true,
+    });
+    if (!ok) return;
+    if (applicationId) {
+      try { await withdrawApplication(applicationId); }
+      catch (e) { appAlert("Could not decline", e instanceof ApiError && e.message ? e.message : "Check your connection and try again."); return; }
+    }
+    showToast(`We let ${landlordName} know`, "info");
+    if (router.canGoBack()) router.back(); else router.replace("/(tabs)/housing" as never);
+  }, [applicationId, landlordName]);
+
+  const onBack = () => {
+    if (part === "offer") return go("apply", -1);
+    if (router.canGoBack()) router.back(); else router.replace("/(tabs)/housing" as never);
   };
 
-  const agreementText = buildAgreementText(
+  const agreementText = useMemo(() => buildAgreementText(
     landlordName, fullName || user?.name || "Tenant",
-    propertyAddress, price, deposit,
-    startDate, duration, market, dealType, conditions, selectedScheme,
-  );
+    propertyAddress || propertyTitle, price, deposit,
+    startDate ? niceDate(startDate) : "", duration, market, dealType, "", selectedScheme,
+  ), [landlordName, fullName, user?.name, propertyAddress, propertyTitle, price, deposit, startDate, duration, market, dealType, selectedScheme]);
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  const entering = reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200).mass(1);
+  const exiting = reduce ? undefined : (dir > 0 ? FadeOutLeft : FadeOutRight).duration(200);
+  const title = part === "apply" ? "Apply" : part === "offer" ? "Your offer" : "Signed";
+  const canSign = agreementRead && (typeInstead ? typedName.trim().length > 1 : signed);
+
+  const footer =
+    part === "apply" ? (
+      <DStick style={{ flexDirection: "column", alignItems: "stretch", gap: 6 }}>
+        <GradientButton label="Send application" block loading={submitting} onPress={() => void sendApplication()} />
+        <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>You can withdraw it at any time.</Text>
+      </DStick>
+    ) : part === "offer" ? (
+      <DStick>
+        <SoftButton label="Decline" ghost onPress={() => void decline()} />
+        <GradientButton label="Sign and accept" outerStyle={{ flex: 1 }} block disabled={!canSign} loading={submitting} onPress={() => void signAndAccept()} />
+      </DStick>
+    ) : (
+      <DStick>
+        <GradientButton label="Done" outerStyle={{ flex: 1 }} block onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/housing" as never))} />
+      </DStick>
+    );
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable
-          onPress={goBack}
-          style={({ pressed }) => [styles.backBtn, { backgroundColor: tc.pillBg }, pressed && { opacity: 0.7 }]}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: tc.textPrimary }]} numberOfLines={1}>
-            {dealType === "buy" ? "Purchase Agreement" : "Tenancy Agreement"}
-          </Text>
-          <Text style={[styles.headerSub, { color: tc.textSecondary }]} numberOfLines={1}>{propertyTitle}</Text>
-        </View>
-        <View style={[styles.marketPill, { backgroundColor: market === "UK" ? "#EEF5FF" : "#FFF0E6" }]}>
-          <Text style={[styles.marketPillText, { color: market === "UK" ? Colors.brand.blue : Colors.brand.orange }]}>
-            {market}
-          </Text>
-        </View>
-      </View>
-
-      {/* Step indicator */}
-      <View style={[styles.stepContainer, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <StepIndicator current={step} total={5} />
-      </View>
-
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 1 — APPLICATION FORM
-        ══════════════════════════════════════════════════════════════════ */}
-        {step === 1 && (
-          <View>
-            <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.sectionIcon}>
-                  <Ionicons name="document-text" size={16} color="#FFF" />
-                </LinearGradient>
-                <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Your Application</Text>
-              </View>
-              <Text style={[styles.sectionDesc, { color: tc.textSecondary }]}>
-                Complete this form to apply for <Text style={{ fontWeight: "700" }}>{propertyTitle}</Text>.
-                The landlord will review your application and respond within 48 hours.
-              </Text>
-            </View>
-
-            {/* Fraud notice */}
-            <View style={[styles.fraudNote, { backgroundColor: isDark ? "#0A2A12" : "#F0FDF4", borderColor: isDark ? "#1A4A2A" : "#BBF7D0" }]}>
-              <Ionicons name="shield-checkmark" size={15} color="#16A34A" />
-              <Text style={styles.fraudNoteText}>
-                All information you provide is kept confidential and shared only with the landlord of this property.
-                Providing false information is a breach of ComLinkr's terms and may result in account suspension.
-              </Text>
-            </View>
-
-            {/* Personal */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>PERSONAL DETAILS</Text>
-            <InputField label="Full legal name" value={fullName} onChange={setFullName} placeholder="As on your ID" required />
-            <InputField label="Current address" value={currentAddress} onChange={setCurrentAddress} placeholder="Street, City, Postcode/ZIP" required />
-
-            {/* Employment */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>EMPLOYMENT</Text>
-            <View style={styles.field}>
-              <FieldLabel label="Employment status" required />
-              <ChipRow options={EMPLOYMENT_OPTIONS} value={employment} onChange={setEmployment} />
-            </View>
-            {(employment === "Employed" || employment === "Self-employed") && (
-              <InputField label="Employer / Business name" value={employer} onChange={setEmployer} placeholder="e.g. NHS, Google, Self" />
-            )}
-            <View style={styles.field}>
-              <FieldLabel label="Annual income (approximate)" required />
-              <ChipRow options={incomeBands} value={income} onChange={setIncome} />
-            </View>
-
-            {/* Occupancy */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>OCCUPANCY</Text>
-            <InputField label="Number of occupants (incl. yourself)" value={occupants} onChange={setOccupants} keyboardType="numeric" required />
-            <View style={styles.field}>
-              <FieldLabel label="Do you have pets?" />
-              <View style={styles.toggleRow}>
-                <Pressable onPress={() => setHasPets(true)}  style={[styles.toggle, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, hasPets  && styles.toggleActive]}>
-                  <Text style={[styles.toggleText, { color: tc.textSecondary }, hasPets  && styles.toggleTextActive]}>Yes</Text>
-                </Pressable>
-                <Pressable onPress={() => setHasPets(false)} style={[styles.toggle, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, !hasPets && styles.toggleActive]}>
-                  <Text style={[styles.toggleText, { color: tc.textSecondary }, !hasPets && styles.toggleTextActive]}>No</Text>
-                </Pressable>
-              </View>
-              {hasPets && (
-                <InputField label="Pet type(s)" value={petDetails} onChange={setPetDetails} placeholder="e.g. 1 small dog, 2 cats" />
-              )}
-            </View>
-            <View style={styles.field}>
-              <FieldLabel label="Do you smoke?" />
-              <View style={styles.toggleRow}>
-                <Pressable onPress={() => setSmokes(true)}  style={[styles.toggle, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, smokes  && styles.toggleActive]}>
-                  <Text style={[styles.toggleText, { color: tc.textSecondary }, smokes  && styles.toggleTextActive]}>Yes</Text>
-                </Pressable>
-                <Pressable onPress={() => setSmokes(false)} style={[styles.toggle, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, !smokes && styles.toggleActive]}>
-                  <Text style={[styles.toggleText, { color: tc.textSecondary }, !smokes && styles.toggleTextActive]}>No</Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {/* Dates & references */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>MOVE-IN & REFERENCES</Text>
-            <View style={styles.field}>
-              <FieldLabel label="Preferred move-in date" required />
-              <DatePickerField
-                value={moveInDate}
-                onChange={setMoveInDate}
-                placeholder="Select move-in date"
-                accentColor={Colors.brand.blue}
-                dateFormat={market === "UK" ? "uk" : "us"}
-                minimumDate={new Date()}
-                forceDark={isDark}
-                textStyle={{ color: tc.textPrimary }}
-                style={{ borderColor: tc.borderLight, backgroundColor: tc.inputBg }}
-              />
-            </View>
-            <InputField
-              label="Previous landlord reference (optional)"
-              value={landlordRef}
-              onChange={setLandlordRef}
-              placeholder="Name & contact of previous landlord"
-            />
-            <InputField
-              label="Additional notes to the landlord"
-              value={notes}
-              onChange={setNotes}
-              placeholder="Anything else you'd like the landlord to know..."
-              multiline
-            />
-
-            {/* Viewing status — optional */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>PROPERTY VIEWING (OPTIONAL)</Text>
-            <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { marginBottom: rs(10) }]}>
-                Have you seen the property yet?
-                <Text style={{ color: "#9CA3AF", fontWeight: "400" }}> — helps the landlord understand your situation</Text>
-              </Text>
-              {[
-                {
-                  value: "in_person" as const,
-                  icon: "home-outline" as const,
-                  label: "Yes — visited in person",
-                  color: "#26B324",
-                  bg: "#EAFBE9",
-                  border: "#BBF7D0",
-                },
-                {
-                  value: "video_tour" as const,
-                  icon: "videocam-outline" as const,
-                  label: "Yes — completed a live video tour",
-                  color: "#7C3AED",
-                  bg: "#FAF5FF",
-                  border: "#E9D5FF",
-                },
-                {
-                  value: "none" as const,
-                  icon: "alert-circle-outline" as const,
-                  label: "No — applying without a viewing",
-                  color: "#D97706",
-                  bg: "#FFFBEB",
-                  border: "#FDE68A",
-                },
-              ].map((opt) => (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => setViewingStatus(opt.value)}
-                  style={[
-                    styles.viewingOption,
-                    { backgroundColor: tc.inputBg, borderColor: tc.borderLight },
-                    viewingStatus === opt.value && {
-                      backgroundColor: opt.bg,
-                      borderColor: opt.border,
-                    },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.viewingOptionIcon,
-                      { backgroundColor: viewingStatus === opt.value ? opt.bg : "#F5F7FA" },
-                    ]}
-                  >
-                    <Ionicons
-                      name={opt.icon}
-                      size={14}
-                      color={viewingStatus === opt.value ? opt.color : "#9CA3AF"}
-                    />
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <DPage title={title} sub={propertyTitle} onBack={part === "done" ? undefined : onBack} footer={footer} scrollRef={scrollRef} scrollEnabled={!drawing}>
+        <Progress frac={part === "apply" ? 1 / 3 : part === "offer" ? 2 / 3 : 1} />
+        <View style={{ height: 16 }} />
+        <Animated.View key={part} entering={entering} exiting={exiting}>
+          {part === "apply" ? (
+            <View style={{ paddingHorizontal: 16 }}>
+              <Reveal i={0}>
+                <View style={st.listingRow}>
+                  <View style={[st.listingIcon, { backgroundColor: tc.accentSoft }]}><Ionicons name="home" size={24} color={tc.accentText} /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{propertyTitle}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary }]} numberOfLines={1}>{[price && `${price}${dealType === "rent" ? " /mo" : ""}`, propertyAddress].filter(Boolean).join(" · ")}</Text>
                   </View>
-                  <Text
-                    style={[
-                      styles.viewingOptionText,
-                      { color: tc.textSecondary },
-                      viewingStatus === opt.value && { color: opt.color, fontWeight: "800" },
-                    ]}
-                  >
-                    {opt.label}
-                  </Text>
-                  <View
-                    style={[
-                      styles.viewingRadio,
-                      viewingStatus === opt.value && { borderColor: opt.color },
-                    ]}
-                  >
-                    {viewingStatus === opt.value && (
-                      <View style={[styles.viewingRadioDot, { backgroundColor: opt.color }]} />
-                    )}
+                </View>
+              </Reveal>
+              <Reveal i={1}>
+                {editProfile ? (
+                  <View>
+                    <Input label="Full name" value={fullName} onChangeText={setFullName} autoCapitalize="words" />
+                    <Input label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+1 555 123 4567" />
+                    <Input label="Where you live now" value={currentAddress} onChangeText={setCurrentAddress} placeholder="City, state, country" />
                   </View>
-                </Pressable>
-              ))}
-
-              {/* Advisory shown only when "no viewing" is selected */}
-              {viewingStatus === "none" && (
-                <View style={styles.viewingAdvisory}>
-                  <Ionicons name="information-circle-outline" size={14} color="#D97706" />
-                  <Text style={styles.viewingAdvisoryText}>
-                    Applying without a viewing is allowed, but we strongly recommend requesting a live video tour first. Use the 'Can't Visit in Person?' section on the listing page to request one safely. Never pay a deposit before completing a verified tour.
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 2 — OFFER REVIEW
-        ══════════════════════════════════════════════════════════════════ */}
-        {step === 2 && (
-          <View>
-            <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#FF7B00", "#E56800"]} style={styles.sectionIcon}>
-                  <Ionicons name="document-attach" size={16} color="#FFF" />
-                </LinearGradient>
-                <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Landlord's Offer</Text>
-              </View>
-              <Text style={[styles.sectionDesc, { color: tc.textSecondary }]}>
-                {landlordName} has reviewed your application and made the following offer.
-                Review the terms carefully before accepting.
-              </Text>
-            </View>
-
-            {/* Offer card */}
-            <View style={[styles.offerCard, { borderColor: isDark ? tc.borderMedium : "#BFDBFE" }]}>
-              <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.offerCardHeader}>
-                <Ionicons name="home" size={18} color="#FFF" />
-                <Text style={styles.offerCardTitle}>{dealType === "rent" ? "Rental Offer" : "Purchase Offer"}</Text>
-              </LinearGradient>
-              <View style={[styles.offerCardBody, { backgroundColor: tc.cardBg }]}>
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Property</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]} numberOfLines={2}>{propertyAddress}</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>{dealType === "rent" ? "Monthly rent" : "Purchase price"}</Text>
-                  <Text style={[styles.offerVal, { color: Colors.brand.blue, fontWeight: "800" }]}>{price}</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Security deposit</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]}>{deposit}</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Tenancy start</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]}>{startDate || (market === "UK" ? "01/04/2026" : "04/01/2026")}</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Duration</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]}>{duration}</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Break clause</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]}>After 6 months, 2 months' notice</Text>
-                </View>
-                <View style={[styles.offerDivider, { backgroundColor: tc.divider }]} />
-                <View style={styles.offerRow}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Deposit scheme</Text>
-                  <Text style={[styles.offerVal, { color: tc.textPrimary }]}>{depositSchemes[0]}</Text>
-                </View>
-
-                {/* Conditions */}
-                <View style={[styles.offerRow, { flexDirection: "column", gap: rs(6) }]}>
-                  <Text style={[styles.offerKey, { color: tc.textSecondary }]}>Conditions</Text>
-                  {[
-                    hasPets ? "Small pets allowed (with prior approval)" : "No pets allowed",
-                    smokes  ? "Smoking allowed" : "No smoking inside the property",
-                    "Professional cleaning required at end of tenancy",
-                    market === "UK"
-                      ? "Deposit protected in government-approved scheme within 30 days"
-                      : "Deposit held per state security deposit laws",
-                  ].map((c, i) => (
-                    <View key={i} style={styles.conditionRow}>
-                      <Ionicons name="ellipse" size={5} color={isDark ? tc.textTertiary : "#6B7280"} />
-                      <Text style={[styles.conditionText, { color: tc.textSecondary }]}>{c}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </View>
-
-            {/* Decision buttons */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>YOUR DECISION</Text>
-            <View style={styles.decisionRow}>
-              <Pressable
-                onPress={() => setOfferAccepted("accepted")}
-                style={[styles.decisionBtn, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, offerAccepted === "accepted" && styles.decisionBtnAccept]}
-              >
-                <Ionicons name="checkmark-circle" size={18} color={offerAccepted === "accepted" ? "#FFF" : "#16A34A"} />
-                <Text style={[styles.decisionBtnText, { color: tc.textSecondary }, offerAccepted === "accepted" && { color: "#FFF" }]}>Accept Offer</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setOfferAccepted("negotiate")}
-                style={[styles.decisionBtn, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }, offerAccepted === "negotiate" && styles.decisionBtnNegotiate]}
-              >
-                <Ionicons name="chatbubble-ellipses" size={18} color={offerAccepted === "negotiate" ? "#FFF" : "#D97706"} />
-                <Text style={[styles.decisionBtnText, { color: tc.textSecondary }, offerAccepted === "negotiate" && { color: "#FFF" }]}>Negotiate</Text>
-              </Pressable>
-            </View>
-
-            {offerAccepted === "negotiate" && (
-              <View style={styles.field}>
-                <FieldLabel label="Your counter-proposal or questions" />
-                <TextInput
-                  style={[styles.input, { height: rs(90), textAlignVertical: "top", backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                  value={negotiateNote}
-                  onChangeText={setNegotiateNote}
-                  placeholder={`e.g. "Could we reduce the rent to ${currency}1,400/mo? I can offer a 12-month lease."`}
-                  placeholderTextColor={tc.textTertiary}
-                  multiline
+                ) : (
+                  <Prefill style={{ marginBottom: 14 }} right={
+                    <PressableScale onPress={() => setEditProfile(true)} hitSlop={8} accessibilityLabel="Change your details">
+                      <Text style={[body(700), { fontSize: 14, color: tc.accentText }]}>Change</Text>
+                    </PressableScale>
+                  }>
+                    <Text style={[TYPE.body, { color: tc.textPrimary }]}>Name, email, phone and city come from your profile.</Text>
+                  </Prefill>
+                )}
+              </Reveal>
+              <Reveal i={2} style={{ marginBottom: 14 }}>
+                <FieldLabel>Move-in date</FieldLabel>
+                <DatePickerField
+                  value={moveInDate}
+                  onChange={setMoveInDate}
+                  placeholder="Choose a date"
+                  accentColor={tc.accent}
+                  dateFormat="iso"
+                  minimumDate={new Date()}
+                  forceDark={isDark}
+                  textStyle={[body(500), { fontSize: 15.5, color: tc.textPrimary }]}
+                  style={[st.field, { backgroundColor: tc.inputBg }]}
                 />
-              </View>
-            )}
-
-            <Pressable
-              onPress={() =>
-                appAlert(
-                  "Decline Offer",
-                  "Are you sure you want to decline this offer? You can re-apply later.",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Decline", style: "destructive", onPress: () => router.back() },
-                  ]
-                )
-              }
-              style={styles.declineLink}
-            >
-              <Text style={styles.declineLinkText}>Decline this offer</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 3 — AGREEMENT TEXT
-        ══════════════════════════════════════════════════════════════════ */}
-        {step === 3 && (
-          <View>
-            <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#7C3AED", "#6D28D9"]} style={styles.sectionIcon}>
-                  <Ionicons name="document-text" size={16} color="#FFF" />
-                </LinearGradient>
-                <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>
-                  {market === "UK" ? "Assured Shorthold Tenancy (AST)" : "Residential Lease Agreement"}
-                </Text>
-              </View>
-              <Text style={[styles.sectionDesc, { color: tc.textSecondary }]}>
-                Read the complete agreement below. Both parties must agree to all terms before signing.
-                Scroll to the bottom to confirm you have read it.
-              </Text>
-            </View>
-
-            {/* Customise key terms */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>CUSTOMISE TERMS</Text>
-            <View style={styles.field}>
-              <FieldLabel label={market === "UK" ? "Tenancy start date" : "Lease start date"} />
-              <DatePickerField
-                value={startDate}
-                onChange={setStartDate}
-                placeholder="Select start date"
-                forceDark={isDark}
-                textStyle={{ color: tc.textPrimary }}
-                accentColor={Colors.brand.blue}
-                dateFormat={market === "UK" ? "uk" : "us"}
-                minimumDate={new Date()}
-                style={{ borderColor: tc.borderLight, backgroundColor: tc.inputBg }}
-              />
-            </View>
-            <View style={styles.field}>
-              <FieldLabel label="Duration" />
-              <TextInput style={[styles.input, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]} value={duration} onChangeText={setDuration} placeholderTextColor={tc.textTertiary} placeholder="12 months" />
-            </View>
-            <View style={styles.field}>
-              <FieldLabel label="Special conditions (if any)" />
-              <TextInput style={[styles.input, { height: rs(70), textAlignVertical: "top", backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]} value={conditions} onChangeText={setConditions} placeholderTextColor={tc.textTertiary} placeholder="Any agreed additions to the standard terms..." multiline />
-            </View>
-            <View style={styles.field}>
-              <FieldLabel label={market === "UK" ? "Deposit protection scheme" : "Deposit held by"} required />
-              <ChipRow options={depositSchemes} value={selectedScheme} onChange={setSelectedScheme} />
-            </View>
-
-            {/* Full agreement scroll area */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>FULL AGREEMENT TEXT</Text>
-            <View style={[styles.agreementBox, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-              <ScrollView
-                style={{ maxHeight: 340 }}
-                showsVerticalScrollIndicator
-                nestedScrollEnabled
-                onScrollEndDrag={() => setAgreementRead(true)}
-                onMomentumScrollEnd={() => setAgreementRead(true)}
-              >
-                <Text style={[styles.agreementText, { color: tc.textSecondary }]}>{agreementText}</Text>
-                <Pressable
-                  onPress={() => setAgreementRead(true)}
-                  style={styles.readConfirmBtn}
-                >
-                  <Ionicons name="checkmark-circle" size={14} color={Colors.brand.green} />
-                  <Text style={styles.readConfirmText}>I have read the full agreement</Text>
-                </Pressable>
-              </ScrollView>
-            </View>
-
-            {agreementRead && (
-              <View style={styles.readBanner}>
-                <Ionicons name="checkmark-circle" size={16} color="#16A34A" />
-                <Text style={styles.readBannerText}>Agreement read — you may proceed to sign</Text>
-              </View>
-            )}
-
-            {/* Disclaimer */}
-            <View style={[styles.disclaimerBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-              <Ionicons name="information-circle-outline" size={15} color={tc.textTertiary} />
-              <Text style={[styles.disclaimerText, { color: tc.textTertiary }]}>
-                ComLinkr is NOT a party to this agreement and assumes no legal responsibility for its enforcement.
-                Both parties should retain a signed copy. You are strongly advised to seek independent legal advice.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 4 — E-SIGNATURE
-        ══════════════════════════════════════════════════════════════════ */}
-        {step === 4 && (
-          <View>
-            <View style={[styles.sectionCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={styles.sectionCardHeader}>
-                <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.sectionIcon}>
-                  <Ionicons name="pencil" size={16} color="#FFF" />
-                </LinearGradient>
-                <Text style={[styles.sectionTitle, { color: tc.textPrimary }]}>Sign the Agreement</Text>
-              </View>
-              <Text style={[styles.sectionDesc, { color: tc.textSecondary }]}>
-                By signing, you confirm you have read and agree to all terms of the agreement.
-              </Text>
-            </View>
-
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>YOUR SIGNATURE</Text>
-            <View style={styles.field}>
-              <FieldLabel label="Type your full legal name to sign" required />
-              <TextInput
-                style={[styles.input, styles.signatureInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-                value={signatureName}
-                onChangeText={setSignatureName}
-                placeholder="Your full legal name"
-                placeholderTextColor={tc.textTertiary}
-                autoCapitalize="words"
-              />
-              {signatureName.trim().length > 0 && (
-                <View style={[styles.signaturePreview, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-                  <Text style={[styles.signaturePreviewLabel, { color: tc.textTertiary }]}>Signature preview:</Text>
-                  <Text style={[styles.signatureFont, { color: tc.textPrimary, borderBottomColor: tc.textPrimary }]}>{signatureName}</Text>
-                  <Text style={[styles.signatureTimestamp, { color: tc.textTertiary }]}>
-                    {new Date().toLocaleDateString("en-GB")} {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-                  </Text>
+              </Reveal>
+              <Reveal i={3}>
+                <FieldLabel hint="Only the owner sees this">Monthly income</FieldLabel>
+                <View style={[st.field, st.row, { backgroundColor: tc.inputBg, marginBottom: 14 }]}>
+                  <Text style={[body(600), { fontSize: 15.5, color: tc.textSecondary }]}>{currency}</Text>
+                  <TextInput value={income} onChangeText={setIncome} keyboardType="numeric" placeholder="e.g. 5,200" placeholderTextColor={tc.textTertiary}
+                    style={[body(500), { flex: 1, fontSize: 15.5, color: tc.textPrimary, paddingVertical: 0 }]} accessibilityLabel="Monthly income" />
                 </View>
-              )}
-            </View>
-
-            {/* Landlord counter-sign note */}
-            <View style={[styles.counterSignNote, { backgroundColor: isDark ? tc.pillBg : "#EEF5FF", borderColor: isDark ? tc.borderLight : "#BFDBFE" }]}>
-              <Ionicons name="information-circle-outline" size={15} color={Colors.brand.blue} />
-              <Text style={[styles.counterSignText, { color: isDark ? tc.textSecondary : "#1E40AF" }]}>
-                After you sign, <Text style={{ fontWeight: "700" }}>{landlordName}</Text> will be notified to counter-sign.
-                Both signatures are required for the agreement to be legally binding.
-              </Text>
-            </View>
-
-            {/* Legal disclaimer */}
-            <View style={[styles.disclaimerBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-              <Ionicons name="shield-outline" size={15} color={tc.textTertiary} />
-              <Text style={[styles.disclaimerText, { color: tc.textTertiary }]}>
-                Your electronic signature has the same legal effect as a handwritten signature under the Electronic Communications Act 2000 (UK) and the E-SIGN Act (US).
-                ComLinkr stores a SHA-256 hash of the signed document for tamper-proof verification.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════════════
-            STEP 5 — DEPOSIT & MOVE-IN
-        ══════════════════════════════════════════════════════════════════ */}
-        {step === 5 && (
-          <View>
-            {/* Success header */}
-            <View style={[styles.successBanner, { backgroundColor: tc.cardBg, borderColor: isDark ? "#1A4A2A" : "#86EFAC" }]}>
-              <LinearGradient colors={["#26B324", "#1a8a18"]} style={styles.successIconCircle}>
-                <Ionicons name="checkmark" size={32} color="#FFF" />
-              </LinearGradient>
-              <Text style={[styles.successTitle, { color: tc.textPrimary }]}>Agreement Signed!</Text>
-              <Text style={[styles.successSub, { color: tc.textSecondary }]}>
-                Both parties have signed. A copy of the agreement has been saved to your Documents.
-              </Text>
-            </View>
-
-            {/* Deposit protection */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>
-              {market === "UK" ? "DEPOSIT PROTECTION — UK LAW" : "SECURITY DEPOSIT"}
-            </Text>
-            <View style={[styles.depositCard, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderMedium : "#FCD34D" }]}>
-              <View style={styles.depositCardHeader}>
-                <Ionicons name="warning" size={18} color="#D97706" />
-                <Text style={[styles.depositCardTitle, { color: tc.textPrimary }]}>
-                  {market === "UK" ? "UK Law Reminder" : "Security Deposit Notice"}
-                </Text>
-              </View>
-              {market === "UK" ? (
-                <>
-                  <Text style={[styles.depositCardText, { color: tc.textSecondary }]}>
-                    Under the <Text style={{ fontWeight: "700" }}>Housing Act 2004</Text>, the landlord must protect
-                    your deposit of <Text style={{ fontWeight: "700" }}>{deposit}</Text> in a government-approved scheme
-                    within <Text style={{ fontWeight: "700" }}>30 days</Text> of receiving it.
-                  </Text>
-                  <Text style={[styles.depositCardText, { marginTop: rs(8), color: tc.textSecondary }]}>
-                    Agreed scheme: <Text style={{ fontWeight: "700" }}>{selectedScheme}</Text>
-                  </Text>
-                  <View style={styles.schemeList}>
-                    {DEPOSIT_SCHEMES_UK.map((s) => (
-                      <View key={s} style={styles.schemeRow}>
-                        <Ionicons
-                          name={s === selectedScheme ? "checkmark-circle" : "ellipse-outline"}
-                          size={14}
-                          color={s === selectedScheme ? "#16A34A" : "#9CA3AF"}
-                        />
-                        <Text style={[styles.schemeText, { color: tc.textSecondary }, s === selectedScheme && { color: "#16A34A", fontWeight: "700" }]}>{s}</Text>
-                      </View>
-                    ))}
+              </Reveal>
+              <Reveal i={4}>
+                <FieldLabel>Work</FieldLabel>
+                <View style={[st.chips, { marginBottom: 10 }]}>
+                  {EMPLOYMENT_OPTIONS.map((o) => <Chip key={o} label={o} on={employment === o} onPress={() => setEmployment(o)} />)}
+                </View>
+                <Input label="Job" value={employer} onChangeText={setEmployer} placeholder="Job title and employer" />
+              </Reveal>
+              <Reveal i={5} style={{ marginBottom: 14 }}>
+                <Stepper label="People moving in" value={occupants} onChange={setOccupants} min={1} max={12} />
+              </Reveal>
+              <Reveal i={6}>
+                <FieldLabel>A note to the owner (optional)</FieldLabel>
+                <TextInput value={notes} onChangeText={setNotes} multiline placeholder="Say hi and when you could view it" placeholderTextColor={tc.textTertiary}
+                  style={[st.field, body(400), { minHeight: 96, textAlignVertical: "top", fontSize: 15.5, color: tc.textPrimary, backgroundColor: tc.inputBg, marginBottom: 14, paddingTop: 12 }]} />
+              </Reveal>
+              <Reveal i={7}>
+                <PressableScale onPress={() => setMoreOpen((v) => !v)} style={[st.more, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]} accessibilityState={{ expanded: moreOpen }}>
+                  <View style={[st.moreDot, { borderColor: tc.borderMedium }]}><Ionicons name={moreOpen ? "remove" : "add"} size={16} color={tc.textSecondary} /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>More details</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary }]}>Optional · pets, smoking, viewing, a reference</Text>
                   </View>
-                  <Text style={[styles.depositLawNote, isDark && { color: "#FBBF24" }]}>
-                    If your landlord fails to protect your deposit, you can claim 1–3× the deposit amount in court.
-                    Contact Citizens Advice or Shelter for guidance.
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text style={[styles.depositCardText, { color: tc.textSecondary }]}>
-                    Your deposit of <Text style={{ fontWeight: "700" }}>{deposit}</Text> will be held as agreed:
-                    <Text style={{ fontWeight: "700" }}> {selectedScheme}</Text>.
-                  </Text>
-                  <Text style={[styles.depositCardText, { marginTop: rs(8), color: tc.textSecondary }]}>
-                    Under applicable state law, your deposit must be returned within 21 days of vacating the property
-                    (or the period required by your state), less any deductions for damages beyond ordinary wear and tear.
-                  </Text>
-                  <Text style={[styles.depositLawNote, isDark && { color: "#FBBF24" }]}>
-                    Fair Housing Act rights apply. Contact your state's housing authority or a local tenant advocacy group for guidance.
-                  </Text>
-                </>
-              )}
+                </PressableScale>
+              </Reveal>
+              {moreOpen ? (
+                <Animated.View entering={reduce ? undefined : FadeInRight.duration(260)} style={{ marginTop: 12 }}>
+                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Pets</Text><Switch value={hasPets} onValueChange={setHasPets} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" /></View>
+                  {hasPets ? <Input label="About your pets" value={petDetails} onChangeText={setPetDetails} placeholder="For example, one small dog" /> : null}
+                  <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I smoke</Text><Switch value={smokes} onValueChange={setSmokes} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" /></View>
+                  <FieldLabel>Have you seen the place?</FieldLabel>
+                  <View style={[st.chips, { marginBottom: 14 }]}>
+                    {VIEWING.map((v) => <Chip key={v.k} label={v.l} on={viewingStatus === v.k} onPress={() => setViewingStatus(viewingStatus === v.k ? "" : v.k)} />)}
+                  </View>
+                  <Input label="A previous landlord's contact (optional)" value={landlordRef} onChangeText={setLandlordRef} placeholder="Name and phone or email" />
+                </Animated.View>
+              ) : null}
             </View>
-
-            {/* Move-in checklist */}
-            <Text style={[styles.groupLabel, { color: tc.textTertiary }]}>MOVE-IN CHECKLIST</Text>
-            <View style={[styles.checklistCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              {[
-                { icon: "key-outline",             text: "Confirm key collection time with your landlord via chat" },
-                { icon: "camera-outline",           text: "Take timestamped photos of every room on move-in day" },
-                { icon: "document-text-outline",    text: "Complete and sign the inventory check-in form together" },
-                { icon: "receipt-outline",          text: "Get a receipt for your deposit payment" },
-                market === "UK"
-                  ? { icon: "checkmark-circle-outline", text: "Confirm deposit protection: landlord must send you the deposit certificate" }
-                  : { icon: "checkmark-circle-outline", text: "Request written confirmation of where deposit is held" },
-                { icon: "wifi-outline",             text: "Register utilities in your name on or before move-in day" },
-                { icon: "mail-outline",             text: "Update your address with HMRC/IRS, bank, and post office" },
-              ].map((item, i) => (
-                <View key={i} style={styles.checklistRow}>
-                  <Ionicons name={item.icon as any} size={16} color={Colors.brand.blue} />
-                  <Text style={[styles.checklistText, { color: tc.textSecondary }]}>{item.text}</Text>
+          ) : part === "offer" ? (
+            <View>
+              <Reveal i={0}>
+                <View style={[st.offerCard, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]}>
+                  <View style={[st.listingIcon, { width: 60, height: 60, backgroundColor: tc.accentSoft }]}><Ionicons name="home" size={26} color={tc.accentText} /></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={2}>{propertyTitle}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary }]}>From {landlordName}</Text>
+                  </View>
                 </View>
-              ))}
-            </View>
-
-            {/* Document saved note */}
-            <View style={[styles.docSavedCard, { backgroundColor: isDark ? tc.inputBg : "#EEF5FF", borderColor: isDark ? tc.borderLight : "#BFDBFE" }]}>
-              <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} style={styles.docSavedIcon}>
-                <Ionicons name="cloud-done" size={20} color="#FFF" />
-              </LinearGradient>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.docSavedTitle, isDark && { color: tc.textPrimary }]}>Agreement saved to My Documents</Text>
-                <Text style={[styles.docSavedSub, isDark && { color: tc.textSecondary }]}>
-                  Accessible any time · Document ID: CLR-AST-2026-{Math.random().toString(36).slice(2,8).toUpperCase()}
+              </Reveal>
+              <Reveal i={1}>
+                <DList rows={[
+                  [dealType === "rent" ? "Rent" : "Price", price ? `${price}${dealType === "rent" ? " /mo" : ""}` : undefined],
+                  ["Deposit", deposit || undefined],
+                  ["Start", startDate ? niceDate(startDate) : undefined],
+                  ["Length", dealType === "rent" ? duration : undefined],
+                ]} />
+              </Reveal>
+              {dealType === "rent" ? (
+                <Reveal i={2}>
+                  <H2>Change a term</H2>
+                  <View style={[st.chips, { paddingHorizontal: 16, marginBottom: 8 }]}>
+                    <Chip label="Start a week later" on={laterStart} onPress={() => setLaterStart((v) => !v)} />
+                    <Chip label="6-month lease" on={shortLease} onPress={() => setShortLease((v) => !v)} />
+                  </View>
+                </Reveal>
+              ) : null}
+              <Reveal i={3}>
+                <PressableScale onPress={() => setReaderOpen(true)} style={[st.readRow, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]} accessibilityRole="button">
+                  <Ionicons name="document-text-outline" size={22} color={tc.accentText} />
+                  <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flex: 1 }]}>Read the full agreement</Text>
+                  <Ionicons name="chevron-forward" size={18} color={tc.textTertiary} />
+                </PressableScale>
+              </Reveal>
+              <Reveal i={4}>
+                <H2>Sign</H2>
+                <View style={{ paddingHorizontal: 16 }}>
+                  {typeInstead ? (
+                    <TextInput value={typedName} onChangeText={setTypedName} autoCapitalize="words" placeholder="Type your full legal name" placeholderTextColor={tc.textTertiary}
+                      style={[st.field, { height: 150, textAlign: "center", fontSize: 26, fontStyle: "italic", color: tc.textPrimary, backgroundColor: tc.inputBg }]} accessibilityLabel="Your full legal name" />
+                  ) : (
+                    <SignPad ref={pad} onChange={setSigned} onDrawing={(d) => setDrawing(d)} />
+                  )}
+                  <View style={st.hint}>
+                    <Ionicons name={typeInstead ? "text-outline" : "create-outline"} size={14} color={tc.textTertiary} />
+                    <Text style={[body(500), { fontSize: 12.5, color: tc.textTertiary }]}>{typeInstead ? "Type your name" : "Sign with your finger"} · </Text>
+                    {typeInstead ? null : (
+                      <Pressable onPress={() => pad.current?.clear()} hitSlop={8}><Text style={[body(700), { fontSize: 12.5, color: tc.accentText }]}>Clear</Text></Pressable>
+                    )}
+                    {typeInstead ? null : <Text style={[body(500), { fontSize: 12.5, color: tc.textTertiary }]}> · </Text>}
+                    <Pressable onPress={() => { setTypeInstead((v) => !v); setSigned(false); }} hitSlop={8}>
+                      <Text style={[body(700), { fontSize: 12.5, color: tc.accentText }]}>{typeInstead ? "Draw instead" : "Type instead"}</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </Reveal>
+              <Reveal i={5}>
+                <View style={[st.switchRow, { paddingHorizontal: 16, marginTop: 12 }]}>
+                  <Switch value={agreementRead} onValueChange={setAgreementRead} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel="I have read the full agreement" />
+                  <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I have read the full agreement</Text>
+                </View>
+                <Text style={[TYPE.small, { color: tc.textTertiary, paddingHorizontal: 16, marginTop: 6 }]}>
+                  An electronic signature has the same effect as a handwritten one under the Electronic Communications Act 2000 (UK) and the E-SIGN Act (US).
                 </Text>
-              </View>
+              </Reveal>
             </View>
-
-            {/* Help */}
-            <View style={[styles.helpCard, { backgroundColor: isDark ? tc.pillBg : "#EEF5FF", borderColor: isDark ? tc.borderLight : "#BFDBFE" }]}>
-              <Ionicons name="help-circle-outline" size={18} color={Colors.brand.blue} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.helpTitle, { color: isDark ? tc.textPrimary : "#1E40AF" }]}>Questions about your tenancy?</Text>
-                <Text style={[styles.helpDesc, { color: isDark ? tc.textSecondary : "#3B82F6" }]}>
+          ) : (
+            <View>
+              <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14).stiffness(220).mass(1)} style={[st.doneMark, { backgroundColor: tc.mint }]}>
+                <Ionicons name="checkmark" size={42} color="#fff" />
+              </Animated.View>
+              <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>You signed</Text>
+              <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", paddingHorizontal: 30, marginTop: 6 }]}>
+                We sent the agreement to {landlordName} to sign. You'll hear back in your messages.
+              </Text>
+              <View style={{ height: 22 }} />
+              <H2>{market === "UK" ? "Your deposit (UK law)" : "Your security deposit"}</H2>
+              <View style={[st.note, { backgroundColor: tc.warningBg }]}>
+                <Text style={[TYPE.body, { color: tc.textPrimary }]}>
                   {market === "UK"
-                    ? "Contact Shelter UK: shelter.org.uk or Citizens Advice"
-                    : "Contact your local tenant advocacy group or HUD: hud.gov"}
+                    ? `Under the Housing Act 2004 your landlord must protect your deposit${deposit ? ` of ${deposit}` : ""} in a government-approved scheme within 30 days. Agreed scheme: ${selectedScheme}. If they don't, you can claim 1–3× the deposit in court; Citizens Advice and Shelter can help.`
+                    : `Your deposit${deposit ? ` of ${deposit}` : ""} will be ${selectedScheme.toLowerCase()}. It must be returned within the period your state requires after you move out (often 21 days), less deductions for damage beyond normal wear and tear.`}
                 </Text>
               </View>
-              <Pressable onPress={() => router.push("/help-support" as any)}>
-                <Text style={styles.helpLink}>Help</Text>
-              </Pressable>
+              <H2>Before you move in</H2>
+              <View style={[st.dl, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]}>
+                {[
+                  { icon: "key-outline", text: "Agree a time to collect the keys in chat" },
+                  { icon: "camera-outline", text: "Photograph every room on move-in day" },
+                  { icon: "document-text-outline", text: "Sign the inventory together" },
+                  { icon: "receipt-outline", text: "Get a receipt for your deposit" },
+                  { icon: "shield-checkmark-outline", text: market === "UK" ? "Ask for the deposit protection certificate" : "Ask in writing where the deposit is held" },
+                  { icon: "flash-outline", text: "Put the utilities in your name" },
+                ].map((r, i) => (
+                  <Reveal key={r.text} i={i + 6}>
+                    <View style={[st.dlRow, { justifyContent: "flex-start", gap: 12 }, i > 0 && { borderTopWidth: 1, borderTopColor: tc.borderLight }]}>
+                      <Ionicons name={r.icon as keyof typeof Ionicons.glyphMap} size={18} color={tc.accentText} />
+                      <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>{r.text}</Text>
+                    </View>
+                  </Reveal>
+                ))}
+              </View>
             </View>
+          )}
+        </Animated.View>
+      </DPage>
 
-            <View style={{ height: rs(8) }} />
-          </View>
-        )}
-
-        <View style={{ height: rs(24) }} />
-      </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* Bottom CTA bar */}
-      <View style={[styles.ctaBar, { backgroundColor: tc.headerBg, borderTopColor: tc.borderLight, paddingBottom: rs(12) + insets.bottom }]}>
-        {step < 5 && (
-          <>
-            <Pressable onPress={goBack} style={[styles.ctaBack, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-              <Text style={[styles.ctaBackText, { color: tc.textSecondary }]}>{step === 1 ? "Cancel" : "Back"}</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => void goNext()}
-              disabled={submitting}
-              style={{ flex: 1, borderRadius: rs(14), overflow: "hidden", opacity: submitting ? 0.7 : 1 }}
-            >
-              <LinearGradient
-                colors={
-                  step === 4
-                    ? ["#26B324", "#1a8a18"]
-                    : step === 2 && offerAccepted === "accepted"
-                    ? ["#26B324", "#1a8a18"]
-                    : [Colors.brand.blue, "#0054CC"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.ctaGrad}
-              >
-                <Text style={styles.ctaText}>
-                  {submitting ? "Please wait…" :
-                   step === 1 ? "Submit Application" :
-                   step === 2 && offerAccepted === "negotiate" ? "Send Counter-Offer" :
-                   step === 2 ? "Accept & Continue" :
-                   step === 3 ? "Proceed to Sign" :
-                   step === 4 ? "Sign Agreement" :
-                   "Done"}
-                </Text>
-                {!submitting && <Ionicons name="arrow-forward" size={16} color="#FFF" />}
-              </LinearGradient>
-            </Pressable>
-          </>
-        )}
-        {step === 5 && (
-          <Pressable
-            onPress={() => router.replace("/(tabs)/housing" as any)}
-            style={{ flex: 1, borderRadius: rs(14), overflow: "hidden" }}
-          >
-            <LinearGradient
-              colors={["#26B324", "#1a8a18"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.ctaGrad}
-            >
-              <Ionicons name="home" size={16} color="#FFF" />
-              <Text style={styles.ctaText}>Back to Housing</Text>
-            </LinearGradient>
-          </Pressable>
-        )}
-      </View>
-    </SafeAreaView>
+      <DSheet visible={readerOpen} onClose={() => setReaderOpen(false)} title={dealType === "buy" ? "Purchase agreement" : "Tenancy agreement"} full>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }}>
+          <Text selectable style={[body(400), { fontSize: 14, lineHeight: 21, color: tc.textPrimary }]}>{agreementText}</Text>
+          <GradientButton label="I have read it" block outerStyle={{ marginTop: 18 }} onPress={() => { setAgreementRead(true); setReaderOpen(false); }} />
+        </ScrollView>
+      </DSheet>
+    </KeyboardAvoidingView>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F5F6FA" },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: rs(14),
-    paddingTop: rs(12),
-    paddingBottom: rs(14),
-    gap: rs(10),
-    backgroundColor: "#FFF",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: rs(4),
-    elevation: 2,
-  },
-  backBtn: {
-    width: rs(36), height: rs(36), borderRadius: rs(12),
-    backgroundColor: "#EEF5FF",
-    alignItems: "center", justifyContent: "center",
-  },
-  headerTitle: { fontSize: rs(16), fontWeight: "800", color: "#0A2540", letterSpacing: -0.3, flex: 1 },
-  headerSub:   { fontSize: rs(11), color: "#6B7280", marginTop: rs(2), fontWeight: "500" },
-  marketPill: {
-    borderRadius: rs(8),
-    paddingHorizontal: rs(8), paddingVertical: rs(4),
-  },
-  marketPillText: { fontSize: rs(11), fontWeight: "800" },
-
-  // Step indicator
-  stepContainer: {
-    backgroundColor: "#FFF",
-    paddingHorizontal: rs(16),
-    paddingVertical: rs(12),
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-  },
-  stepRow: { flexDirection: "row", alignItems: "flex-start" },
-  stepItem: { flex: 1, alignItems: "center", position: "relative" },
-  stepCircle: {
-    width: rs(26), height: rs(26), borderRadius: rs(13),
-    backgroundColor: "#E5E7EB",
-    alignItems: "center", justifyContent: "center",
-    marginBottom: rs(4),
-  },
-  stepCircleDone:   { backgroundColor: Colors.brand.blue },
-  stepCircleActive: { backgroundColor: Colors.brand.blue },
-  stepNum:   { fontSize: rs(11), fontWeight: "800", color: "#9CA3AF" },
-  stepLabel: { fontSize: rs(9), fontWeight: "600", color: "#9CA3AF", textAlign: "center" },
-  stepLine: {
-    position: "absolute",
-    top: rs(13), left: "50%",
-    width: "100%", height: rs(2),
-    backgroundColor: "#E5E7EB",
-    zIndex: -1,
-  },
-
-  // Scroll
-  scroll: { paddingHorizontal: rs(16), paddingTop: rs(16) },
-
-  // Section card
-  sectionCard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(16),
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: rs(14),
-    marginBottom: rs(14),
-  },
-  sectionCardHeader: { flexDirection: "row", alignItems: "center", gap: rs(10), marginBottom: rs(8) },
-  sectionIcon: { width: rs(32), height: rs(32), borderRadius: rs(10), alignItems: "center", justifyContent: "center" },
-  sectionTitle: { fontSize: rs(15), fontWeight: "800", color: "#0A2540" },
-  sectionDesc:  { fontSize: rs(12), color: "#4B5563", lineHeight: rs(18) },
-
-  // Fraud note
-  fraudNote: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: rs(8),
-    backgroundColor: "#F0FDF4",
-    borderWidth: 1, borderColor: "#BBF7D0",
-    borderRadius: rs(12),
-    padding: rs(12),
-    marginBottom: rs(16),
-  },
-  fraudNoteText: { flex: 1, fontSize: rs(12), color: "#166534", lineHeight: rs(17) },
-
-  // Group label
-  groupLabel: {
-    fontSize: rs(10), fontWeight: "800", color: "#9CA3AF",
-    letterSpacing: 0.8, textTransform: "uppercase",
-    marginBottom: rs(10), marginTop: rs(8),
-  },
-
-  // Fields
-  field: { marginBottom: rs(14) },
-  fieldLabel: { fontSize: rs(13), fontWeight: "700", color: "#374151", marginBottom: rs(6) },
-  input: {
-    backgroundColor: "#FFF",
-    borderWidth: 1.5, borderColor: "#E5E7EB",
-    borderRadius: rs(12),
-    paddingHorizontal: rs(14), paddingVertical: rs(11),
-    fontSize: rs(14), color: "#0A2540",
-  },
-
-  // Chips
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: rs(8) },
-  chip: {
-    paddingHorizontal: rs(12), paddingVertical: rs(7),
-    borderRadius: rs(10), borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
-  },
-  chipActive: { backgroundColor: "#EEF5FF", borderColor: Colors.brand.blue },
-  chipText: { fontSize: rs(12), fontWeight: "600", color: "#6B7280" },
-  chipTextActive: { color: Colors.brand.blue, fontWeight: "700" },
-
-  // Toggle yes/no
-  toggleRow: { flexDirection: "row", gap: rs(10), marginBottom: rs(8) },
-  toggle: {
-    paddingHorizontal: rs(20), paddingVertical: rs(8),
-    borderRadius: rs(10), borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
-  },
-  toggleActive: { backgroundColor: "#EEF5FF", borderColor: Colors.brand.blue },
-  toggleText: { fontSize: rs(13), fontWeight: "600", color: "#6B7280" },
-  toggleTextActive: { color: Colors.brand.blue, fontWeight: "700" },
-
-  // Offer card
-  offerCard: {
-    borderRadius: rs(16), overflow: "hidden",
-    borderWidth: 1.5, borderColor: "#BFDBFE",
-    marginBottom: rs(16),
-    shadowColor: "#000", shadowOpacity: 0.06,
-    shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(2) },
-    elevation: 3,
-  },
-  offerCardHeader: {
-    flexDirection: "row", alignItems: "center", gap: rs(10),
-    paddingHorizontal: rs(16), paddingVertical: rs(12),
-  },
-  offerCardTitle: { fontSize: rs(15), fontWeight: "800", color: "#FFF" },
-  offerCardBody: { backgroundColor: "#FFF", padding: rs(16) },
-  offerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", paddingVertical: rs(10) },
-  offerDivider: { height: StyleSheet.hairlineWidth, backgroundColor: "#F3F4F6" },
-  offerKey: { fontSize: rs(12), fontWeight: "600", color: "#6B7280", flex: 0.45 },
-  offerVal: { fontSize: rs(13), fontWeight: "600", color: "#0A2540", flex: 0.55, textAlign: "right" },
-  conditionRow: { flexDirection: "row", alignItems: "flex-start", gap: rs(8), marginTop: rs(4) },
-  conditionText: { flex: 1, fontSize: rs(12), color: "#374151", lineHeight: rs(17) },
-
-  // Decision
-  decisionRow: { flexDirection: "row", gap: rs(10), marginBottom: rs(14) },
-  decisionBtn: {
-    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(8),
-    paddingVertical: rs(12), borderRadius: rs(12),
-    borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
-  },
-  decisionBtnAccept:    { backgroundColor: "#DCFCE7", borderColor: "#86EFAC" },
-  decisionBtnNegotiate: { backgroundColor: "#FEF3C7", borderColor: "#FCD34D" },
-  decisionBtnText: { fontSize: rs(13), fontWeight: "700", color: "#374151" },
-  declineLink: { alignSelf: "center", paddingVertical: rs(8) },
-  declineLinkText: { fontSize: rs(12), color: "#DC2626", fontWeight: "600", textDecorationLine: "underline" },
-
-  // Agreement
-  agreementBox: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(14),
-    borderWidth: 1.5, borderColor: "#E5E7EB",
-    padding: rs(14),
-    marginBottom: rs(12),
-  },
-  agreementText: {
-    fontFamily: "monospace",
-    fontSize: rs(11),
-    color: "#374151",
-    lineHeight: rs(17),
-  },
-  readConfirmBtn: {
-    flexDirection: "row", alignItems: "center", gap: rs(6),
-    marginTop: rs(16), alignSelf: "flex-start",
-    backgroundColor: "#F0FDF4",
-    borderRadius: rs(8), paddingHorizontal: rs(12), paddingVertical: rs(8),
-  },
-  readConfirmText: { fontSize: rs(12), color: "#16A34A", fontWeight: "700" },
-  readBanner: {
-    flexDirection: "row", alignItems: "center", gap: rs(8),
-    backgroundColor: "#DCFCE7", borderWidth: 1, borderColor: "#86EFAC",
-    borderRadius: rs(10), padding: rs(10), marginBottom: rs(12),
-  },
-  readBannerText: { fontSize: rs(12), color: "#166534", fontWeight: "700" },
-  disclaimerBox: {
-    flexDirection: "row", alignItems: "flex-start", gap: rs(8),
-    backgroundColor: "#F9FAFB", borderWidth: 1, borderColor: "#E5E7EB",
-    borderRadius: rs(10), padding: rs(12), marginBottom: rs(12),
-  },
-  disclaimerText: { flex: 1, fontSize: rs(11), color: "#6B7280", lineHeight: rs(16) },
-
-  // E-Signature
-  signatureInput: { fontStyle: "italic", fontSize: rs(16) },
-  signaturePreview: {
-    backgroundColor: "#F8FAFC",
-    borderRadius: rs(10), borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: rs(12), marginTop: rs(8),
-    alignItems: "center",
-  },
-  signaturePreviewLabel: { fontSize: rs(10), color: "#9CA3AF", marginBottom: rs(6) },
-  signatureFont: {
-    fontSize: rs(22), fontStyle: "italic", fontWeight: "300",
-    color: "#0A2540", marginBottom: rs(4),
-    borderBottomWidth: 1, borderBottomColor: "#0A2540",
-    paddingBottom: rs(4), minWidth: 200, textAlign: "center",
-  },
-  signatureTimestamp: { fontSize: rs(10), color: "#9CA3AF", marginTop: rs(4) },
-  twoFACard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(14), borderWidth: 1.5, borderColor: "#BFDBFE",
-    padding: rs(14), marginBottom: rs(14),
-  },
-  twoFADesc: { fontSize: rs(13), color: "#374151", lineHeight: rs(19), marginBottom: rs(12) },
-  sendCodeBtn: { borderRadius: rs(10), overflow: "hidden" },
-  sendCodeGrad: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(8),
-    paddingVertical: rs(12),
-  },
-  sendCodeText: { fontSize: rs(14), fontWeight: "700", color: "#FFF" },
-  resendText: { fontSize: rs(12), color: Colors.brand.blue, fontWeight: "600", marginTop: rs(8), textDecorationLine: "underline" },
-  counterSignNote: {
-    flexDirection: "row", alignItems: "flex-start", gap: rs(8),
-    backgroundColor: "#EEF5FF", borderWidth: 1, borderColor: "#BFDBFE",
-    borderRadius: rs(10), padding: rs(12), marginBottom: rs(12),
-  },
-  counterSignText: { flex: 1, fontSize: rs(12), color: "#1E40AF", lineHeight: rs(17) },
-
-  // Step 5 success
-  successBanner: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(16), borderWidth: 1, borderColor: "#86EFAC",
-    padding: rs(24), alignItems: "center", marginBottom: rs(20),
-  },
-  successIconCircle: {
-    width: rs(64), height: rs(64), borderRadius: rs(32),
-    alignItems: "center", justifyContent: "center",
-    marginBottom: rs(12),
-  },
-  successTitle: { fontSize: rs(20), fontWeight: "900", color: "#0A2540", marginBottom: rs(6) },
-  successSub:   { fontSize: rs(13), color: "#6B7280", textAlign: "center", lineHeight: rs(18) },
-
-  depositCard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(14), borderWidth: 1.5, borderColor: "#FCD34D",
-    padding: rs(14), marginBottom: rs(16),
-  },
-  depositCardHeader: { flexDirection: "row", alignItems: "center", gap: rs(8), marginBottom: rs(10) },
-  depositCardTitle:  { fontSize: rs(14), fontWeight: "800", color: "#0A2540" },
-  depositCardText:   { fontSize: rs(13), color: "#374151", lineHeight: rs(18) },
-  schemeList: { marginTop: rs(10), gap: rs(8) },
-  schemeRow:  { flexDirection: "row", alignItems: "center", gap: rs(8) },
-  schemeText: { fontSize: rs(13), color: "#6B7280" },
-  depositLawNote: {
-    marginTop: rs(12), fontSize: rs(11), color: "#92400E",
-    lineHeight: rs(16), fontStyle: "italic",
-  },
-
-  checklistCard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(14), borderWidth: 1, borderColor: "#E5E7EB",
-    padding: rs(14), marginBottom: rs(16), gap: rs(10),
-  },
-  checklistRow: { flexDirection: "row", alignItems: "flex-start", gap: rs(10) },
-  checklistText: { flex: 1, fontSize: rs(13), color: "#374151", lineHeight: rs(18) },
-
-  docSavedCard: {
-    flexDirection: "row", alignItems: "center", gap: rs(12),
-    backgroundColor: "#EEF5FF", borderRadius: rs(14),
-    borderWidth: 1, borderColor: "#BFDBFE",
-    padding: rs(14), marginBottom: rs(14),
-  },
-  docSavedIcon: { width: rs(40), height: rs(40), borderRadius: rs(13), alignItems: "center", justifyContent: "center" },
-  docSavedTitle: { fontSize: rs(13), fontWeight: "700", color: "#1E40AF", marginBottom: rs(2) },
-  docSavedSub:   { fontSize: rs(11), color: "#3B82F6" },
-
-  helpCard: {
-    flexDirection: "row", alignItems: "center", gap: rs(12),
-    backgroundColor: "#EEF5FF", padding: rs(14),
-    borderRadius: rs(14), borderWidth: 1, borderColor: "#BFDBFE",
-  },
-  helpTitle: { fontSize: rs(13), fontWeight: "700", color: "#1E40AF", marginBottom: rs(2) },
-  helpDesc:  { fontSize: rs(11), color: "#3B82F6" },
-  helpLink:  { fontSize: rs(12), fontWeight: "800", color: Colors.brand.blue },
-
-  // CTA bar
-  ctaBar: {
-    flexDirection: "row", gap: rs(10), alignItems: "center",
-    paddingHorizontal: rs(16), paddingTop: rs(12),
-    backgroundColor: "#FFF",
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E4E6EA",
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: rs(6),
-    shadowOffset: { width: 0, height: rs(-2) }, elevation: 6,
-  },
-  ctaBack: {
-    paddingHorizontal: rs(18), paddingVertical: rs(14),
-    borderRadius: rs(14), borderWidth: 1.5, borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
-  },
-  ctaBackText: { fontSize: rs(14), fontWeight: "700", color: "#6B7280" },
-  ctaGrad: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: rs(8), paddingVertical: rs(14),
-  },
-  ctaText: { fontSize: rs(15), fontWeight: "800", color: "#FFF" },
-
-  // Viewing status (optional, Step 1)
-  viewingOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: rs(10),
-    paddingVertical: rs(11),
-    paddingHorizontal: rs(12),
-    borderRadius: rs(12),
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: rs(8),
-  },
-  viewingOptionIcon: {
-    width: rs(30),
-    height: rs(30),
-    borderRadius: rs(9),
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  viewingOptionText: {
-    flex: 1,
-    fontSize: rs(13),
-    color: "#374151",
-    fontWeight: "600",
-  },
-  viewingRadio: {
-    width: rs(18),
-    height: rs(18),
-    borderRadius: rs(9),
-    borderWidth: 2,
-    borderColor: "#D1D5DB",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  viewingRadioDot: {
-    width: rs(8),
-    height: rs(8),
-    borderRadius: rs(4),
-  },
-  viewingAdvisory: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: rs(8),
-    backgroundColor: "#FFFBEB",
-    borderRadius: rs(10),
-    padding: rs(12),
-    borderWidth: 1,
-    borderColor: "#FDE68A",
-    marginTop: rs(4),
-  },
-  viewingAdvisoryText: {
-    flex: 1,
-    fontSize: rs(12),
-    color: "#92400E",
-    lineHeight: rs(18),
-  },
+const st = StyleSheet.create({
+  progress: { height: 4, borderRadius: 4, overflow: "hidden", marginHorizontal: 16 },
+  listingRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingBottom: 12 },
+  listingIcon: { width: 52, height: 52, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  field: { minHeight: 50, borderRadius: RADIUS.input, paddingHorizontal: 14, borderWidth: 0 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  more: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 20, borderWidth: 1 },
+  moreDot: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderStyle: "dashed", alignItems: "center", justifyContent: "center" },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8, marginBottom: 6 },
+  offerCard: { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginBottom: 16, padding: 14, borderRadius: 24 },
+  dl: { marginHorizontal: 16, marginBottom: 16, borderRadius: 20, overflow: "hidden" },
+  dlRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingVertical: 12, paddingHorizontal: 14 },
+  readRow: { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 6, marginBottom: 6, padding: 14, borderRadius: 20 },
+  hint: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4, marginTop: 6, marginHorizontal: 2 },
+  doneMark: { width: 84, height: 84, borderRadius: 42, alignSelf: "center", alignItems: "center", justifyContent: "center", marginTop: 8 },
+  note: { marginHorizontal: 16, marginBottom: 18, padding: 14, borderRadius: 20 },
 });

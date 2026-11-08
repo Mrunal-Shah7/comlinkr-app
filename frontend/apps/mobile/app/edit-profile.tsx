@@ -1,5 +1,6 @@
 import { rs } from "../src/utils/responsive";
 import { useEffect, useRef, useState } from "react";
+import Reanimated, { ZoomIn } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -51,6 +52,10 @@ import { showToast } from "../src/shared/ui/Toast";
 import { apiErrorMessage } from "../src/utils/apiErrorMessage";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { ScrollView as GHScrollView } from 'react-native-gesture-handler';
+import { TYPE, display } from '../src/theme/d';
+import { Chip, GradientButton, GradientFill, PressableScale, Reveal } from '../src/shared/d';
+import { DPage, goBackOr } from '../src/shared/d/Page';
 
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -244,13 +249,11 @@ function LocationPickerField({
           {
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: rs(12),
-            paddingVertical: rs(12),
-            borderWidth: 1,
-            borderRadius: rs(12),
-            borderColor: value ? accentColor : tc.borderLight,
-            backgroundColor: value ? (accentColor + "12") : tc.cardBg,
-            gap: rs(8),
+            minHeight: 50,
+            paddingHorizontal: 14,
+            borderRadius: 16,
+            backgroundColor: tc.inputBg,
+            gap: 8,
             opacity: disabled ? 0.4 : 1,
           },
         ]}
@@ -258,9 +261,9 @@ function LocationPickerField({
         {showFlags && value && COUNTRY_INFO[value]?.flag ? (
           <Text style={{ fontSize: rs(18) }}>{COUNTRY_INFO[value].flag}</Text>
         ) : (
-          <Ionicons name="location-outline" size={16} color={value ? accentColor : tc.textTertiary} />
+          <Ionicons name="location-outline" size={16} color={value ? tc.accentText : tc.textTertiary} />
         )}
-        <Text style={{ flex: 1, fontSize: rs(15), fontWeight: "600", color: value ? tc.textPrimary : tc.textTertiary }}>
+        <Text style={[TYPE.body, { flex: 1, color: value ? tc.textPrimary : tc.textTertiary }]}>
           {value || placeholder}
         </Text>
         {value ? (
@@ -539,7 +542,7 @@ export default function EditProfileScreen() {
       serverAvatarPathAtLoad.current = fresh.avatarUrl;
       setProfileImage(resolveAvatarDisplayUrl(fresh.avatarUrl));
       pendingAvatarMime.current = null;
-      appAlert("Saved", "Your profile has been updated.", [{ text: "OK", onPress: () => { if (router.canGoBack()) router.back(); else router.replace("/profile" as any); } }]);
+      if (router.canGoBack()) router.back(); else router.replace("/profile" as any);
     } catch (e) {
       showToast(apiErrorMessage(e, "Could not save profile."), "error");
     } finally {
@@ -547,282 +550,254 @@ export default function EditProfileScreen() {
     }
   };
 
+  // ── Save as you go ──────────────────────────────────────────────────────────
+  type SaveKey = "photo" | "name" | "username" | "phone" | "bio" | "place" | "prefs";
+  const [saveState, setSaveState] = useState<Partial<Record<SaveKey, "saving" | "ok" | "err">>>({});
+  const mark = (k: SaveKey, v: "saving" | "ok" | "err") => setSaveState((m) => ({ ...m, [k]: v }));
+  const lastSaved = useRef<{ name: string; username: string; phone: string; bio: string } | null>(null);
+  const prefsReady = useRef(false);
+  useEffect(() => {
+    if (profileLoading || lastSaved.current) return;
+    lastSaved.current = { name: name.trim(), username: username.trim().toLowerCase(), phone: phone.trim(), bio: bio.trim() };
+    setTimeout(() => { prefsReady.current = true; }, 0);
+  }, [profileLoading, name, username, phone, bio]);
+  const refreshUser = async () => {
+    const fresh = await getMyFullProfile();
+    await applyUser(mergeFullProfileIntoUser(fresh, useAuthStore.getState().user));
+    return fresh;
+  };
+  const textError = (k: "name" | "username" | "phone" | "bio"): string | null => {
+    if (k === "name") {
+      const v = name.trim();
+      if (!v) return "Please enter your full name.";
+      if (v.length < 2) return "Your name must be at least 2 characters.";
+      if (v.length > 60) return "Name must be under 60 characters.";
+    }
+    if (k === "username") {
+      const v = username.trim().toLowerCase();
+      if (!v) return "Please enter a username.";
+      if (v.length < 3) return "Username must be at least 3 characters.";
+      if (v.length > 30) return "Username must be under 30 characters.";
+      if (!/^[a-z0-9_]+$/.test(v)) return "Username may only contain lowercase letters, numbers, and underscores.";
+    }
+    if (k === "phone" && phone.trim()) {
+      const c = validatePhoneNumber(phone, countryToPhoneMarket(country));
+      if (!c.valid) return c.error ?? "Please enter a valid phone number.";
+    }
+    return null;
+  };
+  const saveText = async (k: "name" | "username" | "phone" | "bio", quiet = false) => {
+    if (!lastSaved.current) return;
+    const value = k === "username" ? username.trim().toLowerCase() : k === "name" ? name.trim() : k === "phone" ? phone.trim() : bio.trim();
+    if (value === lastSaved.current[k]) return;
+    const err = textError(k);
+    if (err) { if (quiet) return; mark(k, "err"); showToast(err, "error"); return; }
+    if (k === "phone" && !value) return; // the API rejects an empty phone; leaving it empty keeps the old one
+    mark(k, "saving");
+    try {
+      await patchMyProfile(k === "name" ? { fullName: value } : k === "username" ? { username: value } : k === "phone" ? { phoneNumber: value } : { bio: value });
+      lastSaved.current = { ...lastSaved.current, [k]: value };
+      await refreshUser();
+      mark(k, "ok");
+    } catch (ex) {
+      mark(k, "err");
+      showToast(apiErrorMessage(ex, "Could not save."), "error");
+    }
+  };
+  // Text also saves a second after typing stops (closing the Android keyboard does not blur the field);
+  // problems are only reported when you leave the field.
+  useEffect(() => {
+    if (!lastSaved.current) return;
+    const t = setTimeout(() => { for (const k of ["name", "username", "phone", "bio"] as const) void saveText(k, true); }, 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveText reads the latest values
+  }, [name, username, phone, bio]);
+  // Location and the chips save a moment after they change, once they are complete.
+  useEffect(() => {
+    if (!prefsReady.current) return;
+    const hasStates = (STATES_BY_COUNTRY[country] ?? []).length > 0;
+    const hasCities = (CITIES_BY_STATE[stateProvince] ?? []).length > 0;
+    if (!country.trim() || (hasStates && !stateProvince.trim()) || (hasCities && !city.trim())) return;
+    if (selectedInterests.length === 0 && hadInterestsAtLoad.current) return;
+    const t = setTimeout(() => {
+      mark("place", "saving"); mark("prefs", "saving");
+      void syncProfileSelectionsToApi({
+        country: country.trim(), stateProvince: stateProvince.trim(), city: city.trim(),
+        cultureUiIds: selectedCulture, interestUiIds: selectedInterests, communityUiIds: selectedCommunities,
+      }).then(refreshUser).then(() => { mark("place", "ok"); mark("prefs", "ok"); })
+        .catch((ex) => { mark("place", "err"); mark("prefs", "err"); showToast(apiErrorMessage(ex, "Could not save."), "error"); });
+    }, 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshUser and mark only use stable setters
+  }, [country, stateProvince, city, selectedCulture, selectedInterests, selectedCommunities]);
+  // A new photo uploads right away; removing it removes it.
+  const lastPhoto = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (profileLoading) return;
+    if (lastPhoto.current === undefined) { lastPhoto.current = profileImage; return; }
+    if (profileImage === lastPhoto.current) return;
+    lastPhoto.current = profileImage;
+    const isLocal = profileImage != null && isLocalAssetUri(profileImage);
+    if (!isLocal && profileImage != null) return;
+    mark("photo", "saving");
+    void (async () => {
+      try {
+        if (isLocal && profileImage) await uploadMyAvatar(profileImage, pendingAvatarMime.current || "image/jpeg");
+        else if (serverAvatarPathAtLoad.current) await removeMyAvatar();
+        const fresh = await refreshUser();
+        serverAvatarPathAtLoad.current = fresh.avatarUrl;
+        pendingAvatarMime.current = null;
+        lastPhoto.current = resolveAvatarDisplayUrl(fresh.avatarUrl);
+        setProfileImage(lastPhoto.current);
+        mark("photo", "ok");
+      } catch (ex) {
+        mark("photo", "err");
+        showToast(apiErrorMessage(ex, "Could not save the photo."), "error");
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs when the photo changes
+  }, [profileImage, profileLoading]);
+  const savedMark = (k: SaveKey) => {
+    const v = saveState[k];
+    if (!v) return null;
+    if (v === "saving") return <ActivityIndicator size="small" color={tc.textTertiary} style={{ transform: [{ scale: 0.7 }] }} />;
+    return (
+      <Reanimated.View key={v} entering={ZoomIn.springify().damping(14).stiffness(260).mass(1)}>
+        <Ionicons name={v === "ok" ? "checkmark-circle" : "alert-circle"} size={16} color={v === "ok" ? tc.mint : tc.dangerText} accessibilityLabel={v === "ok" ? "Saved" : "Not saved"} />
+      </Reanimated.View>
+    );
+  };
+
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]}>
-      {/* Header */}
-      <View style={[s.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/profile" as any); }} style={({ pressed }) => [s.backBtn, pressed && { opacity: 0.8 }]}>
-          <Ionicons name="chevron-back" size={20} color={Colors.brand.blue} />
-        </Pressable>
-        <Text style={[s.headerTitle, { color: tc.textPrimary }]}>Edit Profile</Text>
-        <TouchableOpacity onPress={handleSave} activeOpacity={0.8} disabled={saving || profileLoading}>
-          <LinearGradient colors={[Colors.brand.blue, "#0055CC"]} style={s.saveBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            {saving || profileLoading
-              ? <ActivityIndicator size="small" color="#FFF" />
-              : <Text style={s.saveBtnText}>Save</Text>
-            }
-          </LinearGradient>
-        </TouchableOpacity>
+  const field = (label: string, input: React.ReactNode, hint?: string, k?: SaveKey) => (
+    <View style={{ marginBottom: 14 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6, marginLeft: 2 }}>
+        <Text style={[TYPE.label, { color: tc.textSecondary }]}>{label}</Text>
+        {k ? savedMark(k) : null}
       </View>
+      {input}
+      {hint ? <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 5, marginLeft: 2, fontSize: 12 }]}>{hint}</Text> : null}
+    </View>
+  );
+  const inputBox = { minHeight: 50, borderRadius: 16, paddingHorizontal: 14, backgroundColor: tc.inputBg, justifyContent: "center" as const };
+  const inputText = [TYPE.body, { color: tc.textPrimary, paddingVertical: 12 }];
+  const group = (t: string, k?: SaveKey) => (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 18, marginBottom: 10, marginLeft: 2 }}>
+      <Text style={[TYPE.overline, { color: tc.textTertiary }]}>{t}</Text>
+      {k ? savedMark(k) : null}
+    </View>
+  );
+  const busy = saving || profileLoading;
 
+  return (
+    <DPage
+      title="Edit profile"
+      largeTitle="hidden"
+      onBack={() => goBackOr("/profile")}
+      right={
+        <Pressable onPress={handleSave} disabled={busy} hitSlop={8} accessibilityRole="button" accessibilityLabel="Save profile" style={{ paddingHorizontal: 12, height: 42, justifyContent: "center" }}>
+          {saving ? <ActivityIndicator size="small" color={tc.accent} /> : <Text style={[TYPE.bodyStrong, { color: busy ? tc.textTertiary : tc.accentText }]}>Done</Text>}
+        </Pressable>
+      }
+    >
       {profileLoading ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: rs(48) }}>
-          <ActivityIndicator size="large" color={Colors.brand.blue} />
-          <Text style={{ marginTop: rs(12), fontSize: rs(14), fontWeight: "600", color: tc.textSecondary }}>Loading profile…</Text>
-        </View>
+        <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 80 }} />
       ) : (
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={s.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={{ paddingHorizontal: 16 }}>
+          {/* Photo */}
+          <Reveal i={0} style={{ alignItems: "center", marginBottom: 14 }}>
+            <PressableScale onPress={showImageOptions} accessibilityRole="button" accessibilityLabel={profileImage ? "Change photo" : "Add a photo"}>
+              <GradientFill style={{ width: 90, height: 90, borderRadius: 45, alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden", alignItems: "center", justifyContent: "center" }}>
+                  {profileImage ? (
+                    <Image source={{ uri: profileImage }} style={{ width: "100%", height: "100%" }} contentFit={isLocalAssetUri(profileImage) ? "contain" : "cover"} cachePolicy={isLocalAssetUri(profileImage) ? "memory" : "memory-disk"} transition={200} />
+                  ) : (
+                    <Text style={[display(800), { color: "#fff", fontSize: 28 }]}>{initials}</Text>
+                  )}
+                </View>
+              </GradientFill>
+              <View style={{ position: "absolute", right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent, borderWidth: 2, borderColor: tc.pageBg }}>
+                {imageLoading ? <ActivityIndicator size="small" color="#FFF" /> : <Ionicons name="camera" size={14} color="#FFF" />}
+              </View>
+            </PressableScale>
+            <Pressable onPress={showImageOptions} hitSlop={8} style={{ marginTop: 10 }} accessibilityRole="button">
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>{profileImage ? "Change photo" : "Add a photo"}</Text>
+                {savedMark("photo")}
+              </View>
+            </Pressable>
+            <Text style={[TYPE.small, { color: tc.textTertiary, fontSize: 12, marginTop: 2 }]}>JPEG, PNG or WebP, up to {MAX_FILE_SIZE_MB} MB</Text>
+          </Reveal>
 
-        {/* Avatar */}
-        <View style={[s.avatarSection, { backgroundColor: isDark ? tc.secondaryBg : "#FFF" }]}>
-          <TouchableOpacity onPress={showImageOptions} activeOpacity={0.85}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={s.avatarImage}
-                contentFit={isLocalAssetUri(profileImage) ? "contain" : "cover"}
-                cachePolicy={isLocalAssetUri(profileImage) ? "memory" : "memory-disk"}
-                transition={200}
-              />
-            ) : (
-              <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={s.avatarGrad}>
-                <Text style={s.avatarInitials}>{initials}</Text>
-              </LinearGradient>
-            )}
-            <View style={s.cameraBadge}>
-              {imageLoading ? <ActivityIndicator size="small" color="#FFF" /> : <Ionicons name="camera" size={14} color="#FFF" />}
+          <Reveal i={1}>
+            {field("Name", <View style={inputBox}><TextInput style={inputText} value={name} onChangeText={setName} onBlur={() => void saveText("name")} placeholder="Your full name" placeholderTextColor={tc.textTertiary} /></View>, undefined, "name")}
+            {field("Username", <View style={inputBox}><TextInput style={inputText} value={username} onChangeText={setUsername} onBlur={() => void saveText("username")} placeholder="username" placeholderTextColor={tc.textTertiary} autoCapitalize="none" /></View>, undefined, "username")}
+            {field("Email", <View style={[inputBox, { opacity: 0.7 }]}><TextInput style={inputText} value={email} editable={false} placeholder="email@example.com" placeholderTextColor={tc.textTertiary} keyboardType="email-address" autoCapitalize="none" /></View>, "Change your email in Settings, Account details.")}
+            {field("Phone", <View style={inputBox}><TextInput style={inputText} value={phone} onChangeText={(t) => setPhone(sanitizePhoneInput(t, countryToPhoneMarket(country)))} onBlur={() => void saveText("phone")} placeholder="+1 (555) 000-0000" placeholderTextColor={tc.textTertiary} keyboardType="phone-pad" /></View>, phone.trim().length > 0 ? formatPhoneHint(countryToPhoneMarket(country)) : undefined, "phone")}
+            {field("Bio", <View style={[inputBox, { paddingVertical: 4 }]}><TextInput style={[inputText, { minHeight: 90, textAlignVertical: "top" }]} value={bio} onChangeText={setBio} onBlur={() => void saveText("bio")} placeholder="A line about you" placeholderTextColor={tc.textTertiary} multiline maxLength={200} /></View>, `${bio.length}/200`, "bio")}
+          </Reveal>
+
+          <Reveal i={2}>
+            {group("Where you live", "place")}
+            {field("Country", <LocationPickerField label="Country" value={country} items={COUNTRIES} onSelect={(v) => { setCountry(v); setStateProvince(""); setCity(""); }} placeholder="Choose a country" showFlags tc={tc} />)}
+            {country.length > 0 && availableStates.length > 0
+              ? field(country === "United States" ? "State" : country === "Canada" ? "Province" : country === "United Kingdom" ? "Region" : "State or province",
+                <LocationPickerField label={country === "United States" ? "State" : country === "Canada" ? "Province" : "State or province"} value={stateProvince} items={availableStates} onSelect={(v) => { setStateProvince(v); setCity(""); }} placeholder="Choose one" tc={tc} />)
+              : null}
+            {stateProvince.length > 0 && availableCities.length > 0
+              ? field("City", <LocationPickerField label="City" value={city} items={availableCities} onSelect={setCity} placeholder="Choose a city" tc={tc} />)
+              : null}
+          </Reveal>
+
+          <Reveal i={3}>
+            {group("Your vibe", "prefs")}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {CULTURE_OPTIONS.map((item) => (
+                <Chip key={item.id} label={item.label} on={selectedCulture.includes(item.id)} onPress={() => toggle(item.id, selectedCulture, setSelectedCulture)} />
+              ))}
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={showImageOptions} activeOpacity={0.7} style={s.changePhotoBtn}>
-            <Ionicons name="cloud-upload-outline" size={14} color={Colors.brand.blue} />
-            <Text style={s.changePhotoText}>{profileImage ? "Change Photo" : "Upload Photo"}</Text>
-          </TouchableOpacity>
-          <Text style={s.photoHint}>JPEG, PNG or WebP · Max {MAX_FILE_SIZE_MB}MB</Text>
+
+            {group("Interests")}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {INTEREST_OPTIONS.map((item) => (
+                <Chip key={item.id} label={item.label} on={selectedInterests.includes(item.id)} onPress={() => toggle(item.id, selectedInterests, setSelectedInterests)} />
+              ))}
+            </View>
+
+            {group(selectedCommunities.length > 0 ? `Communities · ${selectedCommunities.length} chosen` : "Communities")}
+            <GHScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16, marginBottom: 10 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+              {COMMUNITY_CATEGORIES.map((cat) => {
+                const n = COMMUNITY_OPTIONS.filter((o) => o.category === cat && selectedCommunities.includes(o.id)).length;
+                return <Segmentish key={cat} label={n > 0 ? `${cat} · ${n}` : cat} on={activeCommunityCategory === cat} onPress={() => setActiveCommunityCategory(cat)} />;
+              })}
+            </GHScrollView>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {COMMUNITY_OPTIONS.filter((item) => item.category === activeCommunityCategory).map((item) => (
+                <Chip key={item.id} label={`${item.emoji ? item.emoji + " " : ""}${item.label}`} on={selectedCommunities.includes(item.id)} onPress={() => toggle(item.id, selectedCommunities, setSelectedCommunities)} />
+              ))}
+            </View>
+          </Reveal>
+
+          <Text style={[TYPE.small, { color: tc.textTertiary, textAlign: "center", marginTop: 24 }]}>Changes save as you go.</Text>
         </View>
-
-        {/* Basic Info */}
-        <SectionLabel label="BASIC INFO" />
-        <View style={[s.section, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <View style={s.inputGroup}>
-            <Text style={[s.inputLabel, { color: tc.textTertiary }]}>Full Name</Text>
-            <TextInput style={[s.input, { color: tc.textPrimary }]} value={name} onChangeText={setName} placeholder="Your full name" placeholderTextColor={tc.textTertiary} />
-          </View>
-          <View style={[s.divider, { backgroundColor: tc.borderLight }]} />
-          <View style={s.inputGroup}>
-            <Text style={[s.inputLabel, { color: tc.textTertiary }]}>Username</Text>
-            <TextInput style={[s.input, { color: tc.textPrimary }]} value={username} onChangeText={setUsername} placeholder="@username" placeholderTextColor={tc.textTertiary} autoCapitalize="none" />
-          </View>
-          <View style={[s.divider, { backgroundColor: tc.borderLight }]} />
-          <View style={s.inputGroup}>
-            <Text style={[s.inputLabel, { color: tc.textTertiary }]}>Email</Text>
-            <TextInput
-              style={[s.input, { color: tc.textPrimary, opacity: 0.85 }]}
-              value={email}
-              editable={false}
-              placeholder="email@example.com"
-              placeholderTextColor={tc.textTertiary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <Text style={{ fontSize: rs(11), color: tc.textTertiary, marginTop: rs(4) }}>Email cannot be changed here.</Text>
-          </View>
-          <View style={[s.divider, { backgroundColor: tc.borderLight }]} />
-          <View style={s.inputGroup}>
-            <Text style={[s.inputLabel, { color: tc.textTertiary }]}>Phone Number</Text>
-            <TextInput
-              style={[s.input, { color: tc.textPrimary }]}
-              value={phone}
-              onChangeText={(t) => setPhone(sanitizePhoneInput(t, countryToPhoneMarket(country)))}
-              placeholder="+1 (555) 000-0000"
-              placeholderTextColor={tc.textTertiary}
-              keyboardType="phone-pad"
-            />
-            {phone.trim().length > 0 && (
-              <Text style={{ fontSize: rs(11), color: tc.textTertiary, marginTop: rs(4) }}>
-                {formatPhoneHint(countryToPhoneMarket(country))}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {/* Bio */}
-        <SectionLabel label="BIO" />
-        <View style={[s.section, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <TextInput
-            style={[s.bioInput, { color: tc.textPrimary }]}
-            value={bio}
-            onChangeText={setBio}
-            placeholder="Tell the community about yourself..."
-            placeholderTextColor={tc.textTertiary}
-            multiline
-            maxLength={200}
-          />
-          <Text style={s.charCount}>{bio.length}/200</Text>
-        </View>
-
-        {/* Location */}
-        <SectionLabel label="LOCATION" />
-        <View style={{ paddingHorizontal: rs(16), gap: rs(10) }}>
-          <Text style={[s.inputLabel, { color: tc.textTertiary }]}>Country</Text>
-          <LocationPickerField
-            label="Country"
-            value={country}
-            items={COUNTRIES}
-            onSelect={(v) => { setCountry(v); setStateProvince(""); setCity(""); }}
-            placeholder="Select country"
-            showFlags
-            tc={tc}
-          />
-          {country.length > 0 && availableStates.length > 0 && (
-            <>
-              <Text style={[s.inputLabel, { color: tc.textTertiary, marginTop: rs(4) }]}>
-                {country === "United States" ? "State" : country === "Canada" ? "Province" : country === "United Kingdom" ? "Region" : "State / Province"}
-              </Text>
-              <LocationPickerField
-                label={country === "United States" ? "State" : country === "Canada" ? "Province" : "State / Province"}
-                value={stateProvince}
-                items={availableStates}
-                onSelect={(v) => { setStateProvince(v); setCity(""); }}
-                placeholder="Select state / province"
-                tc={tc}
-              />
-            </>
-          )}
-          {stateProvince.length > 0 && availableCities.length > 0 && (
-            <>
-              <Text style={[s.inputLabel, { color: tc.textTertiary, marginTop: rs(4) }]}>City</Text>
-              <LocationPickerField
-                label="City"
-                value={city}
-                items={availableCities}
-                onSelect={setCity}
-                placeholder="Select city"
-                tc={tc}
-              />
-            </>
-          )}
-        </View>
-
-        {/* Lifestyle & Culture */}
-        <SectionLabel label="LIFESTYLE & CULTURE" />
-        <View style={s.chipSection}>
-          {CULTURE_OPTIONS.map((item) => {
-            const active = selectedCulture.includes(item.id);
-            return (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => toggle(item.id, selectedCulture, setSelectedCulture)}
-                activeOpacity={0.75}
-                style={[s.cultureChip, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && s.cultureChipActive]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.cultureLabel, { color: tc.textPrimary }, active && s.cultureLabelActive]}>{item.label}</Text>
-                  <Text style={s.cultureDesc} numberOfLines={1}>{item.desc}</Text>
-                </View>
-                {active && <Ionicons name="checkmark-circle" size={18} color={Colors.brand.blue} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Interests */}
-        <SectionLabel label="MY INTERESTS" />
-        <View style={s.chipSection}>
-          {INTEREST_OPTIONS.map((item) => {
-            const active = selectedInterests.includes(item.id);
-            return (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => toggle(item.id, selectedInterests, setSelectedInterests)}
-                activeOpacity={0.75}
-                style={[s.interestChip, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && s.interestChipActive]}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.interestLabel, { color: tc.textPrimary }, active && s.interestLabelActive]}>{item.label}</Text>
-                  <Text style={s.interestDesc} numberOfLines={1}>{item.desc}</Text>
-                </View>
-                {active && <Ionicons name="checkmark-circle" size={18} color={Colors.brand.green} />}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Communities — categorized, matching onboarding */}
-        <SectionLabel label="MY COMMUNITIES" />
-        {/* Category filter tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.categoryTabRow}
-          style={{ marginBottom: rs(10) }}
-        >
-          {COMMUNITY_CATEGORIES.map((cat) => {
-            const isActive = activeCommunityCategory === cat;
-            const selectedCount = COMMUNITY_OPTIONS.filter(
-              (o) => o.category === cat && selectedCommunities.includes(o.id)
-            ).length;
-            return (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setActiveCommunityCategory(cat)}
-                activeOpacity={0.75}
-                style={[s.categoryTab, isActive && s.categoryTabActive]}
-              >
-                <Text style={[s.categoryTabText, { color: tc.textSecondary }, isActive && s.categoryTabTextActive]}>{cat}</Text>
-                {selectedCount > 0 && (
-                  <View style={s.categoryBadge}>
-                    <Text style={s.categoryBadgeText}>{selectedCount}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-        <View style={s.chipSection}>
-          {COMMUNITY_OPTIONS
-            .filter((item) => item.category === activeCommunityCategory)
-            .map((item) => {
-              const active = selectedCommunities.includes(item.id);
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => toggle(item.id, selectedCommunities, setSelectedCommunities)}
-                  activeOpacity={0.75}
-                  style={[s.chip, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && s.chipActive]}
-                >
-                  <Text style={[s.chipText, { color: tc.textSecondary }, active && s.chipTextActive]}>{item.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-        </View>
-        {selectedCommunities.length > 0 && (
-          <View style={s.communitySelectedRow}>
-            <Text style={s.communitySelectedLabel}>
-              {selectedCommunities.length} communit{selectedCommunities.length === 1 ? "y" : "ies"} selected
-            </Text>
-          </View>
-        )}
-
-        {/* Save button */}
-        <TouchableOpacity onPress={handleSave} activeOpacity={0.85} disabled={saving || profileLoading} style={{ marginTop: rs(28) }}>
-          <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={s.gradientBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            {saving || profileLoading
-              ? <ActivityIndicator size="small" color="#FFF" />
-              : <Text style={s.gradientBtnText}>Save Changes</Text>
-            }
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={{ height: rs(48) }} />
-      </ScrollView>
       </KeyboardAvoidingView>
       )}
-    </SafeAreaView>
+    </DPage>
+  );
+}
+
+/** A category tab: outlined until chosen, then the accent tint (the chips below it are the choices). */
+function Segmentish({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const { tc } = useTheme();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }}
+      style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 1, borderColor: on ? tc.accent : tc.borderMedium, backgroundColor: on ? tc.accentSoft : "transparent" }}>
+      <Text style={[TYPE.label, { fontSize: 13, color: on ? tc.accentText : tc.textSecondary }]}>{label}</Text>
+    </Pressable>
   );
 }
 

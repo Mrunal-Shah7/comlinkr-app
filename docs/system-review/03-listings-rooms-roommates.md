@@ -136,3 +136,15 @@ city with no listings; more listings than one page.
 - Find Roommates: "12 people in Los Angeles · sorted by match %" (36%, 30%, 28%) [observed].
 - Missing values show as **"N/A"**: floor on the card and the detail, "Deposit N/A" on the card, and Security
   deposit, Year built, Heating, Cooling, Utilities in Property Details [observed] [question: TR-001].
+
+## Update 2026-11-06: design D (plan 01, branch `feature/design-d`, not merged)
+
+From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **[code]** unless marked
+**[phone]**.
+
+- Listing detail: the bar is price, Message, Apply; "Your journey" shows only after contacting the owner; "Ask to see it first" is a link. **[phone]**
+- Apply and sign: one page in three parts. Part 1 is the application (fields from the profile open only when missing; date picker; monthly income as a number). Part 2 is the offer: rent, deposit (hidden when the listing has none), start, length; "Start a week later" and "6-month lease" change the terms sent with the server's terms step (step 4, `leaseTerm`, `moveInDate`, `termsRead`, `termsAgreed`); sign with a finger (PNG, `signatureType: drawn`) or type; Decline withdraws. Part 3 is Signed. Re-applying resumes your draft. **[phone]**
+- Landlord applications: Approve and Decline on each card; the card slides off. Not walked.
+- New listing: one question per screen (7), photos first and required; extras as chips; the draft is kept on the phone. Editing a listing keeps the full form. Screen 1 walked.
+- Room composer: steppers for rooms, baths, people, spots; currency from the country.
+- Gallery: "1 of n", swipe down to close (Food uses the same viewer).

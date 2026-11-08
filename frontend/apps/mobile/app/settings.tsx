@@ -55,6 +55,10 @@ import { getMyRestaurants, type Restaurant } from "../src/api/food.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { useThemeStore } from "../src/store/theme.store";
+import { TYPE } from "../src/theme/d";
+import { GradientButton, Reveal } from "../src/shared/d";
+import { DPage, goBackOr } from "../src/shared/d/Page";
 
 // Badge config for verification section
 const BADGE_ITEMS: {
@@ -74,7 +78,7 @@ const BADGE_ITEMS: {
   {
     key: "restaurant_owner",
     icon: "restaurant-outline",
-    iconColors: [Colors.brand.green, "#1a8a18"] as [string, string],
+    iconColors: [Colors.brand.green, "#256B49"] as [string, string],
     title: "Restaurant Owner Badge",
     desc: "Trusted badge on your restaurant listings",
   },
@@ -140,14 +144,10 @@ function mediaUrl(path: string | undefined | null): string | null {
   return resolveAvatarDisplayUrl(path ?? null);
 }
 
-// ── Pressable settings row card ──────────────────────────
+// ── Rows (design D, plan 01) ──────────────────────────
+const D_ROW = { flexDirection: "row" as const, alignItems: "center" as const, gap: 12, paddingHorizontal: 14, paddingVertical: 10, minHeight: 56 };
 function SettingsRow({
-  icon,
-  iconColors = [Colors.brand.blue, Colors.brand.green] as [string, string],
-  title,
-  desc,
-  onPress,
-  right,
+  icon, title, desc, onPress, right, first,
 }: {
   icon: string;
   iconColors?: [string, string];
@@ -155,37 +155,26 @@ function SettingsRow({
   desc?: string;
   onPress?: () => void;
   right?: React.ReactNode;
+  first?: boolean;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc } = useTheme();
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-      <View style={s.cardInner}>
-        <LinearGradient colors={iconColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
-          <Ionicons name={icon as any} size={18} color="#FFF" />
-        </LinearGradient>
-        <View style={s.cardText}>
-          <Text style={[s.cardTitle, { color: tc.textPrimary }]}>{title}</Text>
-          {desc ? <Text style={[s.cardDesc, { color: tc.textSecondary }]}>{desc}</Text> : null}
-        </View>
-        {right !== undefined ? right : (
-          <View style={[s.chevronBox, { backgroundColor: isDark ? tc.inputBg : "#F0F3F8" }]}>
-            <Ionicons name="chevron-forward" size={14} color={tc.textTertiary} />
-          </View>
-        )}
+    <Pressable onPress={onPress} disabled={!onPress} accessibilityRole={onPress ? "button" : undefined} accessibilityLabel={title}
+      style={({ pressed }) => [D_ROW, !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }, pressed && { backgroundColor: tc.inputBg }]}>
+      <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+        <Ionicons name={icon as any} size={17} color={tc.accentText} />
       </View>
-    </TouchableOpacity>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[TYPE.body, { color: tc.textPrimary }]} numberOfLines={1}>{title}</Text>
+        {desc ? <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{desc}</Text> : null}
+      </View>
+      {right !== undefined ? right : <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />}
+    </Pressable>
   );
 }
 
-// ── Toggle row card ──────────────────────────────────────
 function ToggleRow({
-  icon,
-  iconColors = ["#7C3AED", "#A855F7"] as [string, string],
-  title,
-  desc,
-  enabled,
-  onToggle,
-  disabled,
+  icon, title, desc, enabled, onToggle, disabled, first,
 }: {
   icon: string;
   iconColors?: [string, string];
@@ -194,28 +183,54 @@ function ToggleRow({
   enabled: boolean;
   onToggle: () => void;
   disabled?: boolean;
+  first?: boolean;
 }) {
   const { tc } = useTheme();
   return (
-    <View style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, disabled && { opacity: 0.65 }]}>
-      <View style={s.cardInner}>
-        <LinearGradient colors={iconColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
-          <Ionicons name={icon as any} size={18} color="#FFF" />
-        </LinearGradient>
-        <View style={s.cardText}>
-          <Text style={[s.cardTitle, { color: tc.textPrimary }]}>{title}</Text>
-          {desc ? <Text style={[s.cardDesc, { color: tc.textSecondary }]}>{desc}</Text> : null}
-        </View>
-        <Switch
-          value={enabled}
-          onValueChange={onToggle}
-          disabled={disabled}
-          trackColor={{ false: "#D1D5DB", true: Colors.brand.blue }}
-          thumbColor="#FFF"
-        />
+    <View style={[D_ROW, !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }, disabled && { opacity: 0.65 }]}>
+      <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
+        <Ionicons name={icon as any} size={17} color={tc.accentText} />
       </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[TYPE.body, { color: tc.textPrimary }]} numberOfLines={1}>{title}</Text>
+        {desc ? <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={2}>{desc}</Text> : null}
+      </View>
+      <Switch value={enabled} onValueChange={onToggle} disabled={disabled} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor="#FFF" accessibilityLabel={title} />
     </View>
   );
+}
+
+function DangerRow({ icon, title, onPress, first }: { icon: string; title: string; onPress: () => void; first?: boolean }) {
+  const { tc } = useTheme();
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={title}
+      style={({ pressed }) => [D_ROW, !first && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }, pressed && { backgroundColor: tc.inputBg }]}>
+      <View style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(239,68,68,0.12)" }}>
+        <Ionicons name={icon as any} size={17} color={tc.dangerText} />
+      </View>
+      <Text style={[TYPE.body, { flex: 1, color: tc.dangerText }]}>{title}</Text>
+    </Pressable>
+  );
+}
+
+/** A labelled group: one rounded card, rows separated by hairlines (the first row gets `first`). */
+function Group({ label, i = 0, children }: { label?: string; i?: number; children: React.ReactNode }) {
+  const { tc } = useTheme();
+  const items = React.Children.toArray(children).filter(React.isValidElement) as React.ReactElement<{ first?: boolean }>[];
+  if (items.length === 0) return null;
+  return (
+    <Reveal i={i} style={{ marginBottom: 18 }}>
+      {label ? <Text style={[TYPE.overline, { color: tc.textTertiary, marginLeft: 14, marginBottom: 6 }]}>{label}</Text> : null}
+      <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+        {items.map((c, k) => React.cloneElement(c, { first: k === 0 }))}
+      </View>
+    </Reveal>
+  );
+}
+/** A row block with extra content under it (business previews). */
+function Block({ first, children }: { first?: boolean; children: React.ReactNode }) {
+  const { tc } = useTheme();
+  return <View style={!first ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight } : undefined}>{children}</View>;
 }
 
 // ── Bottom-sheet modal ───────────────────────────────────
@@ -240,10 +255,10 @@ function SettingsModal({
         style={s.overlay}
         behavior="padding"
       >
-        <View style={[s.sheet, { backgroundColor: tc.sheetBg }, kbVisible && { maxHeight: "92%", paddingBottom: 0 }]}>
+        <View style={[s.sheet, { backgroundColor: tc.sheetBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }, kbVisible && { maxHeight: "92%", paddingBottom: 0 }]}>
           <View style={[s.handle, { backgroundColor: tc.borderMedium }]} />
           <View style={[s.sheetHead, { borderBottomColor: tc.borderLight }]}>
-            <Text style={[s.sheetTitle, { color: tc.textPrimary }]}>{title}</Text>
+            <Text style={[TYPE.section, { color: tc.textPrimary, flex: 1 }]}>{title}</Text>
             <Pressable onPress={onClose} style={[s.closeBtn, { backgroundColor: tc.inputBg }]}>
               <Ionicons name="close" size={18} color={tc.textSecondary} />
             </Pressable>
@@ -648,23 +663,11 @@ export default function SettingsScreen() {
   };
 
   const renderAccessPill = (access: ListingAccess) => {
-    if (access === "approved") {
-      return (
-        <View style={[s.chevronBox, { backgroundColor: isDark ? tc.inputBg : "#F0F3F8" }]}>
-          <Ionicons name="chevron-forward" size={14} color={tc.textTertiary} />
-        </View>
-      );
-    }
-    if (access === "pending") {
-      return (
-        <View style={[s.accessStatusPill, { backgroundColor: isDark ? "#2A1A00" : "#FEF3C7", borderColor: "#FDE68A" }]}>
-          <Text style={s.accessStatusPillTextPending}>Pending</Text>
-        </View>
-      );
-    }
+    if (access === "approved") return <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />;
+    const pending = access === "pending";
     return (
-      <View style={[s.accessStatusPill, { backgroundColor: isDark ? "#1C1917" : "#F3F4F6", borderColor: tc.borderLight }]}>
-        <Text style={s.accessStatusPillTextBlocked}>Optional: verify</Text>
+      <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: pending ? tc.warningBg : tc.inputBg }}>
+        <Text style={[TYPE.label, { color: pending ? tc.warningText : tc.textSecondary }]}>{pending ? "Pending" : "Optional: verify"}</Text>
       </View>
     );
   };
@@ -695,373 +698,194 @@ export default function SettingsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  const pendingBadges = badgeStatusRows ? badgeStatusRows.filter((r) => r.status === "PENDING").length : 0;
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]}>
-      {/* Header */}
-      <View style={[s.header, { backgroundColor: tc.headerBg, borderBottomColor: tc.borderLight }]}>
-        <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={({ pressed }) => [s.backBtn, { backgroundColor: tc.iconButtonBg, borderWidth: 1, borderColor: tc.borderLight }, pressed && { opacity: 0.7 }]} accessibilityRole="button" accessibilityLabel="Go back">
-          <Ionicons name="chevron-back" size={20} color={Colors.brand.blue} />
-        </Pressable>
-        <Text style={[s.headerTitle, { color: tc.textPrimary }]}>Settings</Text>
-        <View style={{ width: rs(40) }} />
-      </View>
-
+    <>
+    <DPage title="Settings" onBack={() => goBackOr("/(tabs)/feed")}>
       {loadError ? (
-        <View style={[s.errorBanner, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-          <Ionicons name="alert-circle-outline" size={18} color="#DC2626" />
-          <Text style={[s.errorBannerText, { color: tc.textSecondary }]}>{loadError}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 14, backgroundColor: tc.warningBg }}>
+          <Ionicons name="alert-circle-outline" size={18} color={tc.warningText} />
+          <Text style={[TYPE.small, { flex: 1, color: tc.warningText }]}>{loadError}</Text>
         </View>
       ) : null}
 
       {settingsLoading && !settingsReady ? (
-        <View style={s.initialLoading}>
-          <ActivityIndicator size="large" color={Colors.brand.blue} />
-        </View>
-      ) : null}
+        <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 48 }} />
+      ) : (
+      <View style={{ paddingHorizontal: 16 }}>
+        <Group label="Account" i={0}>
+          <SettingsRow icon="person-outline" title="Account details" desc="Email and password" onPress={() => setAccountModal(true)} />
+          <SettingsRow icon="id-card-outline" title="Profile" desc="Edit your public profile" onPress={() => router.push("/profile")} />
+          <SettingsRow icon="location-outline" title="City" onPress={() => setCityModal(true)}
+            right={<View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{user?.city || "Not set"}</Text><Ionicons name="chevron-forward" size={16} color={tc.textTertiary} /></View>} />
+          <SettingsRow icon="sparkles-outline" title="Culture and interests" onPress={() => setInterestsModal(true)} />
+        </Group>
 
-      <ScrollView
-        style={{ flex: 1, opacity: settingsLoading && !settingsReady ? 0 : 1 }}
-        contentContainerStyle={s.content}
-        showsVerticalScrollIndicator={false}
-        pointerEvents={settingsLoading && !settingsReady ? "none" : "auto"}
-      >
+        <Group label="Notifications" i={1}>
+          <ToggleRow icon="notifications-outline" title="Push notifications" desc="Event reminders and updates" enabled={pushEnabled} onToggle={onTogglePush} disabled={!settingsReady} />
+          <ToggleRow icon="mail-outline" title="Email updates" desc="Summaries and alerts by email" enabled={emailEnabled} onToggle={onToggleEmail} disabled={!settingsReady} />
+          <SettingsRow icon="options-outline" title="Notification preferences" desc="Choose what alerts you" onPress={() => setNotifsModal(true)} />
+        </Group>
 
-        {/* ACCOUNT */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>ACCOUNT</Text>
-        <SettingsRow
-          icon="person-outline"
-          iconColors={[Colors.brand.blue, "#0052CC"]}
-          title="Account details"
-          desc="Update email and password"
-          onPress={() => setAccountModal(true)}
-        />
-        <SettingsRow
-          icon="id-card-outline"
-          iconColors={["#7C3AED", "#A855F7"]}
-          title="Profile"
-          desc="Edit your public profile"
-          onPress={() => router.push("/profile")}
-        />
+        <Group label="Appearance" i={2}>
+          <ToggleRow icon={isDark ? "moon-outline" : "sunny-outline"} title="Dark mode" enabled={isDark} onToggle={() => useThemeStore.getState().toggle()} />
+        </Group>
 
-        {/* PREFERENCES */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>PREFERENCES</Text>
-        <SettingsRow
-          icon="location-outline"
-          iconColors={["#FF7B00", "#F59E0B"]}
-          title="City"
-          desc={user?.city || "Update your location"}
-          onPress={() => setCityModal(true)}
-        />
-        <SettingsRow
-          icon="sparkles-outline"
-          iconColors={["#EC4899", "#F43F5E"]}
-          title="Culture & interests"
-          desc="Tailor your feed"
-          onPress={() => setInterestsModal(true)}
-        />
+        <Group label="Privacy and safety" i={3}>
+          <SettingsRow icon="eye-outline" title="Privacy" desc="Who can see you" onPress={() => setPrivacyModal(true)} />
+          <SettingsRow icon="ban-outline" title="Blocked people" onPress={() => setBlockedModal(true)} />
+          <SettingsRow icon="shield-checkmark-outline" title="Badges and verification"
+            desc={badgeStatusRows ? (pendingBadges > 0 ? `${pendingBadges} application${pendingBadges === 1 ? "" : "s"} under review` : "See your badge applications") : "Loading…"}
+            onPress={() => router.push("/verification-status" as any)} />
+        </Group>
 
-        {/* NOTIFICATIONS */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>NOTIFICATIONS</Text>
-        <ToggleRow
-          icon="notifications-outline"
-          iconColors={["#FF7B00", "#F59E0B"]}
-          title="Push notifications"
-          desc="Event reminders and updates"
-          enabled={pushEnabled}
-          onToggle={onTogglePush}
-          disabled={!settingsReady}
-        />
-        <ToggleRow
-          icon="mail-outline"
-          iconColors={[Colors.brand.blue, Colors.brand.green]}
-          title="Email updates"
-          desc="Summaries and alerts by email"
-          enabled={emailEnabled}
-          onToggle={onToggleEmail}
-          disabled={!settingsReady}
-        />
-        <SettingsRow
-          icon="options-outline"
-          iconColors={["#7C3AED", "#6366F1"]}
-          title="Notification preferences"
-          desc="Manage alerts per category"
-          onPress={() => setNotifsModal(true)}
-        />
+        <Group label="Badges" i={4}>
+          {BADGE_ITEMS.map((badge) => {
+            const st = badgeStatusForKey(badgeStatusRows, badge.key);
+            const label = badgeActionLabel(st);
+            const canOpenApply = st === "NOT_APPLIED" || st === "REJECTED" || st === null;
+            const bg = st === "APPROVED" ? tc.mintSoft : st === "PENDING" ? tc.warningBg : tc.accentSoft;
+            const fg = st === "APPROVED" ? tc.successText : st === "PENDING" ? tc.warningText : tc.accentText;
+            return (
+              <SettingsRow
+                key={badge.key}
+                icon={badge.icon}
+                title={badge.title.replace(/ Badge$/, "")}
+                desc={badge.desc}
+                onPress={() => {
+                  if (canOpenApply) router.push({ pathname: "/apply-badge" as any, params: { badgeType: badge.key } });
+                  else router.push("/verification-status" as any);
+                }}
+                right={<View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: bg }}><Text style={[TYPE.label, { color: fg }]}>{label}</Text></View>}
+              />
+            );
+          })}
+        </Group>
 
-        {/* PRIVACY & SAFETY */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>PRIVACY & SAFETY</Text>
-        <SettingsRow
-          icon="lock-closed-outline"
-          iconColors={["#16A34A", "#22C55E"]}
-          title="Privacy"
-          desc="Manage visibility"
-          onPress={() => setPrivacyModal(true)}
-        />
-        <SettingsRow
-          icon="shield-outline"
-          iconColors={["#DC2626", "#EF4444"]}
-          title="Blocked users"
-          desc="Manage blocked profiles"
-          onPress={() => setBlockedModal(true)}
-        />
-        <SettingsRow
-          icon="document-text-outline"
-          iconColors={["#6366F1", "#818CF8"]}
-          title="Privacy policy"
-          desc="How we handle your data"
-          onPress={() => router.push("/privacy-policy" as any)}
-        />
-
-        {/* SUPPORT */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>SUPPORT</Text>
-        <SettingsRow
-          icon="help-circle-outline"
-          iconColors={[Colors.brand.blue, Colors.brand.green]}
-          title="Help & Support"
-          desc="FAQs and contact"
-          onPress={() => router.push("/help-support" as any)}
-        />
-
-        {/* ABOUT */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>ABOUT</Text>
-        <SettingsRow
-          icon="information-circle-outline"
-          iconColors={[Colors.brand.green, "#16A34A"]}
-          title="ComLinkr"
-          desc={`Version ${APP_VERSION}`}
-          right={
-            <View style={s.versionBadge}>
-              <Text style={s.versionText}>v{APP_VERSION}</Text>
-            </View>
-          }
-        />
-
-        {/* BUSINESS & VERIFICATION */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>BUSINESS & VERIFICATION</Text>
-        <SettingsRow
-          icon="shield-checkmark-outline"
-          iconColors={[Colors.brand.blue, Colors.brand.green]}
-          title="My Verification Status"
-          desc={
-            badgeStatusRows
-              ? (() => {
-                  const n = badgeStatusRows.filter((r) => r.status === "PENDING").length;
-                  return n > 0 ? `${n} application${n === 1 ? "" : "s"} under review` : "View all badge statuses & applications";
-                })()
-              : "Loading…"
-          }
-          onPress={() => router.push("/verification-status" as any)}
-          right={
-            <View style={s.verifyStatusBadge}>
-              <Ionicons name="checkmark-circle" size={13} color={Colors.brand.green} />
-              <Text style={s.verifyStatusText}>View All</Text>
-            </View>
-          }
-        />
-        {BADGE_ITEMS.map((badge) => {
-          const st = badgeStatusForKey(badgeStatusRows, badge.key);
-          const label = badgeActionLabel(st);
-          const canOpenApply = st === "NOT_APPLIED" || st === "REJECTED" || st === null;
-          const labelColor =
-            st === "APPROVED" ? Colors.brand.green : st === "PENDING" ? "#D97706" : Colors.brand.blue;
-          return (
-            <SettingsRow
-              key={badge.key}
-              icon={badge.icon}
-              iconColors={badge.iconColors}
-              title={badge.title}
-              desc={badge.desc}
-              onPress={() => {
-                if (canOpenApply) {
-                  router.push({ pathname: "/apply-badge" as any, params: { badgeType: badge.key } });
-                } else {
-                  router.push("/verification-status" as any);
-                }
-              }}
-              right={
-                <View style={[s.applyBadgeBtn, st === "APPROVED" && { backgroundColor: "#EAFBE9", borderColor: "#BBF7D0" }]}>
-                  <Text style={[s.applyBadgeBtnText, { color: labelColor }]}>{label}</Text>
-                </View>
-              }
-            />
-          );
-        })}
-        <View style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <TouchableOpacity onPress={onPressMyListingsHeader} activeOpacity={0.75}>
-            <View style={s.cardInner}>
-              <LinearGradient colors={[Colors.brand.blue, "#0052CC"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
-                <Ionicons name="list-outline" size={18} color="#FFF" />
-              </LinearGradient>
-              <View style={s.cardText}>
-                <Text style={[s.cardTitle, { color: tc.textPrimary }]}>My Listings</Text>
-                <Text style={[s.cardDesc, { color: tc.textSecondary }]}>{listingSectionDesc}</Text>
-              </View>
-              {renderAccessPill(listingAccess)}
-            </View>
-          </TouchableOpacity>
-          {listingAccess === "approved" && (
-            <View style={[s.bizPreviewSection, { borderTopColor: tc.borderLight }]}>
-              {businessPreviewLoading ? (
-                <View style={s.bizPreviewLoading}>
-                  <ActivityIndicator size="small" color={Colors.brand.blue} />
-                </View>
-              ) : listingPreview.length === 0 ? (
-                <Text style={[s.bizPreviewEmpty, { color: tc.textTertiary }]}>No property listings yet.</Text>
-              ) : (
-                listingPreview.map((l) => {
-                  const thumbFirst = listingImageUrlList(l.images)[0];
-                  const thumb = thumbFirst ? mediaUrl(thumbFirst) : null;
-                  return (
-                    <TouchableOpacity
-                      key={l.id}
-                      activeOpacity={0.75}
-                      onPress={() => router.push("/my-listings" as any)}
-                      style={s.bizPreviewRow}
-                    >
-                      {thumb ? (
-                        <FadeImage // SPRINT-42: render the order-sorted listing preview through FadeImage.
-                          uri={thumb} // SPRINT-42: pass the canonical primary listing URL.
-                          style={s.bizPreviewThumb}
-                        />
-                      ) : (
-                        <View style={[s.bizPreviewThumb, s.bizPreviewThumbPh, { backgroundColor: tc.inputBg }]}>
-                          <Ionicons name="home-outline" size={16} color={tc.textTertiary} />
+        <Group label="Your business" i={5}>
+          <Block>
+            <SettingsRow first icon="home-outline" title="My listings" desc={listingSectionDesc} onPress={onPressMyListingsHeader} right={renderAccessPill(listingAccess)} />
+            {listingAccess === "approved" && (
+              <View style={[s.bizPreviewSection, { borderTopColor: tc.borderLight }]}>
+                {businessPreviewLoading ? (
+                  <View style={s.bizPreviewLoading}>
+                    <ActivityIndicator size="small" color={Colors.brand.blue} />
+                  </View>
+                ) : listingPreview.length === 0 ? (
+                  <Text style={[s.bizPreviewEmpty, { color: tc.textTertiary }]}>No property listings yet.</Text>
+                ) : (
+                  listingPreview.map((l) => {
+                    const thumbFirst = listingImageUrlList(l.images)[0];
+                    const thumb = thumbFirst ? mediaUrl(thumbFirst) : null;
+                    return (
+                      <TouchableOpacity
+                        key={l.id}
+                        activeOpacity={0.75}
+                        onPress={() => router.push("/my-listings" as any)}
+                        style={s.bizPreviewRow}
+                      >
+                        {thumb ? (
+                          <FadeImage // SPRINT-42: render the order-sorted listing preview through FadeImage.
+                            uri={thumb} // SPRINT-42: pass the canonical primary listing URL.
+                            style={s.bizPreviewThumb}
+                          />
+                        ) : (
+                          <View style={[s.bizPreviewThumb, s.bizPreviewThumbPh, { backgroundColor: tc.inputBg }]}>
+                            <Ionicons name="home-outline" size={16} color={tc.textTertiary} />
+                          </View>
+                        )}
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text numberOfLines={1} style={[s.bizPreviewTitle, { color: tc.textPrimary }]}>
+                            {l.title}
+                          </Text>
+                          <Text numberOfLines={1} style={[s.bizPreviewSub, { color: tc.textSecondary }]}>
+                            {l.location || l.address || "—"}
+                          </Text>
                         </View>
-                      )}
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text numberOfLines={1} style={[s.bizPreviewTitle, { color: tc.textPrimary }]}>
-                          {l.title}
+                        <Text style={[s.bizPreviewMeta, { color: tc.textTertiary }]}>
+                          {typeof l.price === "number" ? `$${l.price}` : ""}
                         </Text>
-                        <Text numberOfLines={1} style={[s.bizPreviewSub, { color: tc.textSecondary }]}>
-                          {l.location || l.address || "—"}
-                        </Text>
-                      </View>
-                      <Text style={[s.bizPreviewMeta, { color: tc.textTertiary }]}>
-                        {typeof l.price === "number" ? `$${l.price}` : ""}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })
-              )}
-            </View>
-          )}
-        </View>
-
-        <View style={[s.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-          <TouchableOpacity onPress={onPressMyRestaurantsHeader} activeOpacity={0.75}>
-            <View style={s.cardInner}>
-              <LinearGradient colors={[Colors.brand.green, "#1a8a18"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.iconBox}>
-                <Ionicons name="fast-food-outline" size={18} color="#FFF" />
-              </LinearGradient>
-              <View style={s.cardText}>
-                <Text style={[s.cardTitle, { color: tc.textPrimary }]}>My Restaurants</Text>
-                <Text style={[s.cardDesc, { color: tc.textSecondary }]}>{restaurantSectionDesc}</Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
               </View>
-              {renderAccessPill(restaurantAccess)}
-            </View>
-          </TouchableOpacity>
-          {restaurantAccess === "approved" && (
-            <View style={[s.bizPreviewSection, { borderTopColor: tc.borderLight }]}>
-              {businessPreviewLoading ? (
-                <View style={s.bizPreviewLoading}>
-                  <ActivityIndicator size="small" color={Colors.brand.green} />
-                </View>
-              ) : restaurantPreview.length === 0 ? (
-                <Text style={[s.bizPreviewEmpty, { color: tc.textTertiary }]}>No restaurants yet.</Text>
-              ) : (
-                restaurantPreview.map((r) => {
-                  const thumb = r.image ? mediaUrl(r.image) : null;
-                  return (
-                    <TouchableOpacity
-                      key={r.id}
-                      activeOpacity={0.75}
-                      onPress={() => router.push("/my-restaurants" as any)}
-                      style={s.bizPreviewRow}
-                    >
-                      {thumb ? (
-                        <FadeImage // SPRINT-42: keep all settings previews on the shared image component.
-                          uri={thumb} // SPRINT-42: pass the restaurant preview URL.
-                          style={s.bizPreviewThumb}
-                        />
-                      ) : (
-                        <View style={[s.bizPreviewThumb, s.bizPreviewThumbPh, { backgroundColor: tc.inputBg }]}>
-                          <Ionicons name="restaurant-outline" size={16} color={tc.textTertiary} />
+            )}
+            </Block>
+          <Block>
+            <SettingsRow first icon="restaurant-outline" title="My restaurants" desc={restaurantSectionDesc} onPress={onPressMyRestaurantsHeader} right={renderAccessPill(restaurantAccess)} />
+            {restaurantAccess === "approved" && (
+              <View style={[s.bizPreviewSection, { borderTopColor: tc.borderLight }]}>
+                {businessPreviewLoading ? (
+                  <View style={s.bizPreviewLoading}>
+                    <ActivityIndicator size="small" color={Colors.brand.green} />
+                  </View>
+                ) : restaurantPreview.length === 0 ? (
+                  <Text style={[s.bizPreviewEmpty, { color: tc.textTertiary }]}>No restaurants yet.</Text>
+                ) : (
+                  restaurantPreview.map((r) => {
+                    const thumb = r.image ? mediaUrl(r.image) : null;
+                    return (
+                      <TouchableOpacity
+                        key={r.id}
+                        activeOpacity={0.75}
+                        onPress={() => router.push("/my-restaurants" as any)}
+                        style={s.bizPreviewRow}
+                      >
+                        {thumb ? (
+                          <FadeImage // SPRINT-42: keep all settings previews on the shared image component.
+                            uri={thumb} // SPRINT-42: pass the restaurant preview URL.
+                            style={s.bizPreviewThumb}
+                          />
+                        ) : (
+                          <View style={[s.bizPreviewThumb, s.bizPreviewThumbPh, { backgroundColor: tc.inputBg }]}>
+                            <Ionicons name="restaurant-outline" size={16} color={tc.textTertiary} />
+                          </View>
+                        )}
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text numberOfLines={1} style={[s.bizPreviewTitle, { color: tc.textPrimary }]}>
+                            {r.name}
+                          </Text>
+                          <Text numberOfLines={1} style={[s.bizPreviewSub, { color: tc.textSecondary }]}>
+                            {[r.cuisine, r.city].filter(Boolean).join(" · ") || "—"}
+                          </Text>
                         </View>
-                      )}
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text numberOfLines={1} style={[s.bizPreviewTitle, { color: tc.textPrimary }]}>
-                          {r.name}
-                        </Text>
-                        <Text numberOfLines={1} style={[s.bizPreviewSub, { color: tc.textSecondary }]}>
-                          {[r.cuisine, r.city].filter(Boolean).join(" · ") || "—"}
-                        </Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={14} color={tc.textTertiary} />
-                    </TouchableOpacity>
-                  );
-                })
-              )}
-            </View>
-          )}
-        </View>
+                        <Ionicons name="chevron-forward" size={14} color={tc.textTertiary} />
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+            )}
+            </Block>
+        </Group>
 
-        {/* ADMIN PANEL (admin/superadmin only) */}
-        {isAdmin && (
-          <>
-            <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>ADMINISTRATION</Text>
-            <SettingsRow
-              icon="shield-half-outline"
-              iconColors={["#0F172A", "#1E293B"]}
-              title="Admin Dashboard"
-              desc="Manage users, content & platform"
-              onPress={() => router.push("/admin" as any)}
-              right={
-                <View style={[s.adminBadge]}>
-                  <Text style={s.adminBadgeText}>ADMIN</Text>
-                </View>
-              }
-            />
-          </>
-        )}
+        <Group label="About" i={6}>
+          <SettingsRow icon="help-circle-outline" title="Help" onPress={() => router.push("/help-support" as any)} />
+          <SettingsRow icon="document-text-outline" title="Terms and privacy" onPress={() => router.push("/privacy-policy" as any)} />
+          <SettingsRow icon="information-circle-outline" title="Comlinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
+        </Group>
 
-        {/* DANGER ZONE */}
-        <Text style={[s.sectionLabel, { color: tc.textTertiary }]}>DANGER ZONE</Text>
+        {isAdmin ? (
+          <Group label="Administration" i={7}>
+            <SettingsRow icon="shield-half-outline" title="Admin dashboard" desc="Users, content and the platform" onPress={() => router.push("/admin" as any)} />
+          </Group>
+        ) : null}
 
-        <TouchableOpacity onPress={handleLogout} activeOpacity={0.85} style={[s.dangerBtn, { backgroundColor: isDark ? "#1A0A0A" : "#FFF5F5", borderColor: isDark ? "#3D1515" : "#FECACA" }]}>
-          <View style={s.dangerBtnInner}>
-            <View style={[s.dangerIconBox, { backgroundColor: isDark ? "#3D1515" : "#FEE2E2" }]}>
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.dangerBtnTitle}>Log out</Text>
-              <Text style={[s.dangerBtnDesc, { color: isDark ? "#F87171" : "#EF4444" }]}>Sign out of your account</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#DC2626" />
+        <Reveal i={8} style={{ marginBottom: 18 }}>
+          <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+            <DangerRow first icon="log-out-outline" title="Log out" onPress={handleLogout} />
+            <DangerRow icon="trash-outline" title="Delete account" onPress={handleDeleteAccount} />
           </View>
-        </TouchableOpacity>
+        </Reveal>
 
-        <TouchableOpacity onPress={handleDeleteAccount} activeOpacity={0.85} style={[s.dangerBtn, s.deleteBtnBorder, { backgroundColor: isDark ? "#1A0A0A" : "#FFF5F5", borderColor: isDark ? "#5A1515" : "#FCA5A5" }]}>
-          <View style={s.dangerBtnInner}>
-            <View style={[s.dangerIconBox, { backgroundColor: isDark ? "#5A1515" : "#FEE2E2" }]}>
-              <Ionicons name="trash-outline" size={20} color="#DC2626" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.dangerBtnTitle}>Delete account</Text>
-              <Text style={[s.dangerBtnDesc, { color: isDark ? "#F87171" : "#EF4444" }]}>Permanently remove your account</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#DC2626" />
-          </View>
-        </TouchableOpacity>
-
-        <View style={{ height: rs(32) }} />
-        <View style={{ alignItems: "center", paddingBottom: rs(20), gap: rs(3) }}>
-          <Text style={{ fontSize: rs(11), color: tc.textTertiary, fontWeight: "600" }}>© 2026 ComLinkr Ltd.</Text>
-          <Text style={{ fontSize: rs(10), color: tc.textTertiary, fontWeight: "500" }}>All rights reserved.</Text>
-        </View>
-      </ScrollView>
+        <Text style={[TYPE.small, { color: tc.textTertiary, textAlign: "center", fontSize: 11.5, marginTop: 6 }]}>© 2026 ComLinkr Ltd. All rights reserved.</Text>
+      </View>
+      )}
+    </DPage>
 
       {/* ── Account Modal ── */}
-      <SettingsModal visible={accountModal} onClose={() => setAccountModal(false)} title="Account Details">
+      <SettingsModal visible={accountModal} onClose={() => setAccountModal(false)} title="Account details">
         <View style={s.modalBody}>
           <Text style={[s.helperNote, { color: tc.textSecondary }]}>
             Enter your current password to change your email or set a new password.
@@ -1126,16 +950,15 @@ export default function SettingsScreen() {
               />
             </Pressable>
           </View>
-          <Pressable onPress={() => void handleSaveAccount()} style={[s.saveBtn, accountSaving && { opacity: 0.75 }]} disabled={accountSaving}>
-            {accountSaving ? <ActivityIndicator color="#FFF" /> : <Text style={s.saveBtnText}>Save Changes</Text>}
-          </Pressable>
+          <GradientButton block label="Save Changes" loading={accountSaving} onPress={() => void handleSaveAccount()} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 
       {/* ── Privacy Modal ── */}
-      <SettingsModal visible={privacyModal} onClose={() => setPrivacyModal(false)} title="Privacy Settings">
+      <SettingsModal visible={privacyModal} onClose={() => setPrivacyModal(false)} title="Privacy">
         <View style={s.modalBody}>
-          <ToggleRow
+          <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+          <ToggleRow first
             icon="person-outline"
             title="Public profile"
             desc="Others can see your profile"
@@ -1145,7 +968,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="location-outline"
-            iconColors={["#FF7B00", "#F59E0B"]}
+            iconColors={["#257A86", "#F59E0B"]}
             title="Show location"
             desc="Display city on profile"
             enabled={showLocation}
@@ -1161,14 +984,13 @@ export default function SettingsScreen() {
             onToggle={() => setShowActivity((p) => !p)}
             disabled={privacySaving}
           />
-          <Pressable onPress={() => void handleSavePrivacy()} style={[s.saveBtn, privacySaving && { opacity: 0.75 }]} disabled={privacySaving}>
-            {privacySaving ? <ActivityIndicator color="#FFF" /> : <Text style={s.saveBtnText}>Save</Text>}
-          </Pressable>
+          </View>
+          <GradientButton block label="Save" loading={privacySaving} onPress={() => void handleSavePrivacy()} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 
       {/* ── Blocked Users Modal ── */}
-      <SettingsModal visible={blockedModal} onClose={() => setBlockedModal(false)} title="Blocked Users">
+      <SettingsModal visible={blockedModal} onClose={() => setBlockedModal(false)} title="Blocked people">
         <View style={s.modalBody}>
           {blockedLoading ? (
             <View style={{ paddingVertical: rs(28), alignItems: "center" }}>
@@ -1220,7 +1042,7 @@ export default function SettingsScreen() {
       </SettingsModal>
 
       {/* ── City Modal ── */}
-      <SettingsModal visible={cityModal} onClose={() => setCityModal(false)} title="Your City">
+      <SettingsModal visible={cityModal} onClose={() => setCityModal(false)} title="Your city">
         <View style={s.modalBody}>
           <Text style={{ fontSize: rs(14), color: tc.textSecondary, marginBottom: rs(12) }}>
             Current city: <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{user?.city || "Not set"}</Text>
@@ -1228,19 +1050,12 @@ export default function SettingsScreen() {
           <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18) }}>
             Your city determines the local content you see across Explore, Listings, Food and Community.
           </Text>
-          <Pressable
-            onPress={() => { setCityModal(false); router.push("/edit-profile" as any); }}
-            style={s.saveBtn}
-            accessibilityRole="button"
-            accessibilityLabel={user?.city ? "Change your city" : "Set your city"}
-          >
-            <Text style={s.saveBtnText}>{user?.city ? "Change city" : "Set your city"}</Text>
-          </Pressable>
+          <GradientButton block label={user?.city ? "Change city" : "Set your city"} onPress={() => { setCityModal(false); router.push("/edit-profile" as any); }} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 
       {/* ── Culture & Interests Modal ── */}
-      <SettingsModal visible={interestsModal} onClose={() => setInterestsModal(false)} title="Culture & Interests">
+      <SettingsModal visible={interestsModal} onClose={() => setInterestsModal(false)} title="Culture and interests">
         <View style={s.modalBody}>
           <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18), marginBottom: rs(12) }}>
             Your interests help us show you the most relevant content.
@@ -1258,19 +1073,15 @@ export default function SettingsScreen() {
               No interests added yet. Edit your profile to add them.
             </Text>
           )}
-          <Pressable
-            onPress={() => { setInterestsModal(false); router.push("/edit-profile" as any); }}
-            style={s.saveBtn}
-          >
-            <Text style={s.saveBtnText}>Edit in Profile</Text>
-          </Pressable>
+          <GradientButton block label={"Edit in Profile"} onPress={() => { setInterestsModal(false); router.push("/edit-profile" as any); }} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 
       {/* ── Notification Preferences Modal ── */}
-      <SettingsModal visible={notifsModal} onClose={() => setNotifsModal(false)} title="Notification Preferences">
+      <SettingsModal visible={notifsModal} onClose={() => setNotifsModal(false)} title="Notification preferences">
         <View style={s.modalBody}>
-          <ToggleRow
+          <View style={{ borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, overflow: "hidden" }}>
+          <ToggleRow first
             icon="calendar-outline"
             iconColors={[Colors.brand.blue, Colors.brand.green]}
             title="Events nearby"
@@ -1306,12 +1117,11 @@ export default function SettingsScreen() {
             onToggle={() => setNotiMessages((p) => !p)}
             disabled={notifPrefsSaving}
           />
-          <Pressable onPress={() => void handleSaveNotifCategories()} style={[s.saveBtn, notifPrefsSaving && { opacity: 0.75 }]} disabled={notifPrefsSaving}>
-            {notifPrefsSaving ? <ActivityIndicator color="#FFF" /> : <Text style={s.saveBtnText}>Save</Text>}
-          </Pressable>
+          </View>
+          <GradientButton block label="Save" loading={notifPrefsSaving} onPress={() => void handleSaveNotifCategories()} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -1480,7 +1290,7 @@ const s = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
-    backgroundColor: "#EAFBE9",
+    backgroundColor: "#E3F1EA",
     borderRadius: rs(20),
     paddingHorizontal: rs(10),
     paddingVertical: rs(5),

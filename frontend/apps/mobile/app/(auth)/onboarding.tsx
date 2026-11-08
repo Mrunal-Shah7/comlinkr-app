@@ -26,6 +26,44 @@ import { HttpApiError } from "../../src/services/http/apiClient";
 import { COUNTRIES, STATES_BY_COUNTRY, CITIES_BY_STATE } from "../../src/data/locationData";
 import { rs, screenWidth } from "../../src/utils/responsive";
 import { appAlert } from '../../src/shared/ui/Dialogs';
+import { createThemedStyles } from '../../src/theme/themedStyles';
+import Reanimated, { FadeInRight, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
+import { Switch } from 'react-native';
+import { TYPE } from '../../src/theme/d';
+import { GradientFill, PopPressable } from '../../src/shared/d';
+import { SPRING } from '../../src/shared/motion/presets';
+
+/** The onboarding progress: a gradient bar that springs to the step (design D). */
+/** Five dots; the current one stretches to a gradient pill on a spring (`.dots i.on`). */
+function OnbDot({ on }: { on: boolean }) {
+  const { tc } = useTheme();
+  const w = useSharedValue(on ? 20 : 7);
+  useEffect(() => { w.value = withSpring(on ? 20 : 7, SPRING.liquid); }, [on, w]);
+  const a = useAnimatedStyle(() => ({ width: w.value }));
+  return (
+    <Reanimated.View style={[{ height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: on ? 'transparent' : tc.surface3 }, a]}>
+      {on ? <GradientFill style={StyleSheet.absoluteFill} /> : null}
+    </Reanimated.View>
+  );
+}
+function OnbDots({ step, total }: { step: number; total: number }) {
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: total, now: step + 1 }}>
+      {Array.from({ length: total }).map((_, i) => <OnbDot key={i} on={i === step} />)}
+    </View>
+  );
+}
+function OnbProgress({ step, total }: { step: number; total: number }) {
+  const { tc } = useTheme();
+  const p = useSharedValue((step + 1) / total);
+  useEffect(() => { p.value = withSpring((step + 1) / total, SPRING.settle); }, [step, total, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
+  return (
+    <View style={{ flex: 1, height: 6, borderRadius: 3, marginHorizontal: 12, backgroundColor: tc.surface3, overflow: 'hidden' }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: step + 1 }}>
+      <Reanimated.View style={[{ height: '100%', borderRadius: 3, overflow: 'hidden' }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Reanimated.View>
+    </View>
+  );
+}
 
 
 /** Sprint 21: enrollment limited to US + UK at onboarding. */
@@ -196,7 +234,7 @@ const COMMUNITY_CATEGORY_ICON: Record<string, string> = {
   "Faith & Spiritual":   "sparkles-outline",
 };
 
-const STEPS = ["Location", "Culture", "Interests", "Community", "Agreement", "Ready"];
+const STEPS = ["Location", "Culture", "Interests", "Community", "Ready"];
 
 // ─── Reusable picker list ───────────────────────────────
 function PickerList({
@@ -307,10 +345,12 @@ function PickerList({
 export default function OnboardingScreen() {
   const { isDark, tc } = useTheme();
   const updateOnboarding = useAuthStore((s) => s.updateOnboarding);
+  const firstName = (useAuthStore.getState().user?.name ?? "").split(" ")[0];
   const syncFromApiLogin = useAuthStore((s) => s.syncFromApiLogin);
   const logout = useAuthStore((s) => s.logout);
 
   const [step, setStep] = useState(0);
+  const reduceMotion = useReducedMotion();
   const [submitting, setSubmitting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -430,8 +470,7 @@ export default function OnboardingScreen() {
     if (step === 1) return culture.length > 0;
     if (step === 2) return interests.length > 0;
     if (step === 3) return true; // communities optional — can skip
-    if (step === 4) return agreed; // must accept agreement
-    return true; // step 5 Ready
+    return agreed; // step 4 Ready: the terms switch is required
   };
 
   const locationSummary = city ? `${city}, ${stateProvince}, ${country}` : "";
@@ -439,35 +478,19 @@ export default function OnboardingScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
-      <LinearGradient
-        colors={isDark ? ["#0D1B2A", "#0A0E1A", "#0A1628"] : ["#F0F7FF", "#FFFFFF", "#F0FBF0"]}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={isDark ? ["rgba(26,107,174,0.28)", "rgba(48,133,91,0.08)", "transparent"] : ["rgba(26,107,174,0.14)", "rgba(48,133,91,0.05)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} pointerEvents="none" />
       <SafeAreaView style={styles.safe}>
         {/* ── Header ── */}
         <View style={styles.header}>
           {step > 0 ? (
-            <Pressable onPress={goBack} style={[styles.backBtn, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <Ionicons name="arrow-back" size={20} color={tc.textSecondary} />
+            <Pressable onPress={goBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
             </Pressable>
           ) : (
             <View style={styles.backPlaceholder} />
           )}
 
-          <View style={styles.progressRow}>
-            {STEPS.map((_, idx) => (
-              <View
-                key={idx}
-                style={[
-                  styles.progressDot,
-                  { backgroundColor: tc.borderMedium },
-                  idx === step && styles.progressActive,
-                  idx < step && styles.progressDone,
-                ]}
-              />
-            ))}
-          </View>
+          <OnbDots step={step} total={STEPS.length} />
 
           <View style={styles.headerRight}>
             <Pressable onPress={handleSignOut} hitSlop={10} disabled={submitting}>
@@ -487,12 +510,13 @@ export default function OnboardingScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          <Reanimated.View key={step} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200).mass(1)}>
           {/* ─── Step 0: Location ─── */}
           {step === 0 && (
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.blue, Colors.brand.green]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -591,7 +615,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.orange, "#FF5722"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -609,7 +633,7 @@ export default function OnboardingScreen() {
                 {CULTURE_OPTIONS.map((opt) => {
                   const active = culture.includes(opt.id);
                   return (
-                    <Pressable
+                    <PopPressable
                       key={opt.id}
                       onPress={() => toggleCulture(opt.id)}
                       style={[
@@ -637,7 +661,7 @@ export default function OnboardingScreen() {
                           />
                         </View>
                       )}
-                    </Pressable>
+                    </PopPressable>
                   );
                 })}
               </View>
@@ -657,7 +681,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.green, "#1a8a1a"]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -675,7 +699,7 @@ export default function OnboardingScreen() {
                 {INTEREST_OPTIONS.map((opt) => {
                   const active = interests.includes(opt.id);
                   return (
-                    <Pressable
+                    <PopPressable
                       key={opt.id}
                       onPress={() => toggleInterest(opt.id)}
                       style={[
@@ -711,7 +735,7 @@ export default function OnboardingScreen() {
                           />
                         )}
                       </View>
-                    </Pressable>
+                    </PopPressable>
                   );
                 })}
               </View>
@@ -731,7 +755,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={[Colors.brand.blue, Colors.brand.green]}
+                  colors={["#1A6BAE", "#30855B"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -756,7 +780,7 @@ export default function OnboardingScreen() {
                       {items.map((opt) => {
                         const active = communities.includes(opt.id);
                         return (
-                          <Pressable
+                          <PopPressable
                             key={opt.id}
                             onPress={() => toggleCommunity(opt.id)}
                             style={[styles.commChip, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, active && styles.commChipActive]}
@@ -769,7 +793,7 @@ export default function OnboardingScreen() {
                                 <Ionicons name="checkmark-circle" size={14} color={Colors.brand.blue} />
                               </View>
                             )}
-                          </Pressable>
+                          </PopPressable>
                         );
                       })}
                     </View>
@@ -791,225 +815,32 @@ export default function OnboardingScreen() {
 
           {/* ─── Step 4: User Agreement ─── */}
           {step === 4 && (
-            <View style={styles.stepWrap}>
-              <View style={styles.iconCircle}>
-                <LinearGradient
-                  colors={["#6366F1", "#8B5CF6"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.iconGradient}
-                >
-                  <Ionicons name="document-text-outline" size={rs(34)} color="#FFFFFF" />
-                </LinearGradient>
-              </View>
-              <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>User Agreement</Text>
-              <Text style={[styles.stepSub, { color: tc.textSecondary }]}>
-                Please review and accept our terms to continue using ComLinkr
+            <View style={[styles.stepWrap, { alignItems: "center", paddingTop: 40 }]}>
+              <Reanimated.View entering={reduceMotion ? undefined : ZoomIn.springify().damping(13).stiffness(220).mass(1)} style={{ width: 90, height: 90, borderRadius: 30, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, marginBottom: 18 }}>
+                <Ionicons name="checkmark" size={44} color="#06130D" />
+              </Reanimated.View>
+              <Text style={[TYPE.question, { color: tc.textPrimary, textAlign: "center" }]}>You're in{firstName ? `, ${firstName}` : ""} ✦</Text>
+              <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>
+                {city ? `Homes, food and people in ${city} are waiting.` : "Homes, food and people near you are waiting."}
               </Text>
-
-              <View style={[styles.agreementCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                <ScrollView
-                  style={styles.agreementScroll}
-                  contentContainerStyle={styles.agreementScrollContent}
-                  nestedScrollEnabled
-                  showsVerticalScrollIndicator
-                >
-                  <Text style={[styles.agreementSectionTitle, { color: tc.textPrimary }]}>Terms of Service</Text>
-                  <Text style={[styles.agreementText, { color: tc.textSecondary }]}>
-                    Welcome to ComLinkr! By using our app, you agree to the following terms and conditions. These terms govern your access to and use of the ComLinkr platform, including all features, content, and services.
-                  </Text>
-
-                  <Text style={[styles.agreementSectionTitle, { color: tc.textPrimary }]}>Privacy & Data</Text>
-                  <Text style={[styles.agreementText, { color: tc.textSecondary }]}>
-                    We respect your privacy and are committed to protecting your personal data. Your location, preferences, and activity data are used solely to personalize your experience and connect you with your local community. We do not sell your personal information to third parties.
-                  </Text>
-
-                  <Text style={[styles.agreementSectionTitle, { color: tc.textPrimary }]}>Community Guidelines</Text>
-                  <Text style={[styles.agreementText, { color: tc.textSecondary }]}>
-                    ComLinkr is a community-driven platform. You agree to treat all users with respect, refrain from posting harmful or misleading content, and contribute positively to your local community. Violations may result in account restrictions.
-                  </Text>
-
-                  <Text style={[styles.agreementSectionTitle, { color: tc.textPrimary }]}>Content & Usage</Text>
-                  <Text style={[styles.agreementText, { color: tc.textSecondary }]}>
-                    You retain ownership of content you create. By posting on ComLinkr, you grant us a non-exclusive license to display and distribute your content within the platform. You are responsible for ensuring your content does not infringe on others' rights.
-                  </Text>
-
-                  <Text style={[styles.agreementSectionTitle, { color: tc.textPrimary }]}>Liability</Text>
-                  <Text style={[styles.agreementText, { color: tc.textSecondary }]}>
-                    ComLinkr is provided "as is" without warranties. We are not liable for user-generated content, third-party services, or any damages arising from your use of the platform. Use the platform at your own discretion.
-                  </Text>
-                </ScrollView>
-              </View>
-
-              {/* Full policy links */}
-              <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
-                <Pressable
-                  onPress={() => router.push("/privacy-policy" as never)}
-                  style={[styles.policyLinkBtn, { borderColor: tc.borderLight, backgroundColor: tc.cardBg }]}
-                >
-                  <Ionicons name="shield-checkmark-outline" size={14} color={Colors.brand.blue} />
-                  <Text style={[styles.policyLinkText, { color: Colors.brand.blue }]}>Privacy Policy</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => Linking.openURL("https://comlinkr.com/terms")}
-                  style={[styles.policyLinkBtn, { borderColor: tc.borderLight, backgroundColor: tc.cardBg }]}
-                >
-                  <Ionicons name="document-text-outline" size={14} color={Colors.brand.green} />
-                  <Text style={[styles.policyLinkText, { color: Colors.brand.green }]}>Terms of Service</Text>
-                </Pressable>
-              </View>
-
-              {/* Agreement toggle */}
-              <Pressable
-                style={[styles.agreementToggle, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }, agreed && styles.agreementToggleActive]}
-                onPress={() => { setAgreed(!agreed); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
-              >
-                <View style={[styles.agreementCheckbox, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }, agreed && styles.agreementCheckboxActive]}>
-                  {agreed && <Ionicons name="checkmark" size={14} color="#FFF" />}
-                </View>
-                <Text style={[styles.agreementToggleText, { color: tc.textSecondary }, agreed && styles.agreementToggleTextActive]}>
-                  I have read and agree to the Terms of Service, Privacy Policy, and Community Guidelines
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 26, paddingHorizontal: 8 }}>
+                <Switch value={agreed} onValueChange={(v) => { setAgreed(v); Haptics.selectionAsync(); }} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel="I agree to the Terms and Privacy Policy" />
+                <Text style={[TYPE.body, { color: tc.textPrimary, flexShrink: 1 }]}>
+                  I agree to the{" "}
+                  <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }} onPress={() => router.push("/terms-of-service" as never)}>Terms</Text>
+                  {" "}and{" "}
+                  <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }} onPress={() => router.push("/privacy-policy" as never)}>Privacy Policy</Text>
                 </Text>
-              </Pressable>
-
-              {!agreed && (
-                <View style={styles.tipBox}>
-                  <Text style={styles.tipText}>
-                    You must accept the agreement to proceed
-                  </Text>
-                </View>
-              )}
+              </View>
             </View>
           )}
-
-          {/* ─── Step 5: Ready ─── */}
-          {step === 5 && (
-            <View style={styles.stepWrap}>
-              <View style={styles.iconCircle}>
-                <LinearGradient
-                  colors={[Colors.brand.blue, Colors.brand.green]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.iconGradient, { width: 80, height: 80, borderRadius: 24 }]}
-                >
-                  <Ionicons name="checkmark-circle-outline" size={rs(38)} color="#FFFFFF" />
-                </LinearGradient>
-              </View>
-              <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>You're all set!</Text>
-              <Text style={[styles.stepSub, { color: tc.textSecondary }]}>
-                Welcome to ComLinkr — your personalized local community is
-                ready
-              </Text>
-
-              {/* Profile Summary */}
-              <View style={[styles.summaryCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                {/* Location */}
-                <View style={styles.summaryRow}>
-                  <View style={[styles.summaryIconWrap, { backgroundColor: tc.sectionBg }]}>
-                    {countryFlag ? <Text style={{ fontSize: 18 }}>{countryFlag}</Text> : <Ionicons name="location" size={16} color={Colors.brand.blue} />}
-                  </View>
-                  <View style={styles.summaryContent}>
-                    <Text style={[styles.summaryLabel, { color: tc.textTertiary }]}>YOUR LOCATION</Text>
-                    <Text style={[styles.summaryValue, { color: tc.textPrimary }]}>{city}</Text>
-                    <Text style={[styles.summarySubValue, { color: tc.textSecondary }]}>{countryFlag} {stateProvince} · {country} {COUNTRY_INFO[country]?.code ?? ""}</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.summaryDivider, { backgroundColor: tc.borderLight }]} />
-
-                <View>
-                  <Text style={[styles.summaryLabel, { color: tc.textTertiary }]}>YOUR VIBE</Text>
-                  <View style={styles.tagRow}>
-                    {culture.slice(0, 5).map((c) => {
-                      const opt = CULTURE_OPTIONS.find((o) => o.id === c);
-                      return (
-                        <View key={c} style={styles.tagOrange}>
-                          <Text style={styles.tagOrangeText}>{opt?.label}</Text>
-                        </View>
-                      );
-                    })}
-                    {culture.length > 5 && (
-                      <View style={styles.tagOrange}>
-                        <Text style={styles.tagOrangeText}>
-                          +{culture.length - 5} more
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                <View style={[styles.summaryDivider, { backgroundColor: tc.borderLight }]} />
-
-                <View>
-                  <Text style={[styles.summaryLabel, { color: tc.textTertiary }]}>YOUR INTERESTS</Text>
-                  <View style={styles.tagRow}>
-                    {interests.map((i) => {
-                      const opt = INTEREST_OPTIONS.find((o) => o.id === i);
-                      return (
-                        <View key={i} style={styles.tagGreen}>
-                          <Text style={styles.tagGreenText}>{opt?.label}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                {communities.length > 0 && (
-                  <>
-                    <View style={[styles.summaryDivider, { backgroundColor: tc.borderLight }]} />
-                    <View>
-                      <Text style={[styles.summaryLabel, { color: tc.textTertiary }]}>YOUR COMMUNITIES</Text>
-                      <View style={styles.tagRow}>
-                        {communities.slice(0, 6).map((id) => {
-                          const opt = COMMUNITY_OPTIONS.find((o) => o.id === id);
-                          return (
-                            <View key={id} style={styles.tagBlue}>
-                              <Text style={styles.tagBlueText}>{opt?.label}</Text>
-                            </View>
-                          );
-                        })}
-                        {communities.length > 6 && (
-                          <View style={styles.tagBlue}>
-                            <Text style={styles.tagBlueText}>+{communities.length - 6} more</Text>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-                  </>
-                )}
-              </View>
-
-              {/* What's next */}
-              <View style={[styles.whatsNextCard, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                <Text style={[styles.whatsNextTitle, { color: tc.textPrimary }]}>What's waiting for you</Text>
-                {(
-                  [
-                    { icon: "home-outline",        color: Colors.brand.blue,   text: `Housing listings near ${city}` },
-                    { icon: "restaurant-outline",  color: Colors.brand.orange, text: "Local restaurants, events & deals" },
-                    { icon: "newspaper-outline",   color: Colors.brand.green,  text: `News from ${city} & ${country}` },
-                    { icon: "people-outline",      color: "#8B5CF6",           text: "Neighbors, groups & community posts" },
-                  ] as Array<{ icon: string; color: string; text: string }>
-                ).map((item, idx) => (
-                  <View key={idx} style={styles.whatsNextRow}>
-                    <View style={[styles.whatsNextIconWrap, { backgroundColor: item.color + "18" }]}>
-                      <Ionicons name={item.icon as any} size={rs(16)} color={item.color} />
-                    </View>
-                    <Text style={[styles.whatsNextText, { color: tc.textSecondary }]}>{item.text}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <Text style={[styles.summaryHint, { color: tc.textTertiary }]}>
-                You can update these preferences anytime in Settings
-              </Text>
-            </View>
-          )}
+          </Reanimated.View>
         </ScrollView>
 
         {/* ── Bottom CTA ── */}
-        <View style={[styles.bottomBar, { backgroundColor: tc.cardBg, borderTopColor: tc.borderLight }]}>
+        <View style={[styles.bottomBar, { backgroundColor: tc.glass, borderTopColor: tc.glassLine }]}>
           <Pressable
-            onPress={step === 5 ? handleFinish : goNext}
+            onPress={step === 4 ? handleFinish : goNext}
             disabled={!canProceed() || submitting}
             style={({ pressed }) => [
               styles.ctaWrap,
@@ -1019,13 +850,13 @@ export default function OnboardingScreen() {
           >
             <LinearGradient
               colors={
-                canProceed() ? [Colors.brand.blue, Colors.brand.green] : ["#D1D5DB", "#D1D5DB"]
+                [Colors.brand.blue, Colors.brand.green]
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
-              {submitting && step === 5 ? (
+              {submitting && step === 4 ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text
@@ -1034,7 +865,7 @@ export default function OnboardingScreen() {
                     (!canProceed() || submitting) && { color: "#9CA3AF" },
                   ]}
                 >
-                  {step === 5 ? "Let's Explore" : step === 4 && !agreed ? "Accept to Continue" : step === 3 && communities.length === 0 ? "Skip" : "Continue"}
+                  {step === 4 ? "Let's explore" : step === 3 && communities.length === 0 ? "Skip" : "Continue"}
                 </Text>
               )}
             </LinearGradient>
@@ -1048,7 +879,7 @@ export default function OnboardingScreen() {
 // ─── Styles ──────────────────────────────────────────────
 const CHIP_WIDTH = (screenWidth() - 50) / 2;
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: { flex: 1 },
   safe: { flex: 1 },
 
@@ -1559,7 +1390,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#F3F4F6",
   },
   ctaWrap: { borderRadius: rs(16), overflow: "hidden" },
-  ctaDisabled: { opacity: 0.65 },
+  ctaDisabled: { opacity: 0.4 },
   ctaGradient: {
     height: rs(54),
     borderRadius: rs(16),

@@ -1,12 +1,34 @@
-import { rs } from "../../../utils/responsive";
+import { useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
+import { TYPE, body, display } from "../../../theme/d";
+import { GradientFill } from "../../../shared/d";
 import { type WyrCardModel } from "../models";
 
-// ── WYR card (brand blue, no purple) ─────────────────────
+/** One option: after a vote its bar fills to the share of votes (withTiming 800 ms) and the % fades in. */
+function Option({ label, pct, voted, mine, onPress }: { label: string; pct: number; voted: boolean; mine: boolean; onPress: () => void }) {
+  const { tc } = useTheme();
+  const w = useSharedValue(0);
+  const o = useSharedValue(0);
+  useEffect(() => {
+    w.value = withTiming(voted ? pct : 0, { duration: 800, easing: Easing.out(Easing.cubic) });
+    o.value = withTiming(voted ? 1 : 0, { duration: 400 });
+  }, [voted, pct, w, o]);
+  const bar = useAnimatedStyle(() => ({ width: `${w.value}%` }));
+  const num = useAnimatedStyle(() => ({ opacity: o.value }));
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: mine }} accessibilityLabel={voted ? `${label}, ${pct}%` : label}
+      style={[s.opt, { backgroundColor: tc.inputBg }, mine && { borderColor: tc.accent, borderWidth: 1.5 }]}>
+      <Animated.View style={[s.fill, bar]}><GradientFill colors={[tc.accentSoft, tc.mintSoft] as const} style={StyleSheet.absoluteFill} /></Animated.View>
+      <Text style={[body(700), { flex: 1, color: tc.textPrimary, fontSize: 15 }]} numberOfLines={2}>{label}</Text>
+      <Animated.Text style={[body(800), { color: tc.textPrimary, fontSize: 14 }, num]}>{pct}%</Animated.Text>
+    </Pressable>
+  );
+}
+
+/** Would-you-rather poll card, design D (plan 01). */
 export function WYRCard({
   wyr, index, total, voted,
   onVote, onPrev, onNext,
@@ -20,100 +42,37 @@ export function WYRCard({
 }) {
   const { tc, isDark } = useTheme();
   return (
-    <View style={[wc.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-      <LinearGradient colors={[Colors.brand.blue, "#0054CC"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={wc.header}>
-        <View style={wc.headerLeft}>
-          <Ionicons name="flash" size={14} color="#FFF" />
-          <Text style={wc.headerTitle}>Would You Rather</Text>
-        </View>
-        <View style={wc.votesPill}>
-          <Ionicons name="people" size={11} color="rgba(255,255,255,0.9)" />
-          <Text style={wc.votesText}>{wyr.totalVotes} votes</Text>
-        </View>
-        <View style={wc.navRow}>
-          <Pressable style={[wc.navBtn, index === 0 && { opacity: 0.4 }]} onPress={onPrev}>
-            <Ionicons name="arrow-back" size={14} color="#FFF" />
-          </Pressable>
-          <Pressable style={[wc.navBtn, index === total - 1 && { opacity: 0.4 }]} onPress={onNext}>
-            <Ionicons name="arrow-forward" size={14} color="#FFF" />
-          </Pressable>
-        </View>
-      </LinearGradient>
-
-      <Text style={wc.category}>{wyr.category} · QUESTION {wyr.questionNum} OF {wyr.questionTotal}</Text>
-      <Text style={[wc.wyrQuestion, { color: tc.textPrimary }]} numberOfLines={4}>
-        {wyr.question}
-      </Text>
-
-      {(["A", "B"] as const).map((opt) => {
-        const data = opt === "A" ? wyr.optionA : wyr.optionB;
-        const isActive = voted === opt;
-        return (
-          <View key={opt}>
-            <Pressable
-              onPress={() => onVote(opt)}
-              style={[wc.opt, isActive && (opt === "A" ? wc.optActiveA : wc.optActiveB), isDark && !isActive && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}
-            >
-              <View style={[wc.optLabel, isActive && (opt === "A" ? wc.optLabelA : wc.optLabelB), isDark && !isActive && { backgroundColor: tc.sectionBg }]}>
-                <Text style={[wc.optLabelText, isActive && { color: "#FFF" }, isDark && !isActive && { color: tc.textSecondary }]}>{opt}</Text>
-              </View>
-              {/* active options have a LIGHT background — keep dark text; only use light text for unselected in dark mode */}
-              <Text style={[wc.optText, isDark && !isActive && { color: tc.textPrimary }]} numberOfLines={2}>{data.label}</Text>
-              {voted && (
-                <Text style={[wc.pct,
-                  isActive && { color: opt === "A" ? Colors.brand.blue : Colors.brand.green, fontWeight: "800" },
-                  isDark && !isActive && { color: tc.textSecondary },
-                ]}>
-                  {data.pct}%
-                </Text>
-              )}
-            </Pressable>
-            {opt === "A" && <Text style={[wc.or, isDark && { color: tc.textTertiary }]}>OR</Text>}
-          </View>
-        );
-      })}
-
-      <View style={[wc.footer, isDark && { borderTopColor: tc.borderLight }]}>
-        <Ionicons name="bar-chart-outline" size={13} color={isDark ? tc.textTertiary : Colors.text.tertiary} />
-        <Text style={[wc.footerText, isDark && { color: tc.textTertiary }]}>
-          {wyr.totalVotes} neighbors voted
-          {voted
-            ? " · Tap the other option to switch, or your choice again to clear your vote"
-            : ""}
+    <View style={[s.card, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]}>
+      <View style={s.meta}>
+        {wyr.category ? <View style={[s.tag, { backgroundColor: tc.accentSoft }]}><Text style={[body(700), { fontSize: 11.5, color: tc.accentText }]}>{wyr.category}</Text></View> : null}
+        <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]}>Question {wyr.questionNum} of {wyr.questionTotal}</Text>
+        <Pressable onPress={onPrev} disabled={index === 0} hitSlop={6} style={[s.nav, { opacity: index === 0 ? 0.35 : 1 }]} accessibilityLabel="Previous question"><Ionicons name="chevron-back" size={18} color={tc.textPrimary} /></Pressable>
+        <Pressable onPress={onNext} disabled={index === total - 1} hitSlop={6} style={[s.nav, { opacity: index === total - 1 ? 0.35 : 1 }]} accessibilityLabel="Next question"><Ionicons name="chevron-forward" size={18} color={tc.textPrimary} /></Pressable>
+      </View>
+      <Text style={[display(700), { fontSize: 20, lineHeight: 24, color: tc.textPrimary, marginTop: 10, marginBottom: 14 }]} numberOfLines={4}>{wyr.question}</Text>
+      <Option label={wyr.optionA.label} pct={wyr.optionA.pct} voted={!!voted} mine={voted === "A"} onPress={() => onVote("A")} />
+      <Option label={wyr.optionB.label} pct={wyr.optionB.pct} voted={!!voted} mine={voted === "B"} onPress={() => onVote("B")} />
+      <View style={s.foot}>
+        <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]}>
+          {wyr.totalVotes > 0 ? `${wyr.totalVotes} voted` : "Be the first to vote"}{voted ? " · tap your choice again to clear it" : ""}
         </Text>
-        {index < total - 1 && (
-          <Pressable onPress={onNext} style={wc.nextBtn}>
-            <Text style={wc.nextText}>Next →</Text>
-          </Pressable>
-        )}
+        {index < total - 1 ? (
+          <Pressable onPress={onNext} hitSlop={6}><Text style={[body(700), { color: tc.accentText }]}>Next →</Text></Pressable>
+        ) : null}
       </View>
     </View>
   );
 }
 
-export const wc = StyleSheet.create({
-  card: { marginHorizontal: rs(14), marginTop: rs(14), backgroundColor: "#FFF", borderRadius: rs(18), borderWidth: 1, borderColor: "#ECEEF1", overflow: "hidden", shadowColor: Colors.brand.blue, shadowOpacity: 0.1, shadowRadius: rs(12), elevation: 4 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: rs(14), paddingVertical: rs(11), gap: rs(8) },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: rs(6), flex: 1 },
-  headerTitle: { fontSize: rs(13), fontWeight: "800", color: "#FFF", letterSpacing: 0.2 },
-  votesPill: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(10) },
-  votesText: { fontSize: rs(11), fontWeight: "600", color: "rgba(255,255,255,0.92)" },
-  navRow: { flexDirection: "row", gap: rs(4) },
-  navBtn: { width: rs(28), height: rs(28), borderRadius: rs(14), backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
-  category: { fontSize: rs(10), fontWeight: "700", color: Colors.brand.blue, letterSpacing: 1, paddingHorizontal: rs(16), paddingTop: rs(14), paddingBottom: rs(4) },
-  wyrQuestion: { fontSize: rs(14), fontWeight: "600", lineHeight: rs(20), paddingHorizontal: rs(16), paddingBottom: rs(10) },
-  opt: { flexDirection: "row", alignItems: "center", gap: rs(12), marginHorizontal: rs(14), marginVertical: rs(4), padding: rs(14), borderRadius: rs(14), borderWidth: 1.5, borderColor: "#E5E7EB", backgroundColor: "#FAFAFA" },
-  optActiveA: { borderColor: Colors.brand.blue, backgroundColor: Colors.brand.blueLight },
-  optActiveB: { borderColor: Colors.brand.green, backgroundColor: "#EAFBE9" },
-  optLabel: { width: rs(28), height: rs(28), borderRadius: rs(14), backgroundColor: "#E5E7EB", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  optLabelA: { backgroundColor: Colors.brand.blue },
-  optLabelB: { backgroundColor: Colors.brand.green },
-  optLabelText: { fontSize: rs(13), fontWeight: "800", color: Colors.text.secondary },
-  optText: { flex: 1, fontSize: rs(14), fontWeight: "600", color: Colors.text.primary, lineHeight: rs(20) },
-  pct: { fontSize: rs(14), fontWeight: "700", color: Colors.text.tertiary },
-  or: { textAlign: "center", fontSize: rs(11), fontWeight: "800", color: Colors.text.tertiary, letterSpacing: 2, paddingVertical: rs(4) },
-  footer: { flexDirection: "row", alignItems: "center", gap: rs(6), paddingHorizontal: rs(16), paddingVertical: rs(12), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#ECEEF1", marginTop: rs(8) },
-  footerText: { flex: 1, fontSize: rs(12), color: Colors.text.tertiary },
-  nextBtn: { paddingHorizontal: rs(10), paddingVertical: rs(4) },
-  nextText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
+const s = StyleSheet.create({
+  card: { borderRadius: 24, padding: 16, marginHorizontal: 16, marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  meta: { flexDirection: "row", alignItems: "center", gap: 8 },
+  tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  nav: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  opt: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 18, marginBottom: 8, overflow: "hidden", borderWidth: 1.5, borderColor: "transparent" },
+  fill: { position: "absolute", left: 0, top: 0, bottom: 0 },
+  foot: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 },
 });
+
+// Kept for callers that imported the old style sheet.
+export const wc = s;

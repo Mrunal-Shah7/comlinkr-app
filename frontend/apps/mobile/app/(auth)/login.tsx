@@ -33,11 +33,14 @@ import { useTheme } from "../../src/theme/useTheme";
 import { rs } from "../../src/utils/responsive";
 import { Image } from "expo-image";
 import { appAlert } from '../../src/shared/ui/Dialogs';
+import { TYPE, display } from '../../src/theme/d';
+import { GradientButton, Reveal, SoftButton, useShake } from '../../src/shared/d';
+import Reanimated from 'react-native-reanimated';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#0076EB", "#26B324"],
+  colors = ["#1A6BAE", "#30855B"],
   style,
 }: {
   text: string;
@@ -90,11 +93,15 @@ export default function LoginScreen() {
   const [oauthProvider, setOauthProvider] = useState<"google" | "apple">("google");
 
   const passwordRef = useRef<TextInput>(null);
+  // Errors sit under the field they belong to and the fields shake (design D `login`).
+  const [fieldError, setFieldError] = useState<"email" | "password" | "">("");
+  const { style: shakeStyle, shake } = useShake();
 
   async function handleLogin() {
     if (!email.trim() || !password.trim()) {
-      setError("Please fill in both fields");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setFieldError(!email.trim() ? "email" : "password");
+      setError(!email.trim() ? "Enter your email or username." : "Enter your password.");
+      shake();
       return;
     }
     setError("");
@@ -107,8 +114,9 @@ export default function LoginScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
     } catch (e: unknown) {
+      setFieldError("password");
       setError(formatLoginError(e));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      shake();
     } finally {
       setLoading(false);
     }
@@ -203,8 +211,22 @@ export default function LoginScreen() {
     }
   }
 
+  const busy = loading || socialLoading;
+  const social = (
+    <View style={{ flexDirection: "row", gap: 10 }}>
+      <SoftButton ghost block outerStyle={{ flex: 1 }} disabled={busy} onPress={() => void handleSocialLogin("Google")}
+        label={loadingProvider === "google" ? "Opening Google…" : Platform.OS === "ios" ? "Google" : "Continue with Google"}
+        icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
+      {Platform.OS === "ios" ? (
+        <SoftButton ghost block outerStyle={{ flex: 1 }} disabled={busy} onPress={() => void handleSocialLogin("Apple")}
+          label={loadingProvider === "apple" ? "Opening Apple…" : "Apple"}
+          icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} />
+      ) : null}
+    </View>
+  );
+
   return (
-    <View style={[styles.root, { backgroundColor: tc.pageBg }]}>
+    <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
       <OAuthUsernamePickerModal
         visible={usernamePickerVisible}
         tempToken={oauthTempToken}
@@ -222,194 +244,88 @@ export default function LoginScreen() {
           setOauthTempToken("");
         }}
       />
-      <LinearGradient
-        colors={isDark ? ["#080F1E", "#0D1526"] : ["#EEF6FF", "#F5FAF5"]}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* a soft glow of the brand gradient behind the top of the page */}
+      <LinearGradient colors={isDark ? ["rgba(26,107,174,0.30)", "rgba(48,133,91,0.10)", "transparent"] : ["rgba(26,107,174,0.16)", "rgba(48,133,91,0.06)", "transparent"]} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={{ position: "absolute", top: 0, left: 0, right: 0, height: 420 }} pointerEvents="none" />
 
-      <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior="padding"
-        >
-          <ScrollView
-            contentContainerStyle={styles.scroll}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Logo Section */}
-            <View style={styles.logoSection}>
-              <View style={styles.logoWrap}>
-                <Image
-                  source={require("../../assets/images/brand/app_icon_1024.png")}
-                  style={styles.logo}
-                  contentFit="contain"
-                  transition={200}
-                />
-              </View>
-            </View>
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 48, paddingBottom: 32 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <Reveal i={0} style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 28 }}>
+              <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 40, height: 40, borderRadius: 12 }} contentFit="contain" />
+              <Text style={[display(800), { fontSize: 22, color: tc.textPrimary, letterSpacing: -0.5 }]}>comlinkr</Text>
+            </Reveal>
 
-            {/* Card */}
-            <View style={[styles.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "rgba(0,118,235,0.06)" }]}>
-              <GradientText
-                text="Welcome back"
-                style={styles.heading}
-                colors={["#0076EB", "#26B324"]}
+            <Reveal i={1}>
+              <Text style={[display(800), { fontSize: 40, lineHeight: 42, letterSpacing: -1.4, color: tc.textPrimary }]}>New city.</Text>
+              <GradientText text="Your people." style={[display(800), { fontSize: 40, lineHeight: 44, letterSpacing: -1.4 }]} colors={["#3D8FD6", "#3FB57C"]} />
+              <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 8, marginBottom: 24 }]}>Homes, food and friends, around the corner.</Text>
+            </Reveal>
+
+            <Reveal i={2}>{social}</Reveal>
+
+            <Reveal i={3} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 20 }}>
+              <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
+              <Text style={[TYPE.small, { color: tc.textTertiary }]}>or with email</Text>
+              <View style={{ flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: tc.borderMedium }} />
+            </Reveal>
+
+            <Reveal i={4}>
+            <Reanimated.View style={[{ gap: 14 }, shakeStyle]}>
+              <Input
+                error={fieldError === "email" && error ? error : undefined}
+                label="Email"
+                placeholder="you@example.com"
+                value={email}
+                onChangeText={(v) => { setEmail(v); if (fieldError) { setFieldError(""); setError(""); } }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordRef.current?.focus()}
+                icon={<Ionicons name="mail-outline" size={19} color={tc.textTertiary} />}
               />
-              <Text style={[styles.subheading, { color: tc.textSecondary }]}>
-                Sign in to continue exploring
-              </Text>
-
-              {/* Social Buttons */}
-              <View style={styles.socialGroup}>
-                <Pressable
-                  onPress={() => void handleSocialLogin("Google")}
-                  disabled={loading || socialLoading}
-                  style={({ pressed }) => [
-                    styles.socialBtn,
-                    { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                    pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                    (loading || socialLoading) && loadingProvider !== "google" && { opacity: 0.5 },
-                  ]}
-                >
-                  <View style={styles.socialBtnInner}>
-                    {loadingProvider === "google" ? (
-                      <ActivityIndicator size="small" color="#4285F4" />
-                    ) : (
-                      <>
-                        <Ionicons name="logo-google" size={rs(20)} color="#4285F4" />
-                        <GradientText
-                          text="Continue with Google"
-                          style={styles.socialLabel}
-                          colors={["#4285F4", "#0076EB"]}
-                        />
-                      </>
-                    )}
-                  </View>
-                </Pressable>
-
-                {Platform.OS === "ios" ? (
-                  <Pressable
-                    onPress={() => void handleSocialLogin("Apple")}
-                    disabled={loading || socialLoading}
-                    style={({ pressed }) => [
-                      styles.socialBtn,
-                      { borderColor: tc.borderLight, backgroundColor: isDark ? tc.inputBg : "#FAFAFA" },
-                      pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-                      (loading || socialLoading) && loadingProvider !== "apple" && { opacity: 0.5 },
-                    ]}
-                  >
-                    <View style={styles.socialBtnInner}>
-                      {loadingProvider === "apple" ? (
-                        <ActivityIndicator size="small" color={isDark ? "#FFFFFF" : "#000000"} />
-                      ) : (
-                        <>
-                          <Ionicons name="logo-apple" size={22} color={isDark ? "#FFFFFF" : "#000000"} />
-                          <Text style={[styles.socialLabel, { color: tc.textPrimary }]}>Continue with Apple</Text>
-                        </>
-                      )}
-                    </View>
+              <Input
+                ref={passwordRef}
+                label="Password"
+                placeholder="Your password"
+                value={password}
+                onChangeText={(v) => { setPassword(v); if (fieldError) { setFieldError(""); setError(""); } }}
+                error={fieldError === "password" && error ? error : undefined}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoComplete="password"
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
+                icon={<Ionicons name="lock-closed-outline" size={19} color={tc.textTertiary} />}
+                rightIcon={
+                  <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8} accessibilityRole="button" accessibilityLabel={showPassword ? "Hide password" : "Show password"}>
+                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={tc.textTertiary} />
                   </Pressable>
-                ) : null}
-              </View>
+                }
+              />
+            </Reanimated.View>
+            </Reveal>
 
-              {/* Divider */}
-              <View style={styles.dividerRow}>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
-                <Text style={[styles.dividerText, { color: tc.textTertiary }]}>or sign in with email</Text>
-                <View style={[styles.dividerLine, { backgroundColor: tc.borderLight }]} />
-              </View>
+            {error && !fieldError ? (
+              <Reveal style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 14, padding: 12, borderRadius: 14, backgroundColor: "rgba(239,68,68,0.12)" }}>
+                <Ionicons name="alert-circle" size={17} color={tc.dangerText} />
+                <Text style={[TYPE.small, { flex: 1, color: tc.textPrimary }]}>{error}</Text>
+              </Reveal>
+            ) : null}
 
-              {/* Form */}
-              <View style={styles.form}>
-                <Input
-                  label="Email address"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  returnKeyType="next"
-                  onSubmitEditing={() => passwordRef.current?.focus()}
-                />
-                <Input
-                  ref={passwordRef}
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoComplete="password"
-                  returnKeyType="go"
-                  onSubmitEditing={handleLogin}
-                  rightIcon={
-                    <Pressable
-                      onPress={() => setShowPassword(!showPassword)}
-                      hitSlop={8}
-                    >
-                      <Ionicons
-                        name={showPassword ? "eye-off-outline" : "eye-outline"}
-                        size={20}
-                        color={tc.textTertiary}
-                      />
-                    </Pressable>
-                  }
-                />
-              </View>
-
-              {/* Error */}
-              {error ? (
-                <View style={[styles.errorBox, { backgroundColor: isDark ? "#2D0F0F" : "#FEF2F2" }]}>
-                  <Ionicons name="alert-circle" size={rs(16)} color="#EF4444" />
-                  <Text style={styles.errorText}>{error}</Text>
-                </View>
-              ) : null}
-
-              {/* Forgot */}
-              <Pressable style={styles.forgotRow} onPress={() => router.push("/(auth)/forgot-password" as any)}>
-                <GradientText
-                  text="Forgot password?"
-                  style={styles.forgotText}
-                  colors={["#0076EB", "#0066DD"]}
-                />
+            <Reveal i={5} style={{ marginTop: 14 }}>
+              <Pressable onPress={() => router.push("/(auth)/forgot-password" as any)} hitSlop={8} style={{ alignSelf: "flex-start", marginBottom: 18 }} accessibilityRole="button">
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Forgot password?</Text>
               </Pressable>
+              <GradientButton block label={busy ? "Signing in…" : "Sign in"} loading={loading} disabled={socialLoading} onPress={handleLogin} />
+            </Reveal>
 
-              {/* Sign In Button */}
-              <Pressable
-                onPress={handleLogin}
-                disabled={loading || socialLoading}
-                style={({ pressed }) => [
-                  styles.loginBtn,
-                  pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                  (loading || socialLoading) && { opacity: 0.7 },
-                ]}
-              >
-                <LinearGradient
-                  colors={["#0076EB", "#26B324"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.loginBtnGradient}
-                >
-                  <Text style={styles.loginBtnText}>
-                    {loading || socialLoading ? "Signing in..." : "Sign In"}
-                  </Text>
-                </LinearGradient>
+            <Reveal i={6} style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 26 }}>
+              <Text style={[TYPE.body, { color: tc.textSecondary }]}>New here? </Text>
+              <Pressable onPress={() => router.push("/(auth)/signup")} hitSlop={8} accessibilityRole="button">
+                <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Create an account</Text>
               </Pressable>
-            </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={[styles.footerText, { color: tc.textSecondary }]}>New to ComLinkr? </Text>
-              <Pressable onPress={() => router.push("/(auth)/signup")}>
-                <GradientText
-                  text="Create account"
-                  style={styles.footerLink}
-                  colors={["#0076EB", "#26B324"]}
-                />
-              </Pressable>
-            </View>
+            </Reveal>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -439,7 +355,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(0, 118, 235, 0.08)",
+    backgroundColor: "rgba(26,107,174, 0.08)",
     top: -60,
     right: -80,
   },
@@ -448,7 +364,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: "rgba(38, 179, 36, 0.07)",
+    backgroundColor: "rgba(48,133,91, 0.07)",
     bottom: 60,
     left: -60,
   },
@@ -465,13 +381,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 18,
     elevation: 10,
     borderWidth: 2,
-    borderColor: "rgba(0,118,235,0.12)",
+    borderColor: "rgba(26,107,174,0.12)",
   },
   logo: {
     width: rs(88),
@@ -604,7 +520,7 @@ const styles = StyleSheet.create({
   loginBtn: {
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#0076EB",
+    shadowColor: "#1A6BAE",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,

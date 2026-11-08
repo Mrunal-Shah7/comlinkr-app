@@ -16,7 +16,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { useTheme } from '../../theme/useTheme';
-import { Colors } from '../../theme/colors';
+import Animated, { SlideInDown, ZoomIn, useReducedMotion } from 'react-native-reanimated';
+import { TYPE, display } from '../../theme/d';
+import { GradientFill } from '../d';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export interface ConfirmOptions {
   title: string;
@@ -114,6 +118,7 @@ export function DialogHost() {
   const close = useDialogStore((s) => s.close);
   const { tc } = useTheme();
   const insets = useSafeAreaInsets();
+  const reduce = useReducedMotion();
 
   function dismiss() {
     if (!current) return;
@@ -154,7 +159,8 @@ export function DialogHost() {
       return (
         <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
           <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
-            <Pressable
+            <AnimatedPressable
+              entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
               style={[s.dialog, { backgroundColor: tc.sheetBg, borderColor: tc.borderLight }]}
               onPress={() => {}}
               accessibilityViewIsModal
@@ -174,16 +180,13 @@ export function DialogHost() {
                       style={({ pressed }) => [
                         s.btn,
                         {
-                          backgroundColor: isDestructive
-                            ? '#EF4444'
-                            : primary
-                              ? Colors.brand.blue
-                              : tc.inputBg,
+                          backgroundColor: isDestructive ? '#E5484D' : primary ? 'transparent' : tc.inputBg,
                         },
                         pressed && s.pressed,
                       ]}
                       onPress={() => run(b)}
                     >
+                      {primary && !isDestructive ? <GradientFill style={[StyleSheet.absoluteFill, { borderRadius: 16 }]} /> : null}
                       <Text style={[s.btnText, { color: primary || isDestructive ? '#FFFFFF' : tc.textPrimary }]}>
                         {b.text ?? 'OK'}
                       </Text>
@@ -191,15 +194,16 @@ export function DialogHost() {
                   );
                 })}
               </View>
-            </Pressable>
+            </AnimatedPressable>
           </Pressable>
         </Modal>
       );
     }
     return (
-      <Modal visible transparent animationType="slide" onRequestClose={dismiss} statusBarTranslucent>
+      <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
         <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
-          <Pressable
+          <AnimatedPressable
+            entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
             style={[
               s.sheet,
               { backgroundColor: tc.sheetBg, borderColor: tc.borderLight, paddingBottom: Math.max(insets.bottom, 12) + 8 },
@@ -210,7 +214,7 @@ export function DialogHost() {
             <View style={[s.grabber, { backgroundColor: tc.borderMedium }]} />
             <Text style={[s.title, { color: tc.textPrimary }]} accessibilityRole="header">{title}</Text>
             {!!message && <Text style={[s.message, { color: tc.textSecondary }]}>{message}</Text>}
-            <ScrollView style={s.optionList} bounces={false}>
+            <ScrollView style={[s.optionList, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]} bounces={false}>
               {actionBtns.map((b, i) => (
                 <Pressable
                   key={`${b.text ?? 'opt'}-${i}`}
@@ -236,7 +240,7 @@ export function DialogHost() {
             >
               <Text style={[s.btnText, { color: tc.textPrimary }]}>{cancelBtn?.text ?? 'Cancel'}</Text>
             </Pressable>
-          </Pressable>
+          </AnimatedPressable>
         </Pressable>
       </Modal>
     );
@@ -247,7 +251,8 @@ export function DialogHost() {
     return (
       <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
         <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
-          <Pressable
+          <AnimatedPressable
+            entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
             style={[s.dialog, { backgroundColor: tc.sheetBg, borderColor: tc.borderLight }]}
             onPress={() => {}}
             accessibilityViewIsModal
@@ -268,7 +273,7 @@ export function DialogHost() {
                 accessibilityLabel={confirmLabel}
                 style={({ pressed }) => [
                   s.btn,
-                  { backgroundColor: destructive ? '#EF4444' : Colors.brand.blue },
+                  { backgroundColor: destructive ? '#E5484D' : 'transparent' },
                   pressed && s.pressed,
                 ]}
                 onPress={() => {
@@ -276,10 +281,11 @@ export function DialogHost() {
                   close();
                 }}
               >
+                {!destructive ? <GradientFill style={[StyleSheet.absoluteFill, { borderRadius: 16 }]} /> : null}
                 <Text style={[s.btnText, { color: '#FFFFFF' }]}>{confirmLabel}</Text>
               </Pressable>
             </View>
-          </Pressable>
+          </AnimatedPressable>
         </Pressable>
       </Modal>
     );
@@ -287,9 +293,10 @@ export function DialogHost() {
 
   const { title, message, options, cancelLabel = 'Cancel' } = current.opts;
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={dismiss} statusBarTranslucent>
+    <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
       <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
-        <Pressable
+        <AnimatedPressable
+          entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
           style={[
             s.sheet,
             { backgroundColor: tc.sheetBg, borderColor: tc.borderLight, paddingBottom: Math.max(insets.bottom, 12) + 8 },
@@ -300,7 +307,7 @@ export function DialogHost() {
           <View style={[s.grabber, { backgroundColor: tc.borderMedium }]} />
           {!!title && <Text style={[s.title, { color: tc.textPrimary }]} accessibilityRole="header">{title}</Text>}
           {!!message && <Text style={[s.message, { color: tc.textSecondary }]}>{message}</Text>}
-          <ScrollView style={s.optionList} bounces={false}>
+          <ScrollView style={[s.optionList, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]} bounces={false}>
             {options.map((o) => (
               <Pressable
                 key={o.value}
@@ -324,7 +331,7 @@ export function DialogHost() {
           >
             <Text style={[s.btnText, { color: tc.textPrimary }]}>{cancelLabel}</Text>
           </Pressable>
-        </Pressable>
+        </AnimatedPressable>
       </Pressable>
     </Modal>
   );
@@ -332,18 +339,18 @@ export function DialogHost() {
 
 const s = StyleSheet.create({
   backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  dialog: { width: '100%', maxWidth: 380, borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, padding: 20, gap: 8 },
-  title: { fontSize: 18, fontWeight: '800' },
-  message: { fontSize: 14, lineHeight: 20 },
+  dialog: { width: '100%', maxWidth: 380, borderRadius: 28, borderWidth: StyleSheet.hairlineWidth, padding: 22, gap: 8 },
+  title: { ...display(700), fontSize: 20 },
+  message: { ...TYPE.body },
   row: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  btn: { flex: 1, minHeight: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  btnText: { fontSize: 15, fontWeight: '700' },
+  btn: { flex: 1, minHeight: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, overflow: 'hidden' },
+  btnText: { ...TYPE.button },
   pressed: { opacity: 0.85 },
   sheetBackdrop: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingTop: 8, maxHeight: '85%' },
+  sheet: { borderTopLeftRadius: 30, borderTopRightRadius: 30, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 16, paddingTop: 8, maxHeight: '85%' },
   grabber: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, marginBottom: 12 },
-  optionList: { marginTop: 8, flexGrow: 0 },
-  option: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 8, borderBottomWidth: StyleSheet.hairlineWidth },
-  optionText: { fontSize: 16, fontWeight: '600' },
-  cancel: { minHeight: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  optionList: { marginTop: 10, flexGrow: 0, borderRadius: 20, borderWidth: 1 },
+  option: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  optionText: { ...TYPE.body, fontFamily: 'Manrope_600SemiBold', fontSize: 16 },
+  cancel: { minHeight: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
 });

@@ -1,18 +1,18 @@
-import { View, Text, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import type { ReactElement } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
+import { TYPE, body, display } from "../../../theme/d";
+import { GradientFill, PressableScale, SoftButton } from "../../../shared/d";
 import { FadeImage } from "../../../../components/FadeImage";
-import { VerifiedBadgePill } from "../../../../components/BadgeIndicator";
 import { useAuthStore } from "../../../store/auth.store";
 import { formatPrice } from "../../../utils/currency";
 import { appAlert } from "../../../shared/ui/Dialogs";
 import { type Roommate, computeMatch, buildCurrentUserForMatch, COMMUNITY_DISPLAY, VIBE_DISPLAY } from "../roommateModel";
 import { getUserCurrencyCode } from "../utils";
-import { rm } from "../styles/roommate.styles";
 
-// ── Roommate card ────────────────────────────────────────────────────────────
+/** A roommate in Listings → Roommates, design D (plan 01): ringed photo, name, job and budget, up to two things
+ *  you share, and the match % in green. Budget hides when it is not set (no "$0–$0", rule B6). */
 export function RoommateCard({
   roommate,
   onPress,
@@ -30,202 +30,70 @@ export function RoommateCard({
   isSaved: boolean;
   onToggleSave: () => void;
 }) {
-  const { isDark, tc } = useTheme();
+  const { tc, isDark } = useTheme();
   const user = useAuthStore((s) => s.user);
   const currencyCode = getUserCurrencyCode(user);
   const match = computeMatch(buildCurrentUserForMatch(user), roommate);
-  const displayScore = roommate.apiMatchScore ?? match.score;
-  const scoreColor =
-    displayScore >= 80 ? Colors.brand.green : displayScore >= 60 ? Colors.brand.blue : Colors.brand.orange;
-  const scoreBg =
-    displayScore >= 80 ? "#DCFCE7" : displayScore >= 60 ? "#E6F4FE" : "#FFF3E6";
+  const score = roommate.apiMatchScore ?? match.score;
   const cs = roommate.connectionStatus ?? null;
+  const budget = roommate.budgetMin > 0 && roommate.budgetMax > 0 ? `${formatPrice(roommate.budgetMin, currencyCode)}–${formatPrice(roommate.budgetMax, currencyCode)}` : "";
+  const shared = [
+    ...match.sharedCommunities.map((c) => COMMUNITY_DISPLAY[c]?.label ?? c),
+    ...match.sharedVibes.map((v) => VIBE_DISPLAY[v]?.label ?? v),
+  ].slice(0, 2);
+
+  let action: ReactElement | null = null;
+  if (cs === null) action = <SoftButton small label="Connect" icon={<Ionicons name="person-add-outline" size={15} color={tc.accentText} />} onPress={onConnect} />;
+  else if (cs === "pending_sent") action = (
+    <SoftButton small ghost label="Cancel request" onPress={() => appAlert("Cancel request", "Cancel the connection request?", [
+      { text: "Keep", style: "cancel" },
+      { text: "Cancel request", style: "destructive", onPress: onCancelRequest },
+    ])} />
+  );
+  else if (cs === "pending_received") action = <SoftButton small label="Respond" icon={<Ionicons name="mail-unread-outline" size={15} color={tc.accentText} />} onPress={onPress} />;
+  else if (cs === "accepted" && roommate.conversationId) action = <SoftButton small label="Message" icon={<Ionicons name="chatbubble-ellipses-outline" size={15} color={tc.accentText} />} onPress={() => onOpenConversation(roommate.conversationId!)} />;
 
   return (
-    <View style={[rm.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-      {/* ── Tappable: banner + avatar → opens modal ── */}
-      <Pressable
-        style={({ pressed }) => pressed && { opacity: 0.94 }}
-        onPress={onPress}
-      >
-        {/* Gradient banner header */}
-        <LinearGradient
-          colors={[roommate.color + "28", roommate.color + "08"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={rm.cardBanner}
-        >
-          <View style={[rm.cardBannerCircle1, { backgroundColor: roommate.color + "18" }]} />
-          <View style={[rm.cardBannerCircle2, { backgroundColor: roommate.color + "10" }]} />
-          {/* Right: connection badge + verified chip + match score */}
-          <View style={rm.cardBannerRight}>
-            {cs === "accepted" && (
-              <View style={[rm.cardConnectionBadge, { backgroundColor: Colors.brand.green }]}>
-                <Ionicons name="checkmark-circle" size={10} color="#FFF" />
-                <Text style={rm.cardConnectionText}>Connected</Text>
-              </View>
-            )}
-            {cs === "pending_sent" && (
-              <View style={[rm.cardConnectionBadge, { backgroundColor: "#F59E0B" }]}>
-                <Ionicons name="time-outline" size={10} color="#FFF" />
-                <Text style={rm.cardConnectionText}>Pending</Text>
-              </View>
-            )}
-            <Pressable
-              onPress={(e) => {
-                (e as { stopPropagation?: () => void }).stopPropagation?.();
-                onToggleSave();
-              }}
-              hitSlop={8}
-              style={{ padding: 6, borderRadius: 999, backgroundColor: isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.85)" }}
-              accessibilityLabel={isSaved ? "Remove bookmark" : "Save profile"}
-            >
-              <Ionicons
-                name={isSaved ? "bookmark" : "bookmark-outline"}
-                size={16}
-                color={isSaved ? Colors.brand.orange : isDark ? "#FFF" : Colors.brand.blue}
-              />
-            </Pressable>
-            {roommate.verified && <VerifiedBadgePill badge="local_reviewer" />}
-            <View style={[rm.cardScoreBadge, { backgroundColor: scoreBg, borderColor: scoreColor + "40" }]}>
-              <Text style={[rm.cardScoreNum, { color: scoreColor }]}>{displayScore}%</Text>
-              <Text style={[rm.cardScoreLbl, { color: scoreColor }]}>MATCH</Text>
-            </View>
+    <View style={[s.card, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]}>
+      <PressableScale onPress={onPress} style={s.top} accessibilityRole="button" accessibilityLabel={`${roommate.name}, ${score}% match`}>
+        <GradientFill colors={[tc.mint, tc.accent] as const} style={s.ring}>
+          <View style={[s.ringIn, { borderColor: tc.cardBg }]}>
+            {roommate.avatar ? <FadeImage uri={roommate.avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: "#fff" }]}>{roommate.initials}</Text></GradientFill>}
           </View>
-        </LinearGradient>
-
-        {/* Avatar overlapping banner */}
-        <View style={rm.cardAvatarWrap}>
-          <FadeImage uri={roommate.avatar} style={[rm.cardAvatar, { borderColor: roommate.color + "50" }]} />
-          {roommate.verified && (
-            <View style={rm.cardVerified}>
-              <Ionicons name="shield-checkmark" size={10} color="#FFF" />
+        </GradientFill>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={[display(700), { fontSize: 17, color: tc.textPrimary }]} numberOfLines={1}>{roommate.name}{roommate.age > 0 ? `, ${roommate.age}` : ""}</Text>
+          <Text style={[TYPE.small, { color: tc.textSecondary }]} numberOfLines={1}>{[roommate.occupation, budget].filter(Boolean).join(" · ")}</Text>
+          {shared.length ? (
+            <View style={s.tags}>
+              {shared.map((t) => <View key={t} style={[s.tag, { backgroundColor: tc.mintSoft }]}><Text style={[body(700), { fontSize: 11.5, color: tc.successText }]} numberOfLines={1}>{t}</Text></View>)}
             </View>
-          )}
+          ) : null}
         </View>
-      </Pressable>
-
-      {/* ── Card body (tappable to open profile) ── */}
-      <Pressable onPress={onPress} style={rm.cardBody}>
-        {/* Name + occupation */}
-        <Text style={[rm.cardName, { color: tc.textPrimary }]} numberOfLines={1}>{roommate.name}</Text>
-        <Text style={[rm.cardOccupation, { color: tc.textSecondary }]} numberOfLines={1}>{roommate.occupation} · {roommate.age}</Text>
-        <View style={rm.cardLocationRow}>
-          <Ionicons name="location-sharp" size={10} color={Colors.brand.blue} />
-          <Text style={rm.cardLocationText}>{roommate.location}</Text>
-        </View>
-
-        {/* Budget + Move-in + Sleep schedule */}
-        <View style={[rm.cardQuickStats, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-          <View style={rm.cardQuickStat}>
-            <View style={[rm.cardQuickIcon, { backgroundColor: Colors.brand.blueLight }]}>
-              <Ionicons name="cash-outline" size={12} color={Colors.brand.blue} />
-            </View>
-            <Text style={[rm.cardQuickStatText, { color: tc.textPrimary }]}>
-              {formatPrice(roommate.budgetMin, currencyCode)}–{formatPrice(roommate.budgetMax, currencyCode)}/mo
-            </Text>
-          </View>
-          <View style={[rm.cardQuickStatDivider, isDark && { backgroundColor: tc.borderLight }]} />
-          <View style={rm.cardQuickStat}>
-            <View style={[rm.cardQuickIcon, { backgroundColor: Colors.brand.greenLight }]}>
-              <Ionicons name="calendar-outline" size={12} color={Colors.brand.green} />
-            </View>
-            <Text style={[rm.cardQuickStatText, { color: tc.textPrimary }]}>{roommate.moveInDate}</Text>
-          </View>
-          <View style={[rm.cardQuickStatDivider, isDark && { backgroundColor: tc.borderLight }]} />
-          <View style={rm.cardQuickStat}>
-            <View style={[rm.cardQuickIcon, { backgroundColor: Colors.brand.blueLight }]}>
-              <Ionicons name="moon-outline" size={12} color={Colors.brand.blue} />
-            </View>
-            <Text style={[rm.cardQuickStatText, { color: tc.textPrimary }]}>{roommate.sleepSchedule}</Text>
-          </View>
-        </View>
-
-        {/* Bio */}
-        <Text style={[rm.cardBio, { color: tc.textSecondary }]} numberOfLines={2}>{roommate.bio}</Text>
-
-        {/* Shared tags */}
-        {(match.sharedCommunities.length > 0 || match.sharedVibes.length > 0) && (
-          <View style={rm.cardSharedRow}>
-            <View style={rm.cardSharedLabel}>
-              <Ionicons name="heart-circle" size={13} color={Colors.brand.green} />
-              <Text style={rm.cardSharedLabelText}>In common</Text>
-            </View>
-            {match.sharedCommunities.slice(0, 2).map((c) => {
-              const d = COMMUNITY_DISPLAY[c];
-              return d ? (
-                <View key={c} style={rm.cardSharedChip}>
-                  <Ionicons name="globe-outline" size={11} color={Colors.brand.green} />
-                  <Text style={rm.cardSharedText}>{d.label}</Text>
-                </View>
-              ) : null;
-            })}
-            {match.sharedVibes.slice(0, 2).map((v) => {
-              const d = VIBE_DISPLAY[v];
-              return d ? (
-                <View key={v} style={rm.cardSharedChip}>
-                  <Ionicons name={d.icon as any} size={11} color={Colors.brand.green} />
-                  <Text style={rm.cardSharedText}>{d.label}</Text>
-                </View>
-              ) : null;
-            })}
-            {match.sharedCommunities.length + match.sharedVibes.length > 4 && (
-              <View style={[rm.cardSharedChip, { backgroundColor: Colors.brand.blueLight, borderColor: "#D6E8FF" }]}>
-                <Text style={[rm.cardSharedText, { color: Colors.brand.blue }]}>
-                  +{match.sharedCommunities.length + match.sharedVibes.length - 4}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-      </Pressable>
-
-      {/* ── CTA row — sits outside any outer Pressable so buttons fire independently ── */}
-      <View style={[rm.cardCtaRow, isDark && { borderTopColor: tc.borderLight }]}>
-        {cs === null && (
-          <Pressable style={rm.cardMsgBtn} onPress={onConnect}>
-            <Ionicons name="person-add-outline" size={14} color={Colors.brand.blue} />
-            <Text style={rm.cardMsgText}>Connect</Text>
-          </Pressable>
-        )}
-        {cs === "pending_sent" && (
-          <Pressable
-            style={[rm.cardMsgBtn, { borderColor: "#FCA5A5", backgroundColor: "#FEF2F2" }]}
-            onPress={() => appAlert("Cancel Request", "Cancel the connection request?", [
-              { text: "Keep", style: "cancel" },
-              { text: "Cancel Request", style: "destructive", onPress: onCancelRequest },
-            ])}
-          >
-            <Ionicons name="close-circle-outline" size={14} color="#EF4444" />
-            <Text style={[rm.cardMsgText, { color: "#EF4444" }]}>Cancel Request</Text>
-          </Pressable>
-        )}
-        {cs === "pending_received" && (
-          <Pressable style={rm.cardMsgBtn} onPress={onPress}>
-            <Ionicons name="mail-unread-outline" size={14} color={Colors.brand.blue} />
-            <Text style={rm.cardMsgText}>Respond</Text>
-          </Pressable>
-        )}
-        {cs === "accepted" && roommate.conversationId && (
-          <Pressable
-            style={rm.cardMsgBtn}
-            onPress={() => onOpenConversation(roommate.conversationId!)}
-          >
-            <Ionicons name="chatbubble-ellipses" size={14} color={Colors.brand.blue} />
-            <Text style={rm.cardMsgText}>Message</Text>
-          </Pressable>
-        )}
-        <LinearGradient
-          colors={[Colors.brand.blue, Colors.brand.green]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={rm.cardViewGrad}
-        >
-          <Pressable style={rm.cardViewBtn} onPress={onPress}>
-            <Text style={rm.cardViewText}>View Profile</Text>
-          </Pressable>
-        </LinearGradient>
+        <Text style={[display(800), { fontSize: 26, color: tc.mint }]}>{score}%</Text>
+      </PressableScale>
+      <View style={s.foot}>
+        {cs === "pending_sent" ? <View style={[s.state, { backgroundColor: tc.warningBg }]}><Text style={[body(700), { fontSize: 12, color: tc.warningText }]}>Pending</Text></View> : null}
+        {cs === "accepted" ? <View style={[s.state, { backgroundColor: tc.mintSoft }]}><Text style={[body(700), { fontSize: 12, color: tc.successText }]}>Connected</Text></View> : null}
+        <View style={{ flex: 1 }} />
+        <Pressable onPress={onToggleSave} hitSlop={8} style={s.save} accessibilityRole="button" accessibilityLabel={isSaved ? "Remove from saved" : "Save"} accessibilityState={{ selected: isSaved }}>
+          <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={19} color={isSaved ? tc.accentText : tc.textSecondary} />
+        </Pressable>
+        {action}
       </View>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  card: { marginHorizontal: 16, marginBottom: 10, borderRadius: 24, padding: 14, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  top: { flexDirection: "row", alignItems: "center", gap: 14 },
+  ring: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" },
+  ringIn: { width: 56, height: 56, borderRadius: 28, borderWidth: 2.5, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  av: { width: 51, height: 51, borderRadius: 26, alignItems: "center", justifyContent: "center" },
+  tags: { flexDirection: "row", gap: 4, marginTop: 6 },
+  tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, maxWidth: 140 },
+  foot: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 12 },
+  state: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
+  save: { width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+});

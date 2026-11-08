@@ -1,4 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { tabBarClearance } from '../../../src/shared/navigation/DTabBar';
+import Reanimated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag, VoteButton } from '../../../src/shared/d';
+import { DSheet } from '../../../src/shared/d/Sheet';
+import { TYPE } from '../../../src/theme/d';
 import {
   View,
   Text,
@@ -59,6 +64,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '../../../src/api/client';
 
 const TOPICS = ["All", "Housing", "Food", "Transit", "Events", "Safety", "General"];
+const ASK_TOPICS = ["Housing", "Food", "Transit", "Events", "Safety", "General"];
+/** Guesses a question's topic from its words; null when nothing matches. */
+const TOPIC_WORDS: [string, RegExp][] = [
+  ["Housing", /\b(rent|room|roommate|flat|apartment|lease|landlord|deposit|house|housing|sublet|studio|move|moving)\b/i],
+  ["Food", /\b(food|eat|restaurant|cafe|coffee|grocer(y|ies)|brunch|lunch|dinner|bakery|halal|vegan|takeaway|takeout)\b/i],
+  ["Transit", /\b(bus|train|metro|subway|tram|bike|parking|car|driv(e|ing)|licen[cs]e|commute|airport|uber|taxi|transit)\b/i],
+  ["Events", /\b(event|meetup|party|concert|festival|club|tonight|weekend|game|match)\b/i],
+  ["Safety", /\b(safe|safety|scam|police|crime|stolen|emergency|dangerous|night)\b/i],
+];
+function guessTopic(text: string): string | null {
+  for (const [t, re] of TOPIC_WORDS) if (re.test(text)) return t;
+  return null;
+}
 
 const QUESTION_CATEGORIES = ["Housing", "Food", "Transit", "Events", "Safety", "General"] as const;
 
@@ -485,6 +503,9 @@ export default function CommunityScreen() {
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const { city, hasCity, chooseCity } = useAppCity(() => setCityPickerVisible(true));
   const insets = useSafeAreaInsets();
+  // Design D (plan 01): the header title fades in as the large title scrolls away.
+  const communityScrollY = useSharedValue(0);
+  const onCommunityScroll = useAnimatedScrollHandler((e) => { communityScrollY.value = e.contentOffset.y; });
   const blockUser = useBlockStore((s) => s.blockUser);
   const isBlocked = useBlockStore((s) => s.isBlocked);
   const [filter, setFilter] = useState<string | null>(null);
@@ -924,11 +945,16 @@ export default function CommunityScreen() {
     }
   };
 
+  // The topic chip: your pick wins; otherwise the guess from the words.
+  const [pickedTopic, setPickedTopic] = useState<string | null>(null);
+  const guessed = guessTopic(newQ);
+  const askTopic = pickedTopic ?? guessed;
+
   const handleSubmitQuestion = async () => {
     if (!newQ.trim() || posting) return;
     setPosting(true);
     try {
-      const topic = filter && filter !== "All" ? filter : null;
+      const topic = askTopic ?? (filter && filter !== "All" ? filter : null);
       const category =
         topic === "Housing"
           ? "HOUSING"
@@ -952,6 +978,7 @@ export default function CommunityScreen() {
       setQuestions((prev) => [uiQ, ...prev]);
       setExpandedIds((p) => { const n = new Set(p); n.add(uiQ.id); return n; });
       setNewQ("");
+      setPickedTopic(null);
       setShowAsk(false);
     } catch (e) {
       // Keep the draft so the user can retry.
@@ -963,16 +990,18 @@ export default function CommunityScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      <AppHeader />
+      <AppHeader title="Community" scrollY={communityScrollY} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
-      <ScrollView
-        ref={communityScrollRef}
+      <Reanimated.ScrollView
+        ref={communityScrollRef as any}
+        onScroll={onCommunityScroll}
+        scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={s.scrollContent}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
@@ -984,92 +1013,29 @@ export default function CommunityScreen() {
           />
         }
       >
-        {/* Hero */}
-        <LinearGradient
-          colors={[Colors.brand.blue, Colors.brand.green]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.hero}
+        {/* ── Design D (plan 01): large title, ask box, topic chips ── */}
+        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Community</Text>
+        <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 14 }]}>Questions from people around you</Text>
+        <PressableScale
+          onPress={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 16, marginBottom: 14, paddingLeft: 12, paddingRight: 6, height: 54, borderRadius: 18, backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}
+          accessibilityRole="button" accessibilityLabel="Ask a question"
         >
-          <Text style={s.heroLabel}>COMMUNITY Q&A</Text>
-          <Text style={s.heroTitle}>Ask. Answer. Connect.</Text>
-          <Text style={s.heroSub}>Get local tips from people around you.</Text>
+          <Ionicons name="chatbubble-ellipses-outline" size={20} color={tc.textTertiary} />
+          <Text style={[TYPE.body, { flex: 1, color: tc.textTertiary }]} numberOfLines={1}>Ask anything about {city || "your city"}…</Text>
+          <GradientButton small label="Ask" onPress={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }} />
+        </PressableScale>
 
-          {/* Sprint 21: hide aggregate stats row; stats state + fetch kept for future use */}
-          {false && (
-            <View style={s.statsRow}>
-              {[
-                { label: "Members", value: stats.membersCount, icon: "people-outline" as const },
-                { label: "Questions", value: stats.questionsCount, icon: "help-circle-outline" as const },
-                { label: "Answers", value: stats.answersCount, icon: "chatbubble-outline" as const },
-              ].map((stat) => (
-                <View key={stat.label} style={s.statItem}>
-                  <Ionicons name={stat.icon} size={16} color="rgba(255,255,255,0.8)" />
-                  <Text style={s.statValue}>
-                    {stat.value >= 1000 ? `${(stat.value / 1000).toFixed(1)}k` : stat.value}
-                  </Text>
-                  <Text style={s.statLabel}>{stat.label}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Ask bar */}
-          <Pressable onPress={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }} style={s.askBar}>
-            <View style={s.askIconWrap}>
-              <Ionicons name="chatbubble-outline" size={16} color={Colors.brand.blue} />
-            </View>
-            <Text style={s.askPlaceholder}>What do you need help with?</Text>
-            <View style={s.askCtaBtn}>
-              <Text style={s.askCtaText}>Ask</Text>
-            </View>
-          </Pressable>
-        </LinearGradient>
-
-        {/* Topic Chips */}
-        <GHScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={s.chipScroll}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
+        <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
           {TOPICS.map((t) => (
-            <Pressable
-              key={t}
-              onPress={() => setFilter(t === "All" ? null : t)}
-              accessibilityRole="button"
-              accessibilityLabel={`${t} topic`}
-              accessibilityState={{ selected: filter === t || (!filter && t === "All") }}
-              style={[s.chip, { backgroundColor: tc.chipBg }, (filter === t || (!filter && t === "All")) && s.chipActive]}
-            >
-              <Text
-                style={[s.chipText, { color: tc.chipText }, (filter === t || (!filter && t === "All")) && s.chipTextActive]}
-              >
-                {t}
-              </Text>
-            </Pressable>
+            <Chip key={t} label={t} on={filter === t || (!filter && t === "All")} onPress={() => setFilter(t === "All" ? null : t)} />
           ))}
         </GHScrollView>
 
-        {/* Section header with sort */}
-        <View style={s.secHeader}>
-          <Text style={[s.secTitle, { color: tc.textPrimary }]}>
-            {filter ? `Questions about ${filter}` : "Latest Questions"}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            {filter && (
-              <Pressable onPress={() => setFilter(null)}>
-                <Text style={s.clearBtn}>Clear</Text>
-              </Pressable>
-            )}
-            <Pressable
-              onPress={() => setSortBy(sortBy === "recent" ? "popular" : "recent")}
-              style={[s.sortBtn, isDark && { backgroundColor: tc.inputBg }]}
-            >
-              <Ionicons name={sortBy === "popular" ? "flame" : "time-outline"} size={13} color={Colors.brand.blue} />
-              <Text style={s.sortBtnText}>{sortBy === "popular" ? "Popular" : "Recent"}</Text>
-            </Pressable>
-          </View>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingBottom: 10 }}>
+          <Text style={[TYPE.section, { color: tc.textPrimary, flex: 1 }]}>{filter ? `About ${filter}` : "Latest"}</Text>
+          <Chip label={sortBy === "popular" ? "Popular" : "Recent"} on={false} onPress={() => setSortBy(sortBy === "recent" ? "popular" : "recent")}
+            icon={<Ionicons name={sortBy === "popular" ? "flame-outline" : "time-outline"} size={14} color={tc.textSecondary} />} />
         </View>
 
         {hasCity && loadError && sorted.length > 0 ? (
@@ -1098,202 +1064,116 @@ export default function CommunityScreen() {
           />
         ) : sorted.length === 0 ? (
           filter ? (
-            <ListState
-              kind="filtered-empty"
-              title={`No ${filter} questions yet`}
-              message="Be the first to ask, or browse all topics."
-              actionLabel="Show all topics"
-              onAction={() => setFilter(null)}
-            />
+            <EmptyState icon="search-outline" title={`No ${filter} questions yet`} sub="Be the first to ask, or browse all topics." actionLabel="Show all topics" onAction={() => setFilter(null)} />
           ) : (
-            <ListState
-              kind="empty"
-              icon="chatbubbles-outline"
-              title="No questions yet"
-              message={`Nobody has asked in ${city} yet.`}
-              actionLabel="Be the first to ask"
-              onAction={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }}
-            />
+            <EmptyState icon="chatbubbles-outline" title="No questions yet" sub={`Nobody has asked in ${city} yet.`} actionLabel="Be the first to ask"
+              onAction={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }} />
           )
         ) : (
-          sorted.map((q) => (
-            <View key={q.id} style={[s.qaCard, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-              <View style={s.qaHead}>
-                <FadeImage uri={q.avatar} style={s.qaAvatar} showLoadingSpinner={true} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.qaAuthor, { color: tc.textPrimary }]}>{q.author}</Text>
-                  <Text style={[s.qaTime, { color: tc.textTertiary }]}>{q.time}</Text>
-                </View>
-                {/* Share & Bookmark & More */}
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                  <Pressable style={s.iconBtn} onPress={() => handleShareQuestion(q)}>
-                    <Ionicons name="share-social-outline" size={16} color={Colors.text.tertiary} />
-                  </Pressable>
-                  <Pressable style={s.iconBtn} onPress={() => toggleBookmark(q.id)}>
-                    <Ionicons
-                      name={bookmarkedIds.has(q.id) ? "bookmark" : "bookmark-outline"}
-                      size={16}
-                      color={bookmarkedIds.has(q.id) ? Colors.brand.blue : Colors.text.tertiary}
-                    />
-                  </Pressable>
-                  <Pressable style={s.iconBtn} onPress={() =>
-                    appAlert(q.author, "What would you like to do?", [
-                      { text: "Report post", onPress: () => handleReportQuestion(q) },
-                      { text: "Report " + q.author, onPress: () => handleReportPerson(q) },
-                      { text: "Block " + q.author, style: "destructive", onPress: () =>
-                        appAlert("Block " + q.author + "?", "You won't see their posts anymore. You can unblock them in Settings → Blocked Users.", [
-                          { text: "Block", style: "destructive", onPress: async () => {
-                            await blockUser({ id: q.authorId || q.author, name: q.author, avatar: q.avatar });
-                            if (q.authorId) {
-                              try { await blockUserApi(q.authorId); } catch { /* best-effort */ }
-                            }
-                            showToast(q.author + " has been blocked. Manage blocked users in Settings.", "success");
-                          }},
-                          { text: "Cancel", style: "cancel" },
-                        ])
-                      },
-                      { text: "Cancel", style: "cancel" },
-                    ])
-                  }>
-                    <Ionicons name="flag-outline" size={16} color="#DC2626" />
-                  </Pressable>
-                </View>
-              </View>
-              <LinkifiedText text={q.question} style={[s.qaQuestion, { color: tc.textPrimary }]} />
-              <View style={s.qaTags}>
-                {Array.from(
-                  new Set(
-                    q.tags
-                      .map((t) => normalizeQuestionTagToUiTag(String(t)))
-                      .filter((t): t is QuestionCategoryUi => !!t && QUESTION_CATEGORY_SET.has(t))
-                  )
-                ).map((t) => (
-                  <Pressable key={t} onPress={() => setFilter(t)} style={s.qaTag}>
-                    <Text style={s.qaTagText}>{t}</Text>
-                  </Pressable>
-                ))}
-              </View>
-              <View style={[s.qaActions, { borderTopColor: tc.borderLight }]}>
-                <Pressable
-                  onPress={() => handleVote(q.id)}
-                  style={[s.voteBtn, votedIds.has(q.id) && s.voteBtnActive]}
-                >
-                  <Ionicons
-                    name="arrow-up"
-                    size={14}
-                    color={votedIds.has(q.id) ? Colors.brand.blue : Colors.text.tertiary}
-                  />
-                  <Text style={[s.voteCount, { color: tc.textPrimary }, votedIds.has(q.id) && { color: Colors.brand.blue }]}>
-                    {q.votes}
-                  </Text>
-                </Pressable>
-                <Pressable onPress={() => toggleExpanded(q.id)} style={s.answerBadge}>
-                  <Ionicons
-                    name={expandedIds.has(q.id) ? "chatbubble" : "chatbubble-outline"}
-                    size={14}
-                    color={expandedIds.has(q.id) ? Colors.brand.blue : Colors.text.secondary}
-                  />
-                  <Text style={[s.answerCount, expandedIds.has(q.id) && { color: Colors.brand.blue }]}>
-                    {answerTotal(q)} {answerTotal(q) === 1 ? "answer" : "answers"}
-                  </Text>
-                  <Ionicons
-                    name={expandedIds.has(q.id) ? "chevron-up" : "chevron-down"}
-                    size={14}
-                    color={Colors.text.tertiary}
-                  />
-                </Pressable>
-                <View style={{ flex: 1 }} />
-                <Pressable
-                  style={[s.replyBtn, answeringId === q.id && { backgroundColor: Colors.brand.blue }]}
-                  onPress={() => { setAnsweringId(answeringId === q.id ? null : q.id); setAnswerText(""); }}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    size={12}
-                    color={answeringId === q.id ? "#FFF" : Colors.brand.blue}
-                  />
-                  <Text style={[s.replyBtnText, answeringId === q.id && { color: "#FFF" }]}>Answer</Text>
-                </Pressable>
-              </View>
-
-              {/* Answer Input */}
-              {answeringId === q.id && (
-                <View style={[s.answerInputWrap, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
-                  <TextInput
-                    style={[s.answerInput, { color: tc.textPrimary }]}
-                    placeholder="Write your answer..."
-                    placeholderTextColor={tc.textTertiary}
-                    value={answerText}
-                    onChangeText={setAnswerText}
-                    multiline
-                    autoFocus
-                  />
-                  <View style={s.answerInputActions}>
-                    <Pressable onPress={() => { setAnsweringId(null); setAnswerText(""); }} style={s.answerCancelBtn}>
-                      <Text style={s.answerCancelText}>Cancel</Text>
+          sorted.map((q, qi) => {
+            const voted = votedIds.has(q.id);
+            const saved = bookmarkedIds.has(q.id);
+            const open = expandedIds.has(q.id);
+            const total = answerTotal(q);
+            const tags = Array.from(new Set(q.tags.map((t) => normalizeQuestionTagToUiTag(String(t))).filter((t): t is QuestionCategoryUi => !!t && QUESTION_CATEGORY_SET.has(t))));
+            const more = () => appAlert(q.author, "What would you like to do?", [
+              { text: "Share", onPress: () => handleShareQuestion(q) },
+              { text: "Report post", onPress: () => handleReportQuestion(q) },
+              { text: "Report " + q.author, onPress: () => handleReportPerson(q) },
+              { text: "Block " + q.author, style: "destructive", onPress: () =>
+                appAlert("Block " + q.author + "?", "You won't see their posts anymore. You can unblock them in Settings → Blocked Users.", [
+                  { text: "Block", style: "destructive", onPress: async () => {
+                    await blockUser({ id: q.authorId || q.author, name: q.author, avatar: q.avatar });
+                    if (q.authorId) {
+                      try { await blockUserApi(q.authorId); } catch { /* best-effort */ }
+                    }
+                    showToast(q.author + " has been blocked. Manage blocked users in Settings.", "success");
+                  }},
+                  { text: "Cancel", style: "cancel" },
+                ])
+              },
+              { text: "Cancel", style: "cancel" },
+            ]);
+            return (
+              <Reveal key={q.id} i={qi}>
+                <View style={[s.qaCard, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0, borderRadius: 22, borderBottomLeftRadius: 6 }]}>
+                  <View style={s.qaHead}>
+                    <FadeImage uri={q.avatar} style={{ width: 26, height: 26, borderRadius: 13 }} showLoadingSpinner={true} />
+                    <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]} numberOfLines={1}>
+                      <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{q.author.split(" ")[0]}</Text> · {q.time}
+                    </Text>
+                    {tags[0] ? (
+                      <Pressable onPress={() => setFilter(tags[0])} style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, backgroundColor: tc.accentSoft }}>
+                        <Text style={[TYPE.label, { color: tc.accentText }]}>{tags[0]}</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <LinkifiedText text={q.question} style={[TYPE.cardTitle, { fontSize: 18, lineHeight: 22, color: tc.textPrimary, marginTop: 8, marginBottom: 10 }]} />
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <VoteButton on={voted} count={q.votes} onPress={() => handleVote(q.id)} />
+                    <Pressable onPress={() => (total > 0 ? toggleExpanded(q.id) : setAnsweringId(answeringId === q.id ? null : q.id))} hitSlop={6}
+                      style={{ flexDirection: "row", alignItems: "center", gap: 5, height: 32, paddingHorizontal: 8 }}>
+                      <Ionicons name={open ? "chatbubble" : "chatbubble-outline"} size={17} color={tc.textSecondary} />
+                      <Text style={[TYPE.small, { color: tc.textSecondary }]}>{total > 0 ? `${total} ${total === 1 ? "answer" : "answers"}` : "Answer first"}</Text>
                     </Pressable>
-                    <Pressable
-                      style={[s.answerSubmitBtn, !answerText.trim() && { opacity: 0.5 }]}
-                      onPress={() => handleSubmitAnswer(q.id)}
-                    >
-                      <View style={[s.answerSubmitGrad, { backgroundColor: Colors.brand.blue }]}>
-                        <Ionicons name="send" size={12} color="#FFF" />
-                        <Text style={s.answerSubmitText}>Post</Text>
-                      </View>
+                    <View style={{ flex: 1 }} />
+                    <Pressable onPress={() => toggleBookmark(q.id)} hitSlop={6} style={[s.iconBtn, { backgroundColor: "transparent" }]} accessibilityRole="button" accessibilityLabel={saved ? "Remove from saved" : "Save"} accessibilityState={{ selected: saved }}>
+                      <Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={18} color={saved ? tc.accentText : tc.textSecondary} />
+                    </Pressable>
+                    <Pressable onPress={more} hitSlop={6} style={[s.iconBtn, { backgroundColor: "transparent" }]} accessibilityRole="button" accessibilityLabel="More options">
+                      <Ionicons name="ellipsis-horizontal" size={18} color={tc.textSecondary} />
                     </Pressable>
                   </View>
-                </View>
-              )}
 
-              {/* Expanded Answers */}
-              {expandedIds.has(q.id) && q.answers.length > 0 && (
-                <View style={s.answersContainer}>
-                  <View style={s.answersHeader}>
-                    <Ionicons name="chatbubbles-outline" size={14} color={Colors.brand.blue} />
-                    <Text style={s.answersHeaderText}>{answerTotal(q)} {answerTotal(q) === 1 ? "Answer" : "Answers"}</Text>
-                  </View>
-                  {q.answers.map((a) => (
-                    <View key={a.id} style={[s.answerCard, { backgroundColor: tc.sectionBg }]}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                        <FadeImage uri={a.avatar} style={s.answerAvatar} showLoadingSpinner={true} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={[s.answerAuthor, { color: tc.textPrimary }]}>{a.author}</Text>
-                          <Text style={[s.answerTime, { color: tc.textTertiary }]}>{a.time}</Text>
-                        </View>
-                        <Pressable
-                          onPress={() => handleAnswerVote(a.id, q.id)}
-                          style={[s.answerVoteBtn, answerVotedIds.has(a.id) && s.answerVoteBtnActive]}
-                        >
-                          <Ionicons
-                            name="arrow-up"
-                            size={12}
-                            color={answerVotedIds.has(a.id) ? Colors.brand.blue : Colors.text.tertiary}
-                          />
-                          <Text style={[s.answerVoteCount, answerVotedIds.has(a.id) && { color: Colors.brand.blue }]}>
-                            {a.votes}
-                          </Text>
-                        </Pressable>
-                        {a.author === "You" && (
-                          <Pressable onPress={() => handleDeleteAnswer(a.id, q.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={{ marginLeft: 4 }}>
-                            <Ionicons name="trash-outline" size={14} color="#EF4444" />
-                          </Pressable>
-                        )}
+                  {answeringId === q.id ? (
+                    <View style={{ marginTop: 10, padding: 10, borderRadius: 16, backgroundColor: tc.inputBg }}>
+                      <TextInput
+                        style={[TYPE.body, { color: tc.textPrimary, minHeight: 60, textAlignVertical: "top" }]}
+                        placeholder="Write your answer…"
+                        placeholderTextColor={tc.textTertiary}
+                        value={answerText}
+                        onChangeText={setAnswerText}
+                        multiline
+                        autoFocus
+                      />
+                      <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8, marginTop: 6 }}>
+                        <SoftButton small ghost label="Cancel" onPress={() => { setAnsweringId(null); setAnswerText(""); }} />
+                        <GradientButton small label="Post" disabled={!answerText.trim()} onPress={() => handleSubmitAnswer(q.id)} />
                       </View>
-                      <LinkifiedText text={a.text} style={[s.answerText, { color: tc.textSecondary }]} />
                     </View>
-                  ))}
-                </View>
-              )}
+                  ) : null}
 
-              {/* Expand prompt if answers exist but not expanded */}
-              {!expandedIds.has(q.id) && answerTotal(q) > 0 && (
-                <Pressable onPress={() => toggleExpanded(q.id)} style={s.expandPrompt}>
-                  <Text style={s.expandPromptText}>View {answerTotal(q)} {answerTotal(q) === 1 ? "answer" : "answers"}</Text>
-                  <Ionicons name="chevron-down" size={14} color={Colors.brand.blue} />
-                </Pressable>
-              )}
-            </View>
-          ))
+                  {open && q.answers.length > 0 ? (
+                    <View style={{ marginTop: 10, gap: 8 }}>
+                      {[...q.answers].sort((x, y) => y.votes - x.votes).map((a, ai) => (
+                        <Reveal key={a.id} i={ai}>
+                          <View style={{ padding: 12, borderRadius: 16, backgroundColor: tc.inputBg }}>
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                              <FadeImage uri={a.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} showLoadingSpinner={true} />
+                              <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]} numberOfLines={1}>
+                                <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{a.author}</Text> · {a.time}
+                              </Text>
+                              <VoteButton small on={answerVotedIds.has(a.id)} count={a.votes} onPress={() => handleAnswerVote(a.id, q.id)} />
+                              {a.author === "You" ? (
+                                <Pressable onPress={() => handleDeleteAnswer(a.id, q.id)} hitSlop={8} accessibilityLabel="Delete answer">
+                                  <Ionicons name="trash-outline" size={15} color={tc.dangerText} />
+                                </Pressable>
+                              ) : null}
+                            </View>
+                            {ai === 0 && a.votes > 0 && q.answers.length > 1 ? <Tag label="Best answer" ok icon="checkmark" style={{ marginTop: 6 }} /> : null}
+                            <LinkifiedText text={a.text} style={[TYPE.body, { color: tc.textPrimary, marginTop: 6 }]} />
+                          </View>
+                        </Reveal>
+                      ))}
+                      <Pressable onPress={() => { setAnsweringId(q.id); setAnswerText(""); }} hitSlop={6} style={{ alignSelf: "flex-start", paddingVertical: 4 }}>
+                        <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Write an answer</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
+              </Reveal>
+            );
+          })
         )}
 
         {hasCity && hasMore && sorted.length > 0 ? (
@@ -1318,24 +1198,17 @@ export default function CommunityScreen() {
         ) : null}
 
         <View style={{ height: 20 }} />
-      </ScrollView>
+      </Reanimated.ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Ask Question Modal */}
-      <Modal visible={showAsk} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setShowAsk(false)}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={s.modalOverlay}
-        >
-          <View style={[s.modalSheet, { backgroundColor: tc.sheetBg, paddingBottom: Math.max(insets.bottom, 12) + rs(16) }]}>
-            <View style={s.modalHandle} />
-            <Text style={[s.modalTitle, { color: tc.textPrimary }]}>Ask the Community</Text>
-            <Text style={[s.modalSubtitle, { color: tc.textSecondary }]}>
-              Get answers from locals who know the area
-            </Text>
+      {/* Ask a question (design D sheet) */}
+      <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours" grow>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
+            <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Your question</Text>
             <TextInput
-              style={[s.modalInput, { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
-              placeholder="Type your question..."
+              style={[TYPE.body, { minHeight: 90, maxHeight: 200, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]}
+              placeholder="e.g. Where can I get my driving licence translated?"
               placeholderTextColor={tc.textTertiary}
               value={newQ}
               onChangeText={setNewQ}
@@ -1345,29 +1218,18 @@ export default function CommunityScreen() {
               multiline
               autoFocus
             />
-            <Text style={{ alignSelf: "flex-end", fontSize: rs(11), color: tc.textTertiary, marginTop: rs(4) }}>
-              {newQ.length}/300
+            <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 10, marginBottom: 8 }]}>
+              Topic <Text style={{ color: tc.textTertiary }}>{pickedTopic ? "" : guessed ? "(guessed from your words)" : "(we guess it from your words)"}</Text>
             </Text>
-            <View style={s.modalActions}>
-              <Pressable onPress={() => setShowAsk(false)} disabled={posting} style={[s.modalCancel, { backgroundColor: tc.inputBg }]}>
-                <Text style={[s.modalCancelText, { color: tc.textSecondary }]}>Cancel</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSubmitQuestion}
-                disabled={!newQ.trim() || posting}
-                accessibilityRole="button"
-                accessibilityLabel="Post question"
-                accessibilityState={{ disabled: !newQ.trim() || posting, busy: posting }}
-                style={[s.modalSubmit, (!newQ.trim() || posting) && { opacity: 0.5 }]}
-              >
-                <View style={[s.modalSubmitGrad, { backgroundColor: Colors.brand.blue }]}>
-                  {posting ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={s.modalSubmitText}>Post Question</Text>}
-                </View>
-              </Pressable>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+              {ASK_TOPICS.map((t) => (
+                <Chip key={t} label={t} on={askTopic === t} onPress={() => setPickedTopic(pickedTopic === t ? null : t)} />
+              ))}
             </View>
+            <GradientButton block label="Ask" loading={posting} disabled={!newQ.trim()} onPress={handleSubmitQuestion} />
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </DSheet>
       <GuestCityPickerModal visible={cityPickerVisible} onClose={() => setCityPickerVisible(false)} />
     </SafeAreaView>
   );

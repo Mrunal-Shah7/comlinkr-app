@@ -48,7 +48,7 @@ export default function EventDeepLinkScreen() {
 
   return (
     <View style={styles.center}>
-      <ActivityIndicator size="large" color="#0076EB" />
+      <ActivityIndicator size="large" color="#1A6BAE" />
     </View>
   );
 }
@@ -57,5 +57,5 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
   title: { fontSize: 18, fontWeight: "700", marginBottom: 12, color: "#111" },
   btn: { paddingVertical: 10, paddingHorizontal: 16 },
-  btnText: { color: "#0076EB", fontWeight: "600", fontSize: 16 },
+  btnText: { color: "#1A6BAE", fontWeight: "600", fontSize: 16 },
 });

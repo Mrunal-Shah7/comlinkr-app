@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
 import { useAuthStore } from "../../../store/auth.store";
+import Reanimated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { createThemedStyles } from '../../../theme/themedStyles';
+import { TYPE } from '../../../theme/d';
+import { SPRING, layoutEase } from '../../../shared/motion/presets';
 import { useGuestLocationStore } from "../../../store/guestLocation.store";
 
 // ── Safe Renting Guide ───────────────────────────────────────────────────────
@@ -29,7 +33,7 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   {
     icon: "home-outline",
     color: Colors.brand.green,
-    bg: "#EAFBE9",
+    bg: "#E3F1EA",
     market: null,
     title: "Visit before you commit",
     desc: "Always visit the property in person before paying anything. Refuse to pay anyone who won't let you see the property.",
@@ -102,7 +106,7 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   },
   {
     icon: "alert-circle-outline",
-    color: "#0076EB",
+    color: "#1A6BAE",
     bg: "#EEF5FF",
     market: "UK",
     title: "UK: Know your tenant rights",
@@ -110,8 +114,8 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   },
   {
     icon: "business-outline",
-    color: "#26B324",
-    bg: "#EAFBE9",
+    color: "#30855B",
+    bg: "#E3F1EA",
     market: "UK",
     title: "UK: Check if agent is registered",
     desc: "Lettings agents in England must be registered with an approved redress scheme (Property Ombudsman or PRS) and hold Client Money Protection. Ask to see their certificates.",
@@ -120,6 +124,9 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
 
 export function SafeRentingGuide() {
   const [expanded, setExpanded] = useState(false);
+  const turn = useSharedValue(0);
+  useEffect(() => { turn.value = withSpring(expanded ? 1 : 0, SPRING.settle); }, [expanded, turn]);
+  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 180}deg` }] }));
   const user = useAuthStore((s) => s.user);
   const guestCountry = useGuestLocationStore((s) => s.country);
   const { isDark, tc } = useTheme();
@@ -132,7 +139,7 @@ export function SafeRentingGuide() {
   );
 
   return (
-    <View style={[sg.card, { backgroundColor: tc.cardBg, borderColor: isDark ? tc.borderLight : "#FECACA" }]}>
+    <Reanimated.View layout={layoutEase} style={[sg.card, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderRadius: 22, overflow: "hidden" }]}>
       <Pressable
         onPress={() => setExpanded((v) => !v)}
         style={sg.header}
@@ -140,61 +147,61 @@ export function SafeRentingGuide() {
         accessibilityLabel="Safe Renting Guide"
         accessibilityState={{ expanded }}
       >
-        <LinearGradient colors={["#DC2626", "#EF4444"]} style={sg.headerIcon}>
-          <Ionicons name="warning-outline" size={14} color="#FFF" />
-        </LinearGradient>
+        <View style={[sg.headerIcon, { backgroundColor: tc.mintSoft, width: 36, height: 36, borderRadius: 12 }]}>
+          <Ionicons name="shield-checkmark" size={18} color={tc.successText} />
+        </View>
         <View style={{ flex: 1 }}>
-          <Text style={[sg.headerTitle, { color: tc.textPrimary }]}>Safe Renting Guide</Text>
-          <Text style={[sg.headerSub, { color: tc.textSecondary }]}>
-            {market ? `${market} market — ` : ""}{visibleSteps.length} fraud-prevention steps
+          <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>Renting safely</Text>
+          <Text style={[TYPE.small, { color: tc.textTertiary }]}>
+            {visibleSteps.length} checks before you pay{market ? ` · ${market}` : ""}
           </Text>
         </View>
-        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={16} color={tc.textTertiary} />
+        <Reanimated.View style={chev}><Ionicons name="chevron-down" size={18} color={tc.textTertiary} /></Reanimated.View>
       </Pressable>
 
       {expanded && (
-        <View style={[sg.body, { borderTopColor: tc.borderLight }]}>
+        <Reanimated.View entering={FadeIn.duration(220)} style={[sg.body, { borderTopColor: tc.borderLight }]}>
           {visibleSteps.map((step, i) => (
             <View key={i} style={sg.step}>
-              <View style={[sg.stepIcon, { backgroundColor: isDark ? tc.inputBg : step.bg }]}>
-                <Ionicons name={step.icon} size={15} color={step.color} />
+              <View style={[sg.stepIcon, { backgroundColor: tc.accentSoft }]}>
+                <Ionicons name={step.icon} size={15} color={tc.accentText} />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={sg.stepTitleRow}>
-                  <Text style={[sg.stepTitle, { color: tc.textPrimary }]}>{step.title}</Text>
+                  <Text style={[TYPE.bodyStrong, { fontSize: 14, color: tc.textPrimary }]}>{step.title}</Text>
                   {step.market !== null && (
-                    <View style={[sg.marketPill, { backgroundColor: step.market === "UK" ? "#DBEAFE" : "#DCFCE7" }]}>
-                      <Text style={[sg.marketPillText, { color: step.market === "UK" ? "#1E40AF" : "#15803D" }]}>
+                    <View style={[sg.marketPill, { backgroundColor: tc.accentSoft }]}>
+                      <Text style={[sg.marketPillText, { color: tc.accentText }]}>
                         {step.market}
                       </Text>
                     </View>
                   )}
                 </View>
-                <Text style={[sg.stepDesc, { color: tc.textSecondary }]}>{step.desc}</Text>
+                <Text style={[TYPE.small, { color: tc.textSecondary }]}>{step.desc}</Text>
               </View>
             </View>
           ))}
           {market === null ? (
             <View style={sg.footer}>
-              <Ionicons name="alert-circle-outline" size={13} color={Colors.brand.blue} />
-              <Text style={[sg.footerText, { color: tc.textSecondary }]}>
+              <Ionicons name="alert-circle-outline" size={14} color={tc.accentText} />
+              <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]}>
                 Deposit, notice and eviction rules differ by country. Check your local tenant-protection authority before paying anything.
               </Text>
             </View>
           ) : null}
           <View style={sg.footer}>
-            <Ionicons name="information-circle-outline" size={13} color={Colors.brand.blue} />
-            <Text style={sg.footerText}>
-              Report suspicious listings by tapping the share icon on any listing card and selecting "Report".
+            <Ionicons name="information-circle-outline" size={14} color={tc.accentText} />
+            <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]}>
+              Something off? Open the listing, tap ··· and choose Report.
             </Text>
           </View>
-        </View>
+        </Reanimated.View>
       )}
-    </View>
+    </Reanimated.View>
   );
 }
 
-export const sg = StyleSheet.create({
+export const sg = createThemedStyles({
   card: {
     marginHorizontal: 16,
     marginBottom: 12,

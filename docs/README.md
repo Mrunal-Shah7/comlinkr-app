@@ -120,8 +120,21 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-08: [Expo review](build/2026-11-08-expo-review.md) (TR-010): no React Query retry on a 4xx, a 30 s request
+  timeout, no components under `app/`, about 45 unused files deleted, gallery / story / photo-reorder gestures on
+  Gesture Handler and Reanimated. Walked on the phone; pinch not testable over adb.
+- 2026-11-07: [Animation timing](build/2026-11-07-animation-timing.md): every spring now names mass (Reanimated 4's
+  default is 4), shorter reveals, ring, hero and back; no flicker on the guide card; the Explore glow stops off-screen;
+  the roommate profile opens at once. Measured on a phone from screen recordings.
+
+- 2026-11-06: [Release APK on D:](build/2026-11-06-release-apk-on-d-drive.md): `scripts/build-release-apk.cmd`
+  builds the standalone APK with the JDK, SDK, Gradle cache and build output on D:.
 - 2026-11-04: [TR-002 guest menu 401s](build/2026-11-04-TR-002-guest-menu-401s.md): the side menu refreshes its
   data only when signed in; guest menu opens now send no requests. Checked on the phone; not committed.
+- 2026-11-06: [Design D, full match](build/2026-11-06-design-d-full-match.md): the remaining screens,
+  the missing motion and the behaviour changes; two optional API fields and a story enum migration.
+- 2026-11-05: [Design D, phase 1](build/2026-11-05-design-d-phase-1.md): the D look and motion on every screen, a
+  shared base coat for the rest, one commit per screen on `feature/design-d`.
 - 2026-11-04: [One repository for backend and frontend](build/2026-11-04-combined-repository.md): moved into
   `comlinkr-app`, fresh git repository, nothing committed; dependencies reinstalled; docs system written.
 - 2026-10-29: [Bug audit](build/2026-10-29-bug-audit.md): B1 to B10 found and fixed (roommate filter, dates, read

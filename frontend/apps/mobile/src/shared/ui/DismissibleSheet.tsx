@@ -14,6 +14,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-g
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
+import { SPRING } from "../motion/presets";
 
 const DISMISS_DISTANCE = 140;
 const DISMISS_VELOCITY = 900;
@@ -72,7 +73,7 @@ export function SheetDragArea({ children, style }: { children: ReactNode; style?
         ty.value = withTiming(height, { duration: 200 });
         scheduleOnRN(dismiss);
       } else {
-        ty.value = withSpring(0, { damping: 20, stiffness: 240 });
+        ty.value = withSpring(0, SPRING.sheet);
       }
     });
 
