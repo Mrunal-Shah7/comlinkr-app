@@ -33,7 +33,7 @@ restaurants.
   tags; **Rate & Review** (one review per user, edit and delete); report [code].
 - Reservations: `POST /restaurants/:id/reservations` (date, time, party size); the owner confirms or cancels
   (`PATCH /restaurants/reservations/:id/confirm|cancel`) [code].
-- Data loading: `useFocusEffect` behind the 10-minute `listFetchCache` ("food"); pull-to-refresh forces a refetch.
+- Data loading: an infinite React Query keyed by city, search and cuisine, fresh for 10 minutes and refetched on focus once stale; pull-to-refresh forces a refetch ([React Query note](../build/2026-11-09-react-query.md)).
   A remounted tab now refetches instead of showing "No restaurants found" (fixed 2026-10-29) [observed].
 
 ## Rules it enforces

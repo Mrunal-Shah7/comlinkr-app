@@ -49,8 +49,10 @@ a city the user gets the choose-city state [code].
 
 ### Data loading
 
-Three `useFocusEffect`s, each gated by the 10-minute `listFetchCache` (`feed`, `feed:news`): live news (only while
-that sub-tab shows), community posts, and events plus stories in the background [code]. A remounted tab now
+Three `useFocusEffect`s: live news (only while that sub-tab shows), community posts, and events plus stories in the
+background. Each loader fetches through the React Query cache (`queryClient.fetchQuery`, keyed by tab, city, country,
+state and user): an entry younger than 10 minutes (2 for news) answers without a request and is not re-applied;
+pull to refresh forces a fetch ([React Query note](../build/2026-11-09-react-query.md)) [code]. A remounted tab now
 refetches instead of showing an empty list for up to 10 minutes (fixed 2026-10-29) [observed].
 
 ## Rules it enforces

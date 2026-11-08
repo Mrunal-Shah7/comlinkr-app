@@ -47,12 +47,10 @@ comlinkr-app/                one git repository
 ## Mobile stack (`frontend/apps/mobile`)
 - **Expo SDK 57**, React Native 0.86, React 19.2, **expo-router** (file-based routing).
 - **State**: Zustand stores in `src/store/` (`auth`, `theme`, `chat`, `notifications`, `posts`,
-  `sidebar`, `block`, `mute`, `guestLocation`, `listFetchCache`). React Query is configured
-  (`src/services/cache/queryClient.ts`) but almost unused — screens fetch in `useEffect`/`useFocusEffect`
-  and keep results in local `useState`.
-- **List cache**: `listFetchCache.store.ts` — a 10-minute "should I refetch on focus?" timestamp gate
-  per section (`feed`, `feed:news`, `housing`, `food`, `community`).
-- **HTTP**: `src/api/client.ts` (fetch wrapper) + `src/services/http/apiClient.ts` (axios). The session
+  `sidebar`, `block`, `mute`, `guestLocation`). Server data goes through React Query
+  (`src/services/cache/queryClient.ts`, keys in `queryKeys.ts`, screen hooks in `src/hooks/`); see the
+  [React Query note](../build/2026-11-09-react-query.md) for what is converted.
+- **HTTP**: `src/api/client.ts` (fetch wrapper); `src/services/http/apiClient.ts` is a thin adapter over it for the auth and onboarding services (no axios). The session
   cookie is kept in SecureStore and sent as a `Cookie` header. Base URL from
   `EXPO_PUBLIC_API_BASE_URL` (must include `/api`).
 - **Theme**: `src/theme/` — `Colors` brand palette, `LIGHT_THEME`/`DARK_THEME` token sets exposed by

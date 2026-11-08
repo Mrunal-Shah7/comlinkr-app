@@ -30,7 +30,7 @@ Asking locals: questions and answers about the city, with upvotes, plus communit
 - API: `GET /community/questions` (city, category, sort, page), `GET /community/questions/:id`,
   `POST /community/questions`, `POST /community/questions/:id/answers`, upvote toggles, save toggle,
   `GET /community/stats`, polls (shown on Explore → Polls, review 02), reports [code].
-- Data loading: `useFocusEffect` behind the 10-minute `listFetchCache` ("community") [code].
+- Data loading: an infinite React Query keyed by city, sort and topic, fresh for 10 minutes and refetched on focus once stale ([React Query note](../build/2026-11-09-react-query.md)) [code].
 
 ## Rules it enforces
 
