@@ -1,5 +1,7 @@
 import { rs } from "../src/utils/responsive";
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useScreenQuery } from "../src/hooks/useScreenQuery";
 import {
   View,
   Text,
@@ -151,33 +153,29 @@ export default function EventsScreen() {
   const { requireAuth } = useRequireAuth();
   const guestCity = useGuestLocationStore((s) => s.city);
   const [tab, setTab] = useState<typeof TABS[number]>("Upcoming");
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await getEvents({ city: user?.city?.trim() || guestCity || undefined, pageSize: 50 });
-      setEvents(res.data.map(toUiEvent));
-      setSavedIds(new Set(res.data.filter((e) => e.savedByMe).map((e) => e.id)));
-      setInterestedIds(new Set(res.data.filter((e) => e.isAttending || e.registeredByMe).map((e) => e.id)));
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Could not load events.");
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.city, guestCity]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadEvents();
-    }, [loadEvents])
-  );
+  const eventsCity = user?.city?.trim() || guestCity || undefined;
+  const eventsQ = useScreenQuery({
+    queryKey: [...queryKeys.eventsList({ city: eventsCity ?? "" }), user?.id ?? ""],
+    initial: [] as ApiEvent[],
+    staleTime: 0,
+    queryFn: async () => (await getEvents({ city: eventsCity, pageSize: 50 })).data,
+  });
+  const events = useMemo(() => eventsQ.data.map(toUiEvent), [eventsQ.data]);
+  const loading = eventsQ.loading;
+  const error = eventsQ.error ? (eventsQ.error instanceof ApiError ? eventsQ.error.message : "Could not load events.") : "";
+  const loadEvents = eventsQ.refetch;
+  // Saved and attending flags start from each fetch; taps change them locally.
+  const eventsFetchedAt = eventsQ.dataUpdatedAt;
+  useEffect(() => {
+    if (!eventsFetchedAt) return;
+    setSavedIds(new Set(eventsQ.data.filter((e) => e.savedByMe).map((e) => e.id)));
+    setInterestedIds(new Set(eventsQ.data.filter((e) => e.isAttending || e.registeredByMe).map((e) => e.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventsFetchedAt]);
 
   const filtered =
     tab === "Saved"

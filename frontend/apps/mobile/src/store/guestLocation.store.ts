@@ -2,18 +2,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { resolveCityLocation } from '../data/locationData';
-import { useListFetchCacheStore } from './listFetchCache.store';
-
-/** Every list-fetch cache key that's scoped by city — cleared so a city change refetches immediately app-wide instead of waiting out the 10-minute TTL. */
-const CITY_SCOPED_FETCH_KEYS = [
-  'feed', 'housing', 'food', 'community',
-  'feed:news', 'feed:events', 'feed:stories', 'feed:quests', 'feed:polls',
-] as const;
-
-function invalidateCityScopedCaches(): void {
-  const { clearFetchTimestamp } = useListFetchCacheStore.getState();
-  for (const key of CITY_SCOPED_FETCH_KEYS) clearFetchTimestamp(key);
-}
 
 const GUEST_CITY_KEY = 'comlinkr_guest_city';
 const GUEST_STATE_KEY = 'comlinkr_guest_state';
@@ -39,7 +27,6 @@ export const useGuestLocationStore = create<GuestLocationState>((set) => ({
   setCity: async (city: string, location?: { state: string; country: string }) => {
     const { state, country } = location ?? resolveCityLocation(city);
     set({ city, state, country });
-    invalidateCityScopedCaches();
     try {
       await AsyncStorage.multiSet([
         [GUEST_CITY_KEY, city],

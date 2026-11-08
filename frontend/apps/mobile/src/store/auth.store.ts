@@ -10,7 +10,6 @@ import { useAuthStore as useApiAuthStore } from "./auth/authStore";
 import authService from "@services/http/authService";
 import { setSessionCookie as setFetchSessionCookie, getSessionCookie as getFetchSessionCookie, clearSession as clearFetchSession } from "../api/client";
 import { removePushToken } from "../api/users.api";
-import { useListFetchCacheStore } from "./listFetchCache.store";
 import { queryClient } from "../services/cache/queryClient";
 
 export type UserRole = "user" | "admin" | "superadmin";
@@ -199,7 +198,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const user = profileToAppUser(profile);
     await storageSetItem(AUTH_KEY, JSON.stringify(user));
     await setFetchSessionCookie(sessionCookie);
-    useListFetchCacheStore.getState().resetAll(); // UI-08: never reuse another identity's list freshness
     queryClient.clear();
     set({ user, isAuthed: true, isLoading: false });
     useApiAuthStore.getState().login(profile, sessionCookie);
@@ -362,7 +360,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useApiAuthStore.getState().logout();
     await clearFetchSession();
     await storageDeleteItem(AUTH_KEY);
-    useListFetchCacheStore.getState().resetAll(); // UI-08
     queryClient.clear();
     set({ user: null, pushToken: null, isAuthed: false });
   },
@@ -386,7 +383,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useApiAuthStore.getState().logout();
     await clearFetchSession();
     await storageDeleteItem(AUTH_KEY);
-    useListFetchCacheStore.getState().resetAll(); // UI-08
     queryClient.clear();
     set({ user: null, pushToken: null, isAuthed: false });
   },
