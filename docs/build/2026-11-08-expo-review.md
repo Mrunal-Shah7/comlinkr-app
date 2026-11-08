@@ -124,9 +124,11 @@ On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79ba
   (expo-animation: something that happens many times a day does not animate). Unused `LayoutAnimation`,
   `UIManager` and `Platform` imports removed from `app/saved.tsx`.
 - **Checked:** `tsc --noEmit`; `npx expo export --platform android`.
-- **Not checked on the phone:** the phone connected this time (Motorola edge 40 neo) was locked with a PIN, so the
-  signature pad was not drawn on. To check: open `exp://127.0.0.1:8083/--/property-agreement?propertyTitle=Test`
-  (no `listingId`, so nothing is sent to the server), fill part 1, then draw, tap for a dot, clear, draw while the
-  page is scrolled, and check that the page does not scroll under the finger; then "Type instead" and back. iOS:
-  whether the page's scroll view can take a vertical stroke before `onDrawing` turns scrolling off is not known.
-- **The pull request was not opened:** the repository has no GitHub remote and the `gh` CLI is not installed.
+- **Checked on the phone** (OnePlus, second section of the run log): strokes draw, the page does not scroll under
+  a vertical stroke, Clear, sign and accept (the PNG is produced). The walk found that **a tap left no dot**: a touch
+  with no move never activates a pan, so the first point now goes in `onBegin` instead of `onStart`
+  (`fix/signpad-tap-dot`). Explore's news loads and "Load More" appends without `LayoutAnimation`.
+- Not checked: iOS, where the page's scroll view might take a vertical stroke before `onDrawing` turns scrolling
+  off; "Type instead".
+- **Pull requests:** the work went into `main` through Mrunal-Shah7/comlinkr-app#1 once the GitHub remote existed;
+  the tap fix through its own pull request.

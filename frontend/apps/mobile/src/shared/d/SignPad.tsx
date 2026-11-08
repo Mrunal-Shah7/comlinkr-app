@@ -36,10 +36,11 @@ export const SignPad = forwardRef<SignPadHandle, { onChange?: (signed: boolean) 
   const startStroke = () => onDrawing?.(true);
 
   const pan = Gesture.Pan()
-    .minDistance(0) // a tap leaves a dot, and the pad claims the touch before the page can scroll
+    .minDistance(0) // the pad claims the touch before the page can scroll
     .maxPointers(1)
     .shouldCancelWhenOutside(false)
-    .onStart((e) => {
+    // onBegin, not onStart: a tap (down and up, no move) never activates the pan, but must still leave a dot.
+    .onBegin((e) => {
       livePts.set([e.x, e.y]);
       liveD.set(`M${e.x.toFixed(1)} ${e.y.toFixed(1)} l0.1 0`);
       scheduleOnRN(startStroke);

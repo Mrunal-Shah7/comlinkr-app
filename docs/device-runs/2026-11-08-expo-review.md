@@ -34,3 +34,23 @@ Put back: the test story, event, listing (with its photos) and the conversation 
 this run and deleted after it; the story and listing were added again for S-05 and P-05 and deleted again; a count
 of what is left is 0. No setting changed.
 Follow-up: TR-010 updated; review 08 "Update 2026-11-08".
+
+## Second round: signature pad and Explore news (later the same day)
+
+Build: Expo Go, `main` at `aee7784` plus the `fix/signpad-tap-dot` change. Device: OnePlus CPH2613, Android 16, USB.
+Backend and account as above (`ui_tester`; the "UT" avatar on the tabs). Metro with the local API (requests seen on
+`localhost:4000`). The agreement screen was opened with `exp://127.0.0.1:8083/--/property-agreement?propertyTitle=Test%20flat`
+(no `listingId`, so no application was created and nothing was sent to the server).
+
+| ID | Result | Note |
+|---|---|---|
+| A-01 | pass | Part 1 filled (name, phone, city, move-in 30 Nov 2026, income, Employed); "Send application" goes to the offer |
+| A-02 | pass | A diagonal and a vertical stroke both draw; the page did not scroll under the vertical stroke |
+| A-03 | fail, fixed | A tap left no dot: a down and up with no move never activates the pan, so `onStart` did not run. The stroke now starts in `onBegin` (`fix/signpad-tap-dot`) |
+| A-04 | pass | After the fix: Clear empties the pad; a tap leaves a dot |
+| A-05 | pass | Stroke, "I have read" on, "Sign and accept": "Signed" screen (`toPng()` returned a signature); no API request in the Metro log |
+| N-01 | pass | Explore opens; news loads (phase "full", 200) and the cards render |
+| N-02 | pass | "Load More" requests page 2 and appends the cards |
+
+Not checked: "Type instead"; the pad in dark mode; iOS.
+Put back: nothing was written to the database. Metro stopped.
