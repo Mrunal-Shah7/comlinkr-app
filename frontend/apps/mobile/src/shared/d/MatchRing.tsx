@@ -19,10 +19,10 @@ export function MatchRing({ score, size = 72, stroke = 6 }: { score: number; siz
   const [shown, setShown] = useState(reduce ? score : 0);
 
   useEffect(() => {
-    p.value = reduce ? score : withDelay(120, withTiming(score, { duration: 650, easing: Easing.out(Easing.cubic) }));
+    p.set(reduce ? score : withDelay(120, withTiming(score, { duration: 650, easing: Easing.out(Easing.cubic) })));
   }, [score, reduce, p]);
-  useAnimatedReaction(() => Math.round(p.value), (v, prev) => { if (v !== prev) scheduleOnRN(setShown, v); });
-  const arc = useAnimatedProps(() => ({ strokeDashoffset: c * (1 - Math.max(0, Math.min(100, p.value)) / 100) }));
+  useAnimatedReaction(() => Math.round(p.get()), (v, prev) => { if (v !== prev) scheduleOnRN(setShown, v); });
+  const arc = useAnimatedProps(() => ({ strokeDashoffset: c * (1 - Math.max(0, Math.min(100, p.get())) / 100) }));
 
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }} accessibilityLabel={`${score}% match`}>

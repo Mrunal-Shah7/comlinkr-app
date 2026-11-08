@@ -449,8 +449,8 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
 function StepDots({ total, current }: { total: number; current: number; idleColor?: string }) {
   const { tc } = useTheme();
   const p = useSharedValue((current + 1) / total);
-  useEffect(() => { p.value = withSpring((current + 1) / total, SPRING.settle); }, [current, total, p]);
-  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
+  useEffect(() => { p.set(withSpring((current + 1) / total, SPRING.settle)); }, [current, total, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.get()) * 100}%` }));
   return (
     <View style={{ height: 4, borderRadius: 4, backgroundColor: tc.surface3, overflow: "hidden", marginHorizontal: 16, marginBottom: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current + 1 }}>
       <Animated.View style={[{ height: "100%", borderRadius: 3, overflow: "hidden" }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Animated.View>

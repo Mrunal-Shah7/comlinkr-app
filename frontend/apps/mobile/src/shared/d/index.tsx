@@ -30,14 +30,14 @@ type PressableScaleProps = PressableProps & {
 export function PressableScale({ style, outerStyle, scaleTo = 0.96, children, haptic, onPressIn, onPressOut, onPress, ...rest }: PressableScaleProps) {
   const s = useSharedValue(1);
   const reduce = useReducedMotion();
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: s.get() }] }));
   return (
     <Pressable
       {...rest}
       style={outerStyle}
       onPress={(e) => { if (haptic) void Haptics.selectionAsync(); onPress?.(e); }}
-      onPressIn={(e) => { if (!reduce) s.value = withSpring(scaleTo, SPRING.press); onPressIn?.(e); }}
-      onPressOut={(e) => { s.value = withSpring(1, SPRING.press); onPressOut?.(e); }}
+      onPressIn={(e) => { if (!reduce) s.set(withSpring(scaleTo, SPRING.press)); onPressIn?.(e); }}
+      onPressOut={(e) => { s.set(withSpring(1, SPRING.press)); onPressOut?.(e); }}
     >
       <Animated.View style={[style, a]}>{children}</Animated.View>
     </Pressable>
@@ -85,10 +85,10 @@ export function SoftButton({ label, onPress, icon, disabled, block, small, style
 export function Chip({ label, on, onPress, icon, style }: { label: string; on?: boolean; onPress?: () => void; icon?: ReactNode; style?: StyleProp<ViewStyle> }) {
   const { tc } = useTheme();
   const sc = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }}
-      onPress={() => { sc.value = withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.press)); onPress?.(); }}>
+      onPress={() => { sc.set(withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.press))); onPress?.(); }}>
       <Animated.View style={[s.chip, { backgroundColor: on ? tc.mint : tc.chipBg, borderColor: on ? tc.mint : tc.borderMedium }, a, style]}>
         {icon}
         <Text style={[body(600), { fontSize: 13.5, color: on ? '#fff' : tc.textSecondary }]}>{label}</Text>
@@ -105,11 +105,11 @@ export function Segmented({ items, value, onChange, style }: { items: { key: str
   const cur = lay[value];
   useEffect(() => {
     if (!cur) return;
-    if (w.value === 0) { x.value = cur.x; w.value = cur.w; return; }
-    x.value = withSpring(cur.x, SPRING.settle);
-    w.value = withSpring(cur.w, SPRING.settle);
+    if (w.get() === 0) { x.set(cur.x); w.set(cur.w); return; }
+    x.set(withSpring(cur.x, SPRING.settle));
+    w.set(withSpring(cur.w, SPRING.settle));
   }, [cur, x, w]);
-  const ind = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }], width: w.value, opacity: w.value ? 1 : 0 }));
+  const ind = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }], width: w.get(), opacity: w.get() ? 1 : 0 }));
   const onItem = useCallback((k: string) => (e: LayoutChangeEvent) => {
     const { x: lx, width } = e.nativeEvent.layout;
     setLay((p) => (p[k]?.x === lx && p[k]?.w === width ? p : { ...p, [k]: { x: lx, w: width } }));
@@ -146,11 +146,11 @@ export function TileIn({ i = 0, children, style }: { i?: number; children: React
 export function useShake() {
   const t = useSharedValue(0);
   const reduce = useReducedMotion();
-  const style = useAnimatedStyle(() => ({ transform: [{ translateX: t.value }] }));
+  const style = useAnimatedStyle(() => ({ transform: [{ translateX: t.get() }] }));
   const shake = useCallback(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     if (reduce) return;
-    t.value = withSequence(...SHAKE.slice(1).map((v) => withTiming(v, { duration: 420 / SHAKE.length })));
+    t.set(withSequence(...SHAKE.slice(1).map((v) => withTiming(v, { duration: 420 / SHAKE.length }))));
   }, [reduce, t]);
   return { style, shake };
 }
@@ -223,15 +223,15 @@ export function Stepper({ label, value, onChange, min = 0, max = 99, style }: {
   const { style: shakeStyle, shake } = useShake();
   const y = useSharedValue(0);
   const o = useSharedValue(1);
-  const num = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }] }));
+  const num = useAnimatedStyle(() => ({ opacity: o.get(), transform: [{ translateY: y.get() }] }));
   const step = (d: number) => {
     const v = Math.min(max, Math.max(min, value + d));
     if (v === value) return shake();
     void Haptics.selectionAsync();
     onChange(v);
     if (reduce) return;
-    y.value = d > 0 ? 12 : -12; o.value = 0;
-    y.value = withTiming(0, { duration: 240 }); o.value = withTiming(1, { duration: 240 });
+    y.set(d > 0 ? 12 : -12); o.set(0);
+    y.set(withTiming(0, { duration: 240 })); o.set(withTiming(1, { duration: 240 }));
   };
   const btn = (d: number, icon: 'remove' | 'add') => (
     <PressableScale onPress={() => step(d)} scaleTo={0.88} accessibilityLabel={d > 0 ? 'More' : 'Less'}
@@ -307,10 +307,10 @@ export function RollNumber({ value, style }: { value: number | string; style?: S
     const up = Number(value) >= Number(prev);
     setPrev(value);
     if (reduce) return;
-    y.value = up ? 10 : -10; o.value = 0;
-    y.value = withTiming(0, { duration: 260 }); o.value = withTiming(1, { duration: 260 });
+    y.set(up ? 10 : -10); o.set(0);
+    y.set(withTiming(0, { duration: 260 })); o.set(withTiming(1, { duration: 260 }));
   }, [value, prev, reduce, y, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateY: y.value }] }));
+  const a = useAnimatedStyle(() => ({ opacity: o.get(), transform: [{ translateY: y.get() }] }));
   return <View style={{ overflow: 'hidden' }}><Animated.Text style={[style, a]}>{value}</Animated.Text></View>;
 }
 
@@ -321,9 +321,9 @@ export function VoteButton({ on, count, onPress, small }: { on: boolean; count: 
   const { tc } = useTheme();
   const reduce = useReducedMotion();
   const sc = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   const press = () => {
-    if (!on && !reduce) sc.value = withSequence(withTiming(1.32, { duration: 140 }), withSpring(1, SPRING.sheet));
+    if (!on && !reduce) sc.set(withSequence(withTiming(1.32, { duration: 140 }), withSpring(1, SPRING.sheet)));
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
@@ -345,11 +345,11 @@ const APressable = Animated.createAnimatedComponent(Pressable);
 export function PopPressable({ style, onPress, children, ...rest }: PressableProps & { style?: StyleProp<ViewStyle>; children?: ReactNode }) {
   const reduce = useReducedMotion();
   const sc = useSharedValue(1);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <APressable
       {...rest}
-      onPress={(e) => { if (!reduce) sc.value = withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.sheet)); onPress?.(e); }}
+      onPress={(e) => { if (!reduce) sc.set(withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.sheet))); onPress?.(e); }}
       style={[style, a]}
     >
       {children}

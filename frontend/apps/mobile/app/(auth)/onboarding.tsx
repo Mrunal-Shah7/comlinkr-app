@@ -38,8 +38,8 @@ import { SPRING } from '../../src/shared/motion/presets';
 function OnbDot({ on }: { on: boolean }) {
   const { tc } = useTheme();
   const w = useSharedValue(on ? 20 : 7);
-  useEffect(() => { w.value = withSpring(on ? 20 : 7, SPRING.liquid); }, [on, w]);
-  const a = useAnimatedStyle(() => ({ width: w.value }));
+  useEffect(() => { w.set(withSpring(on ? 20 : 7, SPRING.liquid)); }, [on, w]);
+  const a = useAnimatedStyle(() => ({ width: w.get() }));
   return (
     <Reanimated.View style={[{ height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: on ? 'transparent' : tc.surface3 }, a]}>
       {on ? <GradientFill style={StyleSheet.absoluteFill} /> : null}
@@ -56,8 +56,8 @@ function OnbDots({ step, total }: { step: number; total: number }) {
 function OnbProgress({ step, total }: { step: number; total: number }) {
   const { tc } = useTheme();
   const p = useSharedValue((step + 1) / total);
-  useEffect(() => { p.value = withSpring((step + 1) / total, SPRING.settle); }, [step, total, p]);
-  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.value) * 100}%` }));
+  useEffect(() => { p.set(withSpring((step + 1) / total, SPRING.settle)); }, [step, total, p]);
+  const fill = useAnimatedStyle(() => ({ width: `${Math.min(1, p.get()) * 100}%` }));
   return (
     <View style={{ flex: 1, height: 6, borderRadius: 3, marginHorizontal: 12, backgroundColor: tc.surface3, overflow: 'hidden' }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: step + 1 }}>
       <Reanimated.View style={[{ height: '100%', borderRadius: 3, overflow: 'hidden' }, fill]}><GradientFill style={StyleSheet.absoluteFill} /></Reanimated.View>

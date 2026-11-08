@@ -13,11 +13,11 @@ function Option({ label, pct, voted, mine, onPress }: { label: string; pct: numb
   const w = useSharedValue(0);
   const o = useSharedValue(0);
   useEffect(() => {
-    w.value = withTiming(voted ? pct : 0, { duration: 800, easing: Easing.out(Easing.cubic) });
-    o.value = withTiming(voted ? 1 : 0, { duration: 400 });
+    w.set(withTiming(voted ? pct : 0, { duration: 800, easing: Easing.out(Easing.cubic) }));
+    o.set(withTiming(voted ? 1 : 0, { duration: 400 }));
   }, [voted, pct, w, o]);
-  const bar = useAnimatedStyle(() => ({ width: `${w.value}%` }));
-  const num = useAnimatedStyle(() => ({ opacity: o.value }));
+  const bar = useAnimatedStyle(() => ({ width: `${w.get()}%` }));
+  const num = useAnimatedStyle(() => ({ opacity: o.get() }));
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: mine }} accessibilityLabel={voted ? `${label}, ${pct}%` : label}
       style={[s.opt, { backgroundColor: tc.inputBg }, mine && { borderColor: tc.accent, borderWidth: 1.5 }]}>

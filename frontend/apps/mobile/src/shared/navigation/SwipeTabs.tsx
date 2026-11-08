@@ -168,14 +168,14 @@ function SwipeTabsNavigator({
     const widthChanged = lastWidthRef.current !== width;
     lastIndexRef.current = state.index;
     lastWidthRef.current = width;
-    indexSV.value = state.index;
-    widthSV.value = width;
+    indexSV.set(state.index);
+    widthSV.set(width);
     const target = -state.index * width;
     if (widthChanged || Math.abs(prev - state.index) > 1) {
       cancelAnimation(offset);
-      offset.value = target;
+      offset.set(target);
     } else {
-      offset.value = withTiming(target, SETTLE);
+      offset.set(withTiming(target, SETTLE));
     }
   }, [state.index, width, indexSV, widthSV, offset]);
 
@@ -197,22 +197,22 @@ function SwipeTabsNavigator({
     .failOffsetY([-14, 14])
     .onStart(() => {
       cancelAnimation(offset);
-      dragStart.value = offset.value;
+      dragStart.set(offset.get());
     })
     .onUpdate((e) => {
-      const w = widthSV.value;
-      const i = indexSV.value;
+      const w = widthSV.get();
+      const i = indexSV.get();
       // At most one tab either way per swipe; resist past the first/last tab.
-      let x = Math.min(-(i - 1) * w, Math.max(-(i + 1) * w, dragStart.value + e.translationX));
+      let x = Math.min(-(i - 1) * w, Math.max(-(i + 1) * w, dragStart.get() + e.translationX));
       const min = -(count - 1) * w;
       if (x > 0) x *= EDGE_RESISTANCE;
       else if (x < min) x = min + (x - min) * EDGE_RESISTANCE;
-      offset.value = x;
+      offset.set(x);
     })
     .onEnd((e) => {
-      const w = widthSV.value;
-      const i = indexSV.value;
-      const moved = -(offset.value + i * w); // > 0 → towards the next tab
+      const w = widthSV.get();
+      const i = indexSV.get();
+      const moved = -(offset.get() + i * w); // > 0 → towards the next tab
       const far = Math.abs(moved) > w * COMMIT_FRACTION;
       const fast = Math.abs(e.velocityX) > COMMIT_VELOCITY && Math.sign(-e.velocityX) === Math.sign(moved);
       let target = i;
@@ -220,14 +220,14 @@ function SwipeTabsNavigator({
         if (moved > 0 && i < count - 1) target = i + 1;
         else if (moved < 0 && i > 0) target = i - 1;
       }
-      offset.value = withTiming(-target * w, SETTLE);
+      offset.set(withTiming(-target * w, SETTLE));
       if (target !== i) {
-        indexSV.value = target;
+        indexSV.set(target);
         scheduleOnRN(commit, target);
       }
     });
 
-  const stripStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
+  const stripStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.get() }] }));
 
   const onLayout = (e: LayoutChangeEvent) => {
     const w = Math.round(e.nativeEvent.layout.width);

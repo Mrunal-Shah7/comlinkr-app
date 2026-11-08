@@ -32,45 +32,45 @@ export function DSheet({ visible, onClose, title, children, grow, growFrom, full
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      drag.value = 0;
-      p.value = reduce ? withTiming(1, { duration: 150 }) : withSpring(1, SPRING.sheet);
+      drag.set(0);
+      p.set(reduce ? withTiming(1, { duration: 150 }) : withSpring(1, SPRING.sheet));
     } else if (mounted) {
-      p.value = withTiming(0, { duration: reduce ? 120 : 240 }, (done) => { if (done) scheduleOnRN(setMounted, false); });
+      p.set(withTiming(0, { duration: reduce ? 120 : 240 }, (done) => { if (done) scheduleOnRN(setMounted, false); }));
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps -- p, drag and reduce are stable for the sheet's life
 
   const pan = Gesture.Pan()
     .activeOffsetY(10)
-    .onUpdate((e) => { drag.value = Math.max(0, e.translationY); })
+    .onUpdate((e) => { drag.set(Math.max(0, e.translationY)); })
     .onEnd((e) => {
       if (e.translationY > 110 || e.velocityY > 900) scheduleOnRN(onClose);
-      else drag.value = withSpring(0, SPRING.sheet);
+      else drag.set(withSpring(0, SPRING.sheet));
     });
 
-  const backdrop = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) * (1 - Math.min(drag.value / 600, 0.6)) }));
+  const backdrop = useAnimatedStyle(() => ({ opacity: Math.min(1, p.get()) * (1 - Math.min(drag.get() / 600, 0.6)) }));
   const sheet = useAnimatedStyle(() => {
-    if (reduce) return { opacity: p.value, transform: [{ translateY: drag.value }] };
+    if (reduce) return { opacity: p.get(), transform: [{ translateY: drag.get() }] };
     if (grow && growFrom) {
       // Scale about the + button's centre: the view scales about its own centre, so shift it by (O − C)(1 − s),
       // where O is the + centre and C the sheet's centre, both measured from the sheet's top. Until the sheet has
       // been measured it stays hidden, so the first frame cannot show it in the wrong place.
-      const s = interpolate(p.value, [0, 1], [0.04, 1]);
-      const ty = (sheetH.value / 2 - growFrom.bottom) * (1 - s);
+      const s = interpolate(p.get(), [0, 1], [0.04, 1]);
+      const ty = (sheetH.get() / 2 - growFrom.bottom) * (1 - s);
       return {
-        opacity: sheetH.value ? interpolate(p.value, [0, 0.08], [0, 1], 'clamp') : 0,
-        transform: [{ translateY: ty + drag.value }, { scale: s }],
+        opacity: sheetH.get() ? interpolate(p.get(), [0, 0.08], [0, 1], 'clamp') : 0,
+        transform: [{ translateY: ty + drag.get() }, { scale: s }],
       };
     }
     if (grow) {
       return {
-        opacity: interpolate(p.value, [0, 0.4], [0, 1], 'clamp'),
+        opacity: interpolate(p.get(), [0, 0.4], [0, 1], 'clamp'),
         transform: [
-          { translateY: interpolate(p.value, [0, 1], [height * 0.3, 0]) + drag.value },
-          { scale: interpolate(p.value, [0, 1], [0.25, 1]) },
+          { translateY: interpolate(p.get(), [0, 1], [height * 0.3, 0]) + drag.get() },
+          { scale: interpolate(p.get(), [0, 1], [0.25, 1]) },
         ],
       };
     }
-    return { transform: [{ translateY: interpolate(p.value, [0, 1], [height, 0]) + drag.value }] };
+    return { transform: [{ translateY: interpolate(p.get(), [0, 1], [height, 0]) + drag.get() }] };
   });
 
   if (!mounted) return null;
@@ -82,7 +82,7 @@ export function DSheet({ visible, onClose, title, children, grow, growFrom, full
         </Animated.View>
         <Animated.View
           style={[s.sheet, { backgroundColor: tc.sheetBg, paddingBottom: insets.bottom + 16, maxHeight: '88%' }, full && { height: '94%', maxHeight: '94%' }, { transformOrigin: grow && growFrom ? 'center' : 'bottom' }, sheet, style]}
-          onLayout={growFrom ? (e) => { sheetH.value = e.nativeEvent.layout.height; } : undefined}
+          onLayout={growFrom ? (e) => { sheetH.set(e.nativeEvent.layout.height); } : undefined}
         >
           <GestureDetector gesture={pan}>
             <View>

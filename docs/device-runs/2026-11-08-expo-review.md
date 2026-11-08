@@ -67,3 +67,19 @@ Build: Expo Go, `main` at `c49c034`. Same device, backend, account and Metro set
 | L-01 | not applicable | `ListingCard`'s save pop and burst: the shared component is rendered nowhere. The admin listings screen has its own local `ListingCard`, and `MemoListingCard` (the only user of the shared one) was imported by Listings but never rendered. Both deleted on `chore/remove-unused-listingcard` |
 
 Put back: nothing written. Metro stopped.
+
+## Fourth round: after the Expo skills audit (TR-011, later the same day)
+
+Build: Expo Go, `chore/expo-skills-audit` (uncommitted at the time) with Metro started with `--clear` after the
+package bumps. Same device, local backend and account (`ui_tester`).
+
+| ID | Result | Note |
+|---|---|---|
+| S-01 | pass | Tab swipe between all tabs; the tab bar indicator follows (shared values now `.get()`/`.set()`) |
+| S-02 | pass | Homes → Rooms segmented control: the indicator slides and settles |
+| S-03 | pass | The + sheet: opens, Back closes it, a short drag springs back, a long drag closes it |
+| S-04 | pass | A listing saved, then unsaved; no `HousingSave` row left for the account |
+| S-05 | pass | Seeded story `uit-audit-story-20261108` opened from `exp://…/--/app/feed?openStory=…`: status bar hidden (now `expo-status-bar`), shown again after Back |
+| S-06 | not checked | Admin screens' images (`expo-image`): the app keeps the role cached from sign-in, so setting the account to ADMIN in the database did not open them |
+
+Put back: the story deleted (no `uit-%` stories left); `ui_tester` back to role USER; Metro stopped.

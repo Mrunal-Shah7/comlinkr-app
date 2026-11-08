@@ -42,18 +42,18 @@ export function DTabBar({ state, descriptors, navigation, insets, offset, width,
   const [, force] = useState(0);
 
   // Pager progress 0..count-1, smoothed by a spring so the indicator overshoots a little when it settles.
-  const raw = useDerivedValue(() => (width.value ? -offset.value / width.value : 0));
-  const smooth = useDerivedValue(() => (reduce ? raw.value : withSpring(raw.value, SPRING.liquid)));
+  const raw = useDerivedValue(() => (width.get() ? -offset.get() / width.get() : 0));
+  const smooth = useDerivedValue(() => (reduce ? raw.get() : withSpring(raw.get(), SPRING.liquid)));
 
   const pill = useAnimatedStyle(() => {
-    const c = centers.value;
+    const c = centers.get();
     if (!c[0] || !c[count - 1]) return { opacity: 0 };
-    const p = Math.max(0, Math.min(count - 1, smooth.value));
+    const p = Math.max(0, Math.min(count - 1, smooth.get()));
     const i = Math.min(count - 2, Math.floor(p));
     const f = Math.max(0, Math.min(1, p - i));
     const a = c[i], b = c[i + 1];
     const x = a + (b - a) * f;
-    const fr = Math.max(0, Math.min(1, raw.value - Math.floor(raw.value)));
+    const fr = Math.max(0, Math.min(1, raw.get() - Math.floor(raw.get())));
     // The stretch is sized by an ordinary tab-to-tab distance, not the gap it is crossing: from Listings to Food the
     // gap includes the + button and is about twice as wide, which stretched the underline across it.
     let unit = Math.abs(b - a);
@@ -64,9 +64,9 @@ export function DTabBar({ state, descriptors, navigation, insets, offset, width,
 
   const plusRot = useSharedValue(0);
   useEffect(() => {
-    plusRot.value = withTiming(plusOpen ? 45 : 0, { duration: reduce ? 0 : 240 });
+    plusRot.set(withTiming(plusOpen ? 45 : 0, { duration: reduce ? 0 : 240 }));
   }, [plusOpen, reduce, plusRot]);
-  const plusIcon = useAnimatedStyle(() => ({ transform: [{ rotate: `${plusRot.value}deg` }] }));
+  const plusIcon = useAnimatedStyle(() => ({ transform: [{ rotate: `${plusRot.get()}deg` }] }));
 
   // Several tabs report their layout in the same frame; collect them in a plain array (a shared value read
   // back on the JS thread can be stale) and publish a copy.
@@ -74,7 +74,7 @@ export function DTabBar({ state, descriptors, navigation, insets, offset, width,
   const onLayoutTab = (i: number) => (e: LayoutChangeEvent) => {
     const { x, width: w } = e.nativeEvent.layout;
     centersRef.current[i] = x + w / 2;
-    centers.value = centersRef.current.slice();
+    centers.set(centersRef.current.slice());
     force((n) => n + 1);
   };
 

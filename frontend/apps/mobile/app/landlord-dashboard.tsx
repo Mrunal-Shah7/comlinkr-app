@@ -70,13 +70,13 @@ function SlideAway({ i, leaving, children }: { i: number; leaving?: "approved" |
   const x = useSharedValue(0);
   const o = useSharedValue(1);
   useEffect(() => {
-    if (!leaving) { x.value = 0; o.value = 1; return; }
+    if (!leaving) { x.set(0); o.set(1); return; }
     const to = (leaving === "approved" ? 1 : -1) * width * 1.1;
-    if (reduce) { o.value = withTiming(0, { duration: 200 }); return; }
-    x.value = withTiming(to, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) });
-    o.value = withTiming(0, { duration: 300 });
+    if (reduce) { o.set(withTiming(0, { duration: 200 })); return; }
+    x.set(withTiming(to, { duration: 300, easing: Easing.bezier(0.22, 1, 0.36, 1) }));
+    o.set(withTiming(0, { duration: 300 }));
   }, [leaving, reduce, width, x, o]);
-  const a = useAnimatedStyle(() => ({ opacity: o.value, transform: [{ translateX: x.value }] }));
+  const a = useAnimatedStyle(() => ({ opacity: o.get(), transform: [{ translateX: x.get() }] }));
   return (
     <Reveal i={i} style={{ marginHorizontal: 16, marginBottom: 12 }}>
       <Animated.View style={a}>{children}</Animated.View>

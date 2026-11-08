@@ -290,7 +290,7 @@ export default function FoodScreen() {
   const insets = useSafeAreaInsets();
   // Design D (plan 01): the header title fades in as the large title scrolls away.
   const foodScrollY = useSharedValue(0);
-  const onFoodScroll = useAnimatedScrollHandler((e) => { foodScrollY.value = e.contentOffset.y; });
+  const onFoodScroll = useAnimatedScrollHandler((e) => { foodScrollY.set(e.contentOffset.y); });
   const { isDark, tc } = useTheme();
   const user = useAuthStore((s) => s.user);
   const { requireAuth } = useRequireAuth();

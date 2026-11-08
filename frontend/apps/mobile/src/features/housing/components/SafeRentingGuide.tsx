@@ -125,8 +125,8 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
 export function SafeRentingGuide() {
   const [expanded, setExpanded] = useState(false);
   const turn = useSharedValue(0);
-  useEffect(() => { turn.value = withSpring(expanded ? 1 : 0, SPRING.settle); }, [expanded, turn]);
-  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 180}deg` }] }));
+  useEffect(() => { turn.set(withSpring(expanded ? 1 : 0, SPRING.settle)); }, [expanded, turn]);
+  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.get() * 180}deg` }] }));
   const user = useAuthStore((s) => s.user);
   const guestCountry = useGuestLocationStore((s) => s.country);
   const { isDark, tc } = useTheme();

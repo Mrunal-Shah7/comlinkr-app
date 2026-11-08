@@ -70,7 +70,7 @@ export default function HousingScreen() {
   const insets = useSafeAreaInsets();
   // Design D (plan 01): the header title fades in as the large title scrolls away.
   const housingScrollY = useSharedValue(0);
-  const onHousingScroll = useAnimatedScrollHandler((e) => { housingScrollY.value = e.contentOffset.y; });
+  const onHousingScroll = useAnimatedScrollHandler((e) => { housingScrollY.set(e.contentOffset.y); });
   const user = useAuthStore((s) => s.user);
   const updateRoommatePrefs = useAuthStore((s) => s.updateRoommatePrefs);
   const { requireAuth } = useRequireAuth();

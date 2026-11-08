@@ -103,7 +103,7 @@ On `feature/design-d`, not pushed: `d414423` (tier A), `4a07c79` (tier B), `79ba
 ## Reported, not fixed
 
 - About 2 000 hard-coded hex colours in screens instead of theme tokens (expo-design-system).
-- About 200 `useEffect` fetches against 2 `useQuery` uses; React Query is set up but barely used (review 08, Q2).
+- About 200 `useEffect` fetches against 37 `useQuery` / `useMutation` calls, all in two files (`useAdmin.ts`, `ExploreBento.tsx`; corrected in TR-011); React Query is set up but barely used (review 08, Q2).
 - Two HTTP clients (fetch and axios) with different error types.
 - About 40 list keys built from the array index. Looked at in the second round: they are fixed lists (dots, steps,
   requirement rows, the six photo slots) or photo lists where the same photo can be picked twice, so a `uri` key

@@ -45,10 +45,10 @@ export function DPage({ title, sub, right, children, footer, refreshControl, con
   const insets = useSafeAreaInsets();
   const y = useSharedValue(largeTitle === false ? 64 : 0);
   const showTitle = largeTitle === true;
-  const onScroll = useAnimatedScrollHandler((e) => { y.value = e.contentOffset.y; });
-  const bar = useAnimatedStyle(() => ({ opacity: interpolate(y.value, [0, 64], [0, 1], "clamp") }));
+  const onScroll = useAnimatedScrollHandler((e) => { y.set(e.contentOffset.y); });
+  const bar = useAnimatedStyle(() => ({ opacity: interpolate(y.get(), [0, 64], [0, 1], "clamp") }));
   const t = useAnimatedStyle(() => {
-    const c = interpolate(y.value, [0, 64], [0, 1], "clamp");
+    const c = interpolate(y.get(), [0, 64], [0, 1], "clamp");
     return { opacity: c, transform: [{ translateY: (1 - c) * 6 }] };
   });
 

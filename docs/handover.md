@@ -3,7 +3,19 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-08 (latest) - last Expo review checks
+## 2026-11-08 (latest) - Expo skills audit (TR-011)
+
+- GitHub default branch switched to `main` (owner asked; done in the browser).
+- Every rule of the installed Expo skills checked: [build note](build/2026-11-08-expo-skills-audit.md). Fixed on
+  `chore/expo-skills-audit`: one lock file, nine SDK 57 patch bumps, an unused dependency, `.value` → `.get()`/`.set()`
+  (31 files), `expo-image` in four admin screens, `expo-status-bar` in the story viewer, the iOS 120 fps key.
+  Walked on the OnePlus (fourth round of [the run log](device-runs/2026-11-08-expo-review.md)).
+- **Before the next `eas update`:** build a new binary. The native patch bumps are not in the 1.0.4 builds, and
+  `runtimeVersion` follows `appVersion`.
+- Next candidates (reported, not fixed): `keyboardShouldPersistTaps` on 16 forms; axios; `Dimensions.get`.
+- Metro stopped; backend left running as found.
+
+## 2026-11-08 (earlier) - last Expo review checks
 
 - Walked "Type instead" on the signature pad (pass). `ListingCard` turned out to be rendered nowhere; it and
   `MemoListingCard` are deleted (`chore/remove-unused-listingcard`). The news skeleton pulse could not be seen

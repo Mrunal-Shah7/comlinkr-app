@@ -24,10 +24,10 @@ export function SkeletonBlock({
   const { tc } = useTheme();
   const pulse = useSharedValue(0.55);
   useEffect(() => {
-    pulse.value = withRepeat(withTiming(1, { duration: 750 }), -1, true);
+    pulse.set(withRepeat(withTiming(1, { duration: 750 }), -1, true));
     return () => cancelAnimation(pulse);
   }, [pulse]);
-  const animated = useAnimatedStyle(() => ({ opacity: pulse.value }));
+  const animated = useAnimatedStyle(() => ({ opacity: pulse.get() }));
   return (
     <Animated.View
       style={[{ width, height, borderRadius: radius, backgroundColor: tc.skeletonBg }, style, animated]}

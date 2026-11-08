@@ -238,7 +238,7 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
 // ── Conversation list (design D, plan 01: design screen "messages") ─────────
 /** The red action behind a swiped conversation row; the bin grows in as the row slides. */
 function SwipeRemove({ progress }: { progress: SharedValue<number> }) {
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: Math.min(1, 0.6 + progress.value * 0.4) }], opacity: Math.min(1, progress.value * 1.5) }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: Math.min(1, 0.6 + progress.get() * 0.4) }], opacity: Math.min(1, progress.get() * 1.5) }));
   return (
     <View style={{ width: 96, alignItems: "center", justifyContent: "center", backgroundColor: "#C53030" }}>
       <Reanimated.View style={[{ alignItems: "center", gap: 2 }, a]}>

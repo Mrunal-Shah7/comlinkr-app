@@ -20,6 +20,8 @@ module.exports = ({ config }) => ({
     associatedDomains: ['applinks:www.comlinkr.com'],
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      // Lets Reanimated run at 120 fps on ProMotion iPhones (expo-animation skill). Takes effect on the next iOS build.
+      CADisableMinimumFrameDurationOnPhone: true,
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: process.env.APP_ENV !== 'production',
       },
