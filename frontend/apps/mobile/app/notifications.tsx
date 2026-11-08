@@ -1,6 +1,9 @@
 import { useState, useCallback } from "react";
 import { View, Text, Pressable, ActivityIndicator, RefreshControl } from "react-native";
-import { router, Redirect, useFocusEffect } from "expo-router";
+import { router, Redirect } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useRefetchOnFocus } from "../src/hooks/useRefetchOnFocus";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../src/theme/useTheme";
 import { ApiError } from "../src/api/client";
@@ -38,38 +41,38 @@ export default function NotificationsScreen() {
   const { tc } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [items, setItems] = useState<AppNotification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [markingAll, setMarkingAll] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
+  const query = useQuery({
+    queryKey: queryKeys.notifications(),
+    queryFn: async () => {
       const res = await getNotifications({ page: 1, pageSize: 50 });
-      setItems(res.data);
       useSidebarStore.getState().resetUnread();
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Could not load notifications.";
-      setError(msg);
-      setItems([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [load])
+      return res.data;
+    },
+    enabled: isAuthed,
+    staleTime: 0,
+  });
+  useRefetchOnFocus(query.refetch, isAuthed);
+  const items = query.data ?? [];
+  const loading = query.isPending;
+  const [refreshing, setRefreshing] = useState(false);
+  const error =
+    actionError ??
+    (query.error ? (query.error instanceof ApiError ? query.error.message : "Could not load notifications.") : null);
+  const setItems = useCallback(
+    (fn: (prev: AppNotification[]) => AppNotification[]) =>
+      queryClient.setQueryData<AppNotification[]>(queryKeys.notifications(), (prev) => fn(prev ?? [])),
+    [queryClient]
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    void load();
-  }, [load]);
+    setActionError(null);
+    try { await query.refetch(); } finally { setRefreshing(false); }
+  }, [query.refetch]);
 
   const unreadCount = items.filter((n) => !n.read).length;
   const visible = filter === "all" ? items : items.filter((n) => !n.read);
@@ -82,11 +85,11 @@ export default function NotificationsScreen() {
       setItems((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not mark all as read.";
-      setError(msg);
+      setActionError(msg);
     } finally {
       setMarkingAll(false);
     }
-  }, [unreadCount]);
+  }, [unreadCount, setItems]);
 
   const handlePress = useCallback(async (n: AppNotification) => {
     // Mark read first (optimistic)
@@ -109,7 +112,7 @@ export default function NotificationsScreen() {
     } else if (n.type === "badge") {
       router.push("/verification-status" as any);
     }
-  }, []);
+  }, [setItems]);
 
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;

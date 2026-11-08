@@ -10,7 +10,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useRefetchOnFocus } from "../src/hooks/useRefetchOnFocus";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../src/store/auth.store";
@@ -176,18 +179,14 @@ function mapRowToVerificationStatus(row: MyBadgeStatusRow | undefined): Verifica
 export default function VerificationStatusScreen() {
   const user = useAuthStore((s) => s.user);
   const updateBadgeStatus = useAuthStore((s) => s.updateBadgeStatus);
-  const [statusRows, setStatusRows] = useState<MyBadgeStatusRow[]>([]);
-  const [rejections, setRejections] = useState<Partial<Record<UserBadge, string>>>({});
-  const [loading, setLoading] = useState(true);
   const [withdrawingBadge, setWithdrawingBadge] = useState<UserBadge | null>(null);
 
   const badges: UserBadge[] = ["landlord", "restaurant_owner", "agency", "local_reviewer"];
 
-  const loadStatus = useCallback(async () => {
-    setLoading(true);
-    try {
+  const query = useQuery({
+    queryKey: queryKeys.verification(),
+    queryFn: async () => {
       const list = await getMyBadgeStatus();
-      setStatusRows(list);
       const r: Partial<Record<UserBadge, string>> = {};
       for (const row of list) {
         if (row.status === "REJECTED" && row.latestApplication?.id) {
@@ -201,20 +200,15 @@ export default function VerificationStatusScreen() {
           }
         }
       }
-      setRejections(r);
-    } catch {
-      setStatusRows([]);
-      setRejections({});
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadStatus();
-    }, [loadStatus])
-  );
+      return { statusRows: list, rejections: r };
+    },
+    staleTime: 0,
+  });
+  useRefetchOnFocus(query.refetch);
+  const statusRows: MyBadgeStatusRow[] = query.data?.statusRows ?? [];
+  const rejections: Partial<Record<UserBadge, string>> = query.data?.rejections ?? {};
+  const loading = query.isPending;
+  const loadStatus = query.refetch;
 
   const handleWithdraw = (badge: UserBadge) => {
     const row = statusRows.find((x) => x.badgeType === userBadgeKeyToApi(badge));

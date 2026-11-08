@@ -12,7 +12,10 @@ import {
 } from "react-native";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: use the shared image renderer for every saved-item image.
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, Redirect, useLocalSearchParams } from "expo-router";
+import { useQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useInfiniteScreenQuery } from "../src/hooks/useInfiniteScreenQuery";
 import { Ionicons } from "@expo/vector-icons";
 import { ListState } from "../src/shared/ui/ListState";
 import * as Haptics from "expo-haptics";
@@ -140,99 +143,71 @@ export default function SavedScreen() {
   const params = useLocalSearchParams<{ seg?: string }>();
   const [seg, setSeg] = useState<Seg>(params.seg === "int" || params.seg === "fav" ? params.seg : "saved");
   const [active, setActive] = useState<SaveTypeQuery>("news");
-  const [savedTotal, setSavedTotal] = useState<number | null>(null);
-  const [extra, setExtra] = useState<{ int: ExtraRow[] | null; fav: ExtraRow[] | null }>({ int: null, fav: null });
-  const [extraLoading, setExtraLoading] = useState(false);
-  const loadExtra = useCallback(async (which: "int" | "fav") => {
-    setExtraLoading(true);
-    try {
-      if (which === "int") {
+  const queryClient = useQueryClient();
+  const totalQuery = useQuery({
+    queryKey: [...queryKeys.saved(), "total"],
+    queryFn: async () => totalSaveCount((await getSaveCounts()).counts),
+    enabled: isAuthed,
+  });
+  const savedTotal = totalQuery.data ?? null;
+  const extraKey = (which: "int" | "fav") => [...queryKeys.saved(), which] as const;
+  const dropExtra = (which: "int" | "fav", id: string) =>
+    queryClient.setQueryData<ExtraRow[]>(extraKey(which), (rows) => (rows ?? []).filter((r) => r.id !== id));
+  const extraQuery = useQuery({
+    queryKey: extraKey(seg === "fav" ? "fav" : "int"),
+    enabled: isAuthed && seg !== "saved",
+    staleTime: 0,
+    queryFn: async (): Promise<ExtraRow[]> => {
+      if (seg === "int") {
         const res = await getInterestedItems({ pageSize: 50 });
-        setExtra((x) => ({ ...x, int: res.data.map((it) => ({
+        return res.data.map((it) => ({
           id: it.id, title: it.title, sub: it.subtitle, image: it.image ? resolveApiAssetUrl(it.image) : undefined,
           open: () => router.push({ pathname: "/(tabs)/housing", params: { openListing: it.contentId } } as never),
-          remove: async () => { await removeInterested(it.type, it.contentId); setExtra((y) => ({ ...y, int: (y.int ?? []).filter((r) => r.id !== it.id) })); },
-        })) }));
-      } else {
-        const res = await getFavoriteRestaurants();
-        setExtra((x) => ({ ...x, fav: res.map((r) => ({
-          id: r.id, title: r.name, sub: [r.cuisine, r.city].filter(Boolean).join(" · ") || undefined, image: r.image,
-          open: () => router.push({ pathname: "/(tabs)/food", params: { openRestaurant: r.id } } as never),
-          remove: async () => { await toggleFavoriteRestaurant(r.id); setExtra((y) => ({ ...y, fav: (y.fav ?? []).filter((x2) => x2.id !== r.id) })); },
-        })) }));
+          remove: async () => { await removeInterested(it.type, it.contentId); dropExtra("int", it.id); },
+        }));
       }
-    } catch (err) {
-      appAlert("Could not load", err instanceof ApiError ? err.message : "Check your connection and try again.");
-      setExtra((x) => ({ ...x, [which]: [] }));
-    } finally {
-      setExtraLoading(false);
-    }
-  }, []);
-  useEffect(() => { if (seg !== "saved") void loadExtra(seg); }, [seg, loadExtra]);
-  useEffect(() => { void getSaveCounts().then((c) => setSavedTotal(totalSaveCount(c.counts))).catch(() => {}); }, []);
-  const cache = useRef<
-    Partial<
-      Record<
-        SaveTypeQuery,
-        { items: Row[]; page: number; hasMore: boolean; loaded: boolean; loading: boolean }
-      >
-    >
-  >({});
-
-  const [, bump] = useState(0);
-  const forceRender = () => bump((x) => x + 1);
-
-  const tabState = (t: SaveTypeQuery) =>
-    cache.current[t] ?? { items: [], page: 0, hasMore: true, loaded: false, loading: false };
-
-  const loadPage = useCallback(
-    async (t: SaveTypeQuery, page: number, append: boolean) => {
-      const cur = cache.current[t] ?? {
-        items: [],
-        page: 0,
-        hasMore: true,
-        loaded: false,
-        loading: false,
-      };
-      if (cur.loading) return;
-      cache.current[t] = { ...cur, loading: true };
-      forceRender();
-      try {
-        const res = await getSavesByType<Row>(t, { page, limit: 20 });
-        const chunk = Array.isArray(res.data) ? res.data : [];
-        const nextItems = append ? [...cur.items, ...chunk] : chunk;
-        cache.current[t] = {
-          items: nextItems,
-          page: res.page ?? page,
-          hasMore: !!res.hasMore,
-          loaded: true,
-          loading: false,
-        };
-      } catch {
-        cache.current[t] = { ...cur, loading: false, loaded: true, hasMore: false };
-      }
-      forceRender();
+      const res = await getFavoriteRestaurants();
+      return res.map((r) => ({
+        id: r.id, title: r.name, sub: [r.cuisine, r.city].filter(Boolean).join(" · ") || undefined, image: r.image,
+        open: () => router.push({ pathname: "/(tabs)/food", params: { openRestaurant: r.id } } as never),
+        remove: async () => { await toggleFavoriteRestaurant(r.id); dropExtra("fav", r.id); },
+      }));
     },
-    [],
-  );
+  });
+  useEffect(() => {
+    const err = extraQuery.error;
+    if (err) appAlert("Could not load", err instanceof ApiError ? err.message : "Check your connection and try again.");
+  }, [extraQuery.error]);
+  const extraLoading = extraQuery.isPending && seg !== "saved";
+  const extra: { int: ExtraRow[] | null; fav: ExtraRow[] | null } = {
+    int: seg === "int" ? (extraQuery.data ?? (extraQuery.error ? [] : null)) : null,
+    fav: seg === "fav" ? (extraQuery.data ?? (extraQuery.error ? [] : null)) : null,
+  };
+  const loadExtra = (_which: "int" | "fav") => void extraQuery.refetch();
+
+  // One paged query per save type, kept in the cache while the user switches chips.
+  const savedList = useInfiniteScreenQuery<Row>({
+    queryKey: [...queryKeys.saved(), "type", active],
+    fetchPage: async (page) => {
+      const res = await getSavesByType<Row>(active, { page, limit: 20 });
+      return { items: Array.isArray(res.data) ? res.data : [], hasMore: !!res.hasMore };
+    },
+    enabled: isAuthed,
+    staleTime: 0,
+  });
+  const st = {
+    items: savedList.items,
+    loading: savedList.loading || savedList.refreshing || savedList.loadingMore,
+    loaded: !savedList.loading,
+    hasMore: savedList.hasMore,
+  };
 
   const onTabPress = (t: SaveTypeQuery) => {
     void Haptics.selectionAsync();
     setActive(t);
-    const st = cache.current[t];
-    if (!st || !st.loaded) void loadPage(t, 1, false);
   };
 
-  const onRefresh = useCallback(() => {
-    cache.current[active] = {
-      items: [],
-      page: 0,
-      hasMore: true,
-      loaded: false,
-      loading: false,
-    };
-    void loadPage(active, 1, false);
-  }, [active, loadPage]);
+  const onRefresh = savedList.onRefresh;
 
   const unsave = async (item: Row, t: SaveTypeQuery) => {
     const id = pickId(item, t);
@@ -265,13 +240,11 @@ export default function SavedScreen() {
           return;
       }
       if (saved) return;
-      const st = cache.current[t];
-      if (!st) return;
-      cache.current[t] = {
-        ...st,
-        items: st.items.filter((row) => pickId(row, t) !== id),
-      };
-      forceRender();
+      queryClient.setQueryData<InfiniteData<{ items: Row[]; hasMore: boolean }, number>>(
+        [...queryKeys.saved(), "type", t],
+        (old) => old && { ...old, pages: old.pages.map((pg) => ({ ...pg, items: pg.items.filter((row) => pickId(row, t) !== id) })) },
+      );
+      void queryClient.invalidateQueries({ queryKey: [...queryKeys.saved(), "total"] });
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not update save.";
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -309,39 +282,14 @@ export default function SavedScreen() {
     }
   };
 
-  const st = tabState(active);
   const tabMeta = useMemo(() => TABS.find((x) => x.type === active), [active]);
 
-  useEffect(() => {
-    if (!cache.current.news?.loaded) void loadPage("news", 1, false);
-  }, [loadPage]);
-
-  // Re-fetch the active tab whenever this screen regains focus (e.g. after saving
-  // something elsewhere in the app) so newly-saved items appear without a manual
-  // pull-to-refresh — the in-memory cache has no other way to learn about them.
-  const isFirstFocusRef = useRef(true);
-  useFocusEffect(
-    useCallback(() => {
-      if (isFirstFocusRef.current) {
-        isFirstFocusRef.current = false;
-        return;
-      }
-      cache.current[active] = {
-        items: [],
-        page: 0,
-        hasMore: true,
-        loaded: false,
-        loading: false,
-      };
-      void loadPage(active, 1, false);
-    }, [active, loadPage]),
-  );
   useEffect(() => subscribeToPostUpdates((updated) => { // SPRINT-42: consume successful edits in the memory-only saved cache.
-    const state = cache.current.news; // SPRINT-42: inspect only the feed save boundary.
-    if (!state) return; // SPRINT-42: skip an unloaded saved-feed tab.
-    cache.current.news = { ...state, items: state.items.map((item) => pickId(item, "news") === updated.id ? { ...item, ...updated } : item) }; // SPRINT-42: patch all six fields plus isEdited from the authoritative response.
-    forceRender(); // SPRINT-42: repaint the visible saved row immediately.
-  }), []); // SPRINT-42: release the subscription on unmount.
+    queryClient.setQueryData<InfiniteData<{ items: Row[]; hasMore: boolean }, number>>( // SPRINT-42: patch the saved-feed pages.
+      [...queryKeys.saved(), "type", "news"],
+      (old) => old && { ...old, pages: old.pages.map((pg) => ({ ...pg, items: pg.items.map((item) => pickId(item, "news") === updated.id ? { ...item, ...updated } : item) })) },
+    );
+  }), [queryClient]); // SPRINT-42: release the subscription on unmount.
 
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;
@@ -448,7 +396,7 @@ export default function SavedScreen() {
           refreshControl={<RefreshControl refreshing={st.loading && st.loaded} onRefresh={onRefresh} tintColor={tc.accent} />}
           onEndReachedThreshold={0.35}
           onEndReached={() => {
-            if (st.hasMore && !st.loading && st.loaded) void loadPage(active, (st.page ?? 0) + 1, true);
+            if (st.hasMore && !st.loading && st.loaded) savedList.loadMore();
           }}
           renderItem={({ item, index }: { item: Row; index: number }) => {
             if (isStories) {

@@ -11,7 +11,9 @@ import {
 } from "react-native";
 import { Image } from "expo-image"; // SPRINT-31:
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { router, Redirect, useLocalSearchParams } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../src/services/cache/queryKeys";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
@@ -81,49 +83,31 @@ export default function PublicProfileScreen() {
   const params = useLocalSearchParams<{ userId?: string }>();
   const userId = params.userId?.trim() ?? "";
 
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [posts, setPosts] = useState<PostLike[]>([]);
-  const [postsFailed, setPostsFailed] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [following, setFollowing] = useState(false);
-  const [followLoading, setFollowLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadedRef = useRef(false);
-
-  const load = useCallback(async () => {
-    if (!userId) {
-      setError("No user specified.");
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: queryKeys.publicProfile(userId),
+    queryFn: async () => {
       const [prof, postsRes] = await Promise.all([
         getPublicProfile(userId),
         getUserPosts(userId, { page: 1, pageSize: 10 }).then((r) => ({ ok: true as const, r })).catch(() => ({ ok: false as const, r: { data: [] } })),
       ]);
-      setProfile(prof);
-      setFollowing(prof.followedByMe);
-      setPostsFailed(!postsRes.ok);
       const rawPosts = Array.isArray((postsRes.r as any)?.data) ? (postsRes.r as any).data : [];
-      setPosts(rawPosts as PostLike[]);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Could not load profile.");
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!loadedRef.current) {
-        loadedRef.current = true;
-        void load();
-      }
-    }, [load])
-  );
+      return { profile: prof, posts: rawPosts as PostLike[], postsFailed: !postsRes.ok };
+    },
+    enabled: !!userId,
+  });
+  const profile: PublicProfile | null = query.data?.profile ?? null;
+  const posts: PostLike[] = query.data?.posts ?? [];
+  const postsFailed = query.data?.postsFailed ?? false;
+  const loading = !!userId && query.isPending;
+  const error = !userId
+    ? "No user specified."
+    : query.error
+      ? (query.error instanceof ApiError ? query.error.message : "Could not load profile.")
+      : null;
+  // Follow is toggled optimistically on screen; the server's answer replaces it.
+  const [followOverride, setFollowing] = useState<boolean | null>(null);
+  const following = followOverride ?? profile?.followedByMe ?? false;
+  const [followLoading, setFollowLoading] = useState(false);
 
   const handleFollow = async () => {
     if (!profile) return;
@@ -217,7 +201,7 @@ export default function PublicProfileScreen() {
       {loading ? (
         <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 80 }} />
       ) : error ? (
-        <EmptyState icon="person-outline" title="Could not load this profile" sub={error} actionLabel="Try again" onAction={() => { loadedRef.current = false; void load(); }} />
+        <EmptyState icon="person-outline" title="Could not load this profile" sub={error} actionLabel="Try again" onAction={() => { void query.refetch(); }} />
       ) : profile ? (
         <>
           <Reveal i={0} style={{ alignItems: "center", paddingTop: 6, paddingHorizontal: 24 }}>
