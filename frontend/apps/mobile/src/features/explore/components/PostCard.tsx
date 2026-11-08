@@ -21,10 +21,10 @@ function Pop({ on, name, onName, color, onColor, label, count, onPress }: {
   on: boolean; name: keyof typeof Ionicons.glyphMap; onName: keyof typeof Ionicons.glyphMap; color: string; onColor: string; label: string; count?: number | string; onPress?: () => void;
 }) {
   const sc = useSharedValue(1);
-  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <Pressable disabled={!onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }}
-      onPress={() => { sc.value = withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press)); onPress?.(); }} style={pcd.act}>
+      onPress={() => { sc.set(withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press))); onPress?.(); }} style={pcd.act}>
       <Animated.View style={st}><Ionicons name={on ? onName : name} size={18} color={on ? onColor : color} /></Animated.View>
       {count !== undefined ? <Text style={[body(700), { fontSize: 13, color: on ? onColor : color }]}>{count}</Text> : null}
     </Pressable>

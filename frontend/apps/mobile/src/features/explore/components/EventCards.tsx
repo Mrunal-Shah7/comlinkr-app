@@ -22,7 +22,7 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
   const { tc } = useTheme();
   const sc = useSharedValue(1);
   const imgRef = useRef<View>(null);
-  const pop = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const pop = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   const fallback = EVENT_IMAGE_BY_CATEGORY[event.category] ?? EVENT_IMAGE_BY_CATEGORY.Community;
   const meta = [event.interested > 0 ? `${event.interested} going` : "", event.price].filter(Boolean).join(" · ");
   return (
@@ -34,7 +34,7 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
         </View>
         <Pressable
           hitSlop={8}
-          onPress={() => { sc.value = withSequence(withTiming(0.8, { duration: 90 }), withSpring(1.15, SPRING.press), withSpring(1, SPRING.press)); onToggleSave(); }}
+          onPress={() => { sc.set(withSequence(withTiming(0.8, { duration: 90 }), withSpring(1.15, SPRING.press), withSpring(1, SPRING.press))); onToggleSave(); }}
           style={[s.save, { backgroundColor: tc.glass, borderColor: tc.glassLine }]}
           accessibilityRole="button" accessibilityLabel={isSaved ? "Remove from saved" : "Save event"} accessibilityState={{ selected: isSaved }}
         >

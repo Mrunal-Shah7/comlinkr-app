@@ -79,8 +79,8 @@ function FaqItem({ q, a, first, open, onToggle, helpful, onHelpful }: {
 }) {
   const { tc } = useTheme();
   const turn = useSharedValue(open ? 1 : 0);
-  useEffect(() => { turn.value = withSpring(open ? 1 : 0, SPRING.settle); }, [open, turn]);
-  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 90}deg` }] }));
+  useEffect(() => { turn.set(withSpring(open ? 1 : 0, SPRING.settle)); }, [open, turn]);
+  const chev = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.get() * 90}deg` }] }));
   return (
     <Animated.View layout={layoutEase} style={!first ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight } : undefined}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={q}

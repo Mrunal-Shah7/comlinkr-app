@@ -20,10 +20,10 @@ function Rule({ label, met }: { label: string; met: boolean }) {
   const sc = useSharedValue(1);
   const was = useRef(met);
   useEffect(() => {
-    if (met && !was.current && !reduce) sc.value = withSequence(withTiming(1.3, { duration: 110 }), withSpring(1, { damping: 12, stiffness: 260, mass: 1 }));
+    if (met && !was.current && !reduce) sc.set(withSequence(withTiming(1.3, { duration: 110 }), withSpring(1, { damping: 12, stiffness: 260, mass: 1 })));
     was.current = met;
   }, [met, reduce, sc]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }} accessibilityLabel={`${label}: ${met ? 'done' : 'not yet'}`}>
       <Animated.View style={a}>

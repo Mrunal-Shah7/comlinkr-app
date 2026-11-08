@@ -57,12 +57,12 @@ export default function EventRegistrationModal({
   // The ticket flip.
   const flip = useSharedValue(0);
   useEffect(() => {
-    if (!regSubmitted) { flip.value = 0; return; }
-    flip.value = reduce ? withTiming(1, { duration: 160 }) : withSpring(1, SPRING.sheet);
+    if (!regSubmitted) { flip.set(0); return; }
+    flip.set(reduce ? withTiming(1, { duration: 160 }) : withSpring(1, SPRING.sheet));
   }, [regSubmitted, reduce, flip]);
   const flipStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, flip.value * 1.6),
-    transform: [{ perspective: 800 }, { rotateX: `${(1 - flip.value) * -80}deg` }],
+    opacity: Math.min(1, flip.get() * 1.6),
+    transform: [{ perspective: 800 }, { rotateX: `${(1 - flip.get()) * -80}deg` }],
   }));
 
   const restoreBrightness = useCallback(() => {

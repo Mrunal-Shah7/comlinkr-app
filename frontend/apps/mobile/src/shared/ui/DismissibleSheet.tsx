@@ -34,16 +34,16 @@ export function DismissibleSheet({
   const { height } = useWindowDimensions();
   const ty = useSharedValue(0);
   const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: ty.value }],
-    borderTopLeftRadius: Math.min(ty.value / 4, 24),
-    borderTopRightRadius: Math.min(ty.value / 4, 24),
+    transform: [{ translateY: ty.get() }],
+    borderTopLeftRadius: Math.min(ty.get() / 4, 24),
+    borderTopRightRadius: Math.min(ty.get() / 4, 24),
   }));
   const dismiss = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onDismiss();
     // The modal unmounts or slides away; reset for the next presentation.
     setTimeout(() => {
-      ty.value = 0;
+      ty.set(0);
     }, 400);
   };
 
@@ -66,14 +66,14 @@ export function SheetDragArea({ children, style }: { children: ReactNode; style?
     .activeOffsetY(16)
     .failOffsetX([-14, 14])
     .onUpdate((e) => {
-      ty.value = Math.max(0, e.translationY);
+      ty.set(Math.max(0, e.translationY));
     })
     .onEnd((e) => {
       if (e.translationY > DISMISS_DISTANCE || e.velocityY > DISMISS_VELOCITY) {
-        ty.value = withTiming(height, { duration: 200 });
+        ty.set(withTiming(height, { duration: 200 }));
         scheduleOnRN(dismiss);
       } else {
-        ty.value = withSpring(0, SPRING.sheet);
+        ty.set(withSpring(0, SPRING.sheet));
       }
     });
 

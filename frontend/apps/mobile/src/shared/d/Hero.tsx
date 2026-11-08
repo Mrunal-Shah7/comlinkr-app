@@ -34,12 +34,12 @@ export function HeroExpand({ origin, height, onLanded, onDone }: { origin: HeroO
     const t1 = setTimeout(onLanded, 230);
     const t2 = setTimeout(onDone, 480);
     // The prototype's EASE_SHEET: cubic-bezier(.32, 1.18, .52, 1), a slight overshoot; 380 ms (was 480).
-    p.value = withTiming(1, { duration: 380, easing: Easing.bezier(0.32, 1.18, 0.52, 1) });
+    p.set(withTiming(1, { duration: 380, easing: Easing.bezier(0.32, 1.18, 0.52, 1) }));
     return () => { clearTimeout(t1); clearTimeout(t2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per origin
   }, []);
   const a = useAnimatedStyle(() => {
-    const k = p.value;
+    const k = p.get();
     return {
       left: origin.x + (0 - origin.x) * k,
       top: origin.y + (0 - origin.y) * k,
@@ -59,9 +59,9 @@ export function HeroExpand({ origin, height, onLanded, onDone }: { origin: HeroO
 export function useHeroFade(flying: boolean) {
   const o = useSharedValue(0);
   useLayoutEffect(() => {
-    o.value = flying ? 0 : withTiming(1, { duration: 240 });
+    o.set(flying ? 0 : withTiming(1, { duration: 240 }));
   }, [flying, o]);
-  return useAnimatedStyle(() => ({ opacity: o.value }));
+  return useAnimatedStyle(() => ({ opacity: o.get() }));
 }
 
 const st = StyleSheet.create({

@@ -55,19 +55,19 @@ export function ToastHost() {
     if (!message) return;
     setShown({ message, type, action });
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    p.value = 0;
-    p.value = reduce ? withTiming(1, { duration: 150 }) : withSpring(1, SPRING.sheet);
+    p.set(0);
+    p.set(reduce ? withTiming(1, { duration: 150 }) : withSpring(1, SPRING.sheet));
     const ms = action ? ACTION_DURATION_MS : type === 'error' ? ERROR_DURATION_MS : DURATION_MS;
     hideTimer.current = setTimeout(() => {
-      p.value = withTiming(0, { duration: 260 }, (done) => { if (done) scheduleOnRN(hide); });
+      p.set(withTiming(0, { duration: 260 }, (done) => { if (done) scheduleOnRN(hide); }));
     }, ms);
     return () => { if (hideTimer.current) clearTimeout(hideTimer.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a new token is a new toast
   }, [token]);
 
   const a = useAnimatedStyle(() => ({
-    opacity: Math.min(1, p.value * 1.4),
-    transform: [{ translateY: reduce ? 0 : (1 - p.value) * -70 }],
+    opacity: Math.min(1, p.get() * 1.4),
+    transform: [{ translateY: reduce ? 0 : (1 - p.get()) * -70 }],
   }));
 
   if (!shown || !message) return null;
@@ -91,7 +91,7 @@ export function ToastHost() {
             onPress={() => {
               const act = shown.action;
               if (hideTimer.current) clearTimeout(hideTimer.current);
-              p.value = withTiming(0, { duration: 200 }, (done) => { if (done) scheduleOnRN(hide); });
+              p.set(withTiming(0, { duration: 200 }, (done) => { if (done) scheduleOnRN(hide); }));
               act?.onPress();
             }}
           >

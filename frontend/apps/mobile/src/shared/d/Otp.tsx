@@ -17,13 +17,13 @@ function Box({ ch, active, ok, index }: { ch: string; active: boolean; ok: boole
   const pop = useSharedValue(1);
   const green = useSharedValue(0);
   useEffect(() => {
-    if (ch && !reduce) pop.value = withSequence(withTiming(1.14, { duration: 90 }), withSpring(1, { damping: 14, stiffness: 320, mass: 1 }));
+    if (ch && !reduce) pop.set(withSequence(withTiming(1.14, { duration: 90 }), withSpring(1, { damping: 14, stiffness: 320, mass: 1 })));
   }, [ch, reduce, pop]);
   useEffect(() => {
-    green.value = ok ? (reduce ? 1 : withDelay(index * 55, withTiming(1, { duration: 220 }))) : 0;
+    green.set(ok ? (reduce ? 1 : withDelay(index * 55, withTiming(1, { duration: 220 }))) : 0);
   }, [ok, index, reduce, green]);
-  const a = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));
-  const g = useAnimatedStyle(() => ({ opacity: green.value }));
+  const a = useAnimatedStyle(() => ({ transform: [{ scale: pop.get() }] }));
+  const g = useAnimatedStyle(() => ({ opacity: green.get() }));
   return (
     <Animated.View style={[s.box, { backgroundColor: tc.inputBg, borderColor: active ? tc.accent : ch ? tc.borderMedium : "transparent" }, a]}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 16, backgroundColor: tc.mintSoft, borderWidth: 1.5, borderColor: tc.mint }, g]} />

@@ -120,6 +120,10 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-08: [Expo skills audit](build/2026-11-08-expo-skills-audit.md) (TR-011): every rule of the installed Expo
+  skills checked; one lock file, SDK 57 patch bumps, shared values on `.get()`/`.set()`, `expo-image` and
+  `expo-status-bar` everywhere, 120 fps key for iOS. Reported: `Dimensions.get`, `Platform.OS`, forms without
+  `keyboardShouldPersistTaps`, axios, hex colours.
 - 2026-11-08: [Expo review](build/2026-11-08-expo-review.md) (TR-010): no React Query retry on a 4xx, a 30 s request
   timeout, no components under `app/`, about 45 unused files deleted, gallery / story / photo-reorder gestures on
   Gesture Handler and Reanimated. Walked on the phone; pinch not testable over adb.

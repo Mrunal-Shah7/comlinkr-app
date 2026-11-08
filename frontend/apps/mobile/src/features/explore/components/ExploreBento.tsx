@@ -50,11 +50,11 @@ function Glow() {
   useFocusEffect(
     useCallback(() => {
       if (reduce) return;
-      t.value = withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true);
+      t.set(withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true));
       return () => cancelAnimation(t);
     }, [reduce, t]),
   );
-  const st = useAnimatedStyle(() => ({ transform: [{ translateX: -14 * t.value }, { translateY: 10 * t.value }, { scale: 1 + 0.1 * t.value }] }));
+  const st = useAnimatedStyle(() => ({ transform: [{ translateX: -14 * t.get() }, { translateY: 10 * t.get() }, { scale: 1 + 0.1 * t.get() }] }));
   return <Animated.View pointerEvents="none" style={[s.glow, st]} />;
 }
 

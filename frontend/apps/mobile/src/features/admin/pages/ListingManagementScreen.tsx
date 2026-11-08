@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl,
-  Pressable, Alert, Image,
+  Pressable, Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -177,7 +178,7 @@ function ListingCard({
                       key={idx}
                       source={{ uri: resolveApiAssetUrl(img) }}
                       style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: '#F3F4F6' }}
-                      resizeMode="cover"
+                      contentFit="cover"
                     />
                   ))}
                 </ScrollView>

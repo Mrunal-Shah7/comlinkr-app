@@ -505,7 +505,7 @@ export default function CommunityScreen() {
   const insets = useSafeAreaInsets();
   // Design D (plan 01): the header title fades in as the large title scrolls away.
   const communityScrollY = useSharedValue(0);
-  const onCommunityScroll = useAnimatedScrollHandler((e) => { communityScrollY.value = e.contentOffset.y; });
+  const onCommunityScroll = useAnimatedScrollHandler((e) => { communityScrollY.set(e.contentOffset.y); });
   const blockUser = useBlockStore((s) => s.blockUser);
   const isBlocked = useBlockStore((s) => s.isBlocked);
   const [filter, setFilter] = useState<string | null>(null);

@@ -440,10 +440,10 @@ function ScanLine({ color }: { color: string }) {
   const y = useSharedValue(30);
   useEffect(() => {
     if (reduce) return;
-    y.value = withRepeat(withTiming(206, { duration: 2200, easing: Easing.inOut(Easing.ease) }), -1, true);
+    y.set(withRepeat(withTiming(206, { duration: 2200, easing: Easing.inOut(Easing.ease) }), -1, true));
     return () => cancelAnimation(y);
   }, [reduce, y]);
-  const a = useAnimatedStyle(() => ({ top: y.value }));
+  const a = useAnimatedStyle(() => ({ top: y.get() }));
   return <Animated.View pointerEvents="none" style={[st.line, { backgroundColor: color, shadowColor: color }, reduce ? { top: 118 } : a]} />;
 }
 
@@ -454,8 +454,8 @@ function AttendeeRow({ item, i, known }: { item: EventCheckInAttendee; i: number
   const [isNew] = useState(() => known.current != null && !known.current.has(key));
   useEffect(() => { known.current?.add(key); }, [known, key]);
   const flash = useSharedValue(isNew ? 1 : 0);
-  useEffect(() => { if (isNew) flash.value = withTiming(0, { duration: 600 }); }, [isNew, flash]);
-  const a = useAnimatedStyle(() => ({ backgroundColor: `rgba(48,133,91,${0.18 * flash.value})`, transform: [{ translateY: -12 * flash.value }] }));
+  useEffect(() => { if (isNew) flash.set(withTiming(0, { duration: 600 })); }, [isNew, flash]);
+  const a = useAnimatedStyle(() => ({ backgroundColor: `rgba(48,133,91,${0.18 * flash.get()})`, transform: [{ translateY: -12 * flash.get() }] }));
   return (
     <Reveal i={i + 3}>
       <Animated.View style={[st.row, a]}>

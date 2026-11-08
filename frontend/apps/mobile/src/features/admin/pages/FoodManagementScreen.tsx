@@ -1,7 +1,8 @@
 // src/features/admin/pages/FoodManagementScreen.tsx
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Image, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Linking } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -94,7 +95,7 @@ function FoodCard({
                     key={idx}
                     source={{ uri: resolveApiAssetUrl(img) }}
                     style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: '#F3F4F6' }}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 ))}
               </ScrollView>

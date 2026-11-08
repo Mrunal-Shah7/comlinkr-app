@@ -5,7 +5,8 @@
 // moderation surface at all.
 
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert, Modal, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert, Modal } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -69,7 +70,7 @@ function StoryDetailModal({
           <View style={dm.mediaWrap}>
             {mediaUri ? (
               <>
-                <Image source={{ uri: mediaUri }} style={dm.media} resizeMode="cover" />
+                <Image source={{ uri: mediaUri }} style={dm.media} contentFit="cover" />
                 {video && (
                   <View style={dm.playOverlay}>
                     <View style={dm.playCircle}>
@@ -283,7 +284,7 @@ export default function StoriesModerationScreen() {
                     <View style={s.cardRow}>
                       {thumbUri ? (
                         <View style={s.thumbWrap}>
-                          <Image source={{ uri: thumbUri }} style={s.thumb} resizeMode="cover" />
+                          <Image source={{ uri: thumbUri }} style={s.thumb} contentFit="cover" />
                           {video && (
                             <View style={s.thumbPlayOverlay}>
                               <Ionicons name="play" size={14} color="#FFF" />

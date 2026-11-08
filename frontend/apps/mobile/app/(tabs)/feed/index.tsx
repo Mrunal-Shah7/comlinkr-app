@@ -114,7 +114,7 @@ export default function FeedScreen() {
   const feedScrollRef = useRef<FlatList<FeedRow>>(null);
   // Design D (plan 01): the header title fades in as the large "Explore" title scrolls away.
   const exploreScrollY = useSharedValue(0);
-  const onExploreScroll = useAnimatedScrollHandler((e) => { exploreScrollY.value = e.contentOffset.y; });
+  const onExploreScroll = useAnimatedScrollHandler((e) => { exploreScrollY.set(e.contentOffset.y); });
   const exploreInsets = useSafeAreaInsets();
   const feedRevealArmed = useRef(true);
   useScrollToTop(feedScrollRef); // re-tap the Explore tab → back to top

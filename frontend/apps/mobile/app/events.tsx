@@ -11,7 +11,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Image,
 } from "react-native";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-31:
 import { LinkifiedText } from "../components/LinkifiedText";

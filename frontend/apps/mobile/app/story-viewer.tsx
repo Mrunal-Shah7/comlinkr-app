@@ -11,7 +11,6 @@ import {
   StyleSheet,
   useWindowDimensions,
   ActivityIndicator,
-  StatusBar,
   Modal,
   FlatList,
   TextInput,
@@ -19,6 +18,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { createDTypeStyles } from "../src/theme/themedStyles";
 import { Image } from "expo-image"; // SPRINT-31:
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -525,7 +525,7 @@ export default function StoryViewerScreen() {
     return (
       <View style={[st.root, st.center, { width: W, height: H }]}>
         <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
-        <StatusBar barStyle="light-content" hidden />
+        <StatusBar style="light" hidden />
         <ActivityIndicator color="#FFF" size="large" />
         <Text style={{ color: "rgba(255,255,255,0.6)", marginTop: rs(12), fontSize: rs(13) }}>Loading stories…</Text>
       </View>
@@ -537,7 +537,7 @@ export default function StoryViewerScreen() {
     return (
       <View style={[st.root, st.center, { width: W, height: H }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <StatusBar barStyle="light-content" hidden />
+        <StatusBar style="light" hidden />
         <Ionicons name="images-outline" size={rs(52)} color="rgba(255,255,255,0.5)" />
         <Text style={st.emptyText}>No stories right now</Text>
         <Pressable style={st.emptyBtn} onPress={closeViewer}>
@@ -560,7 +560,7 @@ export default function StoryViewerScreen() {
     <GestureDetector gesture={pan}>
     <Reanimated.View style={[st.root, { width: W, height: H }, rootSlide]}>
       <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
-      <StatusBar barStyle="light-content" hidden />
+      <StatusBar style="light" hidden />
 
       {/* ── Media layer ── */}
       {isPhoto && imgUrl ? (

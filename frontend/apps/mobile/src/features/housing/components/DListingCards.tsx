@@ -35,10 +35,10 @@ export function listingFacts(l: Listing): string[] {
 function SaveButton({ saved, onPress, glass }: { saved: boolean; onPress: () => void; glass?: boolean }) {
   const { tc } = useTheme();
   const sc = useSharedValue(1);
-  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <Pressable hitSlop={8} accessibilityRole="button" accessibilityLabel={saved ? "Remove from saved" : "Save"} accessibilityState={{ selected: saved }}
-      onPress={(e) => { e.stopPropagation?.(); sc.value = withSequence(withTiming(0.8, { duration: 90 }), withSpring(1.15, SPRING.press), withSpring(1, SPRING.press)); onPress(); }}
+      onPress={(e) => { e.stopPropagation?.(); sc.set(withSequence(withTiming(0.8, { duration: 90 }), withSpring(1.15, SPRING.press), withSpring(1, SPRING.press))); onPress(); }}
       style={[s.save, glass && { backgroundColor: tc.glass, borderColor: tc.glassLine, borderWidth: 1 }]}>
       <Animated.View style={st}><Ionicons name={saved ? "bookmark" : "bookmark-outline"} size={18} color={saved ? tc.accentText : tc.textPrimary} /></Animated.View>
     </Pressable>

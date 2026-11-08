@@ -16,10 +16,10 @@ function PopIcon({ on, name, onName, color, onColor, size, onPress, label, count
   on: boolean; name: keyof typeof Ionicons.glyphMap; onName: keyof typeof Ionicons.glyphMap; color: string; onColor: string; size: number; onPress: () => void; label: string; count?: number;
 }) {
   const sc = useSharedValue(1);
-  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
+  const st = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   return (
     <Pressable hitSlop={6} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }}
-      onPress={(e) => { e.stopPropagation?.(); sc.value = withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press)); onPress(); }}
+      onPress={(e) => { e.stopPropagation?.(); sc.set(withSequence(withTiming(1.32, { duration: 120 }), withSpring(1, SPRING.press))); onPress(); }}
       style={s.act}>
       <Animated.View style={st}><Ionicons name={on ? onName : name} size={size} color={on ? onColor : color} /></Animated.View>
       {count ? <Text style={[body(700), { fontSize: 13, color: on ? onColor : color }]}>{count}</Text> : null}
