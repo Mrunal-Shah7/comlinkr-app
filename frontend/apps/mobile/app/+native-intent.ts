@@ -51,7 +51,23 @@ export function redirectSystemPath({
 
     if (!rawTab || !isTab(rawTab)) return '/(tabs)/feed';
 
-    // Path style: /app/housing/<id>, and the legacy /app/feed/<id> post links.
+    const decoded = id ? encodeURIComponent(decodeURIComponent(id)) : '';
+    // Path style: /app/housing/<id> opens the listing route (plan 03).
+    if (id && rawTab === 'housing') return `/listing/${decoded}`;
+    // Query style for details that are routes now.
+    const q = parsed.searchParams;
+    const routeFor: [string, string][] = [
+      ['openListing', '/listing/'],
+      ['openRestaurant', '/restaurant/'],
+      ['openEvent', '/events/'],
+      ['openRoommate', '/roommate/'],
+    ];
+    for (const [param, prefix] of routeFor) {
+      const v = q.get(param);
+      if (v) return `${prefix}${encodeURIComponent(v)}`;
+    }
+
+    // Path style: the legacy /app/feed/<id> post links.
     if (id) {
       const param = DEFAULT_PARAM_FOR_TAB[rawTab];
       return `/(tabs)/${rawTab}?${param}=${encodeURIComponent(decodeURIComponent(id))}`;

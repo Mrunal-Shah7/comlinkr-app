@@ -103,9 +103,9 @@ export default function NotificationsScreen() {
     if (n.targetType === "post" && n.targetId) {
       router.push({ pathname: "/(tabs)/feed", params: { openPost: n.targetId } } as any);
     } else if (n.targetType === "listing" && n.targetId) {
-      router.push({ pathname: "/(tabs)/housing", params: { openListing: n.targetId } } as any);
+      router.push(`/listing/${encodeURIComponent(n.targetId)}` as never);
     } else if (n.targetType === "restaurant" && n.targetId) {
-      router.push({ pathname: "/(tabs)/food", params: { openRestaurant: n.targetId } } as any);
+      router.push(`/restaurant/${encodeURIComponent(n.targetId)}` as never);
     } else if (n.type === "message") {
       if (n.targetId) router.push({ pathname: "/chat", params: { conversationId: n.targetId } } as any);
       else router.push("/chat" as any);

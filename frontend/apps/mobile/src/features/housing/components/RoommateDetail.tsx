@@ -1,16 +1,14 @@
-import { View, Text, ScrollView, Pressable, Modal, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { TYPE } from "../../../theme/d";
 import { GradientButton, GradientFill, Reveal, SoftButton } from "../../../shared/d";
 import { MatchRing } from "../../../shared/d/MatchRing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
 import { FadeImage } from "../../../../components/FadeImage";
 import { useAuthStore } from "../../../store/auth.store";
-import { DismissibleSheet, SheetDragArea } from "../../../shared/ui/DismissibleSheet";
 import { formatPrice } from "../../../utils/currency";
 import { LinkifiedText } from "../../../../components/LinkifiedText";
 import { appAlert } from "../../../shared/ui/Dialogs";
@@ -56,9 +54,9 @@ export function PrefRow({
 }
 
 // ── Roommate detail modal ────────────────────────────────────────────────────
-export function RoommateDetailModal({
+/** The body of the /roommate/[id] route (plan 03). */
+export function RoommateDetail({
   roommate,
-  visible,
   onClose,
   isBookmarked,
   onToggleBookmark,
@@ -68,7 +66,6 @@ export function RoommateDetailModal({
   onCancelRequest,
 }: {
   roommate: Roommate | null;
-  visible: boolean;
   onClose: () => void;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
@@ -119,9 +116,8 @@ export function RoommateDetailModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <DismissibleSheet onDismiss={onClose} style={{ backgroundColor: tc.pageBg }}>
-        <SheetDragArea>
+    <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
+        <View>
           <View style={{ flexDirection: "row", alignItems: "center", paddingTop: insets.top + 8, paddingHorizontal: 10, paddingBottom: 4 }}>
             <Pressable onPress={onClose} hitSlop={6} style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }} accessibilityLabel="Back">
               <Ionicons name="chevron-back" size={22} color={tc.textPrimary} />
@@ -131,7 +127,7 @@ export function RoommateDetailModal({
               <Ionicons name={isBookmarked ? "bookmark" : "bookmark-outline"} size={21} color={isBookmarked ? tc.accentText : tc.textPrimary} />
             </Pressable>
           </View>
-        </SheetDragArea>
+        </View>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
           {/* ── Profile head (design D, plan 01) ── */}
@@ -233,8 +229,7 @@ export function RoommateDetailModal({
           ) : null}
           {cs === "accepted" ? <GradientButton block label="Message" outerStyle={{ flex: 1 }} onPress={openChat} /> : null}
         </View>
-      </DismissibleSheet>
-    </Modal>
+    </View>
   );
 }
 

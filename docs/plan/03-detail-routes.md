@@ -1,6 +1,6 @@
 # 03. Detail screens as routes
 
-**Status: Building (2026-11-09).** Owner, 2026-11-09: "I want all the 9 points resolved in this run" (point 7 of the
+**Status: Built (2026-11-09), [build note](../build/2026-11-09-detail-routes.md).** Owner, 2026-11-09: "I want all the 9 points resolved in this run" (point 7 of the
 Expo conventions list). Triage [TR-013](../triage.md).
 
 ## Problem

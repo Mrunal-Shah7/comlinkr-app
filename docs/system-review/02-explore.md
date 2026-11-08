@@ -18,7 +18,8 @@ challenges ("quests"), would-you-rather polls and a daily neighbourhood mood.
 
 - Screen: `frontend/apps/mobile/app/(tabs)/feed/index.tsx` (about 7k lines), styles in
   `src/styles/feedScreen.styles.ts` [code].
-- Event detail `app/events/[id]/index.tsx`, organiser QR check-in `events/[id]/check-in.tsx`, list and management
+- Event detail `app/events/[id]/index.tsx` (`EventDetail`, with save, RSVP, the registration sheet and message
+  host; opened by cards in Explore and Events, Saved, chat and links, [detail routes note](../build/2026-11-09-detail-routes.md)), organiser QR check-in `events/[id]/check-in.tsx`, list and management
   `app/events.tsx`; story viewer `app/story-viewer.tsx` [code].
 - Guests see public content for their picked city; liking, saving, commenting, posting and joining need an account
   [code].

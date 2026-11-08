@@ -25,8 +25,8 @@ import { runAfterTransition } from "../../../src/utils/afterTransition";
 import { SkeletonCard } from "../../../src/shared/ui/Skeleton";
 import { ApiError } from "../../../src/api/client";
 import { rs } from "../../../src/utils/responsive";
-import { deleteListing, getListings, getMyListings, getListing, toggleListingSave, listingImageUrlList, subscribeToListingUpdates, type HousingListing, type HousingListingImageRef } from "../../../src/api/housing.api";
-import { applyToSharedSpace, toggleFavoriteSharedSpace, deleteSharedSpace, updateSharedSpace, acceptRoommateConnection, connectWithRoommate, declineRoommateConnection, getRoommates, getRoommateMatches, getRoommate, getRoommatePreferences, getSharedSpaces, toggleRoommateSave, updateRoommatePreferences, type RoommateListing } from "../../../src/api/roommates.api";
+import { getListings, getMyListings, toggleListingSave, listingImageUrlList, subscribeToListingUpdates, type HousingListing, type HousingListingImageRef } from "../../../src/api/housing.api";
+import { connectWithRoommate, declineRoommateConnection, getRoommates, getRoommateMatches, getRoommatePreferences, getSharedSpaces, toggleRoommateSave, updateRoommatePreferences, type RoommateListing } from "../../../src/api/roommates.api";
 import { DatePickerField } from "../../../components/DateTimePickerField";
 import { roommatePrefsFromGetEndpoint, roommatePrefsToPatchBody } from "../../../src/utils/roommatePrefsMap";
 import { queryKeys } from "../../../src/services/cache/queryKeys";
@@ -40,11 +40,6 @@ import { type Roommate, type AvailableRoom, RM_DEFAULT_PREFS, toUiRoommate, toUi
 import { s } from "../../../src/features/housing/styles/housingScreen.styles";
 import { SafeRentingGuide } from "../../../src/features/housing/components/SafeRentingGuide";
 import { MemoRoommateCard } from "../../../src/features/housing/components/MemoRows";
-import { ar } from "../../../src/features/housing/styles/availableRoom.styles";
-import { AvailableRoomCard } from "../../../src/features/housing/components/AvailableRoomCard";
-import { PropertyDetailModal } from "../../../src/features/housing/components/PropertyDetailModal";
-import { RoommateDetailModal } from "../../../src/features/housing/components/RoommateDetailModal";
-import { AvailableRoomDetailModal } from "../../../src/features/housing/components/AvailableRoomDetailModal";
 import { ListYourSpaceModal } from "../../../src/features/housing/components/ListYourSpaceModal";
 import { FullscreenImageViewer } from "../../../src/features/housing/components/ImageViewer";
 
@@ -105,19 +100,15 @@ export default function HousingScreen() {
   const [petsFilter, setPetsFilter] = useState<boolean | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [listingJourneyMap, setListingJourneyMap] = useState<Record<string, number>>({});
   const [fullscreenImages, setFullscreenImages] = useState<string[]>([]);
   const [fullscreenStartIdx, setFullscreenStartIdx] = useState(0);
   const [fullscreenVisible, setFullscreenVisible] = useState(false);
 
   // ── Roommates state ──
   const [rmFilter, setRmFilter] = useState("Best Match");
-  const [selectedRoommate, setSelectedRoommate] = useState<Roommate | null>(null);
   const [roommateSavedIds, setRoommateSavedIds] = useState<Set<string>>(new Set());
 
   // ── Available Rooms state ──
-  const [selectedAvailableRoom, setSelectedAvailableRoom] = useState<AvailableRoom | null>(null);
   const [requestedRooms, setRequestedRooms] = useState<Set<string>>(new Set());
   const [showListModal, setShowListModal] = useState(false);
 
@@ -171,33 +162,16 @@ export default function HousingScreen() {
     } catch { /* keep local values if backend unreachable */ }
   }, [user?.roommatePrefs, updateRoommatePrefs]);
 
-  // Persist listing journey progress (Enquired/Viewing/Applied) across sessions
-  useEffect(() => {
-    AsyncStorage.getItem("comlinkr_listing_journey").then((val) => {
-      if (val) {
-        try { setListingJourneyMap(JSON.parse(val) as Record<string, number>); } catch {}
-      }
-    });
-  }, []);
-  useEffect(() => {
-    if (Object.keys(listingJourneyMap).length > 0) {
-      AsyncStorage.setItem("comlinkr_listing_journey", JSON.stringify(listingJourneyMap));
-    }
-  }, [listingJourneyMap]);
-
-  // Persist requested rooms across sessions
-  useEffect(() => {
-    AsyncStorage.getItem("comlinkr_requested_rooms").then((val) => {
-      if (val) {
-        try { setRequestedRooms(new Set(JSON.parse(val) as string[])); } catch {}
-      }
-    });
-  }, []);
-  useEffect(() => {
-    if (requestedRooms.size > 0) {
-      AsyncStorage.setItem("comlinkr_requested_rooms", JSON.stringify([...requestedRooms]));
-    }
-  }, [requestedRooms]);
+  // Requested rooms are recorded by the room detail route (plan 03); re-read them whenever the tab is shown.
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem("comlinkr_requested_rooms").then((val) => {
+        if (val) {
+          try { setRequestedRooms(new Set(JSON.parse(val) as string[])); } catch {}
+        }
+      });
+    }, []),
+  )
 
   // ── Roommates sub-tab ──
   const [rmSubTab, setRmSubTab] = useState<"searching" | "matching">("searching");
@@ -272,34 +246,8 @@ export default function HousingScreen() {
       if (update.images) return { ...row, images: applyImages(update.images) }; // SPRINT-42: update primary/gallery order from image ops.
       return row; // SPRINT-42: no-op when the event carries neither body.
     })); // SPRINT-42: finish browse list patch.
-    setSelectedListing((sel) => { // SPRINT-42: patch an open detail modal.
-      if (!sel || sel.id !== update.id) return sel; // SPRINT-42: ignore unrelated detail.
-      if (update.listing) return toUiListing(update.listing, user?.id); // SPRINT-42: refresh detail fields from the PATCH response.
-      if (update.images) return { ...sel, images: applyImages(update.images) }; // SPRINT-42: refresh detail gallery order.
-      return sel; // SPRINT-42: keep prior detail when nothing usable arrived.
-    }); // SPRINT-42: finish detail patch.
   }), [user?.id]); // SPRINT-42: resubscribe if the signed-in user identity changes.
 
-  const confirmDeleteListing = useCallback((id: string) => {
-    appAlert("Delete this listing?", "This can’t be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteListing(id);
-            setListings((prev) => prev.filter((x) => x.id !== id));
-            setSelectedListing(null);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            showToast("Listing deleted.", "success");
-          } catch (e) {
-            showToast(e instanceof ApiError ? e.message : "Could not delete. Try again.", "error");
-          }
-        },
-      },
-    ]);
-  }, []);
 
   // Roommates (browse list merged with the scored matches) and available rooms: signed-in only, cached for
   // the old 10-minute window and keyed by the user's city.
@@ -415,19 +363,10 @@ export default function HousingScreen() {
     }, [updateRoommatePrefs, user?.id]),
   );
 
-  const openRoommateProfile = useCallback(async (id: string) => {
-    // Open at once with the card's data and fill in the full profile when it arrives: waiting for the request
-    // first left the tap doing nothing for the length of a round trip.
-    const local = roommates.find((x) => x.id === id);
-    if (local) setSelectedRoommate(local);
-    try {
-      const full = toUiRoommate(await getRoommate(id));
-      // Only if that profile is still the one open (it may have been closed or another opened meanwhile).
-      setSelectedRoommate((prev) => (local ? (prev?.id === id ? full : prev) : full));
-    } catch {
-      if (!local) showToast("Could not load this roommate.", "error");
-    }
-  }, [roommates]);
+  // The profile is its own route (plan 03); it shows the cached card at once and fetches the full profile.
+  const openRoommateProfile = useCallback((id: string) => {
+    router.push(`/roommate/${encodeURIComponent(id)}` as never);
+  }, []);
 
   // Preferences setup is handled in Edit Profile — no auto-prompt needed here.
 
@@ -437,15 +376,9 @@ export default function HousingScreen() {
     if (!id || openedListingDeepLink.current === id) return;
     openedListingDeepLink.current = id;
     setActiveTab("listings");
-    (async () => {
-      try {
-        const row = await getListing(id);
-        setSelectedListing(toUiListing(row, user?.id));
-      } catch {
-        showToast("This listing may have been removed.", "error");
-      }
-    })();
-  }, [params.openListing, user?.id]);
+    // Older links and callers still pass ?openListing=; the detail is its own route now (plan 03).
+    router.push(`/listing/${encodeURIComponent(id)}` as never);
+  }, [params.openListing]);
 
   useEffect(() => {
     const raw = params.openRoommate;
@@ -455,15 +388,8 @@ export default function HousingScreen() {
     openedRoommateDeepLink.current = id;
     setActiveTab("roommates");
     setRmSubTab("searching");
-    (async () => {
-      try {
-        const rm = await getRoommate(id);
-        setSelectedRoommate(toUiRoommate(rm));
-      } catch {
-        showToast("This roommate profile may no longer be active.", "error");
-      }
-    })();
-  }, [params.openRoommate, requireAuth]);
+    openRoommateProfile(id);
+  }, [params.openRoommate, requireAuth, openRoommateProfile]);
 
   const onRefresh = useCallback(() => {
     (async () => {
@@ -472,8 +398,6 @@ export default function HousingScreen() {
         setSearch("");
         setPropertyTypeFilter("All");
         setRmFilter("Best Match");
-        setSelectedListing(null);
-        setSelectedRoommate(null);
         if (activeTab === "listings") {
           await loadListings();
         } else if (activeTab === "roommates") {
@@ -489,11 +413,6 @@ export default function HousingScreen() {
     try {
       const res = await connectWithRoommate(rm.id);
       const cid = res.conversationId ?? null;
-      setSelectedRoommate((prev) =>
-        prev?.id === rm.id
-          ? { ...prev, connectionStatus: "pending_sent", conversationId: cid ?? prev.conversationId }
-          : prev,
-      );
       setRoommates((prev) =>
         prev.map((x) =>
           x.id === rm.id ? { ...x, connectionStatus: "pending_sent" as const, conversationId: cid ?? x.conversationId } : x,
@@ -501,33 +420,6 @@ export default function HousingScreen() {
       );
     } catch {
       showToast("Could not connect. Please try again.", "error");
-      void openRoommateProfile(rm.id);
-    }
-  };
-
-  const handleAcceptRoommate = async (rm: Roommate) => {
-    try {
-      const { conversationId } = await acceptRoommateConnection(rm.id);
-      const patch = (x: Roommate): Roommate =>
-        x.id === rm.id
-          ? { ...x, connectionStatus: "accepted", conversationId: conversationId ?? x.conversationId }
-          : x;
-      setSelectedRoommate((prev) => (prev?.id === rm.id ? patch(prev) : prev));
-      setRoommates((prev) => prev.map(patch));
-    } catch (e) {
-      showToast(e instanceof ApiError ? e.message : "Could not accept. Try again.", "error");
-    }
-  };
-
-  const handleDeclineRoommate = async (rm: Roommate) => {
-    try {
-      await declineRoommateConnection(rm.id);
-      const patch = (x: Roommate): Roommate =>
-        x.id === rm.id ? { ...x, connectionStatus: null, conversationId: null } : x;
-      setSelectedRoommate((prev) => (prev?.id === rm.id ? patch(prev) : prev));
-      setRoommates((prev) => prev.map(patch));
-    } catch (e) {
-      showToast(e instanceof ApiError ? e.message : "Could not decline. Try again.", "error");
     }
   };
 
@@ -536,7 +428,6 @@ export default function HousingScreen() {
       await declineRoommateConnection(rm.id);
       const patch = (x: Roommate): Roommate =>
         x.id === rm.id ? { ...x, connectionStatus: null, conversationId: null } : x;
-      setSelectedRoommate((prev) => (prev?.id === rm.id ? patch(prev) : prev));
       setRoommates((prev) => prev.map(patch));
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : "Could not cancel. Try again.", "error");
@@ -552,9 +443,6 @@ export default function HousingScreen() {
         else n.delete(id);
         return n;
       });
-      setSelectedRoommate((prev) =>
-        prev?.id === id ? { ...prev, isSaved: saved } : prev,
-      );
       setRoommates((prev) =>
         prev.map((x) => (x.id === id ? { ...x, isSaved: saved } : x)),
       );
@@ -563,130 +451,9 @@ export default function HousingScreen() {
     }
   };
 
-  const handleApplySharedSpace = async (id: string, message?: string) => {
-    const { isAuthed, user } = useAuthStore.getState();
-    if (!isAuthed || !user?.onboardingDone) {
-      // Close the room modal so the sign-in / onboarding screen isn't hidden behind it.
-      setSelectedAvailableRoom(null);
-      setTimeout(() => { requireAuth(undefined, "Sign in to request this shared space."); }, process.env.EXPO_OS === "ios" ? 450 : 250);
-      return;
-    }
-    try {
-      await applyToSharedSpace(id, message?.trim() || undefined);
-      setRequestedRooms((p) => {
-        const n = new Set(p);
-        n.add(id);
-        return n;
-      });
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "";
-      if (msg.toLowerCase().includes("already applied")) {
-        setRequestedRooms((p) => {
-          const n = new Set(p);
-          n.add(id);
-          return n;
-        });
-      }
-      showToast(msg || "Could not send request. Please try again.", "error");
-    }
-  };
 
-  const handleToggleSharedSpaceSave = async (id: string) => {
-    if (!requireAuth(undefined, "Sign in to save this space and find it later.")) return;
-    try {
-      const { saved } = await toggleFavoriteSharedSpace(id);
-      setAvailableRooms((prev) =>
-        prev.map((r) =>
-          r.id === id && r.api
-            ? {
-                ...r,
-                api: {
-                  ...r.api,
-                  isSaved: saved,
-                  savedByMe: saved,
-                },
-              }
-            : r,
-        ),
-      );
-    } catch {
-      showToast("Could not update bookmark. Please try again.", "error");
-    }
-  };
 
-  const handleDeleteSharedSpace = (id: string) => {
-    appAlert("Delete this listing?", "This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteSharedSpace(id);
-            setAvailableRooms((p) => p.filter((x) => x.id !== id));
-            setSelectedAvailableRoom(null);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            showToast("Shared space deleted.", "success");
-          } catch (err) {
-            showToast(err instanceof ApiError ? err.message : "Could not delete. Try again.", "error");
-          }
-        },
-      },
-    ]);
-  };
 
-  const [editRoomTarget, setEditRoomTarget] = useState<AvailableRoom | null>(null);
-  const [editRoomDesc, setEditRoomDesc] = useState("");
-  const [editRoomPrice, setEditRoomPrice] = useState("");
-  const [editRoomDeposit, setEditRoomDeposit] = useState("");
-  const [editRoomSpots, setEditRoomSpots] = useState("");
-  const [editRoomSaving, setEditRoomSaving] = useState(false);
-
-  const openEditSharedSpace = (room: AvailableRoom) => {
-    setEditRoomDesc(room.apartmentDesc || "");
-    setEditRoomPrice(String(room.rentPerMonth ?? ""));
-    setEditRoomDeposit(String(room.deposit ?? ""));
-    setEditRoomSpots(String(room.availableRooms ?? ""));
-    setEditRoomTarget(room);
-  };
-
-  const handleSaveEditSharedSpace = async () => {
-    if (!editRoomTarget) return;
-    const price = Number(editRoomPrice);
-    const deposit = editRoomDeposit.trim() ? Number(editRoomDeposit) : undefined;
-    const availableSpots = Number(editRoomSpots);
-    if (!editRoomDesc.trim()) {
-      showToast("Description can't be empty.", "error");
-      return;
-    }
-    if (!Number.isFinite(price) || price <= 0) {
-      showToast("Enter a valid monthly rent.", "error");
-      return;
-    }
-    if (!Number.isFinite(availableSpots) || availableSpots < 0) {
-      showToast("Enter a valid number of available spots.", "error");
-      return;
-    }
-    setEditRoomSaving(true);
-    try {
-      const updated = await updateSharedSpace(editRoomTarget.id, {
-        description: editRoomDesc.trim(),
-        price,
-        deposit: deposit != null && Number.isFinite(deposit) ? deposit : undefined,
-        availableSpots,
-      });
-      const merged = toUiAvailableRoom(updated);
-      setAvailableRooms((prev) => prev.map((r) => (r.id === editRoomTarget.id ? merged : r)));
-      setSelectedAvailableRoom((prev) => (prev && prev.id === editRoomTarget.id ? merged : prev));
-      setEditRoomTarget(null);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast("Changes saved.", "success");
-    } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not save changes. Try again.", "error");
-    } finally {
-      setEditRoomSaving(false);
-    }
-  };
 
   const toggleSave = async (id: string) => {
     if (!requireAuth(undefined, "Sign in to save listings and find them later.")) return;
@@ -764,7 +531,9 @@ export default function HousingScreen() {
     setFullscreenVisible(true);
   });
   const onToggleRoommateSave = useStableCallback((id: string) => void toggleRoommateBookmark(id));
-  const onOpenRoommate = useStableCallback((id: string) => void openRoommateProfile(id));
+  const openRoom = useStableCallback((r: AvailableRoom) => router.push(`/room/${encodeURIComponent(r.id)}` as never));
+  const openListing = useStableCallback((l: Listing) => router.push(`/listing/${encodeURIComponent(l.id)}` as never));
+  const onOpenRoommate = useStableCallback((id: string) => openRoommateProfile(id));
   const onConnectRoommate = useStableCallback((rm: Roommate) => void handleConnect(rm));
   const onCancelRoommateRequest = useStableCallback((rm: Roommate) => void handleCancelRequest(rm));
   const openRoommateConversation = useStableCallback((cid: string) =>
@@ -790,12 +559,12 @@ export default function HousingScreen() {
   const renderHousingRow = useCallback(
     ({ item }: { item: HousingRow }) => {
       if (item.kind === "listing") {
-        return <ListingFeature listing={item.listing} saved={savedIds.has(item.listing.id)} onToggleSaveId={onToggleListingSave} onOpen={setSelectedListing} />;
+        return <ListingFeature listing={item.listing} saved={savedIds.has(item.listing.id)} onToggleSaveId={onToggleListingSave} onOpen={openListing} />;
       }
       if (item.kind === "listingPair") {
         return (
           <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
-            {item.listings.map((l) => <ListingTile key={l.id} listing={l} saved={savedIds.has(l.id)} onToggleSaveId={onToggleListingSave} onOpen={setSelectedListing} />)}
+            {item.listings.map((l) => <ListingTile key={l.id} listing={l} saved={savedIds.has(l.id)} onToggleSaveId={onToggleListingSave} onOpen={openListing} />)}
             {item.listings.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
         );
@@ -803,7 +572,7 @@ export default function HousingScreen() {
       if (item.kind === "roomPair") {
         return (
           <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 16 }}>
-            {item.rooms.map((r) => <RoomTile key={r.id} room={r} onOpen={setSelectedAvailableRoom} />)}
+            {item.rooms.map((r) => <RoomTile key={r.id} room={r} onOpen={openRoom} />)}
             {item.rooms.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
         );
@@ -1139,162 +908,11 @@ export default function HousingScreen() {
       />
 
       {/* Detail modals */}
-      <PropertyDetailModal
-        listing={selectedListing}
-        visible={!!selectedListing}
-        onClose={() => setSelectedListing(null)}
-        onDelete={
-          selectedListing?.isOwner ? () => confirmDeleteListing(selectedListing.id) : undefined
-        }
-        onEdit={selectedListing?.isOwner ? () => { const id = selectedListing.id; setSelectedListing(null); router.push({ pathname: "/create-post", params: { type: "listing", mode: "edit", id } } as any); } : undefined} // SPRINT-42: open the reused listing editor with the authoritative listing id.
-        initialJourneyStep={selectedListing ? (listingJourneyMap[selectedListing.id] ?? 0) : 0}
-        onJourneyStepChange={(id, step) => setListingJourneyMap((prev) => ({ ...prev, [id]: step }))}
-        isBookmarked={selectedListing ? savedIds.has(selectedListing.id) : false}
-        onToggleBookmark={() => {
-          if (selectedListing) void toggleSave(selectedListing.id);
-        }}
-      />
-      <RoommateDetailModal
-        roommate={selectedRoommate}
-        visible={!!selectedRoommate}
-        onClose={() => setSelectedRoommate(null)}
-        isBookmarked={selectedRoommate ? roommateSavedIds.has(selectedRoommate.id) : false}
-        onToggleBookmark={() => {
-          if (selectedRoommate) void toggleRoommateBookmark(selectedRoommate.id);
-        }}
-        onConnect={() => selectedRoommate && void handleConnect(selectedRoommate)}
-        onAccept={() => selectedRoommate && void handleAcceptRoommate(selectedRoommate)}
-        onDecline={() => selectedRoommate && void handleDeclineRoommate(selectedRoommate)}
-        onCancelRequest={() => selectedRoommate && void handleCancelRequest(selectedRoommate)}
-      />
-      <AvailableRoomDetailModal
-        room={selectedAvailableRoom}
-        visible={!!selectedAvailableRoom}
-        onClose={() => setSelectedAvailableRoom(null)}
-        requested={selectedAvailableRoom ? requestedRooms.has(selectedAvailableRoom.id) : false}
-        saved={!!selectedAvailableRoom?.api?.isSaved}
-        isOwner={!!selectedAvailableRoom?.api?.isOwner}
-        onToggleSave={
-          selectedAvailableRoom
-            ? () => void handleToggleSharedSpaceSave(selectedAvailableRoom.id)
-            : undefined
-        }
-        onDelete={
-          selectedAvailableRoom?.api?.isOwner
-            ? () => handleDeleteSharedSpace(selectedAvailableRoom.id)
-            : undefined
-        }
-        onEdit={
-          selectedAvailableRoom?.api?.isOwner ? (room) => openEditSharedSpace(room) : undefined
-        }
-        onApplyWithMessage={(msg) => {
-          if (selectedAvailableRoom) void handleApplySharedSpace(selectedAvailableRoom.id, msg);
-        }}
-        onRequest={() => {
-          if (selectedAvailableRoom) setSelectedAvailableRoom(selectedAvailableRoom);
-        }}
-      />
       <ListYourSpaceModal
         visible={showListModal}
         onClose={() => setShowListModal(false)}
         onSubmit={() => setShowListModal(false)}
       />
-
-      {/* ── Edit Shared Space Modal ── */}
-      <Modal
-        visible={!!editRoomTarget}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => !editRoomSaving && setEditRoomTarget(null)}
-      >
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
-          <SafeAreaView style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }} edges={["top", "bottom"]}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: rs(20), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight }}>
-              <Pressable onPress={() => !editRoomSaving && setEditRoomTarget(null)} hitSlop={12}>
-                <Ionicons name="close" size={24} color={tc.textPrimary} />
-              </Pressable>
-              <Text style={{ fontSize: rs(16), fontWeight: "800", color: tc.textPrimary }}>Edit Listing</Text>
-              <Pressable
-                onPress={() => void handleSaveEditSharedSpace()}
-                hitSlop={12}
-                disabled={editRoomSaving}
-                style={{ backgroundColor: Colors.brand.blue, borderRadius: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(7), opacity: editRoomSaving ? 0.65 : 1 }}
-              >
-                {editRoomSaving ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={{ color: "#FFF", fontWeight: "800", fontSize: rs(13) }}>Save</Text>}
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={{ padding: rs(20), gap: rs(18) }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              <View>
-                <Text style={{ fontSize: rs(12), fontWeight: "700", color: tc.textTertiary, marginBottom: rs(8), textTransform: "uppercase", letterSpacing: 0.4 }}>
-                  Description
-                </Text>
-                <TextInput
-                  style={{ borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(12), backgroundColor: tc.inputBg, color: tc.textPrimary, paddingHorizontal: rs(14), paddingVertical: rs(12), fontSize: rs(14), minHeight: rs(110), textAlignVertical: "top" }}
-                  value={editRoomDesc}
-                  onChangeText={setEditRoomDesc}
-                  placeholder="Describe the space, house rules, what makes it a good fit..."
-                  placeholderTextColor={tc.textTertiary}
-                  multiline
-                  editable={!editRoomSaving}
-                />
-              </View>
-
-              <View style={{ flexDirection: "row", gap: rs(10) }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: rs(12), fontWeight: "700", color: tc.textTertiary, marginBottom: rs(8), textTransform: "uppercase", letterSpacing: 0.4 }}>
-                    Monthly Rent
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), backgroundColor: tc.inputBg, paddingHorizontal: rs(10), height: rs(46) }}>
-                    <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>$</Text>
-                    <TextInput
-                      style={{ flex: 1, fontSize: rs(14), color: tc.textPrimary }}
-                      value={editRoomPrice}
-                      onChangeText={setEditRoomPrice}
-                      keyboardType="numeric"
-                      placeholder="Rent"
-                      placeholderTextColor={tc.textTertiary}
-                      editable={!editRoomSaving}
-                    />
-                  </View>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: rs(12), fontWeight: "700", color: tc.textTertiary, marginBottom: rs(8), textTransform: "uppercase", letterSpacing: 0.4 }}>
-                    Deposit
-                  </Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), backgroundColor: tc.inputBg, paddingHorizontal: rs(10), height: rs(46) }}>
-                    <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>$</Text>
-                    <TextInput
-                      style={{ flex: 1, fontSize: rs(14), color: tc.textPrimary }}
-                      value={editRoomDeposit}
-                      onChangeText={setEditRoomDeposit}
-                      keyboardType="numeric"
-                      placeholder="Deposit"
-                      placeholderTextColor={tc.textTertiary}
-                      editable={!editRoomSaving}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              <View>
-                <Text style={{ fontSize: rs(12), fontWeight: "700", color: tc.textTertiary, marginBottom: rs(8), textTransform: "uppercase", letterSpacing: 0.4 }}>
-                  Available Spots
-                </Text>
-                <TextInput
-                  style={{ borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), backgroundColor: tc.inputBg, color: tc.textPrimary, paddingHorizontal: rs(14), height: rs(46), fontSize: rs(14) }}
-                  value={editRoomSpots}
-                  onChangeText={setEditRoomSpots}
-                  keyboardType="numeric"
-                  placeholder="e.g. 1"
-                  placeholderTextColor={tc.textTertiary}
-                  editable={!editRoomSaving}
-                />
-              </View>
-            </ScrollView>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
-      </Modal>
 
       {/* Fullscreen image viewer */}
       {fullscreenVisible && fullscreenImages.length > 0 && (

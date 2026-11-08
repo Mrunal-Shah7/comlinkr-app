@@ -37,19 +37,22 @@ roommates) [code].
   and max price, beds, pets) [code].
 - `SafeRentingGuide`, then `ListingCard`s (image carousel, price, beds and baths, landlord avatar, verified
   badge, save heart). "Load More" pages by 50 [code].
-- **PropertyDetailModal**: gallery with pinch-zoom and fullscreen, details, landlord, message landlord (opens
-  `chat` with the listing as context), interest, save, share, report (`ReportListingModal`),
-  `RemoteViewingPanel`, owner edit and delete, apply [code].
+- **Listing detail**, the route `app/listing/[id].tsx` (`PropertyDetail`): gallery with pinch-zoom and fullscreen,
+  details, landlord, message landlord (opens `chat` with the listing as context), interest, save, share, report
+  (`ReportListingModal`), `RemoteViewingPanel`, owner edit and delete, apply. It shows the list's cached row at once
+  and refreshes it from `GET /housing/:id`; Back is the stack's ([detail routes note](../build/2026-11-09-detail-routes.md)) [code].
 - A local "journey" per listing (Enquired → Viewing → Applied) kept in AsyncStorage `comlinkr_listing_journey`
   [code].
 
 ### Rooms & Mates
 
 - Sub-tabs **Available Rooms** (shared spaces) and **Find Roommates** [code].
-- Available Rooms: "Have a Spare Room?" (→ `create-post?type=shared_space`), `AvailableRoomCard`s, detail with
-  apply or request (requested ids in AsyncStorage `comlinkr_requested_rooms`) [code].
+- Available Rooms: "Have a Spare Room?" (→ `create-post?type=shared_space`), `AvailableRoomCard`s; the detail is the
+  route `app/room/[id].tsx` with apply or request (requested ids in AsyncStorage `comlinkr_requested_rooms`, re-read
+  when the tab is shown) and the owner's quick edit (`EditSharedSpaceModal`) [code].
 - Find Roommates: chips Best Match / Budget / Move-in Soon / Verified, `RoommateCard`s with match %, shared tags,
-  connect / cancel / accept / chat, save, `RoommateDetailModal`. A preferences modal (budget, move-in, sleep,
+  connect / cancel / chat, save; the profile is the route `app/roommate/[id].tsx` (connect, accept, decline, cancel,
+  save; signed-in users only). A preferences modal (budget, move-in, sleep,
   cleanliness, noise, pets, smoking, guests, work from home) saves with `PATCH /roommates/preferences` [code].
 - Connecting creates a pending DIRECT conversation; accepting unlocks chat (review 06) [code].
 
@@ -69,8 +72,8 @@ Full rules in [reference/RoommateMatching.md](../reference/RoommateMatching.md) 
 React Query ([React Query note](../build/2026-11-09-react-query.md)): homes are an infinite query keyed by city and filters (`GET /housing` page 1 merged with
 `GET /housing/my-listings`), refetched on every focus; roommates (browse merged with matches) and shared spaces are
 cached for 10 minutes per city. A listing mutation invalidates all of them. Roommate preferences load on each focus
-(signed in only). Pull-to-refresh resets filters. Deep links `?openListing=<id>` and `?openRoommate=<id>` open the detail
-modals [code].
+(signed in only). Pull-to-refresh resets filters. Links `?openListing=<id>` and `?openRoommate=<id>` push the
+detail routes; a detail action invalidates the list it came from, so Back shows the new state [code].
 
 ### Housing API
 

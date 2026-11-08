@@ -21,7 +21,7 @@ export default function FoodDeepLinkBridge() {
       router.replace("/(tabs)/food");
       return;
     }
-    router.replace({ pathname: "/(tabs)/food", params: { openRestaurant } });
+    router.replace(`/restaurant/${encodeURIComponent(openRestaurant)}` as never);
   }, [openRestaurant]);
 
   return (

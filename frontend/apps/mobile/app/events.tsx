@@ -1,5 +1,5 @@
 import { rs } from "../src/utils/responsive";
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { queryKeys } from "../src/services/cache/queryKeys";
 import { useScreenQuery } from "../src/hooks/useScreenQuery";
 import {
@@ -15,10 +15,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-31:
-import { LinkifiedText } from "../components/LinkifiedText";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
@@ -36,12 +33,10 @@ import {
   type ApiEvent,
   type EventTicket,
 } from "../src/api/events.api";
-import { RatingSummary, EventReviewsSection } from "../components/events"; // SPRINT-42:
 import * as Brightness from "expo-brightness"; // SPRINT-42:
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { TYPE, display } from '../src/theme/d';
 import { EmptyState, PressableScale, Reveal, Segmented } from '../src/shared/d';
-import { EventDetailModal } from '../src/features/explore/components/EventDetailModal';
 import EventRegistrationModal from '../src/features/explore/components/EventRegistrationModal';
 import type { ExploreEventRow } from '../src/features/explore/models';
 import { DPage, goBackOr } from '../src/shared/d/Page';
@@ -155,7 +150,6 @@ export default function EventsScreen() {
   const [tab, setTab] = useState<typeof TABS[number]>("Upcoming");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   const eventsCity = user?.city?.trim() || guestCity || undefined;
   const eventsQ = useScreenQuery({
@@ -202,7 +196,6 @@ export default function EventsScreen() {
     }
   };
 
-  const [regEvent, setRegEvent] = useState<EventItem | null>(null);
 
   const toggleInterested = async (id: string) => {
     if (!requireAuth(undefined, "Sign in to RSVP and get event updates.")) return;
@@ -257,7 +250,7 @@ export default function EventsScreen() {
         const past = event.category === "past";
         return (
           <Reveal key={event.id} i={i} style={{ marginHorizontal: 16, marginBottom: 10 }}>
-            <PressableScale onPress={() => setSelectedEvent(event)} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}
+            <PressableScale onPress={() => router.push(`/events/${encodeURIComponent(event.id)}` as never)} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}
               style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg, opacity: past ? 0.75 : 1 }}>
               <View style={{ width: 54, height: 60, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}>
                 <Text style={[TYPE.label, { color: tc.accentText, fontSize: 11 }]}>{day}</Text>
@@ -291,30 +284,6 @@ export default function EventsScreen() {
       ) : null}
     </DPage>
 
-      {/* ── Event detail modal ── */}
-      <EventDetailModal
-        event={selectedEvent ? toExploreRow(selectedEvent, savedIds.has(selectedEvent.id), interestedIds.has(selectedEvent.id)) : null}
-        visible={!!selectedEvent}
-        onClose={() => setSelectedEvent(null)}
-        isSaved={selectedEvent ? savedIds.has(selectedEvent.id) : false}
-        onToggleSave={() => selectedEvent && toggleSave(selectedEvent.id)}
-        isRegistered={selectedEvent ? interestedIds.has(selectedEvent.id) : false}
-        onToggleGoing={() => selectedEvent && toggleInterested(selectedEvent.id)}
-        onRegister={() => {
-          if (!requireAuth(undefined, "Sign in to register for this event.")) return;
-          if (selectedEvent) { const ev = selectedEvent; setSelectedEvent(null); setRegEvent(ev); }
-        }}
-      />
-      <EventRegistrationModal
-        visible={!!regEvent}
-        event={regEvent}
-        onClose={() => setRegEvent(null)}
-        onRegistered={async ({ name, email, phone, tickets }) => {
-          if (!regEvent) return;
-          await registerForEvent(regEvent.id, { attendeeName: name, attendeeEmail: email, attendeePhone: phone || undefined, ticketCount: parseInt(tickets, 10) || 1 });
-          setInterestedIds((prev) => new Set(prev).add(regEvent.id));
-        }}
-      />
     </>
   );
 }
