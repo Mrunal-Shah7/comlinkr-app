@@ -97,38 +97,9 @@ export function Chip({ label, on, onPress, icon, style }: { label: string; on?: 
   );
 }
 
-/* ---------- segmented control with a sliding gradient indicator ---------- */
-export function Segmented({ items, value, onChange, style }: { items: { key: string; label: string }[]; value: string; onChange: (k: string) => void; style?: StyleProp<ViewStyle> }) {
-  const { tc } = useTheme();
-  const [lay, setLay] = useState<Record<string, { x: number; w: number }>>({});
-  const x = useSharedValue(0), w = useSharedValue(0);
-  const cur = lay[value];
-  useEffect(() => {
-    if (!cur) return;
-    if (w.get() === 0) { x.set(cur.x); w.set(cur.w); return; }
-    x.set(withSpring(cur.x, SPRING.settle));
-    w.set(withSpring(cur.w, SPRING.settle));
-  }, [cur, x, w]);
-  const ind = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }], width: w.get(), opacity: w.get() ? 1 : 0 }));
-  const onItem = useCallback((k: string) => (e: LayoutChangeEvent) => {
-    const { x: lx, width } = e.nativeEvent.layout;
-    setLay((p) => (p[k]?.x === lx && p[k]?.w === width ? p : { ...p, [k]: { x: lx, w: width } }));
-  }, []);
-  return (
-    <View style={[s.seg, { backgroundColor: tc.glass, borderColor: tc.glassLine }, style]}>
-      <Animated.View style={[s.segInd, ind]} pointerEvents="none"><GradientFill style={StyleSheet.absoluteFill} /></Animated.View>
-      {items.map((it) => {
-        const on = it.key === value;
-        return (
-          <Pressable key={it.key} onLayout={onItem(it.key)} onPress={() => { if (!on) { void Haptics.selectionAsync(); onChange(it.key); } }}
-            style={s.segBtn} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <Text style={[body(700), { fontSize: 13, color: on ? '#fff' : tc.textSecondary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>{it.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
+/* ---------- segmented control ---------- */
+// Plan 02: the platform's own segmented control from @expo/ui (Segmented.ios.tsx / Segmented.android.tsx).
+export { Segmented } from './Segmented';
 
 /* ---------- entrance animations ---------- */
 /** Wrap list rows: rise and fade in, 35 ms apart. */
@@ -180,9 +151,6 @@ const s = StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   glow: { shadowColor: '#1A6BAE', shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 7, borderRadius: RADIUS.chip, borderWidth: 1 },
-  seg: { flexDirection: 'row', padding: 4, borderRadius: 18, borderWidth: 1 },
-  segInd: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 14, overflow: 'hidden', shadowColor: '#1A6BAE', shadowOpacity: 0.5, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  segBtn: { flex: 1, paddingVertical: 8, paddingHorizontal: 3, alignItems: 'center', borderRadius: 14 },
   tile: { borderRadius: RADIUS.tile, padding: 14, overflow: 'hidden', minHeight: 118 },
   stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
   stepCtl: { flexDirection: 'row', alignItems: 'center', gap: 12 },

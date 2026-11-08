@@ -45,10 +45,12 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
 - **State:** Zustand stores in `src/store/`. React Query is set up (`src/services/cache/queryClient.ts`) but barely
   used; screens fetch in `useEffect` / `useFocusEffect` [code].
 - **List cache:** `listFetchCache.store.ts`, a 10-minute "refetch on focus?" gate per section [code].
-- **Navigation:** expo-router. Bottom tabs are a horizontal pager (`src/shared/navigation/SwipeTabs.tsx`); all four
-  tabs stay mounted, tabs two or more away from the focused one are frozen, direct neighbours stay live. Android
-  edge swipe-back through the stack itself (`EdgeSwipeBack` deleted 2026-11-08), pull-down-to-close sheets
-  (`DismissibleSheet`) [code].
+- **Navigation:** expo-router, native since [plan 02](../plan/02-native-navigation.md) (2026-11-09): `NativeTabs`
+  (Material 3 bottom navigation on Android, the system tab bar on iOS; tabs do not slide), a fifth "Post" trigger
+  that opens the compose sheet, the native `Stack` with the platform's push animation (iOS edge swipe back, Android
+  system Back). Pull-down-to-close detail modals (`DismissibleSheet`) stay [code].
+- **Controls:** `@expo/ui` switches, segmented controls and bottom sheet (`DSheet`); gesture-handler gestures do not
+  run inside the native sheet [code].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
   colour [code].
 - Route map: [reference/Architecture.md](../reference/Architecture.md#route-map-expo-router).
@@ -79,7 +81,7 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
 
 ## How to test it
 
-The smoke checklist covers launch, tab swipes, back navigation and theme. Backend: `pnpm test:unit`,
+The smoke checklist covers launch, tab switches, back navigation and theme. Backend: `pnpm test:unit`,
 `pnpm test:e2e` (guarded test database).
 
 ## Not yet checked

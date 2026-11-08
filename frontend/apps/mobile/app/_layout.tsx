@@ -9,9 +9,9 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { useFonts, Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { BricolageGrotesque_500Medium, BricolageGrotesque_700Bold, BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque';
 import { DARK_THEME, LIGHT_THEME } from '../src/theme/useTheme';
-import { ZoomStack, zoomOptions } from '../src/shared/navigation/ZoomStack';
+import { Stack } from 'expo-router';
 
-// Screens that own horizontal edge gestures (or are roots) don't get the edge swipe-back.
+// Screens that own horizontal edge gestures (or are roots) don't get the iOS edge swipe-back.
 const NO_EDGE_SWIPE = new Set(['index', '(tabs)', '(auth)', 'story-viewer']);
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../src/services/cache/queryClient';
@@ -109,10 +109,13 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <StatusBar style={isDark ? 'light' : 'dark'} />
           <ErrorBoundary>
-            {/* Design D: pushed screens zoom in; edge swipe goes back on both platforms (ZoomStack). */}
-            <ZoomStack
+            {/* Plan 02: the native stack, with the platform's own push animation (edge swipe back on iOS, system Back
+                on Android). With reduce motion on, screens fade. */}
+            <Stack
               screenOptions={({ route }) => ({
-                ...zoomOptions(reduceMotion, pageBg),
+                headerShown: false,
+                contentStyle: { backgroundColor: pageBg },
+                animation: reduceMotion ? 'fade' : 'default',
                 gestureEnabled: !NO_EDGE_SWIPE.has(route.name),
               })}
             />

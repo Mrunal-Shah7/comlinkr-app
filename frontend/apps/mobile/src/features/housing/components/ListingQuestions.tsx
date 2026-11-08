@@ -2,8 +2,9 @@
 // photos, kind, rent, size, where, a few words, then a summary with optional extras as "+" chips. City, state,
 // country and currency come from the profile. The draft is kept on the phone if you close it.
 // It drives the composer's own state and submit, so validation and the server calls are the composer's.
+import { Switch } from "../../../shared/ui/Switch";
 import { useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { FadeInLeft, FadeInRight, useAnimatedStyle, useReducedMotion, withSpring } from "react-native-reanimated";
 import { Image } from "expo-image";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -279,7 +280,7 @@ export function ListingQuestions(p: ListingQuestionsProps) {
                     return (
                       <Animated.View key={x.k} entering={FadeInRight.duration(220)} style={st.switchRow}>
                         <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Furnished</Text>
-                        <Switch value={v} onValueChange={set} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" />
+                        <Switch value={v} onValueChange={set} />
                       </Animated.View>
                     );
                   }

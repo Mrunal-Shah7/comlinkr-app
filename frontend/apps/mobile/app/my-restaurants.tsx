@@ -1,3 +1,4 @@
+import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import { useEffect, useState } from "react";
 import {
@@ -11,7 +12,6 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-  Switch,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
@@ -223,7 +223,7 @@ function RestaurantCard({
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
                   <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Open now</Text>
-                  <Switch value={editOpenNow} onValueChange={setEditOpenNow} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor="#FFF" />
+                  <Switch value={editOpenNow} onValueChange={setEditOpenNow} />
                 </View>
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <SoftButton block ghost label="Cancel" outerStyle={{ flex: 1 }} disabled={saving} onPress={() => setEditMode(false)} />

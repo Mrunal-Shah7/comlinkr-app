@@ -109,8 +109,9 @@ none is in `docs/production-lessons.md`.
   (B6).
 - Hide an empty state while its list is still loading (B3).
 - List every value a `useMemo` or `useEffect` reads in its dependencies (B8).
-- Horizontal scrollers inside tab screens must be gesture-handler `ScrollView` / `FlatList`, or the tab swipe
-  takes their drags ([architecture](docs/reference/Architecture.md)).
+- Inside the native `@expo/ui` bottom sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
+  not rely on gesture-handler gestures (they never fire); use `Pressable` or the React Native responder props
+  ([native navigation](docs/build/2026-11-09-native-navigation.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`
   ([performance note](docs/build/2026-10-29-ui-performance-tab-jank.md)).
 

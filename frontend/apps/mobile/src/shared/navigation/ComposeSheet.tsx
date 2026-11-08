@@ -9,7 +9,6 @@ import { DSheet } from '../d/Sheet';
 import { GradientFill, PressableScale, Reveal } from '../d';
 import { useRequireAuth } from '../hooks/useRequireAuth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { plusCenterFromBottom } from './DTabBar';
 
 type Item = { icon: keyof typeof Ionicons.glyphMap; title: string; sub: string; href: any; auth: string };
 const ITEMS: Item[] = [
@@ -31,14 +30,14 @@ export function ComposeSheet({ visible, onClose }: { visible: boolean; onClose: 
   const open = (it: Item) => {
     onClose();
     if (!requireAuth(undefined, it.auth)) return;
-    // Let the sheet start closing before the next screen zooms in.
+    // Let the sheet start closing before the next screen opens.
     setTimeout(() => {
       if (it.href === '__ask__') router.push({ pathname: '/community', params: { ask: String(Date.now()) } } as any);
       else router.push(it.href);
     }, 180);
   };
   return (
-    <DSheet visible={visible} onClose={onClose} title="Post something" grow growFrom={{ bottom: plusCenterFromBottom(insets.bottom) }}>
+    <DSheet visible={visible} onClose={onClose} title="Post something">
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 8 }} showsVerticalScrollIndicator={false}>
         {ITEMS.map((it, i) => (
           <Reveal key={it.title} i={i}>

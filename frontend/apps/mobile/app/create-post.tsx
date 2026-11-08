@@ -1,3 +1,4 @@
+import { Switch } from "../src/shared/ui/Switch";
 import { useEffect, useState, useRef } from "react"; // SPRINT-42: load authoritative post/listing data in edit mode.
 import {
   View,
@@ -10,7 +11,6 @@ import {
   Modal,
   Dimensions,
   ActivityIndicator,
-  Switch,
   KeyboardAvoidingView,
   Platform,
   ActionSheetIOS,
@@ -3103,7 +3103,6 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <Switch
                 value={listingFurnishedSwitch}
                 onValueChange={setListingFurnishedSwitch}
-                trackColor={{ false: "#D1D5DB", true: type.color }}
               />
             </View>
 
@@ -3565,7 +3564,6 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
               <Switch
                 value={sharedSpaceSmoking}
                 onValueChange={setSharedSpaceSmoking}
-                trackColor={{ false: "#D1D5DB", true: type.color }}
               />
             </View>
 

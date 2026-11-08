@@ -1,3 +1,4 @@
+import { Switch } from "../../src/shared/ui/Switch";
 import { useState, useRef, useEffect } from "react";
 import { Linking } from "react-native";
 import {
@@ -28,7 +29,6 @@ import { rs, screenWidth } from "../../src/utils/responsive";
 import { appAlert } from '../../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../../src/theme/themedStyles';
 import Reanimated, { FadeInRight, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
-import { Switch } from 'react-native';
 import { TYPE } from '../../src/theme/d';
 import { GradientFill, PopPressable } from '../../src/shared/d';
 import { SPRING } from '../../src/shared/motion/presets';
@@ -824,7 +824,7 @@ export default function OnboardingScreen() {
                 {city ? `Homes, food and people in ${city} are waiting.` : "Homes, food and people near you are waiting."}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 26, paddingHorizontal: 8 }}>
-                <Switch value={agreed} onValueChange={(v) => { setAgreed(v); Haptics.selectionAsync(); }} trackColor={{ true: tc.mint, false: tc.surface3 }} thumbColor="#fff" accessibilityLabel="I agree to the Terms and Privacy Policy" />
+                <Switch value={agreed} onValueChange={(v) => { setAgreed(v); Haptics.selectionAsync(); }} accessibilityLabel="I agree to the Terms and Privacy Policy" />
                 <Text style={[TYPE.body, { color: tc.textPrimary, flexShrink: 1 }]}>
                   I agree to the{" "}
                   <Text style={{ color: tc.accentText, fontFamily: "Manrope_700Bold" }} onPress={() => router.push("/terms-of-service" as never)}>Terms</Text>

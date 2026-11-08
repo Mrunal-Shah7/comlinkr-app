@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { tabBarClearance } from "../../../src/shared/navigation/DTabBar";
 import { FullscreenImageViewer } from "../../../src/features/housing/components/ImageViewer";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
@@ -305,7 +304,7 @@ export default function FoodScreen() {
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No restaurants") when it peeks in during a tab swipe.
+  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No restaurants") the first time the tab opens.
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(1);
@@ -821,7 +820,7 @@ export default function FoodScreen() {
         onScroll={onFoodScroll}
         scrollEventThrottle={16}
         style={s.scroll}
-        contentContainerStyle={[s.scrollContent, { paddingBottom: tabBarClearance(insets.bottom) }]}
+        contentContainerStyle={[s.scrollContent, { paddingBottom: 24 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
