@@ -3,7 +3,7 @@ import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-nati
 import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
 import { Chip, Segmented, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
-import { View, Text, ScrollView, FlatList, Pressable, TextInput, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, FlatList, Pressable, TextInput, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -695,7 +695,7 @@ export default function HousingScreen() {
     if (!isAuthed || !user?.onboardingDone) {
       // Close the room modal so the sign-in / onboarding screen isn't hidden behind it.
       setSelectedAvailableRoom(null);
-      setTimeout(() => { requireAuth(undefined, "Sign in to request this shared space."); }, Platform.OS === "ios" ? 450 : 250);
+      setTimeout(() => { requireAuth(undefined, "Sign in to request this shared space."); }, process.env.EXPO_OS === "ios" ? 450 : 250);
       return;
     }
     try {
@@ -1337,7 +1337,7 @@ export default function HousingScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => !editRoomSaving && setEditRoomTarget(null)}
       >
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
           <SafeAreaView style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }} edges={["top", "bottom"]}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: rs(20), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight }}>
               <Pressable onPress={() => !editRoomSaving && setEditRoomTarget(null)} hitSlop={12}>
@@ -1554,7 +1554,7 @@ export default function HousingScreen() {
         onRequestClose={() => setRmPrefsModalVisible(false)}
       >
         {/* Android: no "height" behavior — it can leave the sheet clipped at a fixed height after the keyboard closes (blank area below Lifestyle). */}
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
           <SafeAreaView style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }} edges={["top", "bottom"]}>
             {/* Header */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: rs(20), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight }}>

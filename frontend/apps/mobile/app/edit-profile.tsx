@@ -14,7 +14,6 @@ import {
   Modal,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { Image } from "expo-image"; // SPRINT-31:
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -706,7 +705,7 @@ export default function EditProfileScreen() {
       {profileLoading ? (
         <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 80 }} />
       ) : (
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
         <View style={{ paddingHorizontal: 16 }}>
           {/* Photo */}
           <Reveal i={0} style={{ alignItems: "center", marginBottom: 14 }}>

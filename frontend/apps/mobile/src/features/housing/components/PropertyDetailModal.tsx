@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, Modal, Share, useWindowDimensions, Platform, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, Modal, Share, useWindowDimensions, StyleSheet } from "react-native";
 import { TYPE, body, display } from "../../../theme/d";
 import { GradientButton, Reveal, SoftButton } from "../../../shared/d";
 import { has } from "./DListingCards";
@@ -183,7 +183,7 @@ export function PropertyDetailModal({
   ] as [string, string][]).filter(([, v]) => has(v));
   const share = () => {
     const link = getShareLink("listing", listing.id);
-    Share.share({ title: listing.title, message: `${listing.title} — ${listing.price}/mo at ${listing.address}. Check it out on ComLinkr!\n\n${link}`, ...(Platform.OS === "ios" ? { url: link } : {}) });
+    Share.share({ title: listing.title, message: `${listing.title} — ${listing.price}/mo at ${listing.address}. Check it out on ComLinkr!\n\n${link}`, ...(process.env.EXPO_OS === "ios" ? { url: link } : {}) });
   };
   const more = () => appAlert(listing.title, undefined, [
     { text: "Share", onPress: share },

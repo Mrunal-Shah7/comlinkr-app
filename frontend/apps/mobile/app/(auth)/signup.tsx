@@ -8,7 +8,6 @@ import {
   TextInput,
   StyleSheet,
   Alert,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -237,7 +236,7 @@ export default function SignupScreen() {
     }
     if (provider === "Apple") {
       // SPRINT-39: shared Apple helper; authorizationCode included when Apple provides it
-      if (Platform.OS !== "ios") {
+      if (process.env.EXPO_OS !== "ios") {
         appAlert("Apple Sign In", "Apple sign-in is only available on iOS devices.");
         return;
       }
@@ -333,8 +332,8 @@ export default function SignupScreen() {
               {/* Social Sign Up */}
               {step === "form" ? (
               <Reveal i={2} style={{ flexDirection: "row", gap: 10 }}>
-                <SoftButton ghost block outerStyle={{ flex: 1 }} label={Platform.OS === "ios" ? "Google" : "Sign up with Google"} onPress={() => void handleSocialSignup("Google")} icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
-                {Platform.OS === "ios" ? <SoftButton ghost block outerStyle={{ flex: 1 }} label="Apple" onPress={() => void handleSocialSignup("Apple")} icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} /> : null}
+                <SoftButton ghost block outerStyle={{ flex: 1 }} label={process.env.EXPO_OS === "ios" ? "Google" : "Sign up with Google"} onPress={() => void handleSocialSignup("Google")} icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
+                {process.env.EXPO_OS === "ios" ? <SoftButton ghost block outerStyle={{ flex: 1 }} label="Apple" onPress={() => void handleSocialSignup("Apple")} icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} /> : null}
               </Reveal>
               ) : null}
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, KeyboardAvoidingView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -56,7 +56,7 @@ export function ListYourSpaceModal({
     <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={reset}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
       >
         <Pressable style={StyleSheet.absoluteFill} onPress={reset} />
         <View style={{ backgroundColor: tc.sheetBg, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: "92%", overflow: "hidden" }} onStartShouldSetResponder={() => true}>
@@ -91,7 +91,7 @@ export function ListYourSpaceModal({
               </Text>
             </View>
           ) : (
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
+            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 20 }} showsVerticalScrollIndicator={false}>
               {/* Room type selector */}
               <Text style={[ar.listLabel, { color: tc.textTertiary }]}>Room Type</Text>
               <View style={{ flexDirection: "row", gap: 8, marginBottom: 14 }}>

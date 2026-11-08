@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { View, Text, Pressable, StyleSheet, Share, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../theme/useTheme";
@@ -45,7 +45,7 @@ export const StoryCard = memo(function StoryCard({
   const ini = (apiSt.author?.name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   const share = () => {
     const link = getShareLink("story", apiSt.id);
-    void Share.share({ message: `${apiSt.title}\n\nShared via ComLinkr\n\n${link}`, ...(Platform.OS === "ios" ? { url: link } : {}) });
+    void Share.share({ message: `${apiSt.title}\n\nShared via ComLinkr\n\n${link}`, ...(process.env.EXPO_OS === "ios" ? { url: link } : {}) });
   };
   const glassBtn = (icon: keyof typeof Ionicons.glyphMap, color: string, label: string, onPress: () => void) => (
     <Pressable hitSlop={6} onPress={(e) => { e.stopPropagation(); void Haptics.selectionAsync(); onPress(); }} style={s.glassBtn} accessibilityRole="button" accessibilityLabel={label}>

@@ -119,7 +119,7 @@ export function ReportListingModal({
               </Pressable>
             </View>
           ) : (
-            <ScrollView
+            <ScrollView keyboardShouldPersistTaps="handled"
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingBottom: 32 }}
               showsVerticalScrollIndicator={false}

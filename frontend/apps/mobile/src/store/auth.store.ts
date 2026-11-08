@@ -3,7 +3,6 @@
 // authService.login() -> syncFromApiLogin(). Kept for potential future local-dev use; do not
 // reintroduce hardcoded credentials here.
 
-import { Platform } from "react-native";
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
 import type { SessionCookieHeader, UserProfile } from "@shared/types/api";
@@ -145,14 +144,14 @@ const AUTH_KEY = "comlinkr_auth";
 const BADGE_APPLICATIONS_KEY = "comlinkr_badge_applications";
 
 async function storageGetItem(key: string): Promise<string | null> {
-  if (Platform.OS === "web") {
+  if (process.env.EXPO_OS === "web") {
     try { return typeof localStorage === "undefined" ? null : localStorage.getItem(key); } catch { return null; }
   }
   return await SecureStore.getItemAsync(key);
 }
 
 async function storageSetItem(key: string, value: string): Promise<void> {
-  if (Platform.OS === "web") {
+  if (process.env.EXPO_OS === "web") {
     try { if (typeof localStorage !== "undefined") localStorage.setItem(key, value); } catch { }
     return;
   }
@@ -160,7 +159,7 @@ async function storageSetItem(key: string, value: string): Promise<void> {
 }
 
 async function storageDeleteItem(key: string): Promise<void> {
-  if (Platform.OS === "web") {
+  if (process.env.EXPO_OS === "web") {
     try { if (typeof localStorage !== "undefined") localStorage.removeItem(key); } catch { }
     return;
   }

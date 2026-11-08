@@ -2,7 +2,7 @@ import { rs } from "../../../utils/responsive";
 import { useState, useEffect, useRef } from "react";
 import Animated from "react-native-reanimated";
 import { HeroExpand, takeHero, useHeroFade, type HeroOrigin } from "../../../shared/d/Hero";
-import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TouchableOpacity, Dimensions, Linking, ActivityIndicator, Share, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, Modal, TouchableOpacity, useWindowDimensions, Linking, ActivityIndicator, Share } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -58,7 +58,7 @@ export function EventDetailModal({
   const [attendeesLoading, setAttendeesLoading] = useState(false);
   const [attendeesExpanded, setAttendeesExpanded] = useState(false);
   const { isDark, tc } = useTheme();
-  const screenW = Dimensions.get("window").width;
+  const { width: screenW } = useWindowDimensions();
 
   useEffect(() => {
     setHeroIdx(0);
@@ -153,7 +153,7 @@ export function EventDetailModal({
       await Share.share({
         title: displayEvent.title,
         message: `Check out "${displayEvent.title}" on ${displayEvent.date} at ${displayEvent.location}! 🎉\n\n${link}`,
-        ...(Platform.OS === "ios" ? { url: link } : {}),
+        ...(process.env.EXPO_OS === "ios" ? { url: link } : {}),
       });
     } catch { /* ignore */ }
   };

@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
@@ -18,7 +17,7 @@ function loadGoogleSignIn(): GoogleSignInModule {
 }
 
 export function isGoogleSignInConfigured(): boolean {
-  if (Platform.OS === "ios") {
+  if (process.env.EXPO_OS === "ios") {
     return Boolean(webClientId && iosClientId);
   }
   // Android needs webClientId to mint an idToken for our backend.
@@ -38,7 +37,7 @@ function ensureConfigured(GoogleSignin: GoogleSignInModule["GoogleSignin"]): voi
   }
   GoogleSignin.configure({
     webClientId: webClientId!,
-    iosClientId: Platform.OS === "ios" ? iosClientId : undefined,
+    iosClientId: process.env.EXPO_OS === "ios" ? iosClientId : undefined,
     offlineAccess: false,
   });
   configured = true;
@@ -64,7 +63,7 @@ export async function getGoogleIdToken(): Promise<string | null> {
 
   ensureConfigured(GoogleSignin);
 
-  if (Platform.OS === "android") {
+  if (process.env.EXPO_OS === "android") {
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
   }
 

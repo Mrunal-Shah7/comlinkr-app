@@ -222,7 +222,7 @@ export default function NotificationManagementScreen() {
       <View style={s.decorCircle} />
 
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled"
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}

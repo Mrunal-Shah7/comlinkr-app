@@ -12,7 +12,6 @@ import {
   StyleSheet,
   Modal,
   KeyboardAvoidingView,
-  Platform,
   Alert,
   Share,
   ActivityIndicator,
@@ -865,7 +864,7 @@ export default function CommunityScreen() {
       await Share.share({
         title: "ComLinkr Community",
         message: `Q: ${q.question}\n\nAsked by ${q.author} on ComLinkr Community · ${q.votes} votes · ${answerTotal(q)} answers\n\n${link}`,
-        ...(Platform.OS === "ios" ? { url: link } : {}),
+        ...(process.env.EXPO_OS === "ios" ? { url: link } : {}),
       });
     } catch (_) {}
   };
@@ -992,7 +991,7 @@ export default function CommunityScreen() {
       <AppHeader title="Community" scrollY={communityScrollY} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
       <Reanimated.ScrollView
@@ -1202,7 +1201,7 @@ export default function CommunityScreen() {
 
       {/* Ask a question (design D sheet) */}
       <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours">
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
           <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
             <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Your question</Text>
             <TextInput

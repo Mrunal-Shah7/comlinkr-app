@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  Dimensions,
   TextInput,
   Alert,
   ActivityIndicator,
@@ -40,15 +39,19 @@ function OnbDot({ on }: { on: boolean }) {
   const w = useSharedValue(on ? 20 : 7);
   useEffect(() => { w.set(withSpring(on ? 20 : 7, SPRING.liquid)); }, [on, w]);
   const a = useAnimatedStyle(() => ({ width: w.get() }));
+  // Each dot has a fixed 20 px slot and the pill inside it is absolutely positioned, so animating its width never
+  // re-lays out the row (expo-animation: width only on an out-of-flow element).
   return (
-    <Reanimated.View style={[{ height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: on ? 'transparent' : tc.surface3 }, a]}>
-      {on ? <GradientFill style={StyleSheet.absoluteFill} /> : null}
-    </Reanimated.View>
+    <View style={{ width: 20, height: 7, alignItems: 'center', justifyContent: 'center' }}>
+      <Reanimated.View style={[{ position: 'absolute', height: 7, borderRadius: 4, overflow: 'hidden', backgroundColor: on ? 'transparent' : tc.surface3 }, a]}>
+        {on ? <GradientFill style={StyleSheet.absoluteFill} /> : null}
+      </Reanimated.View>
+    </View>
   );
 }
 function OnbDots({ step, total }: { step: number; total: number }) {
   return (
-    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: total, now: step + 1 }}>
+    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: total, now: step + 1 }}>
       {Array.from({ length: total }).map((_, i) => <OnbDot key={i} on={i === step} />)}
     </View>
   );
@@ -69,7 +72,6 @@ function OnbProgress({ step, total }: { step: number; total: number }) {
 /** Sprint 21: enrollment limited to US + UK at onboarding. */
 const ONBOARDING_COUNTRIES = COUNTRIES.filter((c) => c === "United States" || c === "United Kingdom");
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ─── Country Flags & Dial Codes ─────────────────────────
 const COUNTRY_INFO: Record<string, { flag: string; code: string }> = {

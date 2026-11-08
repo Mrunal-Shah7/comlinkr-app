@@ -3,7 +3,6 @@ import {
   Pressable,
   Text,
   View,
-  Platform,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
@@ -175,7 +174,7 @@ export function DatePickerField({
 //           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
 //         </Pressable>
 //
-//         {Platform.OS === "ios" ? (
+//         {process.env.EXPO_OS === "ios" ? (
 //           <InlinePickerSheet
 //             visible={show}
 //             accentColor={accentColor}
@@ -234,7 +233,7 @@ export function DatePickerField({
     };
 
     const openPicker = () => {
-      if (Platform.OS === "android") {
+      if (process.env.EXPO_OS === "android") {
         openAndroidPicker();
         return;
       }
@@ -265,7 +264,7 @@ export function DatePickerField({
           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
         </Pressable>
 
-        {Platform.OS === "ios" && (
+        {process.env.EXPO_OS === "ios" && (
           <InlinePickerSheet
             visible={show}
             accentColor={accentColor}
@@ -340,7 +339,7 @@ export function TimePickerField({
 //           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
 //         </Pressable>
 //
-//         {Platform.OS === "ios" ? (
+//         {process.env.EXPO_OS === "ios" ? (
 //           <InlinePickerSheet
 //             visible={show}
 //             accentColor={accentColor}
@@ -395,7 +394,7 @@ export function TimePickerField({
     };
 
     const openPicker = () => {
-      if (Platform.OS === "android") {
+      if (process.env.EXPO_OS === "android") {
         openAndroidPicker();
         return;
       }
@@ -418,7 +417,7 @@ export function TimePickerField({
           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
         </Pressable>
 
-        {Platform.OS === "ios" && (
+        {process.env.EXPO_OS === "ios" && (
           <InlinePickerSheet
             visible={show}
             accentColor={accentColor}

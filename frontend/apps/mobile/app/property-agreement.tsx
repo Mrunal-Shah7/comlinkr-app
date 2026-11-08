@@ -10,7 +10,7 @@
  */
 import { Switch } from "../src/shared/ui/Switch";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ScrollView } from "react-native";
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Pressable, ScrollView } from "react-native";
 import Animated, { FadeInLeft, FadeInRight, FadeOutLeft, FadeOutRight, ZoomIn, useAnimatedStyle, useReducedMotion, withSpring } from "react-native-reanimated";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -510,7 +510,7 @@ export default function PropertyAgreementScreen() {
     );
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
       <DPage title={title} sub={propertyTitle} onBack={part === "done" ? undefined : onBack} footer={footer} scrollRef={scrollRef} scrollEnabled={!drawing}>
         <Progress frac={part === "apply" ? 1 / 3 : part === "offer" ? 2 / 3 : 1} />
         <View style={{ height: 16 }} />
@@ -711,7 +711,7 @@ export default function PropertyAgreementScreen() {
       </DPage>
 
       <DSheet visible={readerOpen} onClose={() => setReaderOpen(false)} title={dealType === "buy" ? "Purchase agreement" : "Tenancy agreement"} full>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }}>
           <Text selectable style={[body(400), { fontSize: 14, lineHeight: 21, color: tc.textPrimary }]}>{agreementText}</Text>
           <GradientButton label="I have read it" block outerStyle={{ marginTop: 18 }} onPress={() => { setAgreementRead(true); setReaderOpen(false); }} />
         </ScrollView>

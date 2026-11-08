@@ -4,8 +4,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl, Modal,
-  TextInput, Pressable, Alert, KeyboardAvoidingView, Platform,
-} from 'react-native';
+  TextInput, Pressable, Alert, KeyboardAvoidingView, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -102,7 +101,7 @@ function ReplyModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={mo.overlay}>
           <ScrollView
             style={mo.sheet}
@@ -364,7 +363,7 @@ export default function SupportRequestsScreen() {
       <AdminBackdrop />
 
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled"
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}

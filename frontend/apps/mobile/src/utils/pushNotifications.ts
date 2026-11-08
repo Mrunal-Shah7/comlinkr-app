@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
   // Expo Go does not support remote push notifications on SDK 53+.
@@ -10,7 +9,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
 
   // Simulators/emulators cannot receive push notifications.
-  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+  if (process.env.EXPO_OS !== 'ios' && process.env.EXPO_OS !== 'android') {
     console.warn('Push notifications require a physical device.');
     return null;
   }

@@ -1,7 +1,6 @@
 // src/services/http/apiClient.ts
 
 import axios, { AxiosInstance, AxiosError, AxiosHeaders, InternalAxiosRequestConfig } from 'axios';
-import { Platform } from 'react-native';
 
 const BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
@@ -91,7 +90,7 @@ function messageForNetworkError(error: AxiosError): string {
   } else {
     out += `${axiosMsg}${code ? ` (${code})` : ''}`;
   }
-  if (Platform.OS === 'android' && BASE_URL.startsWith('http://')) {
+  if (process.env.EXPO_OS === 'android' && BASE_URL.startsWith('http://')) {
     out += ' Android blocks cleartext HTTP unless usesCleartextTraffic is enabled (see app.config.js).';
   }
   return out;

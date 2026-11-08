@@ -10,7 +10,6 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
@@ -1311,7 +1310,7 @@ export default function ApplyBadgeScreen() {
       onBack={goBackStep}
     >
       {step < 5 ? <StepDots total={adjustedTotal} current={adjustedStep} /> : null}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
         <Animated.View key={step} style={{ paddingHorizontal: 16, paddingTop: 10 }} entering={reduceMotion ? undefined : FadeInRight.springify().damping(20).stiffness(200).mass(1)}>
           {step === 0 && renderBadgeSelect()}
           {step === 1 && (

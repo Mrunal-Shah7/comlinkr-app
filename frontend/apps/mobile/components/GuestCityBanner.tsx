@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, TextInput, FlatList, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, Pressable, StyleSheet, Modal, TextInput, FlatList, KeyboardAvoidingView } from "react-native";
 import { DSheet } from "../src/shared/d/Sheet";
 import { TYPE } from "../src/theme/d";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -69,7 +69,7 @@ export function GuestCityPickerModal({
   // Design D `city`: "Your city" in the D sheet; search, then rows with a pin; the current city has a check.
   return (
     <DSheet visible={visible} onClose={onClose} title="Your city" full>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 18, marginBottom: 12, height: 50, paddingHorizontal: 14, borderRadius: 16, backgroundColor: tcTheme.inputBg }}>
           <Ionicons name="search" size={18} color={tcTheme.textTertiary} />
           <TextInput

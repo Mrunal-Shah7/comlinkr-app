@@ -188,7 +188,7 @@ export default function EventRegistrationModal({
   return (
     <DSheet visible={visible} onClose={resetForm} title={regSubmitted ? "Your ticket" : "RSVP"}>
       {regSubmitted ? (
-        <ScrollView contentContainerStyle={st.sb} showsVerticalScrollIndicator={false}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={st.sb} showsVerticalScrollIndicator={false}>
           <Animated.View style={[st.ticket, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }, { transformOrigin: "top" }, flipStyle]}>
             <View style={{ padding: 18, paddingHorizontal: 20 }}>
               <Tag label="Confirmed" ok icon="checkmark" />

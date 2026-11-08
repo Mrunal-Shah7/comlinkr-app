@@ -13,7 +13,6 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
@@ -172,7 +171,7 @@ function RestaurantCard({
 
       {/* ── Manage sheet ── */}
       <DSheet visible={manageOpen} onClose={() => { if (!saving) setManageOpen(false); }} title={restaurant.name} full>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
           <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24, gap: 14 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <Text style={[TYPE.small, { color: tc.textSecondary }]}>{[restaurant.cuisine, restaurant.city].filter(Boolean).join(" · ")}</Text>
