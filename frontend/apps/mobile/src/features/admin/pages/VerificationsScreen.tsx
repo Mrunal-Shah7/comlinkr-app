@@ -23,6 +23,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const BADGE_META: Record<string, { label: string; icon: string; gradient: [string, string]; description: string; checklistItems: string[] }> = {
   LANDLORD: {
@@ -551,7 +552,7 @@ function ApplicationCard({
 }
 
 export default function VerificationsScreen() {
-  const [filter, setFilter] = useState<'all' | 'landlord' | 'restaurant_owner' | 'agency' | 'local_reviewer'>('all');
+  const [filter, setFilter] = useBackState<'all' | 'landlord' | 'restaurant_owner' | 'agency' | 'local_reviewer'>('all');
   const [rejectTarget, setRejectTarget] = useState<BadgeApplication | null>(null);
   const { // SPRINT-41:
     items: applications, // SPRINT-41:

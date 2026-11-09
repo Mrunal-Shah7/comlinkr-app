@@ -42,6 +42,7 @@ import EventRegistrationModal from '../src/features/explore/components/EventRegi
 import type { ExploreEventRow } from '../src/features/explore/models';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { useBackState } from '../src/hooks/useBackState';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -148,7 +149,7 @@ export default function EventsScreen() {
   const user = useAuthStore((st) => st.user);
   const { requireAuth } = useRequireAuth();
   const guestCity = useGuestLocationStore((s) => s.city);
-  const [tab, setTab] = useState<typeof TABS[number]>("Upcoming");
+  const [tab, setTab] = useBackState<typeof TABS[number]>("Upcoming");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [interestedIds, setInterestedIds] = useState<Set<string>>(new Set());
 

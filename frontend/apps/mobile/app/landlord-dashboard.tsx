@@ -38,6 +38,7 @@ import { TYPE } from '../src/theme/d';
 import { EmptyState, GradientButton, GradientFill, PersonAvatar, PressableScale, Reveal, Segmented, SoftButton } from '../src/shared/d';
 import { DSheet } from '../src/shared/d/Sheet';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
+import { useBackState } from '../src/hooks/useBackState';
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ export default function LandlordDashboard() {
   const isAuthed = useAuthStore((s) => s.isAuthed);
   const user = useAuthStore((s) => s.user);
 
-  const [tab, setTab] = useState<Tab>("applications");
+  const [tab, setTab] = useBackState<Tab>("applications");
   const dash = useScreenQuery({
     queryKey: queryKeys.landlordDashboard(),
     initial: { applications: [] as PropertyApplication[], listings: [] as HousingListing[] },

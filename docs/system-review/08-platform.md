@@ -59,6 +59,12 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
 - **Navigation bar (Android):** hidden throughout the app by `<NavigationBar hidden />` in `app/_layout.tsx` and the
   `expo-navigation-bar` plugin. A swipe up from the bottom edge shows it for a moment. It shows while a native
   sheet or `Modal` is open, because those have their own window. Plan 04 [walked, Android].
+- **Back (Android):**
+  - Tabs keep a history (`backBehavior="history"`).
+  - On 28 screens, sections, filters and searches are kept with `useBackState`. Back undoes them one step at a time
+    before it leaves the screen. A sheet visit is one step, and so is a burst of typing.
+  - The on-screen ← always leaves the screen.
+  - iOS has no system Back, so in-screen undo is Android only. Plan 05 [walked, Android, button].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
   colour [code]. Screens styled with the static `palette` follow dark mode through `createThemedStyles`. Its tables,
   and a lightness fallback for colours they do not name, map light surfaces and dark text. Colours passed as props go

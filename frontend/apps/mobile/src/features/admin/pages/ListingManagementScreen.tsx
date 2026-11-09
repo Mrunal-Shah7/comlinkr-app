@@ -25,6 +25,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 type AdminListing = Listing & { propertyType?: string; backendStatus?: string }; // SPRINT-41:
 
@@ -280,9 +281,9 @@ function ListingCard({
 }
 
 export default function ListingManagementScreen() {
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'AVAILABLE' | 'RENTED' | 'UNLISTED'>('all'); // SPRINT-41:
-  const [propertyFilter, setPropertyFilter] = useState('all'); // SPRINT-41:
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [statusFilter, setStatusFilter] = useBackState<'all' | 'AVAILABLE' | 'RENTED' | 'UNLISTED'>('all'); // SPRINT-41:
+  const [propertyFilter, setPropertyFilter] = useBackState('all'); // SPRINT-41:
 
   const { // SPRINT-41:
     items: listings, // SPRINT-41:

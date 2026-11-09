@@ -23,6 +23,7 @@ import type { AdminStoryRow } from '../../../api/admin.api';
 import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
+import { useBackState } from '../../../hooks/useBackState';
 
 function isExpired(expiresAt: string): boolean {
   return new Date(expiresAt).getTime() < Date.now();
@@ -168,8 +169,8 @@ function StoryDetailModal({
 }
 
 export default function StoriesModerationScreen() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [filter, setFilter] = useBackState('all');
   const [detailStory, setDetailStory] = useState<AdminStoryRow | null>(null);
   const {
     items: stories,

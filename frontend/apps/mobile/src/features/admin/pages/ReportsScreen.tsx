@@ -24,6 +24,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   PENDING:   { color: palette.red500,            bg: palette.red50,               icon: 'alert-circle',     label: 'Pending'   },
@@ -317,8 +318,8 @@ function ReportCard({
 }
 
 export default function ReportsScreen() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [filter, setFilter] = useBackState('all');
   const { // SPRINT-41:
     items: reports, // SPRINT-41:
     meta, // SPRINT-41:

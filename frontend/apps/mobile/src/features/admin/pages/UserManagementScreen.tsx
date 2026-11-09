@@ -24,6 +24,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const GRANT_BADGE_OPTIONS: { value: string; label: string; icon: string; color: string }[] = [
   { value: 'LANDLORD',         label: 'Verified Landlord',         icon: 'home',       color: Colors.brand.blue  },
@@ -562,9 +563,9 @@ function GrantBadgeModal({
 }
 
 export default function UserManagementScreen() {
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'USER' | 'ADMIN'>('all'); // SPRINT-41:
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'suspended'>('all'); // SPRINT-41:
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [roleFilter, setRoleFilter] = useBackState<'all' | 'USER' | 'ADMIN'>('all'); // SPRINT-41:
+  const [activeFilter, setActiveFilter] = useBackState<'all' | 'active' | 'suspended'>('all'); // SPRINT-41:
   const [warnUserId, setWarnUserId]     = useState<string | null>(null);
   const [warnUserName, setWarnUserName] = useState('');
   const [grantUserId, setGrantUserId]   = useState<string | null>(null);

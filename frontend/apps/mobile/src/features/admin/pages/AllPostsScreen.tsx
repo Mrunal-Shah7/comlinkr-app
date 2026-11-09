@@ -18,6 +18,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const TYPE_META: Record<string, { icon: string; color: string; bg: string; gradient: [string, string] }> = {
   listing:    { icon: 'home',       color: Colors.brand.blue,  bg: Colors.brand.blueLight,  gradient: [Colors.brand.blue, palette.blueL40_2]   },
@@ -273,7 +274,7 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
 export default function AllPostsScreen() {
   const [search, setSearch]     = useState('');
   const [filter, setFilter]     = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all_types');
+  const [typeFilter, setTypeFilter] = useBackState('all_types');
   const [detailPost, setDetailPost] = useState<AdminPost | null>(null);
   const {
     items: posts,

@@ -31,6 +31,7 @@ import { createThemedStyles } from '../src/theme/themedStyles';
 import { TYPE } from '../src/theme/d';
 import { EmptyState, GradientButton, GradientFill, PressableScale, Reveal, Segmented, SoftButton } from '../src/shared/d';
 import { DPage, goBackOr } from '../src/shared/d/Page';
+import { useBackState } from '../src/hooks/useBackState';
 
 type VerificationLevel = "basic" | "verified" | "fully_verified";
 
@@ -86,7 +87,7 @@ export default function MyListingsScreen() {
   const [expandedApplicants, setExpandedApplicants] = useState<Record<string, boolean>>({});
   const [expandedApplicant, setExpandedApplicant] = useState<string | null>(null);
   const [statusUpdating, setStatusUpdating] = useState<Record<string, boolean>>({});
-  const [panel, setPanel] = useState<"homes" | "rooms">("homes");
+  const [panel, setPanel] = useBackState<"homes" | "rooms">("homes");
 
   const handleToggleListingStatus = async (listing: HousingListing) => {
     const nextStatus = listing.status === "RENTED" ? "AVAILABLE" : "RENTED";
