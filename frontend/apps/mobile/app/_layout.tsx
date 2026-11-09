@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { LogBox, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationBar } from 'expo-navigation-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
@@ -108,6 +109,8 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <StatusBar style={isDark ? 'light' : 'dark'} />
+          {/* Android: hide the navigation bar; a swipe up from the bottom edge shows it for a moment (immersive). */}
+          <NavigationBar hidden />
           <ErrorBoundary>
             {/* Plan 02: the native stack, with the platform's own push animation (edge swipe back on iOS, system Back
                 on Android). With reduce motion on, screens fade. */}

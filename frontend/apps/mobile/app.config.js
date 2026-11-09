@@ -86,6 +86,8 @@ module.exports = ({ config }) => ({
     'expo-font',
     'expo-image',
     'expo-status-bar',
+    // Android: the navigation bar starts hidden; a swipe up from the bottom edge shows it for a moment.
+    ['expo-navigation-bar', { hidden: true }],
     'expo-web-browser',
     [
       'expo-build-properties',
