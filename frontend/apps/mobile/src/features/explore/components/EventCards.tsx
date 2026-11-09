@@ -9,6 +9,7 @@ import { FadeImage } from "../../../../components/FadeImage";
 import { useTheme } from "../../../theme/useTheme";
 import { TYPE, body, display } from "../../../theme/d";
 import { PressableScale } from "../../../shared/d";
+import { DetailLink, detailHref } from "../../../shared/d/DetailLink";
 import { SPRING } from "../../../shared/motion/presets";
 import { EVENT_IMAGE_BY_CATEGORY, type ExploreEventRow } from "../models";
 
@@ -25,6 +26,8 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
   const fallback = EVENT_IMAGE_BY_CATEGORY[event.category] ?? EVENT_IMAGE_BY_CATEGORY.Community;
   const meta = [event.interested > 0 ? `${event.interested} going` : "", event.price].filter(Boolean).join(" · ");
   return (
+    <DetailLink href={detailHref.event(event.id)} style={{ flex: 1 }}
+      actions={[{ title: isSaved ? "Remove from saved" : "Save event", icon: isSaved ? "bookmark.slash" : "bookmark", onPress: onToggleSave }]}>
     <PressableScale onPress={() => onPress?.()} outerStyle={{ flex: 1 }} style={s.tile} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}>
       <View>
         <View ref={imgRef} collapsable={false}><FadeImage uri={event.image} fallbackUri={fallback} style={s.img} /></View>
@@ -43,12 +46,13 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
       <Text style={[display(700), { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={2}>{event.title}</Text>
       {meta ? <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2, marginHorizontal: 2 }]} numberOfLines={1}>{meta}</Text> : null}
     </PressableScale>
+    </DetailLink>
   );
 }
 
 const s = StyleSheet.create({
   tile: { flex: 1 },
-  img: { width: "100%", aspectRatio: 1, borderRadius: 22 },
-  chip: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1, maxWidth: "80%" },
+  img: { width: "100%", aspectRatio: 1, borderRadius: 22 , borderCurve: "continuous"},
+  chip: { position: "absolute", left: 8, bottom: 8, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderCurve: "continuous", borderWidth: 1, maxWidth: "80%" },
   save: { position: "absolute", right: 8, top: 8, width: 34, height: 34, borderRadius: 17, borderWidth: 1, alignItems: "center", justifyContent: "center" },
 });

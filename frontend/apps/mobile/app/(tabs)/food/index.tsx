@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { BentoTile, Chip, GradientFill, PressableScale, Reveal, TileIn, TileLabel } from "../../../src/shared/d";
+import { DETAIL_LINK_ON, DetailLink, detailHref } from "../../../src/shared/d/DetailLink";
 import { TYPE } from "../../../src/theme/d";
 import {
   View,
@@ -434,7 +435,13 @@ export default function FoodScreen() {
               {pair.map((r) => {
                 const saved = bookmarkedIds.has(r.id) || !!r.isSaved;
                 return (
-                  <PressableScale key={r.id} outerStyle={{ flex: 1 }} onPress={() => openRestaurant(r.id)} onLongPress={() => void openCardActions(r)} delayLongPress={350} accessibilityRole="button" accessibilityLabel={r.name}>
+                  <DetailLink key={r.id} href={detailHref.restaurant(r.id)} style={{ flex: 1 }} actions={[
+                    { title: favorites.has(r.id) ? "Remove from favorites" : "Add to favorites", icon: favorites.has(r.id) ? "heart.slash" : "heart", onPress: () => void toggleFav(r.id) },
+                    { title: saved ? "Remove from saved" : "Save for later", icon: saved ? "bookmark.slash" : "bookmark", onPress: () => void toggleBookmark(r.id) },
+                    { title: "Share", icon: "square.and.arrow.up", onPress: () => void handleShare(r) },
+                    { title: "Directions", icon: "map", onPress: () => handleDirections(r) },
+                  ]}>
+                  <PressableScale outerStyle={{ flex: 1 }} onPress={() => openRestaurant(r.id)} onLongPress={DETAIL_LINK_ON ? undefined : () => void openCardActions(r)} delayLongPress={350} accessibilityRole="button" accessibilityLabel={r.name}>
                     <View>
                       <FadeImage uri={(r.images && r.images[0]) || r.image} style={{ width: "100%", aspectRatio: 1, borderRadius: 22 }} />
                       {(r.reviews ?? 0) > 0 ? (
@@ -454,6 +461,7 @@ export default function FoodScreen() {
                     <Text style={[TYPE.cardTitle, { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={1}>{r.name}</Text>
                     <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{[r.cuisine, r.price ? getDisplayPrice(r, countryCode) : ""].filter(Boolean).join(" · ")}</Text>
                   </PressableScale>
+                  </DetailLink>
                 );
               })}
               {pair.length === 1 ? <View style={{ flex: 1 }} /> : null}

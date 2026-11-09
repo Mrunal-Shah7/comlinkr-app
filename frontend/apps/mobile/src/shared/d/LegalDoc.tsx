@@ -66,6 +66,6 @@ export function LegalDoc({ title, version, updated, sections, intro, outro }: {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 14 },
+  card: { borderRadius: 20, borderCurve: "continuous", borderWidth: 1, paddingHorizontal: 14 },
   toc: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
 });

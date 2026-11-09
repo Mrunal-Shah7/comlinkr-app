@@ -79,7 +79,7 @@ export const OtpBoxes = forwardRef<OtpHandle, {
 
 const s = StyleSheet.create({
   row: { flexDirection: "row", gap: 8, justifyContent: "center" },
-  box: { width: 48, height: 58, borderRadius: 16, borderWidth: 1.5, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  box: { width: 48, height: 58, borderRadius: 16, borderCurve: "continuous", borderWidth: 1.5, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });
 
