@@ -1,5 +1,7 @@
 # TR-011: the mobile app checked rule by rule against the installed Expo skills
 
+Merged as pull request 5.
+
 _2026-11-08. Triage [TR-011](../triage.md). Review [08 Platform](../system-review/08-platform.md). Run log
 [2026-11-08 Expo review](../device-runs/2026-11-08-expo-review.md), fourth round. Follows the
 [Expo review](2026-11-08-expo-review.md) (TR-010)._

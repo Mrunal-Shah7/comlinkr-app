@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/check-docs.mjs\" --session-start",
+            "timeout": 30,
+            "statusMessage": "Reading the handover and checking the docs"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git push*)",
+            "shell": "bash",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/check-docs.mjs\" --hook",
+            "timeout": 30,
+            "statusMessage": "Checking the docs before push"
+          }
+        ]
+      },
+      {
+        "matcher": "PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "PowerShell(git push*)",
+            "shell": "bash",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/check-docs.mjs\" --hook",
+            "timeout": 30,
+            "statusMessage": "Checking the docs before push"
+          }
+        ]
+      }
+    ]
+  }
+}

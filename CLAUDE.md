@@ -51,6 +51,22 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   phone's settings beyond what the checklist says.
 - Screenshots that show personal data stay out of the repository.
 
+## Tools
+
+- **Phone:** drive the phone through MCPier's `android` server (scrcpy-mcp): `list_servers` must show it ready, then
+  `call_tool` for single steps. `execute` scripts have no `setTimeout`, so waits go between `call_tool` calls.
+  Screenshots taken during a scrcpy session lag one step behind; check with `adb exec-out screencap -p` instead.
+  If MCPier is down, use adb directly (`D:\AppData\AndroidStudio\Sdk\platform-tools\adb.exe`): `input tap`,
+  `input keyevent`, `screencap`. Details in [docs/device-testing.md](docs/device-testing.md).
+- **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe
+  Back. Check gestures by hand.
+- **Browser and GitHub:** the `gh` CLI is not installed. Use Claude in Chrome for anything in a browser, including
+  opening and merging pull requests: push the branch, open
+  `https://github.com/Mrunal-Shah7/comlinkr-app/compare/<base>...<branch>?expand=1` with the title and body
+  filled in, then create the pull request there. Merge only when the owner asks, and close the tab afterwards.
+- **Phone settings** changed for a check (navigation mode, dark mode, a test user's role) are put back before the
+  session ends, and the handover says so.
+
 ## Before a pull request
 
 - For each app the change touches: type check, and for the backend run unit tests (and e2e tests when an endpoint
@@ -59,6 +75,13 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   undo, sign out), unless the change cannot be seen on the phone.
 - Write a build note.
 - Work on a branch and open a pull request. Nothing is pushed to `development` or `main` directly.
+
+## After a merge
+
+In the next commit on any branch (or a small `chore/docs-…` pull request if nothing else is open):
+- set the task's state in `docs/triage.md` to `merged (PR n)`;
+- add the pull request number and merge commit to the build note;
+- remove the branch's line from "In progress" at the top of `docs/handover.md`.
 
 ## Where things are written down
 
@@ -74,7 +97,24 @@ So the next developer, or the next session, can see what changed and why (index:
 - **Something production showed first** also goes in `docs/production-lessons.md` and the rules below.
 - **Database changes** are Prisma migrations in the same pull request as the code that needs them. After running
   one locally, query the database to check that it did what it says.
-- **At the end of a session**, add an entry to the top of `docs/handover.md`.
+- **When a branch is cut**, add a line under "In progress" at the top of `docs/handover.md`: branch, task ID, what
+  is left. Update it when the plan changes, so a session that runs out of context can be picked up from it.
+- **At the end of a session**, add an entry to the top of `docs/handover.md`, including anything still running
+  (backend, Metro) and any phone setting not yet put back. End it with **"Slowed down by:"**: what cost time
+  (a missing tool, a wrong assumption, a step that had to be rediscovered). Anything likely to happen again
+  becomes a rule here (Tools, or "Rules from bugs already found") in the same commit; say which in the entry.
+- **handover.md keeps the latest five entries.** Move older ones to the top of `docs/handover-archive.md`.
+
+## Checks on the docs
+
+`node scripts/check-docs.mjs` checks that the docs agree with git: triage states against merged branches, merged
+tasks' build notes against their PR numbers, the build-notes list in `docs/README.md`, relative links, and the
+"In progress" section and length of `docs/handover.md`. Run it before every pull request.
+
+Two hooks in `.claude/settings.json` run it without anyone remembering: at session start (it prints "In
+progress", the latest handover entry and any findings) and before `git push`, which it blocks while there are
+errors. Fix the docs rather than skipping the hook. When a check is wrong or no longer useful, change the script
+in a pull request like any other code.
 
 ## Safety on a local copy
 
@@ -114,6 +154,9 @@ none is in `docs/production-lessons.md`.
   ([native navigation](docs/build/2026-11-09-native-navigation.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`
   ([performance note](docs/build/2026-10-29-ui-performance-tab-jank.md)).
+
+Rules are also removed: when one stops applying (a tool gets installed, a library changes), delete it in the
+same pull request that makes it obsolete, so this file only holds rules that still bite.
 
 General rules this way of working starts with:
 

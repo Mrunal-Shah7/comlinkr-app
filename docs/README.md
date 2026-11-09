@@ -22,7 +22,9 @@ tested and how it deploys. Then [handover.md](handover.md) for where the work st
 | [review/](review/README.md), [plan/](plan/README.md) | Current behaviour, then the change | Before building a change in behaviour |
 | [build/](build/README.md) | How each change was built and checked | With every fix or feature |
 | [production-lessons.md](production-lessons.md) | What reached people and the rule from it | After a production incident |
-| [handover.md](handover.md) | Where the work stopped | At the end of every session |
+| [handover.md](handover.md) | "In progress" branches and the latest five sessions | When a branch is cut or merges; at the end of every session |
+| [handover-archive.md](handover-archive.md) | Older handover entries | When handover.md passes five entries |
+| `../scripts/check-docs.mjs` | Checks the docs against git (run by the hooks in `../.claude/settings.json`) | When a check is wrong or missing |
 | [reference/](reference/) | Product overview, architecture, API summary, data model, roommate matching | When they drift from the code |
 
 ## System review (`system-review/`)
@@ -96,7 +98,7 @@ Each gets a plan in `plan/` when it is picked up.
 | T-002 | A local build path that cannot reach production: an EAS `local` profile or a documented `expo run:android`, and a native build workaround that works at this path | Every EAS profile points at production; the old workaround was left in `code/` |
 | T-003 | A seed for every module (events, stories, quests, polls, applications, badges, admin data, restaurant hours, conversations) with `.test` emails, and a reset script that uses the test-database guard | Most modules cannot be walked with today's data; the smoke run could not check open or closed (S-09) or read ticks (S-11) |
 | T-004 | ~~Set up phone testing and run the smoke checklist~~ Done 2026-11-04 through MCPier's `android` server. Still open: read the scrcpy-mcp source behind it | It has a shell on the phone |
-| T-005 | Create the GitHub repository, a `development` branch and branch protection | Pull requests need somewhere to go |
+| T-005 | ~~Create the GitHub repository~~ Done (pull requests 1 to 20 merged there). Still open: a `development` branch and branch protection; until then pull requests go straight to `main` | Pull requests need somewhere to go |
 | T-006 | Fix the mobile type check (`expo-modules-core` import in `audioPlayback.ts`) | `pnpm typecheck` fails |
 | T-007 | Decide where the signing keystores live (EAS credentials or a password manager), and whether the old repository's history needs them removed | They were committed in the old frontend repository |
 
@@ -134,6 +136,8 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.
+- 2026-11-09: [Docs checks and tooling rules](build/2026-11-09-docs-tooling.md) (TR-025): Tools and After-a-merge
+  rules, `scripts/check-docs.mjs` with session-start and pre-push hooks, handover archive, stale triage rows fixed.
 - 2026-11-09: [Back returns to the previous state](build/2026-11-09-back-history.md) (TR-023, plan 05): tab history,
   and `useBackState` so Android Back undoes sections, filters and searches on 28 screens before leaving. Walked on
   Android with the Back button.

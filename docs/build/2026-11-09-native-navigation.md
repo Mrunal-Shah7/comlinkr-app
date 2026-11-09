@@ -1,5 +1,7 @@
 # TR-012: native tabs, native screen transitions and native controls
 
+Merged as pull request 6.
+
 _2026-11-09. Triage [TR-012](../triage.md). Plan [02](../plan/02-native-navigation.md). Review
 [08 Platform](../system-review/08-platform.md). Run log
 [2026-11-09 native navigation](../device-runs/2026-11-09-native-navigation.md)._
