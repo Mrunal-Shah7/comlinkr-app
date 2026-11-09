@@ -1,6 +1,8 @@
 import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import { useEffect, useState } from "react";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useScreenQuery } from "../src/hooks/useScreenQuery";
 import {
   View,
   Text,
@@ -270,29 +272,22 @@ export default function MyRestaurantsScreen() {
   const user = useAuthStore((s) => s.user);
   const { isVerifiedRestaurantOwner } = usePermissions();
   const { isDark, tc } = useTheme();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const load = async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
+  const mine = useScreenQuery({
+    queryKey: queryKeys.myRestaurants(),
+    initial: [] as Restaurant[],
+    staleTime: 0,
+    queryFn: async () => {
       const data = await getMyRestaurants();
       // Backend may return wrapped { data: [...] } or flat array
-      const rows = Array.isArray(data) ? data : ((data as any)?.data ?? []);
-      setRestaurants(rows);
-    } catch (e) {
-      if (!silent) {
-        const msg = (e as any)?.message ?? "Could not load your restaurants.";
-        showToast(msg, "error");
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { void load(); }, []);
+      return (Array.isArray(data) ? data : ((data as any)?.data ?? [])) as Restaurant[];
+    },
+  });
+  const restaurants = mine.data;
+  const loading = mine.loading;
+  const setRestaurants = mine.setData;
+  useEffect(() => {
+    if (mine.error) showToast((mine.error as any)?.message ?? "Could not load your restaurants.", "error");
+  }, [mine.error]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -335,7 +330,7 @@ export default function MyRestaurantsScreen() {
           <Ionicons name="add" size={26} color={tc.textPrimary} />
         </Pressable>
       }
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} tintColor={tc.accent} />}
+      refreshControl={<RefreshControl refreshing={mine.refreshing} onRefresh={mine.onRefresh} tintColor={tc.accent} />}
     >
       {loading ? <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} /> : null}
 

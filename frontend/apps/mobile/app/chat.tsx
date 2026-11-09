@@ -50,7 +50,8 @@ import {
   type ApiMessage,
 } from "../src/api/chat.api";
 import { ApiError } from "../src/api/client";
-import { useListFetchCacheStore } from "../src/store/listFetchCache.store"; // SPRINT-27
+import { queryClient } from "../src/services/cache/queryClient";
+import { queryKeys } from "../src/services/cache/queryKeys";
 import {
   connectMessagingSocket, // SPRINT-39:
   emitMessagingEvent, // SPRINT-39:
@@ -1660,7 +1661,9 @@ export default function ChatScreen() {
 
   const resolveAsset = useCallback((p: string | null | undefined) => resolveApiAssetUrl(p), []);
 
-  const loadConversations = useCallback(async () => {
+  // The inbox goes through the query cache: opening Messages again within 30 s reuses the last answer, while
+  // socket events, sends and pull to refresh force a fetch (`force`).
+  const loadConversations = useCallback(async (force = true) => {
     if (!currentUserId) {
       setConversations([]);
       setListLoading(false);
@@ -1671,7 +1674,11 @@ export default function ChatScreen() {
       const filter =
         listTab === "All" ? "all" : listTab === "Listings" ? "listings" : "events";
       const [raw, contextCache] = await Promise.all([
-        getConversations(filter),
+        queryClient.fetchQuery({
+          queryKey: [...queryKeys.conversations(), filter, currentUserId],
+          queryFn: () => getConversations(filter),
+          staleTime: force ? 0 : 30_000,
+        }),
         loadChatContextNames(),
       ]);
       const genericFallbacks = new Set(["Listing inquiry", "Event inquiry"]);
@@ -1684,7 +1691,6 @@ export default function ChatScreen() {
       }));
       const uc = await getUnreadCount();
       setHeaderUnread(uc.count);
-      useListFetchCacheStore.getState().markFetched("messages"); // SPRINT-27
     } catch {
       // preserve existing conversations on error so inbox doesn't blank out
     } finally {
@@ -1709,9 +1715,7 @@ export default function ChatScreen() {
   }, [loadConversations]);
 
   useEffect(() => {
-    // SPRINT-27: 10-minute stale-while-revalidate gate
-    if (!useListFetchCacheStore.getState().shouldFetch("messages")) return;
-    void loadConversations();
+    void loadConversations(false);
   }, [loadConversations]);
 
   // SPRINT-39: do not disconnect the shared socket when leaving Messages — owned by auth lifecycle
@@ -1760,7 +1764,6 @@ export default function ChatScreen() {
   }, [currentUserId, loadConversations]);
 
   const onRefreshList = useCallback(async () => {
-    useListFetchCacheStore.getState().clearFetchTimestamp("messages"); // SPRINT-27
     setRefreshing(true);
     try {
       await loadConversations();

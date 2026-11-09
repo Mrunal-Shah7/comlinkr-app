@@ -1,6 +1,9 @@
 // Design D `compose-review`: search restaurants and pick one from the list (no exact name to type), then the
 // stars and an optional line. The list fades up and out (200 ms); the picked place rises in (340 ms).
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../services/cache/queryKeys";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
 import { ActivityIndicator, Text, TextInput, View, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeOutUp, useReducedMotion } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,21 +26,15 @@ export function ReviewPicker({ city, picked, onPick, rating, onRating, text, onT
   const { tc } = useTheme();
   const reduce = useReducedMotion();
   const [q, setQ] = useState("");
-  const [list, setList] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (picked) return;
-    let live = true;
-    setLoading(true);
-    const t = setTimeout(() => {
-      getRestaurants({ search: q.trim() || undefined, city: q.trim() ? undefined : city, pageSize: 20 })
-        .then(({ data }) => { if (live) setList(data); })
-        .catch(() => { if (live) setList([]); })
-        .finally(() => { if (live) setLoading(false); });
-    }, q ? 250 : 0);
-    return () => { live = false; clearTimeout(t); };
-  }, [q, city, picked]);
+  const search = useDebouncedValue(q.trim(), 250);
+  // A search looks everywhere; an empty field lists the city's restaurants.
+  const query = useQuery({
+    queryKey: [...queryKeys.restaurantPicker(search ? null : city), search] as const,
+    queryFn: async () => (await getRestaurants({ search: search || undefined, city: search ? undefined : city, pageSize: 20 })).data,
+    enabled: !picked,
+  });
+  const list: Restaurant[] = query.data ?? [];
+  const loading = query.isPending || (q.trim() !== search);
 
   if (picked) {
     return (

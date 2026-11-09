@@ -10,7 +10,7 @@ import { useAuthStore } from "../src/store/auth.store";
 import { useThemeStore } from "../src/store/theme.store";
 import { resolveAvatarDisplayUrl } from "../src/api/meProfile.api";
 import { useSidebarStore } from "../src/store/sidebar.store";
-import { LIST_FETCH_TTL_MS } from "../src/store/listFetchCache.store";
+import { LIST_STALE_MS as LIST_FETCH_TTL_MS } from "../src/services/cache/queryClient";
 import { appAlert } from "../src/shared/ui/Dialogs";
 import { useTheme } from "../src/theme/useTheme";
 import { TYPE, body } from "../src/theme/d";

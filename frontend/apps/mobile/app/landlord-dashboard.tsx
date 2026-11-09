@@ -15,7 +15,9 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect } from "expo-router";
+import { router, Redirect } from "expo-router";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useScreenQuery } from "../src/hooks/useScreenQuery";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
@@ -89,49 +91,37 @@ export default function LandlordDashboard() {
   const user = useAuthStore((s) => s.user);
 
   const [tab, setTab] = useState<Tab>("applications");
-  const [applications, setApplications] = useState<PropertyApplication[]>([]);
-  const [listings, setListings] = useState<HousingListing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const dash = useScreenQuery({
+    queryKey: queryKeys.landlordDashboard(),
+    initial: { applications: [] as PropertyApplication[], listings: [] as HousingListing[] },
+    refetchOnFocus: false,
+    queryFn: async () => {
+      const [apps, listingsRes] = await Promise.all([
+        getReceivedApplications().catch(() => [] as PropertyApplication[]),
+        getMyListings({ page: 1, pageSize: 50 }).catch(() => ({ data: [] as HousingListing[] })),
+      ]);
+      return {
+        applications: apps,
+        listings: (Array.isArray((listingsRes as any)?.data) ? (listingsRes as any).data : []) as HousingListing[],
+      };
+    },
+  });
+  const { applications, listings } = dash.data;
+  const loading = dash.loading;
+  const refreshing = dash.refreshing;
+  const error = dash.error ? (dash.error instanceof ApiError ? dash.error.message : "Could not load data.") : null;
+  const setDash = dash.setData;
+  const setApplications = useCallback(
+    (fn: (p: PropertyApplication[]) => PropertyApplication[]) => setDash((d) => ({ ...d, applications: fn(d.applications) })),
+    [setDash],
+  );
 
   // Detail modal
   const [selectedApp, setSelectedApp] = useState<PropertyApplication | null>(null);
   const [decisionNote, setDecisionNote] = useState("");
   const [deciding, setDeciding] = useState(false);
 
-  const loadData = useCallback(async (silent = false) => {
-    try {
-      if (!silent) setLoading(true);
-      setError(null);
-      const [apps, listingsRes] = await Promise.all([
-        getReceivedApplications().catch(() => [] as PropertyApplication[]),
-        getMyListings({ page: 1, pageSize: 50 }).catch(() => ({ data: [] as HousingListing[] })),
-      ]);
-      setApplications(apps);
-      setListings(Array.isArray((listingsRes as any)?.data) ? (listingsRes as any).data : []);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Could not load data.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  const loadedRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (!loadedRef.current) {
-        loadedRef.current = true;
-        void loadData();
-      }
-    }, [loadData])
-  );
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    void loadData(true);
-  }, [loadData]);
+  const onRefresh = dash.onRefresh;
 
   // One tap on a card: decide, slide the card off to its side, then move it down the list.
   const [leaving, setLeaving] = useState<Record<string, "approved" | "rejected">>({});
@@ -219,7 +209,7 @@ export default function LandlordDashboard() {
       {loading ? (
         <ActivityIndicator size="large" color={tc.accent} style={{ marginTop: 40 }} />
       ) : error ? (
-        <EmptyState icon="alert-circle-outline" title="Could not load" sub={error} actionLabel="Try again" onAction={() => { loadedRef.current = false; void loadData(); }} />
+        <EmptyState icon="alert-circle-outline" title="Could not load" sub={error} actionLabel="Try again" onAction={() => { void dash.refetch(); }} />
       ) : tab === "applications" ? (
         sortedApps.length === 0 ? (
           <EmptyState icon="document-text-outline" title="No applications yet" sub="When someone applies for one of your homes, it shows up here." />

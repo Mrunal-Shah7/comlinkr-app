@@ -44,7 +44,7 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
   is sent as a `Cookie` header. Base URL from `EXPO_PUBLIC_API_BASE_URL`, which must end in `/api` [code].
 - **State:** Zustand stores in `src/store/`. React Query is set up (`src/services/cache/queryClient.ts`) but barely
   used; screens fetch in `useEffect` / `useFocusEffect` [code].
-- **List cache:** `listFetchCache.store.ts`, a 10-minute "refetch on focus?" gate per section [code].
+- **Server data:** React Query (`src/services/cache/`, `src/hooks/useScreenQuery.ts`, `useInfiniteScreenQuery.ts`): keys carry city and filters, `focusManager` follows `AppState`, stale queries refetch when a screen regains focus, sign-in and sign-out clear the cache ([React Query note](../build/2026-11-09-react-query.md)) [code].
 - **Navigation:** expo-router, native since [plan 02](../plan/02-native-navigation.md) (2026-11-09): `NativeTabs`
   (Material 3 bottom navigation on Android, the system tab bar on iOS; tabs do not slide), a fifth "Post" trigger
   that opens the compose sheet, the native `Stack` with the platform's push animation (iOS edge swipe back, Android

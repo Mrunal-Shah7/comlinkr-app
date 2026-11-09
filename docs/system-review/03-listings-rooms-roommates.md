@@ -66,10 +66,10 @@ Full rules in [reference/RoommateMatching.md](../reference/RoommateMatching.md) 
 
 ### Data loading
 
-On every focus, after the tab animation settles (`runAfterTransition`): roommate preferences (signed in only),
-`GET /housing` and `GET /housing/my-listings` merged, then roommates and shared spaces behind the 10-minute
-`listFetchCache`. State is replaced only when the response differs from the last one applied. Filter changes
-refetch; pull-to-refresh resets filters. Deep links `?openListing=<id>` and `?openRoommate=<id>` open the detail
+React Query ([React Query note](../build/2026-11-09-react-query.md)): homes are an infinite query keyed by city and filters (`GET /housing` page 1 merged with
+`GET /housing/my-listings`), refetched on every focus; roommates (browse merged with matches) and shared spaces are
+cached for 10 minutes per city. A listing mutation invalidates all of them. Roommate preferences load on each focus
+(signed in only). Pull-to-refresh resets filters. Deep links `?openListing=<id>` and `?openRoommate=<id>` open the detail
 modals [code].
 
 ### Housing API

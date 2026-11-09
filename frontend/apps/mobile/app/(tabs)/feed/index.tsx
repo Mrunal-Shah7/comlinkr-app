@@ -41,7 +41,7 @@ import { getChallenges, joinChallenge, type ApiChallenge } from "../../../src/ap
 import { ApiError } from "../../../src/api/client";
 import EventRegistrationModal from "../../../src/features/explore/components/EventRegistrationModal";
 import { useNotificationStore } from "../../../src/store/notifications.store";
-import { useListFetchCacheStore } from "../../../src/store/listFetchCache.store";
+import { queryClient, LIST_STALE_MS } from "../../../src/services/cache/queryClient";
 import { s, st } from "../../../src/styles/feedScreen.styles";
 import { showToast } from "../../../src/shared/ui/Toast";
 import { appAlert } from "../../../src/shared/ui/Dialogs";
@@ -337,6 +337,19 @@ export default function FeedScreen() {
   // still pick up fresh like/comment counts.
   const newsStatsFetchedIds = useRef<Set<string>>(new Set());
 
+  // Every Explore request goes through the React Query cache, keyed by tab and location: a fresh entry
+  // (10 minutes, 2 for news) answers without a request, and `force` (pull to refresh) always refetches.
+  const cached = <T,>(key: readonly unknown[], fn: () => Promise<T>, force = false, staleTime = LIST_STALE_MS) =>
+    queryClient.fetchQuery({ queryKey: ["feed", ...key], queryFn: fn, staleTime: force ? 0 : staleTime });
+  // A fresh cache entry comes back as the same object: skip re-applying it, so a tab focus that needed no
+  // request does not re-render the whole feed either.
+  const appliedRef = useRef(new Map<string, unknown>());
+  const isNew = (name: string, data: unknown) => {
+    if (appliedRef.current.get(name) === data) return false;
+    appliedRef.current.set(name, data);
+    return true;
+  };
+
   const loadNews = useCallback(async (force = false) => {
     if (!city) { setNewsLoading(false); return; } // no resolved location: Explore shows the choose-city prompt
     // Cache for 2 minutes — pull-to-refresh always forces a fresh fetch
@@ -371,7 +384,7 @@ export default function FeedScreen() {
     const runPhaseTwo = async (existingPrimary: NewsArticle[]) => {
       setPrimaryLoaded(true);
       try {
-        const fullRes = await getNewsExplore({
+        const fullRes = await cached(["news", city, userCountry, userState ?? "", "full", 1], () => getNewsExplore({
           city,
           country: userCountry,
           state: userState, // SPRINT-30
@@ -379,7 +392,7 @@ export default function FeedScreen() {
           page: 1,
           pageSize: LIVE_NEWS_PAGE_SIZE,
           force: force === true,
-        });
+        }), force, 120_000);
         const fullArticles = Array.isArray(fullRes?.data) && fullRes.data.length > 0 ? fullRes.data : existingPrimary;
         const firstPage = fullArticles.slice(0, LIVE_NEWS_PAGE_SIZE);
         if (firstPage.length > 0) {
@@ -408,13 +421,13 @@ export default function FeedScreen() {
       if (cacheFresh && cache.phase === "primary" && newsArticles.length > 0) {
         primaryArticles = newsArticles;
       } else {
-        const primaryRes = await getNewsExplore({
+        const primaryRes = await cached(["news", city, userCountry, userState ?? "", "primary"], () => getNewsExplore({
           city,
           country: userCountry,
           state: userState, // SPRINT-30
           phase: "primary",
           force: force === true,
-        });
+        }), force, 120_000);
         primaryArticles = Array.isArray(primaryRes?.data) && primaryRes.data.length > 0 ? primaryRes.data : FALLBACK_NEWS;
       }
 
@@ -469,7 +482,6 @@ export default function FeedScreen() {
       setPrimaryLoaded(false);
     } finally {
       setNewsLoading(false);
-      useListFetchCacheStore.getState().markFetched("feed:news"); // SPRINT-30
     }
   }, [city, userCountry, userState, newsArticles]);
 
@@ -536,11 +548,7 @@ export default function FeedScreen() {
       if (feedTab !== "News" || newsSubTab !== "live") {
         return undefined;
       }
-      // SPRINT-30: sub-tab cache gate for Live News
-      if (!useListFetchCacheStore.getState().shouldFetch("feed:news")) return undefined;
-      void loadNews().then(() => {
-        useListFetchCacheStore.getState().markFetched("feed:news");
-      });
+      void loadNews();
       return undefined;
     }, [feedTab, newsSubTab, loadNews]),
   );
@@ -551,17 +559,15 @@ export default function FeedScreen() {
     if (newsCityRef.current === city) return;
     newsCityRef.current = city;
     if (feedTab !== "News" || newsSubTab !== "live") return;
-    void loadNews().then(() => {
-      useListFetchCacheStore.getState().markFetched("feed:news");
-    });
+    void loadNews();
   }, [city, feedTab, newsSubTab, loadNews]);
 
-  const loadExploreEvents = useCallback(async (opts?: { silent?: boolean }) => {
+  const loadExploreEvents = useCallback(async (opts?: { silent?: boolean; force?: boolean }) => {
     const silent = opts?.silent === true;
     if (!city) return;
     if (!silent) setExploreEventsLoading(true);
     try {
-      const [stats, moodSummary, res, listingsRes, feedRes, storiesRaw] = await Promise.all([
+      const [stats, moodSummary, res, listingsRes, feedRes, storiesRaw] = await cached(["hero", city], () => Promise.all([
         getCommunityStats(city),
         getNeighborhoodMood(city),
         getEvents({
@@ -573,7 +579,8 @@ export default function FeedScreen() {
         getListings({ page: 1, pageSize: 12, city }),
         getFeed({ page: 1, pageSize: 25, trending: false, city }),
         getActiveStories(city),
-      ]);
+      ]), opts?.force);
+      if (!isNew("hero", stats) && !opts?.force) return;
       setHeroCommunityStats(stats);
       applyMoodSummary(moodSummary);
       setHeroEventsTotal(typeof res?.total === "number" ? res.total : res?.data?.length ?? 0);
@@ -615,23 +622,27 @@ export default function FeedScreen() {
     }
   }, [applyMoodSummary, city]);
 
-  const loadStories = useCallback(async (opts?: { silent?: boolean }) => {
+  const loadStories = useCallback(async (opts?: { silent?: boolean; force?: boolean }) => {
     const silent = opts?.silent === true;
     if (!city) return;
     if (!silent) setStoriesLoading(true);
     try {
-      const raw = await getActiveStories(city);
-      const list = Array.isArray(raw) ? raw : [];
-      let myList: typeof list = [];
-      // /stories/me requires auth — skip entirely for guests to avoid noisy 401s
-      if (user?.id) {
-        try {
-          const mine = await getMyStories();
-          myList = Array.isArray(mine) ? mine : [];
-        } catch {
-          myList = [];
+      const { list, myList } = await cached(["stories", city, user?.id ?? ""], async () => {
+        const raw = await getActiveStories(city);
+        const list = Array.isArray(raw) ? raw : [];
+        let myList: typeof list = [];
+        // /stories/me requires auth — skip entirely for guests to avoid noisy 401s
+        if (user?.id) {
+          try {
+            const mine = await getMyStories();
+            myList = Array.isArray(mine) ? mine : [];
+          } catch {
+            myList = [];
+          }
         }
-      }
+        return { list, myList };
+      }, opts?.force);
+      if (!isNew("stories", list) && !opts?.force) return;
       const listNorm = list.map(normalizeApiStoryForFeed);
       const myNorm = myList.map(normalizeApiStoryForFeed);
       setStoriesFromApi(listNorm);
@@ -669,11 +680,12 @@ export default function FeedScreen() {
     }
   }, [city, user?.id]);
 
-  const loadQuests = useCallback(async () => {
+  const loadQuests = useCallback(async (force = false) => {
     if (!city) return;
     try {
       setQuestsLoading(true);
-      const res = await getChallenges({ status: "ACTIVE", city });
+      const res = await cached(["quests", city, user?.id ?? ""], () => getChallenges({ status: "ACTIVE", city }), force);
+      if (!isNew("quests", res) && !force) return;
       const list = Array.isArray(res?.data) ? res.data : [];
       setQuestsList(list);
       const joined = new Set(list.filter((q) => q.isJoined).map((q) => q.id));
@@ -683,7 +695,7 @@ export default function FeedScreen() {
     } finally {
       setQuestsLoading(false);
     }
-  }, [city]);
+  }, [city, user?.id]);
 
   useEffect(() => {
     // UI-11: respect the OS "remove animations" setting; keep a static skeleton instead of pulsing.
@@ -728,18 +740,19 @@ export default function FeedScreen() {
       });
   }, [newsArticles]);
 
-  const loadCommunityNewsFeed = useCallback(async (opts?: { silent?: boolean }) => {
+  const loadCommunityNewsFeed = useCallback(async (opts?: { silent?: boolean; force?: boolean }) => {
     const silent = opts?.silent === true;
     if (!city) return;
     if (!silent) setCommunityNewsLoading(true);
     try {
       // Omit `category`: the create-post news form uses Community, Announcement, Jobs, etc.
       // Previously only COMMUNITY was requested, so other news categories never appeared here.
-      const res = await getFeed({
+      const res = await cached(["community", city, user?.id ?? ""], () => getFeed({
         page: 1,
         pageSize: 50,
         city,
-      });
+      }), opts?.force);
+      if (!isNew("community", res) && !opts?.force) return;
       const raw = Array.isArray(res?.data) ? (res.data as FeedPost[]) : [];
       setCommunityNewsPosts(raw.map((post) => { // SPRINT-42: overlay in-memory PATCH so a refetch cannot erase a just-edited post.
         const latest = getLatestPostUpdate(post.id); // SPRINT-42: read process-local edit cache.
@@ -750,13 +763,14 @@ export default function FeedScreen() {
     } finally {
       if (!silent) setCommunityNewsLoading(false);
     }
-  }, [city]);
+  }, [city, user?.id]);
 
-  const loadPollFeed = useCallback(async () => {
+  const loadPollFeed = useCallback(async (force = false) => {
     if (!city) return;
     try {
       setPollPostsLoading(true);
-      const res = await getFeed({ page: 1, pageSize: 25, category: "QUESTION", city });
+      const res = await cached(["questions", city, user?.id ?? ""], () => getFeed({ page: 1, pageSize: 25, category: "QUESTION", city }), force);
+      if (!isNew("questions", res) && !force) return;
       const items = Array.isArray(res?.data) ? res.data : [];
       setPollQuestionPosts((items as FeedPost[]).map((post) => { // SPRINT-42: preserve just-edited question posts across refetch.
         const latest = getLatestPostUpdate(post.id); // SPRINT-42: read process-local edit cache.
@@ -767,20 +781,21 @@ export default function FeedScreen() {
     } finally {
       setPollPostsLoading(false);
     }
-  }, [city]);
+  }, [city, user?.id]);
 
-  const loadWyrPolls = useCallback(async () => {
+  const loadWyrPolls = useCallback(async (force = false) => {
     if (!city) return;
     try {
       setWyrPollsLoading(true);
-      const list = await getPolls(city);
+      const list = await cached(["polls", city, user?.id ?? ""], () => getPolls(city), force);
+      if (!isNew("polls", list) && !force) return;
       setWyrPolls(Array.isArray(list) ? list : []);
     } catch {
       setWyrPolls([]);
     } finally {
       setWyrPollsLoading(false);
     }
-  }, [city]);
+  }, [city, user?.id]);
 
   const feedBackgroundHydratedRef = useRef(false);
 
@@ -797,13 +812,10 @@ export default function FeedScreen() {
   useFocusEffect(
     useCallback(() => {
       if (feedTab !== "News" || newsSubTab !== "community") return undefined;
-      // SPRINT-27: 10-minute stale-while-revalidate gate
-      if (communityNewsEverLoadedRef.current && !useListFetchCacheStore.getState().shouldFetch("feed")) return undefined;
       const silent = communityNewsEverLoadedRef.current;
       return runAfterTransition(() => {
         void loadCommunityNewsFeed({ silent }).then(() => {
           communityNewsEverLoadedRef.current = true;
-          useListFetchCacheStore.getState().markFetched("feed");
         });
       });
     }, [feedTab, newsSubTab, loadCommunityNewsFeed]),
@@ -811,41 +823,25 @@ export default function FeedScreen() {
 
   useEffect(() => {
     if (feedTab !== "Events") return;
-    // SPRINT-30: sub-tab cache gate
-    if (!useListFetchCacheStore.getState().shouldFetch("feed:events")) return;
-    void loadExploreEvents({ silent: feedBackgroundHydratedRef.current }).then(() => {
-      useListFetchCacheStore.getState().markFetched("feed:events");
-    });
+    void loadExploreEvents({ silent: feedBackgroundHydratedRef.current });
   }, [feedTab, loadExploreEvents]);
 
   useEffect(() => {
     // Design D: the Explore bento shows story rings, so News loads stories too.
     if (feedTab !== "Stories" && feedTab !== "News") return;
-    // SPRINT-30: sub-tab cache gate
-    if (!useListFetchCacheStore.getState().shouldFetch("feed:stories")) return;
-    void loadStories({ silent: feedBackgroundHydratedRef.current }).then(() => {
-      useListFetchCacheStore.getState().markFetched("feed:stories");
-    });
+    void loadStories({ silent: feedBackgroundHydratedRef.current });
   }, [feedTab, loadStories]);
 
   useEffect(() => {
     // Design D: the Explore bento shows a quest, so News (the default tab) loads quests too.
     if (feedTab !== "Quests" && feedTab !== "News") return;
-    // SPRINT-30: sub-tab cache gate
-    if (!useListFetchCacheStore.getState().shouldFetch("feed:quests")) return;
-    void loadQuests().then(() => {
-      useListFetchCacheStore.getState().markFetched("feed:quests");
-    });
+    void loadQuests();
   }, [feedTab, loadQuests]);
 
   useEffect(() => {
     // Design D: the Explore bento shows a poll, so News loads polls too.
     if (feedTab !== "Polls" && feedTab !== "News") return;
-    // SPRINT-30: sub-tab cache gate
-    if (!useListFetchCacheStore.getState().shouldFetch("feed:polls")) return;
-    Promise.allSettled([loadPollFeed(), loadWyrPolls()]).then(() => {
-      useListFetchCacheStore.getState().markFetched("feed:polls");
-    });
+    void Promise.allSettled([loadPollFeed(), loadWyrPolls()]);
   }, [feedTab, loadPollFeed, loadWyrPolls]);
 
   useEffect(() => {
@@ -861,8 +857,6 @@ export default function FeedScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      // SPRINT-27: 10-minute stale-while-revalidate gate
-      if (feedBackgroundHydratedRef.current && !useListFetchCacheStore.getState().shouldFetch("feed")) return undefined;
       let cancelled = false;
       const silent = feedBackgroundHydratedRef.current;
       const cancelDefer = runAfterTransition(() => {
@@ -871,7 +865,6 @@ export default function FeedScreen() {
           await loadExploreEvents({ silent });
           await loadStories({ silent });
           feedBackgroundHydratedRef.current = true;
-          useListFetchCacheStore.getState().markFetched("feed");
         })();
       });
       return () => {
@@ -1174,30 +1167,22 @@ export default function FeedScreen() {
   };
 
   const onRefresh = useCallback(() => {
-    useListFetchCacheStore.getState().clearFetchTimestamp("feed"); // SPRINT-27
     setRefreshing(true);
-    const heroSync = loadExploreEvents();
+    const heroSync = loadExploreEvents({ force: true });
     if (feedTab === "News") {
-      useListFetchCacheStore.getState().clearFetchTimestamp("feed:news"); // SPRINT-30
       if (newsSubTab === "community") {
-        Promise.allSettled([heroSync, loadNews(true), loadCommunityNewsFeed()]).finally(() =>
+        Promise.allSettled([heroSync, loadNews(true), loadCommunityNewsFeed({ force: true })]).finally(() =>
           setRefreshing(false),
         );
       } else {
         Promise.allSettled([heroSync, loadNews(true)]).finally(() => setRefreshing(false));
       }
-    } else if (feedTab === "Events") {
-      useListFetchCacheStore.getState().clearFetchTimestamp("feed:events"); // SPRINT-30
-      heroSync.finally(() => setRefreshing(false));
     } else if (feedTab === "Stories") {
-      useListFetchCacheStore.getState().clearFetchTimestamp("feed:stories"); // SPRINT-30
-      Promise.allSettled([heroSync, loadStories()]).finally(() => setRefreshing(false));
+      Promise.allSettled([heroSync, loadStories({ force: true })]).finally(() => setRefreshing(false));
     } else if (feedTab === "Quests") {
-      useListFetchCacheStore.getState().clearFetchTimestamp("feed:quests"); // SPRINT-30
-      Promise.allSettled([heroSync, loadQuests()]).finally(() => setRefreshing(false));
+      Promise.allSettled([heroSync, loadQuests(true)]).finally(() => setRefreshing(false));
     } else if (feedTab === "Polls") {
-      useListFetchCacheStore.getState().clearFetchTimestamp("feed:polls"); // SPRINT-30
-      Promise.allSettled([heroSync, loadPollFeed(), loadWyrPolls()]).finally(() => setRefreshing(false));
+      Promise.allSettled([heroSync, loadPollFeed(true), loadWyrPolls(true)]).finally(() => setRefreshing(false));
     } else {
       heroSync.finally(() => setRefreshing(false));
     }

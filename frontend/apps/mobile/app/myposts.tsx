@@ -14,7 +14,9 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect } from "expo-router";
+import { router, Redirect } from "expo-router";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useInfiniteScreenQuery } from "../src/hooks/useInfiniteScreenQuery";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
@@ -128,26 +130,14 @@ export default function MyPostsScreen() {
   const user = useAuthStore((s) => s.user);
   const { tc } = useTheme();
   const [filter, setFilter] = useState<FilterTab>("All");
-  const [items, setItems] = useState<UnifiedMyPost[]>([]);
   const [detailPost, setDetailPost] = useState<UnifiedMyPost | null>(null); // SPRINT-42: declare detail state before the edit subscription patches it.
-  useEffect(() => subscribeToPostUpdates((updated) => { // SPRINT-42: consume memory-only successful post updates.
-    setItems((posts) => posts.map((post) => post.id === updated.id ? { ...post, title: updated.title, content: updated.content, category: updated.category, isEdited: updated.isEdited, metadata: { ...post.metadata, tags: updated.tags, location: updated.location, sourceLabel: updated.sourceLabel } } : post)); // SPRINT-42: preserve all edited fields through the unified card mapping.
-    setDetailPost((post) => post?.id === updated.id ? { ...post, title: updated.title, content: updated.content, category: updated.category, isEdited: updated.isEdited, metadata: { ...post.metadata, tags: updated.tags, location: updated.location, sourceLabel: updated.sourceLabel } } : post); // SPRINT-42: patch an open detail boundary.
-  }), []); // SPRINT-42: release the subscription automatically on unmount.
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const PAGE_SIZE = 30;
 
-  const loadPage = useCallback(async (nextPage: number, append: boolean) => {
-    if (nextPage === 1 && !append) setLoading(true);
-    else if (append) setLoadingMore(true);
-    setError(null);
-    try {
+  // Page 1 merges the user's posts with their events, stories and questions; later pages are posts only.
+  const fetchPage = async (nextPage: number) => {
+    const append = nextPage > 1;
+    {
       const [postsRes, eventsRes, storiesRes, questionsRes] = await Promise.allSettled([
         getMyPosts({ page: nextPage, pageSize: PAGE_SIZE }),
         nextPage === 1 ? getMyEvents() : Promise.resolve(null),
@@ -157,7 +147,7 @@ export default function MyPostsScreen() {
 
       if (postsRes.status === "rejected") {
         const msg = postsRes.reason instanceof ApiError ? postsRes.reason.message : String(postsRes.reason);
-        setError(`Could not load posts: ${msg}`);
+        throw new Error(`Could not load posts: ${msg}`);
       }
       const posts = postsRes.status === "fulfilled" ? postsRes.value.data : [];
       const hasMore = postsRes.status === "fulfilled" ? postsRes.value.hasMore : false;
@@ -228,30 +218,24 @@ export default function MyPostsScreen() {
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
 
-      setItems((prev) => (append ? [...prev, ...combined] : combined));
-      setPage(nextPage);
-      setHasMore(hasMore);
-    } catch (e) {
-      const msg = e instanceof ApiError ? e.message : "Could not load your posts.";
-      setError(msg);
-      if (!append) setItems([]);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-      setRefreshing(false);
+      return { items: combined, hasMore };
     }
-  }, [user?.id]);
+  };
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadPage(1, false);
-    }, [loadPage])
-  );
+  const list = useInfiniteScreenQuery<UnifiedMyPost>({
+    queryKey: [...queryKeys.myPosts(), user?.id ?? ""],
+    fetchPage,
+    enabled: !!user?.id,
+    staleTime: 0,
+  });
+  const { items, setItems, loading, loadingMore, hasMore, refreshing, onRefresh } = list;
+  const error = list.error ? (list.error instanceof Error ? list.error.message : "Could not load your posts.") : null;
+  useEffect(() => subscribeToPostUpdates((updated) => { // SPRINT-42: consume memory-only successful post updates.
+    setItems((posts) => posts.map((post) => post.id === updated.id ? { ...post, title: updated.title, content: updated.content, category: updated.category, isEdited: updated.isEdited, metadata: { ...post.metadata, tags: updated.tags, location: updated.location, sourceLabel: updated.sourceLabel } } : post)); // SPRINT-42: preserve all edited fields through the unified card mapping.
+    setDetailPost((post) => post?.id === updated.id ? { ...post, title: updated.title, content: updated.content, category: updated.category, isEdited: updated.isEdited, metadata: { ...post.metadata, tags: updated.tags, location: updated.location, sourceLabel: updated.sourceLabel } } : post); // SPRINT-42: patch an open detail boundary.
+  }), [setItems]); // SPRINT-42: release the subscription automatically on unmount.
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    void loadPage(1, false);
-  }, [loadPage]);
+
 
   const initials = user?.name
     ? user.name
@@ -288,7 +272,7 @@ export default function MyPostsScreen() {
       showToast(msg, "error");
       setItems((prev) => (prev.some((x) => x.id === post.id) ? prev : [post, ...prev]));
     }
-  }, []);
+  }, [setItems]);
   useEffect(() => () => {
     pendingDeletes.current.forEach(({ post, timer }) => { clearTimeout(timer); void commitDelete(post); });
   }, [commitDelete]);
@@ -458,7 +442,7 @@ export default function MyPostsScreen() {
       })}
 
       {!loading && hasMore ? (
-        <SoftButton label={loadingMore ? "Loading…" : "Load more"} disabled={loadingMore} onPress={() => void loadPage(page + 1, true)} style={{ alignSelf: "center", marginTop: 6 }} />
+        <SoftButton label={loadingMore ? "Loading…" : "Load more"} disabled={loadingMore} onPress={list.loadMore} style={{ alignSelf: "center", marginTop: 6 }} />
       ) : null}
 
       {!loading && filtered.length === 0 && !error ? (

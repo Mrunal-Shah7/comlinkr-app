@@ -34,7 +34,9 @@ import { FadeImage } from "../../../components/FadeImage"; // SPRINT-31: shared 
 import { LinkifiedText } from "../../../components/LinkifiedText";
 import { useBlockStore } from "../../../src/store/block.store";
 import { blockUser as blockUserApi, reportUser } from "../../../src/api/profile.api";
-import { useListFetchCacheStore } from "../../../src/store/listFetchCache.store"; // SPRINT-27
+import { queryKeys } from "../../../src/services/cache/queryKeys";
+import { LIST_STALE_MS } from "../../../src/services/cache/queryClient";
+import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuery";
 import {
   askQuestion,
   bookmarkQuestion,
@@ -489,6 +491,9 @@ function relativeTime(iso: string): string {
   return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+const EMPTY_QUESTIONS: UIQuestion[] = [];
+const questionId = (q: UIQuestion) => q.id;
+
 export default function CommunityScreen() {
   const communityScrollRef = useRef<ScrollView>(null);
   useScrollToTop(communityScrollRef); // re-tap the Community tab → back to top
@@ -507,14 +512,7 @@ export default function CommunityScreen() {
   const blockUser = useBlockStore((s) => s.blockUser);
   const isBlocked = useBlockStore((s) => s.isBlocked);
   const [filter, setFilter] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<UIQuestion[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not an empty state) the first time the tab opens.
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [posting, setPosting] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [showAsk, setShowAsk] = useState(false);
   // Long-press on the Community tab opens the composer (`/community?ask=<token>`); each token fires once.
   const consumedAskRef = useRef<string | undefined>(undefined);
@@ -540,89 +538,52 @@ export default function CommunityScreen() {
   });
   const [refreshing, setRefreshing] = useState(false);
 
-  const requestGenRef = useRef(0);
-  const loadQuestions = useCallback(async (opts?: { silent?: boolean; page?: number }) => {
-    if (!hasCity) {
-      setQuestions([]);
-      return;
-    }
-    const targetPage = opts?.page ?? 1;
-    const gen = ++requestGenRef.current;
-    const res = await getQuestions({
-      page: targetPage,
-      pageSize: 20,
-      sort: sortBy,
-      city,
-      tag: (filter ?? undefined) as any,
-    });
-    if (gen !== requestGenRef.current) return; // a newer city/filter/sort request superseded this one
-    const items = Array.isArray(res?.data) ? res.data : [];
-    // Backend returns `isUpvoted` / `isSaved` / `answers[].isUpvoted`.
-    const upvotedIds = new Set<string>();
-    const savedIds = new Set<string>();
-    const answerUpvotedIds = new Set<string>();
-
-    for (const q of items as any[]) {
-      if (q?.isUpvoted === true) upvotedIds.add(String(q.id));
-      if (q?.isSaved === true) savedIds.add(String(q.id));
-      if (Array.isArray(q?.answers)) {
-        for (const a of q.answers as any[]) {
-          if (a?.isUpvoted === true) answerUpvotedIds.add(String(a.id));
+  // Questions: one cached query per city, sort and topic, kept for 10 minutes like the old fetch gate.
+  // Each page also carries the server's vote and save flags, which seed the local sets when a fetch lands.
+  type QPage = { items: UIQuestion[]; hasMore: boolean; upvoted: string[]; saved: string[]; answerUpvoted: string[] };
+  const questionsQ = useInfiniteScreenQuery<UIQuestion, QPage>({
+    queryKey: queryKeys.community(city, { sort: sortBy, tag: filter ?? null }),
+    enabled: hasCity,
+    staleTime: LIST_STALE_MS,
+    getId: questionId,
+    fetchPage: async (targetPage) => {
+      const res = await getQuestions({ page: targetPage, pageSize: 20, sort: sortBy, city, tag: (filter ?? undefined) as any });
+      const items = Array.isArray(res?.data) ? res.data : [];
+      // Backend returns `isUpvoted` / `isSaved` / `answers[].isUpvoted`.
+      const upvoted: string[] = [];
+      const saved: string[] = [];
+      const answerUpvoted: string[] = [];
+      for (const q of items as any[]) {
+        if (q?.isUpvoted === true) upvoted.push(String(q.id));
+        if (q?.isSaved === true) saved.push(String(q.id));
+        if (Array.isArray(q?.answers)) {
+          for (const a of q.answers as any[]) if (a?.isUpvoted === true) answerUpvoted.push(String(a.id));
         }
       }
-    }
-
-    const merge = (prev: Set<string>, next: Set<string>) => (targetPage > 1 ? new Set([...prev, ...next]) : next);
-    setVotedIds((p) => merge(p, upvotedIds));
-    setBookmarkedIds((p) => merge(p, savedIds));
-    setAnswerVotedIds((p) => merge(p, answerUpvotedIds));
-    const ui = items.map(toUiQuestion);
-    setQuestions((prev) => (targetPage > 1 ? [...prev, ...ui.filter((n) => !prev.some((o) => o.id === n.id))] : ui));
-    setPage(targetPage);
-    const meta = (res as any)?.meta;
-    setHasMore(meta ? targetPage < Number(meta.totalPages ?? 1) : items.length >= 20);
-    setLoadError(false);
-  }, [sortBy, city, hasCity, filter]);
-
-  const communityEverLoadedRef = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      // SPRINT-27: 10-minute stale-while-revalidate gate
-      // The gate only applies once this instance has data — a remounted screen must refetch.
-      if (communityEverLoadedRef.current && !useListFetchCacheStore.getState().shouldFetch("community")) return undefined;
-      let cancelled = false;
-      const silent = communityEverLoadedRef.current;
-      const cancelDefer = runAfterTransition(() => {
-        if (cancelled) return;
-        void (async () => {
-          try {
-            if (!silent) setLoading(true);
-            await loadQuestions({ silent });
-            communityEverLoadedRef.current = true;
-            useListFetchCacheStore.getState().markFetched("community");
-          } catch {
-            // Keep any previously loaded rows; surface a persistent retry state instead of a blocking alert.
-            setLoadError(true);
-          } finally {
-            if (!cancelled) setLoading(false);
-          }
-        })();
-      });
-      return () => {
-        cancelled = true;
-        cancelDefer();
+      const meta = (res as any)?.meta;
+      return {
+        items: items.map(toUiQuestion),
+        hasMore: meta ? targetPage < Number(meta.totalPages ?? 1) : items.length >= 20,
+        upvoted, saved, answerUpvoted,
       };
-    }, [loadQuestions]),
-  );
-
-  // Re-fetch when sortBy or city changes (filter is now client-side — no API call needed)
+    },
+  });
+  const questions = hasCity ? questionsQ.items : EMPTY_QUESTIONS;
+  const setQuestions = questionsQ.setItems;
+  const loading = questionsQ.loading;
+  const loadError = !!questionsQ.error;
+  const hasMore = questionsQ.hasMore;
+  const loadingMore = questionsQ.loadingMore;
+  const questionsFetchedAt = questionsQ.dataUpdatedAt;
   useEffect(() => {
-    if (!communityEverLoadedRef.current) return;
-    setLoading(true);
-    loadQuestions({ silent: true })
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
-  }, [loadQuestions]);
+    const pages = questionsQ.pages;
+    if (!pages) return;
+    setVotedIds(new Set(pages.flatMap((pg) => pg.upvoted)));
+    setBookmarkedIds(new Set(pages.flatMap((pg) => pg.saved)));
+    setAnswerVotedIds(new Set(pages.flatMap((pg) => pg.answerUpvoted)));
+    // Only when a fetch lands, not on a local patch of the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionsFetchedAt, questionsQ.pages?.length]);
 
   useEffect(() => {
     const raw = params.openQuestion;
@@ -653,21 +614,18 @@ export default function CommunityScreen() {
   }, [params.openQuestion]);
 
   const onRefresh = useCallback(() => {
-    useListFetchCacheStore.getState().clearFetchTimestamp("community"); // SPRINT-27
     (async () => {
       try {
         setRefreshing(true);
         setExpandedIds(new Set());
         setAnsweringId(null);
         setAnswerText("");
-        await loadQuestions();
-      } catch {
-        setLoadError(true);
+        await questionsQ.refetch();
       } finally {
         setRefreshing(false);
       }
     })();
-  }, [loadQuestions]);
+  }, [questionsQ.refetch]);
 
   // Category filtering is server-side (COM-03); only locally blocked authors are hidden here.
   const filtered = questions.filter((q) => !isQuestionHiddenByBlock(q, isBlocked));
@@ -1054,11 +1012,7 @@ export default function CommunityScreen() {
         ) : loadError && sorted.length === 0 ? (
           <ListState
             kind="error"
-            onAction={() => {
-              setLoadError(false);
-              setLoading(true);
-              loadQuestions().catch(() => setLoadError(true)).finally(() => setLoading(false));
-            }}
+            onAction={() => { void questionsQ.refetch(); }}
           />
         ) : sorted.length === 0 ? (
           filter ? (
@@ -1179,12 +1133,7 @@ export default function CommunityScreen() {
             accessibilityRole="button"
             accessibilityLabel="Load more questions"
             disabled={loadingMore}
-            onPress={() => {
-              setLoadingMore(true);
-              loadQuestions({ page: page + 1 })
-                .catch(() => showToast("Could not load more questions.", "error"))
-                .finally(() => setLoadingMore(false));
-            }}
+            onPress={questionsQ.loadMore}
             style={[s.loadMoreBtn, { borderColor: tc.borderLight, backgroundColor: tc.cardBg }]}
           >
             {loadingMore ? (

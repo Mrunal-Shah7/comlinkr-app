@@ -29,7 +29,10 @@ import { deleteListing, getListings, getMyListings, getListing, toggleListingSav
 import { applyToSharedSpace, toggleFavoriteSharedSpace, deleteSharedSpace, updateSharedSpace, acceptRoommateConnection, connectWithRoommate, declineRoommateConnection, getRoommates, getRoommateMatches, getRoommate, getRoommatePreferences, getSharedSpaces, toggleRoommateSave, updateRoommatePreferences, type RoommateListing } from "../../../src/api/roommates.api";
 import { DatePickerField } from "../../../components/DateTimePickerField";
 import { roommatePrefsFromGetEndpoint, roommatePrefsToPatchBody } from "../../../src/utils/roommatePrefsMap";
-import { useListFetchCacheStore } from "../../../src/store/listFetchCache.store";
+import { queryKeys } from "../../../src/services/cache/queryKeys";
+import { LIST_STALE_MS } from "../../../src/services/cache/queryClient";
+import { useScreenQuery } from "../../../src/hooks/useScreenQuery";
+import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuery";
 import { showToast } from "../../../src/shared/ui/Toast";
 import { appAlert } from "../../../src/shared/ui/Dialogs";
 import { type Listing, propertyFilterLabelToApi, toUiListing, FILTERS } from "../../../src/features/housing/listingModel";
@@ -62,6 +65,11 @@ const housingRowKey = (row: HousingRow) =>
   : `m:${row.roommate.id}`;
 
 // ── Main screen ──────────────────────────────────────────────────────────────
+const EMPTY_LISTINGS: Listing[] = [];
+const EMPTY_ROOMMATES: Roommate[] = [];
+const EMPTY_ROOMS: AvailableRoom[] = [];
+const listingId = (l: Listing) => l.id;
+
 export default function HousingScreen() {
   const housingScrollRef = useRef<FlatList<HousingRow>>(null);
   useScrollToTop(housingScrollRef); // re-tap the Listings tab → back to top
@@ -97,13 +105,6 @@ export default function HousingScreen() {
   const [petsFilter, setPetsFilter] = useState<boolean | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [listings, setListings] = useState<Listing[]>([]);
-  // Starts true so a tab that hasn't fetched yet shows skeletons (not "No listings") the first time the tab opens.
-  const [listingsLoading, setListingsLoading] = useState(true);
-  const [listingsError, setListingsError] = useState(false);
-  const [listingsHasMore, setListingsHasMore] = useState(false);
-  const [listingsPage, setListingsPage] = useState(1);
-  const [listingsLoadingMore, setListingsLoadingMore] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [listingJourneyMap, setListingJourneyMap] = useState<Record<string, number>>({});
   const [fullscreenImages, setFullscreenImages] = useState<string[]>([]);
@@ -112,14 +113,10 @@ export default function HousingScreen() {
 
   // ── Roommates state ──
   const [rmFilter, setRmFilter] = useState("Best Match");
-  const [roommates, setRoommates] = useState<Roommate[]>([]);
-  const [roommatesLoading, setRoommatesLoading] = useState(false);
   const [selectedRoommate, setSelectedRoommate] = useState<Roommate | null>(null);
   const [roommateSavedIds, setRoommateSavedIds] = useState<Set<string>>(new Set());
 
   // ── Available Rooms state ──
-  const [availableRooms, setAvailableRooms] = useState<AvailableRoom[]>([]);
-  const [availableRoomsLoading, setAvailableRoomsLoading] = useState(false);
   const [selectedAvailableRoom, setSelectedAvailableRoom] = useState<AvailableRoom | null>(null);
   const [requestedRooms, setRequestedRooms] = useState<Set<string>>(new Set());
   const [showListModal, setShowListModal] = useState(false);
@@ -205,124 +202,66 @@ export default function HousingScreen() {
   // ── Roommates sub-tab ──
   const [rmSubTab, setRmSubTab] = useState<"searching" | "matching">("searching");
 
-  const listingsSignatureRef = useRef("");
-  const loadListings = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent === true;
-    if (!userCity) {
-      // No resolved location: show the choose-city prompt instead of unscoped listings.
-      listingsSignatureRef.current = "";
-      setListings([]);
-      setListingsHasMore(false);
-      setListingsError(false);
-      setListingsLoading(false);
-      return;
-    }
-    if (!silent) setListingsLoading(true);
-    try {
-      const typeApi = propertyFilterLabelToApi(propertyTypeFilter);
-      const minPriceNum = minPriceFilter.trim() ? Number(minPriceFilter) : undefined;
-      const maxPriceNum = maxPriceFilter.trim() ? Number(maxPriceFilter) : undefined;
-      // Fetch public listings + the user's own listings in parallel so the owner
-      // always sees their own post even if the backend filters it from the public feed.
+  // Listings: one cached query per city + filter set. Page 1 also merges the user's own listings so an owner
+  // always sees their post even if the public feed filters it out. Refetched on every focus (staleTime 0) so
+  // edits made elsewhere show at once.
+  const listingFilters = useMemo(() => {
+    const typeApi = propertyFilterLabelToApi(propertyTypeFilter);
+    const minPriceNum = minPriceFilter.trim() ? Number(minPriceFilter) : undefined;
+    const maxPriceNum = maxPriceFilter.trim() ? Number(maxPriceFilter) : undefined;
+    return {
+      ...(typeApi ? { type: typeApi } : {}),
+      ...(minPriceNum != null && Number.isFinite(minPriceNum) ? { minPrice: minPriceNum } : {}),
+      ...(maxPriceNum != null && Number.isFinite(maxPriceNum) ? { maxPrice: maxPriceNum } : {}),
+      ...(bedsFilter != null ? { beds: bedsFilter } : {}),
+      ...(petsFilter != null ? { pets: petsFilter } : {}),
+      ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    };
+  }, [propertyTypeFilter, minPriceFilter, maxPriceFilter, bedsFilter, petsFilter, debouncedSearch]);
+  const listingsQ = useInfiniteScreenQuery<Listing, { items: Listing[]; hasMore: boolean; savedIds: string[] }>({
+    queryKey: [...queryKeys.housing(userCity, listingFilters), user?.id ?? ""],
+    enabled: !!userCity,
+    staleTime: 0,
+    getId: listingId,
+    fetchPage: async (page) => {
       const [res, myRes] = await Promise.allSettled([
-        getListings({
-          page: 1,
-          pageSize: 50,
-          ...(typeApi ? { type: typeApi } : {}),
-          ...(userCity ? { city: userCity } : {}),
-          ...(minPriceNum != null && Number.isFinite(minPriceNum) ? { minPrice: minPriceNum } : {}),
-          ...(maxPriceNum != null && Number.isFinite(maxPriceNum) ? { maxPrice: maxPriceNum } : {}),
-          ...(bedsFilter != null ? { beds: bedsFilter } : {}),
-          ...(petsFilter != null ? { pets: petsFilter } : {}),
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        }),
-        user?.id ? getMyListings({ page: 1, pageSize: 20 }) : Promise.resolve(null),
+        getListings({ page, pageSize: 50, ...(userCity ? { city: userCity } : {}), ...listingFilters }),
+        page === 1 && user?.id ? getMyListings({ page: 1, pageSize: 20 }) : Promise.resolve(null),
       ]);
       if (res.status === "rejected") throw res.reason;
       const publicData: HousingListing[] = Array.isArray(res.value?.data) ? res.value.data : [];
       const myData: HousingListing[] = myRes.status === "fulfilled" && myRes.value && Array.isArray(myRes.value.data) ? myRes.value.data : [];
-
-      // Merge: public listings first, then append own listings not already in the list
       const seen = new Set(publicData.map((x) => x.id));
       const q = debouncedSearch.toLowerCase();
       const ownMatches = (x: HousingListing) =>
         !q || `${x.title ?? ""} ${(x as { location?: string }).location ?? ""} ${(x as { city?: string }).city ?? ""}`.toLowerCase().includes(q);
       const merged = [...publicData, ...myData.filter((x) => !seen.has(x.id) && ownMatches(x))];
-
-      // Focus refreshes usually return identical rows; skip the state churn (and the re-render of
-      // every card) when nothing changed since the last applied response.
-      const signature = JSON.stringify(merged) + String(res.value.hasMore === true);
-      if (silent && signature === listingsSignatureRef.current) return;
-      listingsSignatureRef.current = signature;
-
-      setListings(merged.map((row) => toUiListing(row, user?.id)));
-      setSavedIds(
-        new Set(
-          merged.filter((x) => (x as HousingListing).isSaved === true || x.savedByMe === true).map((x) => x.id),
-        ),
-      );
-      setListingsError(false);
-      setListingsPage(1);
-      setListingsHasMore(res.value.hasMore === true);
-    } catch {
-      if (!silent) {
-        listingsSignatureRef.current = "";
-        setListings([]);
-        setSavedIds(new Set());
-        setListingsError(true);
-      }
-    } finally {
-      if (!silent) setListingsLoading(false);
-    }
-  }, [user?.id, propertyTypeFilter, userCity, minPriceFilter, maxPriceFilter, bedsFilter, petsFilter, debouncedSearch]);
-
-  const loadMoreListings = useCallback(async () => {
-    if (listingsLoadingMore || !listingsHasMore) return;
-    setListingsLoadingMore(true);
-    try {
-      const typeApi = propertyFilterLabelToApi(propertyTypeFilter);
-      const minPriceNum = minPriceFilter.trim() ? Number(minPriceFilter) : undefined;
-      const maxPriceNum = maxPriceFilter.trim() ? Number(maxPriceFilter) : undefined;
-      const nextPage = listingsPage + 1;
-      const res = await getListings({
-        page: nextPage,
-        pageSize: 50,
-        ...(typeApi ? { type: typeApi } : {}),
-        ...(userCity ? { city: userCity } : {}),
-        ...(minPriceNum != null && Number.isFinite(minPriceNum) ? { minPrice: minPriceNum } : {}),
-        ...(maxPriceNum != null && Number.isFinite(maxPriceNum) ? { maxPrice: maxPriceNum } : {}),
-        ...(bedsFilter != null ? { beds: bedsFilter } : {}),
-        ...(petsFilter != null ? { pets: petsFilter } : {}),
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      });
-      const nextData: HousingListing[] = Array.isArray(res.data) ? res.data : [];
-      setListings((prev) => {
-        const seen = new Set(prev.map((l) => l.id));
-        const nextUi = nextData.filter((x) => !seen.has(x.id)).map((row) => toUiListing(row, user?.id));
-        return [...prev, ...nextUi];
-      });
-      setSavedIds((prev) => {
-        const next = new Set(prev);
-        for (const x of nextData) {
-          if ((x as HousingListing).isSaved === true || x.savedByMe === true) next.add(x.id);
-        }
-        return next;
-      });
-      setListingsPage(nextPage);
-      setListingsHasMore(res.hasMore === true);
-    } catch {
-      showToast("Could not load more listings.", "error");
-    } finally {
-      setListingsLoadingMore(false);
-    }
-  }, [listingsLoadingMore, listingsHasMore, propertyTypeFilter, minPriceFilter, maxPriceFilter, listingsPage, userCity, bedsFilter, petsFilter, user?.id, debouncedSearch]);
-
-  const userCityRef = useRef(userCity);
+      return {
+        items: merged.map((row) => toUiListing(row, user?.id)),
+        hasMore: res.value.hasMore === true,
+        savedIds: merged.filter((x) => (x as HousingListing).isSaved === true || x.savedByMe === true).map((x) => x.id),
+      };
+    },
+  });
+  const listings = userCity ? listingsQ.items : EMPTY_LISTINGS;
+  const setListings = listingsQ.setItems;
+  const listingsLoading = listingsQ.loading;
+  const listingsError = !!listingsQ.error;
+  const listingsHasMore = listingsQ.hasMore;
+  const listingsLoadingMore = listingsQ.loadingMore;
+  const loadListings = listingsQ.refetch;
+  const loadMoreListings = listingsQ.loadMore;
+  // The server's saved flags seed the hearts each time a page arrives; taps change them locally after that.
+  const listingsFetchedAt = listingsQ.dataUpdatedAt;
   useEffect(() => {
-    if (userCityRef.current === userCity) return;
-    userCityRef.current = userCity;
-    void loadListings();
-  }, [userCity, loadListings]);
+    if (!listingsQ.pages) return;
+    setSavedIds(new Set(listingsQ.pages.flatMap((pg) => pg.savedIds)));
+    // Only when a fetch lands, not on a local patch of the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listingsFetchedAt, listingsQ.pages?.length]);
+  useEffect(() => {
+    if (listingsQ.error && !listingsQ.pages) showToast("Could not load listings. Please try again.", "error");
+  }, [listingsQ.error, listingsQ.pages]);
 
   useEffect(() => subscribeToListingUpdates((update) => { // SPRINT-42: consume in-memory listing field/image updates without waiting for TTL.
     const applyImages = (images: HousingListingImageRef[] | string[] | undefined) => // SPRINT-42: normalize ordered URLs for the UI listing model.
@@ -362,18 +301,14 @@ export default function HousingScreen() {
     ]);
   }, []);
 
-  const roommatesSignatureRef = useRef("");
-  const loadRoommates = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent === true;
-    if (!user?.id) {
-      setRoommates([]);
-      setRoommateSavedIds(new Set());
-      if (!silent) setRoommatesLoading(false);
-      return;
-    }
-    if (!silent) setRoommatesLoading(true);
-    try {
-      // Fetch both city-filtered browse list AND personalised match list, then merge
+  // Roommates (browse list merged with the scored matches) and available rooms: signed-in only, cached for
+  // the old 10-minute window and keyed by the user's city.
+  const roommatesQ = useScreenQuery({
+    queryKey: ["housing", "roommates", user?.city?.trim() ?? "", user?.id ?? ""],
+    enabled: !!user?.id,
+    staleTime: LIST_STALE_MS,
+    initial: EMPTY_ROOMMATES,
+    queryFn: async () => {
       const [browseRes, matchRes] = await Promise.allSettled([
         getRoommates({ page: 1, pageSize: 100, city: user?.city?.trim() || undefined }),
         getRoommateMatches({ page: 1, pageSize: 100 }),
@@ -383,47 +318,36 @@ export default function HousingScreen() {
       // Merge by id — prefer matchData entry (has server-side score) when duplicate
       const byId = new Map<string, RoommateListing>();
       browseData.forEach((r) => byId.set(r.id, r));
-      matchData.forEach((r) => byId.set(r.id, r)); // overwrite with scored version
-      const rows = Array.from(byId.values());
-      const signature = JSON.stringify(rows);
-      if (silent && signature === roommatesSignatureRef.current) return;
-      roommatesSignatureRef.current = signature;
-      const cards = rows.map(toUiRoommate);
-      setRoommates(cards);
-      setRoommateSavedIds(new Set(cards.filter((c) => c.isSaved).map((c) => c.id)));
-    } catch {
-      if (!silent) {
-        roommatesSignatureRef.current = "";
-        setRoommates([]);
-        setRoommateSavedIds(new Set());
-      }
-    } finally {
-      if (!silent) setRoommatesLoading(false);
-    }
-  }, [user?.city, user?.id]);
+      matchData.forEach((r) => byId.set(r.id, r));
+      return Array.from(byId.values()).map(toUiRoommate);
+    },
+  });
+  const roommates = user?.id ? roommatesQ.data : EMPTY_ROOMMATES;
+  const setRoommates = roommatesQ.setData;
+  const roommatesLoading = roommatesQ.loading;
+  const loadRoommates = roommatesQ.refetch;
+  const roommatesFetchedAt = roommatesQ.dataUpdatedAt;
+  useEffect(() => {
+    if (!roommatesFetchedAt) return;
+    setRoommateSavedIds(new Set(roommatesQ.data.filter((c) => c.isSaved).map((c) => c.id)));
+    // Only when a fetch lands, not on every local patch of the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roommatesFetchedAt]);
 
-  const loadAvailableRooms = useCallback(async (opts?: { silent?: boolean }) => {
-    const silent = opts?.silent === true;
-    if (!user?.id) {
-      setAvailableRooms([]);
-      if (!silent) setAvailableRoomsLoading(false);
-      return;
-    }
-    if (!silent) setAvailableRoomsLoading(true);
-    try {
-      const res = await getSharedSpaces({
-        city: user?.city?.trim() || undefined,
-        page: 1,
-        pageSize: 20,
-      });
-      const data = Array.isArray(res?.data) ? res.data : [];
-      setAvailableRooms(data.map(toUiAvailableRoom));
-    } catch {
-      if (!silent) setAvailableRooms([]);
-    } finally {
-      if (!silent) setAvailableRoomsLoading(false);
-    }
-  }, [user?.city, user?.id]);
+  const roomsQ = useScreenQuery({
+    queryKey: ["housing", "rooms", user?.city?.trim() ?? "", user?.id ?? ""],
+    enabled: !!user?.id,
+    staleTime: LIST_STALE_MS,
+    initial: EMPTY_ROOMS,
+    queryFn: async () => {
+      const res = await getSharedSpaces({ city: user?.city?.trim() || undefined, page: 1, pageSize: 20 });
+      return (Array.isArray(res?.data) ? res.data : []).map(toUiAvailableRoom);
+    },
+  });
+  const availableRooms = user?.id ? roomsQ.data : EMPTY_ROOMS;
+  const setAvailableRooms = roomsQ.setData;
+  const availableRoomsLoading = roomsQ.loading;
+  const loadAvailableRooms = roomsQ.refetch;
 
   const saveRmPrefs = useCallback(async () => {
     const minVal = parseInt(rmBudgetMin, 10);
@@ -465,73 +389,23 @@ export default function HousingScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rmBudgetMin, rmBudgetMax, rmMoveInDate, rmSleep, rmClean, rmNoise, rmPet, rmSmoke, rmGuest, rmWfh, updateRoommatePrefs, loadRoommates]);
 
-  const housingListingsEverLoadedRef = useRef(false);
-  const housingRoommatesEverLoadedRef = useRef(false);
-  const loadListingsRef = useRef(loadListings);
-  const loadRoommatesRef = useRef(loadRoommates);
-  const loadAvailableRoomsRef = useRef(loadAvailableRooms);
-  loadListingsRef.current = loadListings;
-  loadRoommatesRef.current = loadRoommates;
-  loadAvailableRoomsRef.current = loadAvailableRooms;
-
-  // Re-fetch whenever the property type / price / beds / pets filters change
-  // (loadListings identity changes with them since they're in its dep array).
-  const listingsFilterLoadRef = useRef(loadListings);
-  useEffect(() => {
-    if (listingsFilterLoadRef.current === loadListings) return;
-    listingsFilterLoadRef.current = loadListings;
-    if (!housingListingsEverLoadedRef.current) return;
-    void loadListings({ silent: true });
-  }, [loadListings]);
+  // Roommate preferences come from the server on each focus (signed in only); the lists refetch themselves.
   useFocusEffect(
     useCallback(() => {
-      // SPRINT-42: listing browse always silent-refetches on focus (no 10-minute suppression). Roommate slices still honor TTL.
-      // Loaders are read through refs so the effect only re-runs on focus / account change — not on
-      // segment switches or filter edits (the filter effect above already refetches those).
+      if (!user?.id) return;
       let cancelled = false;
       const cancelDefer = runAfterTransition(() => {
-        if (cancelled) return;
-        const loadListings = loadListingsRef.current;
-        const loadRoommates = loadRoommatesRef.current;
-        const loadAvailableRooms = loadAvailableRoomsRef.current;
         void (async () => {
-          // Roommate prefs / matching require an account — skip for guests
-          if (user?.id) {
-            try {
-              const fresh = await getRoommatePreferences();
-              const mapped = roommatePrefsFromGetEndpoint({
-                budgetMin: fresh.budgetMin, budgetMax: fresh.budgetMax, moveInDate: fresh.moveInDate,
-                sleepSchedule: fresh.sleepSchedule, cleanliness: fresh.cleanliness, noiseLevel: fresh.noiseLevel,
-                petFriendly: fresh.petFriendly, smoking: fresh.smoking, guestPolicy: fresh.guestPolicy, workFromHome: fresh.workFromHome,
-              });
-              await updateRoommatePrefs({ ...RM_DEFAULT_PREFS, ...mapped });
-            } catch { /* backend unreachable — keep local */ }
-          }
-          if (cancelled) return;
-          const silentListings = housingListingsEverLoadedRef.current;
           try {
-            await loadListings({ silent: silentListings }); // SPRINT-42: always refresh listings on focus so edits are not TTL-stale.
-            housingListingsEverLoadedRef.current = true;
-          } catch {
-            if (!silentListings) showToast("Could not load listings. Please try again.", "error");
-          }
-          if (cancelled) return;
-          if (!user?.id) {
-            useListFetchCacheStore.getState().markFetched("housing");
-            return;
-          }
-          const refreshRoommates = useListFetchCacheStore.getState().shouldFetch("housing"); // SPRINT-42: roommates keep the prior TTL gate (cleared on listing publish).
-          if (!refreshRoommates && housingRoommatesEverLoadedRef.current) { // SPRINT-42: skip roommate refetch only when TTL is fresh and roommates already loaded.
-            return; // SPRINT-42: listings already refreshed above.
-          } // SPRINT-42: finish roommate TTL short-circuit.
-          const silentRm = housingRoommatesEverLoadedRef.current;
-          try {
-            await Promise.all([loadRoommates({ silent: silentRm }), loadAvailableRooms({ silent: silentRm })]);
-            housingRoommatesEverLoadedRef.current = true;
-          } catch {
-            if (!silentRm) showToast("Could not load roommates. Please try again.", "error");
-          }
-          useListFetchCacheStore.getState().markFetched("housing");
+            const fresh = await getRoommatePreferences();
+            if (cancelled) return;
+            const mapped = roommatePrefsFromGetEndpoint({
+              budgetMin: fresh.budgetMin, budgetMax: fresh.budgetMax, moveInDate: fresh.moveInDate,
+              sleepSchedule: fresh.sleepSchedule, cleanliness: fresh.cleanliness, noiseLevel: fresh.noiseLevel,
+              petFriendly: fresh.petFriendly, smoking: fresh.smoking, guestPolicy: fresh.guestPolicy, workFromHome: fresh.workFromHome,
+            });
+            await updateRoommatePrefs({ ...RM_DEFAULT_PREFS, ...mapped });
+          } catch { /* backend unreachable — keep local */ }
         })();
       });
       return () => {
@@ -592,7 +466,6 @@ export default function HousingScreen() {
   }, [params.openRoommate, requireAuth]);
 
   const onRefresh = useCallback(() => {
-    useListFetchCacheStore.getState().clearFetchTimestamp("housing"); // SPRINT-27
     (async () => {
       try {
         setRefreshing(true);
@@ -970,9 +843,6 @@ export default function HousingScreen() {
     void Haptics.selectionAsync();
     setActiveTab(tab);
     setSearch("");
-    if (tab === "roommates" && roommates.length === 0 && !roommatesLoading) {
-      void Promise.all([loadRoommates(), loadAvailableRooms()]);
-    }
   };
 
 

@@ -9,7 +9,8 @@ import type { PaginatedResponse } from "./feed.api";
 // New:
 import { resolveApiAssetUrl } from "./feed.api";
 
-import { useListFetchCacheStore } from "../store/listFetchCache.store"; // SPRINT-42: clear housing TTL when a listing mutates.
+import { queryClient } from "../services/cache/queryClient";
+import { queryKeys } from "../services/cache/queryKeys";
 
 /** One row from `GET /housing` — Nest `formatListing` returns objects, not bare URL strings. */
 export interface HousingListingImageRef {
@@ -266,7 +267,8 @@ function publishListingUpdate(update: ListingUpdateEvent): void { // SPRINT-42: 
   }; // SPRINT-42: finish merge.
   latestListingUpdates.set(update.id, merged); // SPRINT-42: retain process-local latest.
   listingUpdateListeners.forEach((listener) => listener(merged)); // SPRINT-42: patch every mounted consumer immediately.
-  useListFetchCacheStore.getState().clearFetchTimestamp("housing"); // SPRINT-42: invalidate 10-minute housing TTL after any listing mutation.
+  void queryClient.invalidateQueries({ queryKey: ["housing"] }); // a listing changed: browse lists, roommates and rooms refetch
+  void queryClient.invalidateQueries({ queryKey: queryKeys.myListings() });
 } // SPRINT-42: end listing update publisher.
 
 export async function uploadListingImages(

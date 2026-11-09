@@ -11,7 +11,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, Redirect, useFocusEffect } from "expo-router"; // SPRINT-42: refetch My Listings on focus after edits.
+import { router, Redirect } from "expo-router";
+import { queryKeys } from "../src/services/cache/queryKeys";
+import { useScreenQuery } from "../src/hooks/useScreenQuery";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../src/store/auth.store";
@@ -58,10 +60,26 @@ export default function MyListingsScreen() {
   const user = useAuthStore((s) => s.user);
   const { isVerifiedLandlord, isVerifiedAgency } = usePermissions();
   const { isDark, tc } = useTheme();
-  const [listings, setListings] = useState<HousingListing[]>([]);
-  const [sharedSpaces, setSharedSpaces] = useState<SharedSpaceListing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  // Owner listings refetch on every focus (staleTime 0): the editor may have changed them.
+  const mine = useScreenQuery({
+    queryKey: queryKeys.myListings(),
+    initial: { listings: [] as HousingListing[], sharedSpaces: [] as SharedSpaceListing[] },
+    staleTime: 0,
+    queryFn: async () => {
+      const [listRes, spaceRes] = await Promise.allSettled([
+        getMyListings({ pageSize: 50 }),
+        getSharedSpaces({ pageSize: 50 }),
+      ]);
+      const listings = listRes.status === "fulfilled" && Array.isArray(listRes.value.data) ? listRes.value.data : [];
+      const all = spaceRes.status === "fulfilled" && Array.isArray(spaceRes.value.data) ? spaceRes.value.data : [];
+      return { listings, sharedSpaces: all.filter((s) => s.isOwner === true) };
+    },
+  });
+  const { listings, sharedSpaces } = mine.data;
+  const loading = mine.loading;
+  const setMine = mine.setData;
+  const setListings = (fn: (p: HousingListing[]) => HousingListing[]) => setMine((d) => ({ ...d, listings: fn(d.listings) }));
+  const setSharedSpaces = (fn: (p: SharedSpaceListing[]) => SharedSpaceListing[]) => setMine((d) => ({ ...d, sharedSpaces: fn(d.sharedSpaces) }));
   const [applicantsMap, setApplicantsMap] = useState<Record<string, SpaceApplicant[]>>({});
   const [applicantsLoading, setApplicantsLoading] = useState<Record<string, boolean>>({});
   const [expandedApplicants, setExpandedApplicants] = useState<Record<string, boolean>>({});
@@ -128,44 +146,14 @@ export default function MyListingsScreen() {
     );
   };
 
-  const load = async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const [listRes, spaceRes] = await Promise.allSettled([
-        getMyListings({ pageSize: 50 }),
-        getSharedSpaces({ pageSize: 50 }),
-      ]);
-      if (listRes.status === "fulfilled") {
-        setListings(Array.isArray(listRes.value.data) ? listRes.value.data : []);
-      }
-      if (spaceRes.status === "fulfilled") {
-        const all = Array.isArray(spaceRes.value.data) ? spaceRes.value.data : [];
-        setSharedSpaces(all.filter((s) => s.isOwner === true));
-      }
-    } catch {
-      // silently fail — show empty state
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { void load(); }, []);
-
   useEffect(() => subscribeToListingUpdates((update) => { // SPRINT-42: patch My Listings immediately after field/image edits.
-    setListings((prev) => prev.map((row) => { // SPRINT-42: update matching owner rows.
+    setMine((d) => ({ ...d, listings: d.listings.map((row) => { // SPRINT-42: update matching owner rows.
       if (row.id !== update.id) return row; // SPRINT-42: leave other listings alone.
       if (update.listing) return update.listing; // SPRINT-42: replace with the full PATCH response.
       if (update.images) return { ...row, images: update.images as HousingListingImageRef[] }; // SPRINT-42: replace ordered images from image ops.
       return row; // SPRINT-42: ignore empty events.
-    })); // SPRINT-42: finish owner-list patch.
-  }), []); // SPRINT-42: subscribe for this screen lifetime.
-
-  useFocusEffect( // SPRINT-42: refetch owner listings on focus without a 10-minute gate.
-    useCallback(() => { // SPRINT-42: silent refresh when returning from the editor.
-      void load(true); // SPRINT-42: pull authoritative my-listings after edits.
-    }, []), // SPRINT-42: stable focus callback.
-  ); // SPRINT-42: end my-listings focus refresh.
+    }) })); // SPRINT-42: finish owner-list patch.
+  }), [setMine]); // SPRINT-42: subscribe for this screen lifetime.
 
   const isTrustedHost = isVerifiedLandlord || isVerifiedAgency;
 
@@ -216,7 +204,7 @@ export default function MyListingsScreen() {
           <Ionicons name="add" size={26} color={tc.textPrimary} />
         </Pressable>
       }
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} tintColor={tc.accent} />}
+      refreshControl={<RefreshControl refreshing={mine.refreshing} onRefresh={mine.onRefresh} tintColor={tc.accent} />}
     >
       <Segmented
         style={{ marginHorizontal: 16, marginBottom: 14 }}
