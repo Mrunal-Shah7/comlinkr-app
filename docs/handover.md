@@ -3,7 +3,15 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-09 (latest) - React Query on the rest, keyboard taps (TR-014)
+## 2026-11-09 (latest) - admin reports filter and Data privacy crash (TR-015)
+
+- `fix/admin-reports-privacy`: `/admin/reports` accepts `status` (default PENDING); `/admin/privacy-requests`
+  filters by `status` / `type`; the Data privacy screen uses the API's snapshot fields and real enums.
+  [Build note](build/2026-11-09-admin-reports-privacy.md).
+- Open: e2e `sprint54/stories-listing-reason` fails on `main` too ("Listing not found"); not looked at.
+- `ui_tester` back to USER; servers stopped.
+
+## 2026-11-09 (earlier) - React Query on the rest, keyboard taps (TR-014)
 
 - PRs 7-12 (TR-013) merged into `main`. Then `chore/react-query-rest`: the 22 admin pages, edit profile, Settings,
   event, story and one-off loads on React Query; the last four keyboard-tap screens.

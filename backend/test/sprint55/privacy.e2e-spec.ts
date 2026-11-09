@@ -121,11 +121,15 @@ describe('SPRINT-56 / Sprint 55', () => {
     expect('EventReview' in payload).toBe(false); // SPRINT-56:
 
     await request(base)
-      .get(`/admin/privacy-requests/${created.privacyRequestId}/export-download`)
+      .get(
+        `/admin/privacy-requests/${created.privacyRequestId}/export-download`,
+      )
       .set('Cookie', nonAdmin.cookie)
       .expect(403); // SPRINT-56:
     await request(base)
-      .get(`/admin/privacy-requests/${created.privacyRequestId}/export-download`)
+      .get(
+        `/admin/privacy-requests/${created.privacyRequestId}/export-download`,
+      )
       .set('Cookie', adm.cookie)
       .expect(200); // SPRINT-56:
   }); // SPRINT-56:
@@ -165,7 +169,9 @@ describe('SPRINT-56 / Sprint 55', () => {
     const exportUser = await seedUser({ label: 'erx' }); // SPRINT-56:
 
     const erase = await admin.createErasureRequest(adm.id, u1.id); // SPRINT-56:
-    const state = await getTestPrisma().user.findUnique({ where: { id: u1.id } }); // SPRINT-56:
+    const state = await getTestPrisma().user.findUnique({
+      where: { id: u1.id },
+    }); // SPRINT-56:
     expect(state?.isActive).toBe(false); // SPRINT-56:
     expect(state?.deletedAt).toBeTruthy(); // SPRINT-56:
     expect(state?.deletionSource).toBe('ADMIN'); // SPRINT-56:
@@ -182,9 +188,13 @@ describe('SPRINT-56 / Sprint 55', () => {
     expect(restored?.deletionSource).toBe('NONE'); // SPRINT-56:
 
     const erase2 = await admin.createErasureRequest(adm.id, u2.id); // SPRINT-56:
-    const before = await getTestPrisma().user.findUnique({ where: { id: u2.id } }); // SPRINT-56:
+    const before = await getTestPrisma().user.findUnique({
+      where: { id: u2.id },
+    }); // SPRINT-56:
     await admin.approvePrivacyRequest(adm.id, erase2.privacyRequestId); // SPRINT-56:
-    const after = await getTestPrisma().user.findUnique({ where: { id: u2.id } }); // SPRINT-56:
+    const after = await getTestPrisma().user.findUnique({
+      where: { id: u2.id },
+    }); // SPRINT-56:
     expect(after?.isActive).toBe(before?.isActive); // SPRINT-56:
     expect(String(after?.deletedAt)).toBe(String(before?.deletedAt)); // SPRINT-56:
     expect(after?.deletionSource).toBe('ADMIN'); // SPRINT-56:
@@ -198,6 +208,84 @@ describe('SPRINT-56 / Sprint 55', () => {
     ).rejects.toThrow(/erasure/i); // SPRINT-56:
     expect(beforeApprove?.deletionSource).toBe('ADMIN'); // SPRINT-56:
   }); // SPRINT-56:
+
+  it('GET /admin/privacy-requests filters by status and type over HTTP', async () => {
+    const adm = await seedAdmin();
+    const u1 = await seedUser({ label: 'pf1' });
+    const u2 = await seedUser({ label: 'pf2' });
+    await admin.createErasureRequest(adm.id, u1.id); // PENDING ERASURE
+    await admin.createDataExport(adm.id, u2.id); // COMPLETED DATA_EXPORT
+
+    const pending = await request(base)
+      .get('/admin/privacy-requests?page=1&limit=20&status=PENDING')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(pending.body.data).toHaveLength(1);
+    expect(pending.body.data[0].type).toBe('ERASURE');
+    expect(pending.body.meta.total).toBe(1);
+
+    const exports = await request(base)
+      .get('/admin/privacy-requests?type=DATA_EXPORT')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(exports.body.data).toHaveLength(1);
+    expect(exports.body.data[0].snapshotUsername).toBe(u2.username);
+
+    const all = await request(base)
+      .get('/admin/privacy-requests?pageSize=1')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(all.body.data).toHaveLength(1);
+    expect(all.body.meta.total).toBe(2);
+
+    await request(base)
+      .get('/admin/privacy-requests?status=PROCESSING')
+      .set('Cookie', adm.cookie)
+      .expect(400);
+  });
+
+  it('GET /admin/reports accepts the status filter the dashboard sends', async () => {
+    const adm = await seedAdmin();
+    const reporter = await seedUser({ label: 'rs1' });
+    const t1 = await seedUser({ label: 'rs2' });
+    const t2 = await seedUser({ label: 'rs3' });
+    await getTestPrisma().listingReport.create({
+      data: {
+        reporterId: reporter.id,
+        targetType: 'USER',
+        targetId: t1.id,
+        reason: 'open',
+        status: 'PENDING',
+      },
+    });
+    await getTestPrisma().listingReport.create({
+      data: {
+        reporterId: reporter.id,
+        targetType: 'USER',
+        targetId: t2.id,
+        reason: 'done',
+        status: 'DISMISSED',
+      },
+    });
+
+    const pending = await request(base)
+      .get('/admin/reports?page=1&limit=20&status=PENDING')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(pending.body.data.map((r: any) => r.targetId)).toEqual([t1.id]);
+
+    const unfiltered = await request(base)
+      .get('/admin/reports')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(unfiltered.body.data.map((r: any) => r.targetId)).toEqual([t1.id]); // default stays the open queue
+
+    const dismissed = await request(base)
+      .get('/admin/reports?status=DISMISSED')
+      .set('Cookie', adm.cookie)
+      .expect(200);
+    expect(dismissed.body.data.map((r: any) => r.targetId)).toEqual([t2.id]);
+  });
 
   it('privacy-requests list retains snapshot after hard-delete', async () => {
     // SPRINT-56:

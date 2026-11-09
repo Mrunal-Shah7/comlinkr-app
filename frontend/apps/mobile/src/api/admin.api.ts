@@ -880,21 +880,26 @@ export function adminGetAuditLog(
 
 // ─── Data Privacy / GDPR ────────────────────────────────────────────────────────
 
-export type PrivacyRequestType = "EXPORT" | "ERASURE";
-export type PrivacyRequestStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "REJECTED";
+// The backend's PrivacyRequestType / PrivacyRequestStatus enums (prisma/schema.prisma).
+export type PrivacyRequestType = "DATA_EXPORT" | "ERASURE";
+export type PrivacyRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 
 export interface AdminPrivacyRequest {
   id: string;
   type: PrivacyRequestType;
   status: PrivacyRequestStatus;
-  user: { id: string; username: string; fullName: string | null; email: string };
+  /** Null once the account is hard-deleted; the snapshot fields stay. */
+  userId: string | null;
+  snapshotUsername: string;
+  snapshotEmail: string;
   reason: string | null;
-  requestedBy: "USER" | "ADMIN";
+  /** Set when an admin raised the request; null when the user did. */
+  requestedByAdminId: string | null;
+  /** Set for a DATA_EXPORT whose payload is stored (download through the admin-only export route). */
+  exportFileKey: string | null;
+  resolvedAt: string | null;
+  resolvedByAdminId: string | null;
   createdAt: string;
-  processedAt?: string | null;
-  processedBy?: { id: string; username: string } | null;
-  /** For EXPORT once COMPLETED — signed, short-lived download URL. */
-  downloadUrl?: string | null;
 }
 
 /** GET /admin/privacy-requests */

@@ -39,6 +39,7 @@ import { AdminReportsQueryDto } from './dto/admin-reports-query.dto'; // SPRINT-
 import { AdminBadgeApplicationsQueryDto } from './dto/admin-badge-applications-query.dto'; // SPRINT-57
 import { ReportActionDto } from './dto/report-action.dto'; // SPRINT-51
 import { PrivacyRequestReasonDto } from './dto/privacy-request-reason.dto'; // SPRINT-55
+import { AdminPrivacyRequestsQueryDto } from './dto/admin-privacy-requests-query.dto';
 import { AdminAuditInterceptor } from './admin-audit.interceptor'; // SPRINT-52
 
 @ApiTags('Admin')
@@ -663,12 +664,13 @@ export class AdminController {
   @ApiOperation({ summary: 'Paginated privacy request compliance log' })
   getPrivacyRequests(
     @CurrentUser('id') adminUserId: string,
-    @Query('page') page?: string,
-    @Query('pageSize') pageSize?: string,
+    @Query() query: AdminPrivacyRequestsQueryDto,
   ) {
     return this.adminService.getPrivacyRequests(adminUserId, {
-      page: page ? Number(page) : undefined,
-      pageSize: pageSize ? Number(pageSize) : undefined,
+      page: query.page,
+      pageSize: query.pageSize ?? query.limit,
+      status: query.status,
+      type: query.type,
     });
   }
 

@@ -55,7 +55,10 @@ and support tickets, sending broadcasts, and privacy requests.
 
 ## Problems found
 
-None recorded yet.
+- Fixed 2026-11-09 (TR-015, [build note](../build/2026-11-09-admin-reports-privacy.md)): the dashboard's open
+  reports request (`status=PENDING`) was rejected with 400, and Data privacy crashed on open because the screen
+  expected a `user` object. `GET /admin/reports` now takes `status` (default `PENDING`). `GET /admin/privacy-requests`
+  takes `status` and `type`, and returns snapshot username and email, which outlive a hard delete.
 
 ## Questions
 
