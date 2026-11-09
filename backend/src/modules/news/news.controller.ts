@@ -87,6 +87,18 @@ export class NewsController {
     return this.newsService.getArticleStatsBatch(userId, dto.ids);
   }
 
+  // One article, for the article route opened from a link (TR-017). Declared after 'articles/saved'.
+  @Get('articles/:id')
+  @OptionalAuth()
+  @ApiOperation({
+    summary:
+      'One article from the live news cache, or from a saved copy when the cache has moved on',
+  })
+  @ApiResponse({ status: 404, description: 'Not in the cache and never saved' })
+  getArticle(@Param('id') articleId: string) {
+    return this.newsService.getArticleById(articleId);
+  }
+
   @Get('articles/:id/stats')
   @OptionalAuth()
   getArticleStats(

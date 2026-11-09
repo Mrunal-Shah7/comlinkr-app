@@ -33,3 +33,16 @@ animation and no `Link.Preview` on iOS.
 
 `tsc`, `expo export`. On the phone: open each detail from its list, Back; open one from a link; the actions on each
 detail with test data, undone afterwards.
+
+## Addendum (2026-11-09, TR-017): the news article
+
+The news article stayed a modal because it had no by-id endpoint. Owner, 2026-11-09: fix it in this run.
+
+- Backend: `GET /news/articles/:id` (optional auth). It reads the in-memory feed cache. When the cache has moved on,
+  it falls back to the newest saved copy (`NewsArticleSave`: title, link, image, source). Otherwise it returns 404.
+  Article ids include the feed position, so an old link can miss: the route then says the article is no longer
+  available.
+- App: `app/news/[id].tsx`. From the feed, the card hands over the article, so it opens with no request. From a
+  link, it fetches. Likes, saves and comments made there are passed back to the feed's cards. The comments are a
+  native sheet (`NewsCommentsSheet`), shared with the feed.
+- [Build note](../build/2026-11-09-news-article-route.md).

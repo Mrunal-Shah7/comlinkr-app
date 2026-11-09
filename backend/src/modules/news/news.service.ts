@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   PaginationDto,
@@ -365,6 +365,47 @@ export class NewsService {
 
   getActiveLocations(): string[] {
     return [...this.activeLocations];
+  }
+
+  /**
+   * One article by id (TR-017). Articles live only in the in-memory feed cache, so the cache is searched first;
+   * when it has been rebuilt or evicted since, a saved copy (title, link, image, source) answers instead. Article
+   * ids carry the feed position, so an id from an older build can miss both: that is a 404.
+   */
+  async getArticleById(articleId: string): Promise<RssNewsArticle> {
+    for (const entry of this.cache.values()) {
+      const hit = entry.data.find((a) => a.id === articleId);
+      if (hit) return hit;
+    }
+    const saved = await this.prisma.newsArticleSave.findFirst({
+      where: { articleId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        articleId: true,
+        title: true,
+        url: true,
+        imageUrl: true,
+        source: true,
+        publishedAt: true,
+        createdAt: true,
+      },
+    });
+    if (!saved) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Article not found',
+      });
+    }
+    return {
+      id: saved.articleId,
+      title: saved.title,
+      description: '',
+      url: saved.url,
+      image: saved.imageUrl ?? null,
+      source: saved.source ?? '',
+      publishedAt: (saved.publishedAt ?? saved.createdAt).toISOString(),
+      category: 'local',
+    };
   }
 
   async getArticleStats(userId: string | undefined, articleId: string) {

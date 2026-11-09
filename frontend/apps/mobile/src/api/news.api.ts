@@ -219,6 +219,20 @@ export interface PaginatedNewsComments {
   };
 }
 
+/** GET /news/articles/:id: one article from the live cache or a saved copy (TR-017); 404 once it is gone. */
+export function getNewsArticle(articleId: string): Promise<{
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  image: string | null;
+  source: string;
+  publishedAt: string;
+  category: string;
+}> {
+  return api.get(`/news/articles/${encodeURIComponent(articleId)}`);
+}
+
 export function getArticleStats(articleId: string): Promise<NewsArticleStats> {
   return api.get<NewsArticleStats>(`/news/articles/${articleId}/stats`);
 }

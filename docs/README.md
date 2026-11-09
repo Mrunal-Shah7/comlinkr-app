@@ -132,6 +132,8 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.
+- 2026-11-09: [News article route](build/2026-11-09-news-article-route.md) (TR-017, point 4): `GET /news/articles/:id`
+  and `/news/[id]` replace the article modal; news comments in the native sheet. Walked on Android.
 - 2026-11-09: [E2e listing visibility](build/2026-11-09-e2e-listing-visibility.md) (TR-016): the sprint54 moderation
   test expects SEC-04's "not found" for a rejected listing; the e2e suite passes in full (45/45).
 - 2026-11-09: [Admin reports and privacy](build/2026-11-09-admin-reports-privacy.md) (TR-015): `/admin/reports` takes
