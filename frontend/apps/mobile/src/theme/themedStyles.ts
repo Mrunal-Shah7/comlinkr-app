@@ -71,21 +71,67 @@ const TEXT: Record<string, string> = {
 
 const BORDER = new Set(['#e1e9ed', '#cfdbe1', '#e5e7eb', '#f0f2f5', '#f3f4f6', '#e8edf4', '#f0f3f8', '#e2e8f0', '#f1f5f9']);
 
+/** A hex colour as hue (0–360), saturation and lightness (0–1); null for anything else. */
+function hsl(hex: string): [number, number, number] | null {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(hex);
+  if (!m) return null;
+  const h = m[1].length === 3 ? m[1].split('').map((c) => c + c).join('') : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  if (d === 0) return [0, 0, l];
+  const sat = d / (1 - Math.abs(2 * l - 1));
+  const hue = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(hue * 60 + 360) % 360, sat, l];
+}
+const css = (h: number, s: number, l: number) => `hsl(${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
+
+/** For a colour no table above names (TR-017, point 1): light neutrals become dark surfaces, light tints a dark
+ *  shade of their hue, dark and mid-grey text light text. Saturated brand and status colours and light text
+ *  (white on a brand button) are left alone. */
+function fallback(prop: string, key: string): string | null {
+  const c = hsl(key);
+  if (!c) return null;
+  const [h, s, l] = c;
+  const neutral = s < 0.25;
+  if (prop === 'backgroundColor') {
+    if (l < 0.94) return null;
+    if (neutral) return l >= 0.985 ? DARK_THEME.cardBg : DARK_THEME.inputBg;
+    return css(h, 0.35, 0.14);
+  }
+  if (prop === 'color') {
+    if (neutral && l <= 0.3) return DARK_THEME.textPrimary;
+    if (neutral && l <= 0.6) return DARK_THEME.textSecondary;
+    if (!neutral && l <= 0.32) return css(h, Math.min(s, 0.8), 0.75);
+    return null;
+  }
+  if (l < 0.85) return null;
+  return neutral ? DARK_THEME.borderLight : css(h, 0.3, 0.24);
+}
+
 function mapValue(prop: string, value: unknown): unknown {
   if (typeof value !== 'string') return value;
   const key = norm(value);
-  if (prop === 'color') return TEXT[key] ?? value;
+  if (prop === 'color') return TEXT[key] ?? fallback(prop, key) ?? value;
   if (prop === 'backgroundColor') {
     // Near-opaque white chrome (header circles, pills) becomes the elevated icon-button surface.
     if (/^rgba\(255,\s*255,\s*255,\s*0?\.(8|9)\d*\)$/.test(key)) return DARK_THEME.iconButtonBg;
-    return SURFACE[key] ?? value;
+    return SURFACE[key] ?? fallback(prop, key) ?? value;
   }
   if (prop.startsWith('border') && prop.endsWith('Color')) {
     if (BORDER.has(key)) return DARK_THEME.borderLight;
     if (key.startsWith('rgba(0,0,0,0.0') || key.startsWith('rgba(0, 0, 0, 0.0')) return DARK_THEME.borderLight;
-    return SURFACE[key] ?? value;
+    return SURFACE[key] ?? fallback('borderColor', key) ?? value;
   }
   return value;
+}
+
+/** A colour used outside a stylesheet (an icon's `color`, `placeholderTextColor`, an inline background), mapped
+ *  for the active theme like the styles are. Reading it subscribes the component to the theme, so it redraws on
+ *  a toggle. Use `prop` 'backgroundColor' or 'borderColor' for surfaces; the default is text. */
+export function usePaletteColor() {
+  const isDark = useThemeStore((st) => st.isDark);
+  return (value: string, prop: 'color' | 'backgroundColor' | 'borderColor' = 'color'): string =>
+    isDark ? (mapValue(prop, value) as string) : value;
 }
 
 function mapStyle(style: any): any {
@@ -114,9 +160,11 @@ function dType(style: any): any {
 
 export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
   styles: T | StyleSheet.NamedStyles<T>,
+  options: { fonts?: boolean } = {},
 ): T {
+  // fonts: false keeps the file's own type (colour only), for screens moved over without a font change.
   const typed: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(styles)) typed[k] = dType(v);
+  for (const [k, v] of Object.entries(styles)) typed[k] = options.fonts === false ? v : dType(v);
   const base = StyleSheet.create(typed as any) as T;
   let darkCache: Partial<Record<keyof T, any>> = {};
   return new Proxy(base, {
