@@ -38,4 +38,6 @@ The docs carry work across sessions, but only as well as each session remembers 
   `main` was reported as merged; fixed by ignoring branches at the same commit as `origin/main`.
 - Both hook commands piped by hand from a subdirectory: the session-start output prints the handover; the
   push check exits 0 when clean and 1 or 2 on errors.
-- The push of this branch ran through the PreToolUse hook (see the pull request).
+- With a link broken on purpose, the script reported it and exited 2. The hooks did not fire in the session that
+  wrote them: `.claude/settings.json` did not exist when that session started, so Claude Code was not watching
+  it. They load in the next session (or after opening `/hooks`). Not yet seen firing.
