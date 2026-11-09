@@ -11,10 +11,13 @@ import {
   BroadcastPriority, // SPRINT-57
   BroadcastStatus, // SPRINT-57
   FeedCategory,
+  ListingReportStatus,
   ListingReportTargetType, // SPRINT-51
   ListingStatus,
   NotificationType,
   Prisma,
+  PrivacyRequestStatus,
+  PrivacyRequestType,
   PropertyType,
   SupportTicketStatus,
 } from '@prisma/client';
@@ -1047,6 +1050,7 @@ export class AdminService {
       page: query.page ?? 1,
       pageSize: query.limit ?? 20,
       targetType: query.targetType,
+      status: query.status,
       targetId: query.targetId,
       reporterId: query.reporterId,
     });
@@ -2056,6 +2060,7 @@ export class AdminService {
     page?: number;
     pageSize?: number;
     targetType?: ListingReportTargetType; // SPRINT-51
+    status?: ListingReportStatus; // the open queue (PENDING) unless asked otherwise
     targetId?: string; // SPRINT-51
     reporterId?: string; // SPRINT-51
   }) {
@@ -2063,7 +2068,7 @@ export class AdminService {
     const pageSize = query.pageSize ?? 20;
     // SPRINT-51: single authoritative source is ListingReport after ContentReport migration
     const where: Prisma.ListingReportWhereInput = {
-      status: 'PENDING',
+      status: query.status ?? 'PENDING',
     };
     if (query.targetType) where.targetType = query.targetType; // SPRINT-51
     if (query.targetId) where.targetId = query.targetId; // SPRINT-51
@@ -2971,14 +2976,23 @@ export class AdminService {
   // SPRINT-55: paginated compliance log
   async getPrivacyRequests(
     adminUserId: string,
-    query: { page?: number; pageSize?: number },
+    query: {
+      page?: number;
+      pageSize?: number;
+      status?: PrivacyRequestStatus;
+      type?: PrivacyRequestType;
+    },
   ) {
     await this.assertActiveAdmin(adminUserId);
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
     const skip = (page - 1) * pageSize;
+    const where: Prisma.PrivacyRequestWhereInput = {};
+    if (query.status) where.status = query.status;
+    if (query.type) where.type = query.type;
     const [data, total] = await Promise.all([
       this.prisma.privacyRequest.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
         take: pageSize,
@@ -2997,7 +3011,7 @@ export class AdminService {
           createdAt: true,
         },
       }),
-      this.prisma.privacyRequest.count(),
+      this.prisma.privacyRequest.count({ where }),
     ]);
     return { data, meta: createPaginationMeta(page, pageSize, total) };
   }

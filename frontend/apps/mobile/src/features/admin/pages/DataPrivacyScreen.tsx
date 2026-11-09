@@ -30,7 +30,7 @@ import { showToast } from '../../../shared/ui/Toast';
 
 const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
   PENDING: { color: palette.amber500, bg: palette.legacyOrangeLight, label: 'Pending' },
-  PROCESSING: { color: Colors.brand.blue, bg: Colors.brand.blueLight, label: 'Processing' },
+  APPROVED: { color: Colors.brand.blue, bg: Colors.brand.blueLight, label: 'Approved' },
   COMPLETED: { color: Colors.brand.green, bg: Colors.brand.greenLight, label: 'Completed' },
   REJECTED: { color: palette.red500, bg: palette.red50, label: 'Rejected' },
 };
@@ -211,7 +211,7 @@ export default function DataPrivacyScreen() {
             filters={[
               { label: 'All', value: 'all' },
               { label: 'Pending', value: 'pending' },
-              { label: 'Processing', value: 'processing' },
+              { label: 'Approved', value: 'approved' },
               { label: 'Completed', value: 'completed' },
               { label: 'Rejected', value: 'rejected' },
             ]}
@@ -243,17 +243,17 @@ export default function DataPrivacyScreen() {
                 return (
                   <View key={req.id} style={s.card}>
                     <View style={s.cardHeaderRow}>
-                      <Ionicons name={req.type === 'EXPORT' ? 'download-outline' : 'trash-outline'} size={16} color={meta2.color} />
+                      <Ionicons name={req.type === 'DATA_EXPORT' ? 'download-outline' : 'trash-outline'} size={16} color={meta2.color} />
                       <View style={{ flex: 1 }}>
-                        <Text style={s.cardTitle}>{req.type === 'EXPORT' ? 'Data Export' : 'Erasure Request'}</Text>
-                        <Text style={s.cardSub}>{req.user.username} · {req.user.email}</Text>
+                        <Text style={s.cardTitle}>{req.type === 'DATA_EXPORT' ? 'Data Export' : 'Erasure Request'}</Text>
+                        <Text style={s.cardSub}>{req.snapshotUsername} · {req.snapshotEmail}</Text>
                       </View>
                       <View style={[s.statusChip, { backgroundColor: meta2.bg }]}>
                         <Text style={[s.statusChipText, { color: meta2.color }]}>{meta2.label}</Text>
                       </View>
                     </View>
                     {req.reason && <Text style={s.cardReason}>{req.reason}</Text>}
-                    <Text style={s.cardMeta}>Requested by {req.requestedBy.toLowerCase()} · {relativeTime(req.createdAt)}</Text>
+                    <Text style={s.cardMeta}>Requested by {req.requestedByAdminId ? 'admin' : 'user'} · {relativeTime(req.createdAt)}</Text>
                     {req.status === 'PENDING' && (
                       <>
                         {rejectingId === req.id && (
@@ -281,7 +281,7 @@ export default function DataPrivacyScreen() {
                         </View>
                       </>
                     )}
-                    {req.downloadUrl && (
+                    {req.type === 'DATA_EXPORT' && !!req.exportFileKey && (
                       <Text style={s.downloadNote}>Export ready — signed link available server-side.</Text>
                     )}
                   </View>
