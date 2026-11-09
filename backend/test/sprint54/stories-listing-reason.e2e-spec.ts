@@ -134,11 +134,11 @@ describe('SPRINT-56 / Sprint 54', () => {
     expect(rejected?.moderationReason).toBe('Incomplete photos'); // SPRINT-56:
 
     const ownerView = await housing.getListingById(owner.id, listing.id); // SPRINT-56:
-    const viewerView = await housing.getListingById(viewer.id, listing.id); // SPRINT-56:
     expect(ownerView.moderationReason).toBe('Incomplete photos'); // SPRINT-56:
-    expect(
-      Object.prototype.hasOwnProperty.call(viewerView, 'moderationReason'),
-    ).toBe(false); // SPRINT-56:
+    // SEC-04: a listing that is not AVAILABLE is hidden from everyone but its owner and admins.
+    await expect(housing.getListingById(viewer.id, listing.id)).rejects.toThrow(
+      'Listing not found',
+    );
 
     await admin.moderateListing(adm.id, listing.id, 'approve'); // SPRINT-56:
     const approved = await getTestPrisma().housingListing.findUnique({
@@ -147,6 +147,11 @@ describe('SPRINT-56 / Sprint 54', () => {
     expect(approved?.moderationReason).toBeNull(); // SPRINT-56:
     const ownerAfter = await housing.getListingById(owner.id, listing.id); // SPRINT-56:
     expect(ownerAfter.moderationReason).toBeNull(); // SPRINT-56:
+    // Once available again, others see the listing but never the moderation field (owner-only).
+    const viewerAfter = await housing.getListingById(viewer.id, listing.id);
+    expect(
+      Object.prototype.hasOwnProperty.call(viewerAfter, 'moderationReason'),
+    ).toBe(false);
   }); // SPRINT-56:
 
   it('feed and restaurant moderation ignore optional DTO reason', async () => {

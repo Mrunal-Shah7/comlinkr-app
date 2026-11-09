@@ -8,7 +8,8 @@ else. Keep old entries short: what was done and where it is written._
 - `fix/admin-reports-privacy`: `/admin/reports` accepts `status` (default PENDING); `/admin/privacy-requests`
   filters by `status` / `type`; the Data privacy screen uses the API's snapshot fields and real enums.
   [Build note](build/2026-11-09-admin-reports-privacy.md).
-- Open: e2e `sprint54/stories-listing-reason` fails on `main` too ("Listing not found"); not looked at.
+- E2e `sprint54/stories-listing-reason` was out of date against SEC-04; updated on `chore/e2e-listing-visibility`
+  (TR-016, [build note](build/2026-11-09-e2e-listing-visibility.md)). The backend e2e suite now passes 45/45.
 - `ui_tester` back to USER; servers stopped.
 
 ## 2026-11-09 (earlier) - React Query on the rest, keyboard taps (TR-014)
