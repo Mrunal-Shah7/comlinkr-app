@@ -3,7 +3,18 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-09 (latest) - the nine Expo conventions (TR-013)
+## 2026-11-09 (latest) - React Query on the rest, keyboard taps (TR-014)
+
+- PRs 7-12 (TR-013) merged into `main`. Then `chore/react-query-rest`: the 22 admin pages, edit profile, Settings,
+  event, story and one-off loads on React Query; the last four keyboard-tap screens.
+  [Build note](build/2026-11-09-react-query-rest.md).
+- Follow-ups found (older bugs): admin dashboard sends `status` to `/admin/reports` (400); admin Data privacy crashes
+  on `req.user.username` (backend sends `snapshotUsername`).
+- Still partial from the audit: iOS previews only on some cards, the news article modal, palette colours not
+  dark-aware.
+- `ui_tester` set back to USER. Servers stopped at the end.
+
+## 2026-11-09 (earlier) - the nine Expo conventions (TR-013)
 
 - All nine points done, one stacked pull request per group, each on the one before:
   `chore/expo-conventions` (keyboard taps, window size, `EXPO_OS`, onboarding dots, axios dropped) →

@@ -1,6 +1,8 @@
 import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../services/cache/queryKeys";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, Linking, ActivityIndicator, Share } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
@@ -65,48 +67,32 @@ export function EventDetail({
     setHeroIdx(0);
   }, [event?.id]);
 
+  // Without an apiEvent from the caller, the detail and (for the organiser) the attendees come through
+  // React Query (TR-013).
+  const detailQuery = useQuery({
+    queryKey: queryKeys.event(event?.id ?? ""),
+    queryFn: () => getEvent(String(event?.id)),
+    enabled: !apiEvent && !!event?.id,
+    staleTime: 0,
+  });
   useEffect(() => {
-    if (apiEvent) {
-      setDetailApiEvent(apiEvent);
-      setDetailFromApi(apiEventToExploreRow(apiEvent));
-      return;
-    }
-    if (!event?.id) {
-      setDetailFromApi(null);
-      setDetailApiEvent(null); // SPRINT-42:
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const api = await getEvent(event.id);
-        if (!cancelled) {
-          setDetailApiEvent(api); // SPRINT-42:
-          setDetailFromApi(apiEventToExploreRow(api));
-        }
-      } catch {
-        if (!cancelled) {
-          setDetailFromApi(null);
-          setDetailApiEvent(null); // SPRINT-42:
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [apiEvent, event?.id]);
+    const api = apiEvent ?? (event?.id ? detailQuery.data ?? null : null);
+    setDetailApiEvent(api);
+    setDetailFromApi(api ? apiEventToExploreRow(api) : null);
+  }, [apiEvent, event?.id, detailQuery.data]);
 
+  const attendeesQuery = useQuery({
+    queryKey: [...queryKeys.event(event?.id ?? ""), "attendees"],
+    queryFn: () => getEventAttendees(String(event?.id)).catch((): EventAttendee[] => []),
+    enabled: !!event?.isOwner && !!event?.id,
+    staleTime: 0,
+  });
   useEffect(() => {
-    if (!event?.isOwner || !event?.id) {
-      setAttendees([]);
-      return;
-    }
-    setAttendeesLoading(true);
-    getEventAttendees(event.id)
-      .then(setAttendees)
-      .catch(() => setAttendees([]))
-      .finally(() => setAttendeesLoading(false));
-  }, [event?.id, event?.isOwner]);
+    setAttendees(event?.isOwner && event?.id ? attendeesQuery.data ?? [] : []);
+  }, [event?.id, event?.isOwner, attendeesQuery.data]);
+  useEffect(() => {
+    setAttendeesLoading(!!event?.isOwner && !!event?.id && attendeesQuery.isFetching && !attendeesQuery.data);
+  }, [event?.id, event?.isOwner, attendeesQuery.isFetching, attendeesQuery.data]);
 
   const insetsD = useSafeAreaInsets();
   if (!event) return null;

@@ -320,7 +320,7 @@ export default function FoodScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
       <AppHeader title="Food" scrollY={foodScrollY} />
-      <Reanimated.ScrollView
+      <Reanimated.ScrollView keyboardShouldPersistTaps="handled" 
         ref={foodScrollRef as any}
         onScroll={onFoodScroll}
         scrollEventThrottle={16}

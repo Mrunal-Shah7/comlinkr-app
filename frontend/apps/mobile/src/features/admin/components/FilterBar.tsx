@@ -42,7 +42,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     </View>
 
     {filters && filters.length > 0 && (
-      <ScrollView
+      <ScrollView keyboardShouldPersistTaps="handled" 
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 7, paddingRight: 4 }}

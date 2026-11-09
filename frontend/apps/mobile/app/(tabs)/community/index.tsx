@@ -36,7 +36,7 @@ import { LinkifiedText } from "../../../components/LinkifiedText";
 import { useBlockStore } from "../../../src/store/block.store";
 import { blockUser as blockUserApi, reportUser } from "../../../src/api/profile.api";
 import { queryKeys } from "../../../src/services/cache/queryKeys";
-import { LIST_STALE_MS } from "../../../src/services/cache/queryClient";
+import { LIST_STALE_MS, queryClient } from "../../../src/services/cache/queryClient";
 import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuery";
 import {
   askQuestion,
@@ -593,7 +593,7 @@ export default function CommunityScreen() {
     openedQuestionRef.current = id;
     (async () => {
       try {
-        const q = await getQuestion(id);
+        const q = await queryClient.fetchQuery({ queryKey: ["community", "question", id], queryFn: () => getQuestion(id), staleTime: 0 });
         const ui = toUiQuestion(q);
         setQuestions((prev) => (prev.some((x) => x.id === ui.id) ? prev : [ui, ...prev]));
         if ((q as { isSaved?: boolean }).isSaved === true) {

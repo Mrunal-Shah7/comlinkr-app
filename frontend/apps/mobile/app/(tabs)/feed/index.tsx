@@ -709,7 +709,7 @@ export default function FeedScreen() {
     // Marked before the request so a re-render mid-flight cannot queue a duplicate.
     pending.forEach((id) => newsStatsFetchedIds.current.add(id));
 
-    getArticleStatsBatch(pending)
+    cached(["articleStats", ...pending], () => getArticleStatsBatch(pending), true)
       .then((res) => {
         const stats = res?.data ?? {};
         const likeCounts: Record<string, number> = {};
@@ -1373,7 +1373,7 @@ export default function FeedScreen() {
     (async () => {
       setFeedCommentsLoading(true);
       try {
-        const list = await getComments(feedCommentPostId);
+        const list = await cached(["comments", feedCommentPostId], () => getComments(feedCommentPostId), true);
         if (!cancelled) setFeedComments(Array.isArray(list) ? list : []);
       } catch {
         if (!cancelled) setFeedComments([]);
@@ -1434,9 +1434,9 @@ export default function FeedScreen() {
     let cancelled = false;
     (async () => {
       try {
-        await getStory(id);
+        await cached(["story", id], () => getStory(id), true);
         if (cancelled) return;
-        const rawList = await getActiveStories(city);
+        const rawList = await cached(["stories", "link", city], () => getActiveStories(city), true);
         if (cancelled) return;
         const list = Array.isArray(rawList) ? rawList : [];
         const listNorm = list.map(normalizeApiStoryForFeed);
@@ -1486,7 +1486,7 @@ export default function FeedScreen() {
     }
     let cancelled = false;
     setFeedCommentPostLoading(true);
-    void getPost(feedCommentPostId)
+    void cached(["post", feedCommentPostId], () => getPost(feedCommentPostId), true)
       .then((p) => {
         if (!cancelled) {
           const latest = getLatestPostUpdate(p.id); // SPRINT-42: prefer the in-memory PATCH when a slower GET races after edit.

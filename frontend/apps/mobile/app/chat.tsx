@@ -1,6 +1,7 @@
 import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   View,
   Text,
@@ -720,16 +721,18 @@ function Thread({
   }, [loadThread]);
 
   // Load live member list when group info panel opens
+  // Through React Query while the panel is open (TR-013); fetched fresh each time it opens.
+  const groupInfoQuery = useQuery({
+    queryKey: ["chat", "conversation", id ?? ""],
+    queryFn: () => getConversation(String(id)),
+    enabled: showGroupInfo && isGroupChat && !!id,
+    staleTime: 0,
+  });
   useEffect(() => {
-    if (!showGroupInfo || !isGroupChat || !id) return;
-    getConversation(id)
-      .then((raw) => {
-        setLiveMembers(
-          (raw.members ?? []).map((m) => ({ id: m.userId, name: m.name || m.username, role: m.role }))
-        );
-      })
-      .catch(() => {});
-  }, [showGroupInfo, isGroupChat, id]);
+    const raw = groupInfoQuery.data;
+    if (!showGroupInfo || !raw) return;
+    setLiveMembers((raw.members ?? []).map((m) => ({ id: m.userId, name: m.name || m.username, role: m.role })));
+  }, [showGroupInfo, groupInfoQuery.data]);
 
   useEffect(() => {
     composerPrefillAppliedRef.current = false;
@@ -1881,7 +1884,7 @@ export default function ChatScreen() {
     const draft = params.initialMessage?.trim() || undefined;
     void (async () => {
       try {
-        const raw = await getConversation(cid);
+        const raw = await queryClient.fetchQuery({ queryKey: ["chat", "conversation", cid], queryFn: () => getConversation(cid), staleTime: 0 });
         if (cancelled) return;
         if (draft) setThreadComposerPrefill(draft);
         const row = mapConversationToListRow(raw, currentUserId, resolveAsset);

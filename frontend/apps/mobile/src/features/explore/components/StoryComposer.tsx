@@ -57,7 +57,7 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
         <TextInput value={caption} onChangeText={onCaption} maxLength={120} placeholder="Add a caption (optional)" placeholderTextColor="rgba(255,255,255,0.55)"
           style={[body(500), { color: palette.white, fontSize: 15.5, paddingVertical: 0 }]} accessibilityLabel="Caption" />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: insets.bottom + 24 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, alignItems: "center" }}>
+      <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: insets.bottom + 24 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, alignItems: "center" }}>
         {topics.map((t) => {
           const on = topic === t;
           return (

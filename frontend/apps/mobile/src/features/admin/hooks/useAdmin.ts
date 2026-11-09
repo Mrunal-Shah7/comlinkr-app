@@ -1,6 +1,8 @@
 // src/features/admin/hooks/useAdmin.ts
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { adminQueryFn } from '../api/adminQuery';
 import type {
   AdminActionVerb,
   AdminNotification,
@@ -133,94 +135,72 @@ type MutationOpts<TResult> = { // SPRINT-41:
 
 // ─── Infrastructure ───────────────────────────────────────────────────────────
 
-export interface AsyncDataState<T> { // SPRINT-41:
-  data: T | null; // SPRINT-41:
-  isLoading: boolean; // SPRINT-41:
-  isRefetching: boolean; // SPRINT-41:
-  isError: boolean; // SPRINT-41:
-  errorMessage: string | null; // SPRINT-41:
-  refetch: () => void; // SPRINT-41:
-} // SPRINT-41:
+export interface AsyncDataState<T> {
+  data: T | null;
+  isLoading: boolean;
+  isRefetching: boolean;
+  isError: boolean;
+  errorMessage: string | null;
+  refetch: () => void;
+}
 
-/** // SPRINT-41: Simple async fetch hook — deps drive refetch; useEffect depends on load */
-export function useAsyncData<T>( // SPRINT-41:
-  fetchFn: () => Promise<T>, // SPRINT-41:
-  deps: unknown[] = [], // SPRINT-41:
-  enabled = true, // SPRINT-41:
-): AsyncDataState<T> { // SPRINT-41:
-  const [data, setData] = useState<T | null>(null); // SPRINT-41:
-  const [isLoading, setIsLoading] = useState(enabled); // SPRINT-41:
-  const [isRefetching, setIsRefetching] = useState(false); // SPRINT-41:
-  const [isError, setIsError] = useState(false); // SPRINT-41:
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // SPRINT-41:
-  const [reloadToken, setReloadToken] = useState(0); // SPRINT-41:
+/**
+ * One admin value through React Query (TR-013, point 3), cached under ['admin', key, ...deps]. Same return shape
+ * as the hand-written hook it replaces, so the screens did not change.
+ */
+export function useAsyncData<T>(
+  key: string,
+  fetchFn: () => Promise<T>,
+  deps: unknown[] = [],
+  enabled = true,
+): AsyncDataState<T> {
+  const query = useQuery({
+    queryKey: ['admin', key, ...deps],
+    queryFn: () => adminQueryFn(fetchFn),
+    enabled,
+  });
+  const { refetch } = query;
+  return {
+    data: query.data ?? null,
+    isLoading: enabled && query.isPending,
+    isRefetching: query.isRefetching,
+    isError: query.isError,
+    errorMessage: query.error ? query.error.message : null,
+    refetch: useCallback(() => void refetch(), [refetch]),
+  };
+}
 
-  const refetch = useCallback(() => setReloadToken((t) => t + 1), []); // SPRINT-41:
+/**
+ * Admin mutation: mutate(arg, { onSuccess, onError }) resolves to the result, or undefined on failure.
+ * A success invalidates every ['admin'] query, so lists and counts show the change without a manual refresh.
+ */
+export function useMutation<TArg, TResult = void>(
+  fn: (arg: TArg) => Promise<TResult>,
+) {
+  const qc = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => { // SPRINT-41:
-    if (!enabled) { // SPRINT-41:
-      setIsLoading(false); // SPRINT-41:
-      return; // SPRINT-41:
-    } // SPRINT-41:
-    let cancelled = false; // SPRINT-41:
-    const isRefresh = reloadToken > 0 || data !== null; // SPRINT-41:
-    if (isRefresh) setIsRefetching(true); // SPRINT-41:
-    else setIsLoading(true); // SPRINT-41:
-    setIsError(false); // SPRINT-41:
-    setErrorMessage(null); // SPRINT-41:
+  const mutate = useCallback(
+    async (arg: TArg, opts?: MutationOpts<TResult>): Promise<TResult | undefined> => {
+      setIsPending(true);
+      try {
+        const result = await fn(arg);
+        void qc.invalidateQueries({ queryKey: ['admin'] });
+        opts?.onSuccess?.(result);
+        return result;
+      } catch (err) {
+        handleAdminApiError(err); // a 403 leaves the admin area even if the caller shows no alert
+        opts?.onError?.(err);
+        return undefined;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [fn, qc],
+  );
 
-    (async () => { // SPRINT-41:
-      try { // SPRINT-41:
-        const result = await fetchFn(); // SPRINT-41:
-        if (!cancelled) setData(result); // SPRINT-41:
-      } catch (err) { // SPRINT-41:
-        if (!cancelled) { // SPRINT-41:
-          setIsError(true); // SPRINT-41:
-          setErrorMessage(handleAdminApiError(err)); // SPRINT-41:
-        } // SPRINT-41:
-      } finally { // SPRINT-41:
-        if (!cancelled) { // SPRINT-41:
-          setIsLoading(false); // SPRINT-41:
-          setIsRefetching(false); // SPRINT-41:
-        } // SPRINT-41:
-      } // SPRINT-41:
-    })(); // SPRINT-41:
-
-    return () => { // SPRINT-41:
-      cancelled = true; // SPRINT-41:
-    }; // SPRINT-41:
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, reloadToken, ...deps]); // SPRINT-41:
-
-  return { data, isLoading, isRefetching, isError, errorMessage, refetch }; // SPRINT-41:
-} // SPRINT-41:
-
-/** // SPRINT-41: Mutation helper — onError receives err; mutate returns result */
-export function useMutation<TArg, TResult = void>( // SPRINT-41:
-  fn: (arg: TArg) => Promise<TResult>, // SPRINT-41:
-) { // SPRINT-41:
-  const [isPending, setIsPending] = useState(false); // SPRINT-41:
-
-  const mutate = useCallback( // SPRINT-41:
-    async (arg: TArg, opts?: MutationOpts<TResult>): Promise<TResult | undefined> => { // SPRINT-41:
-      setIsPending(true); // SPRINT-41:
-      try { // SPRINT-41:
-        const result = await fn(arg); // SPRINT-41:
-        opts?.onSuccess?.(result); // SPRINT-41:
-        return result; // SPRINT-41:
-      } catch (err) { // SPRINT-41:
-        handleAdminApiError(err); // SPRINT-41: ensures 403 leaves admin even if caller skips alert
-        opts?.onError?.(err); // SPRINT-41:
-        return undefined; // SPRINT-41:
-      } finally { // SPRINT-41:
-        setIsPending(false); // SPRINT-41:
-      } // SPRINT-41:
-    }, // SPRINT-41:
-    [fn], // SPRINT-41:
-  ); // SPRINT-41:
-
-  return { mutate, isPending }; // SPRINT-41:
-} // SPRINT-41:
+  return { mutate, isPending };
+}
 
 // ─── Mapping helpers ──────────────────────────────────────────────────────────
 
@@ -495,12 +475,12 @@ function mapBroadcastToNotification(row: Record<string, unknown>): AdminNotifica
 
 /** // SPRINT-41: Raw AdminAnalytics from adminGetAnalytics — no mockApiResponse fabrications */
 export function useAdminStats() { // SPRINT-41:
-  return useAsyncData<AdminAnalytics>(() => adminGetAnalytics(), []); // SPRINT-41:
+  return useAsyncData<AdminAnalytics>('useAdminStats', () => adminGetAnalytics(), []); // SPRINT-41:
 } // SPRINT-41:
 
 /** // SPRINT-41: Time-series deferred — hook removed from screens; throws if called */
 export function useAdminAnalytics(_period: '7d' | '30d' | '90d' | '1y' = '30d') { // SPRINT-41:
-  return useAsyncData<AnalyticsTimeSeries>(async () => { // SPRINT-41:
+  return useAsyncData<AnalyticsTimeSeries>('useAdminAnalytics', async () => { // SPRINT-41:
     throw new Error('Admin analytics time-series is not available (deferred).'); // SPRINT-41:
   }, [_period]); // SPRINT-41:
 } // SPRINT-41:
@@ -515,7 +495,7 @@ type AdminUsersParams = { // SPRINT-41:
 }; // SPRINT-41:
 
 export function useAdminUsers(initialParams?: AdminUsersParams) { // SPRINT-41:
-  return useAdminListState<ListUser, AdminUsersParams>({ // SPRINT-41:
+  return useAdminListState<ListUser, AdminUsersParams>({ key: 'useAdminUsers', // SPRINT-41:
     initialParams: { limit: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, limit, search, role, isActive }) => { // SPRINT-41:
       const res = await adminGetUsers({ page, limit, search, role, isActive }); // SPRINT-41:
@@ -525,7 +505,7 @@ export function useAdminUsers(initialParams?: AdminUsersParams) { // SPRINT-41:
 } // SPRINT-41:
 
 export function useAdminUserDetail(id: string | null) { // SPRINT-41:
-  return useAsyncData<AdminUser | null>( // SPRINT-41:
+  return useAsyncData<AdminUser | null>('useAdminUserDetail', // SPRINT-41:
     async () => (id ? adminGetUser(id) : null), // SPRINT-41:
     [id], // SPRINT-41:
     Boolean(id), // SPRINT-41:
@@ -569,7 +549,7 @@ type AdminListingsParams = { // SPRINT-41:
 }; // SPRINT-41:
 
 export function useAdminListings(initialParams?: AdminListingsParams) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminListings', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search, status, propertyType }) => { // SPRINT-41:
       const res = await adminGetListings({ page, pageSize, search, status, propertyType }); // SPRINT-41:
@@ -600,7 +580,7 @@ export function useModerateListingMutation() { // SPRINT-41:
 // ─── Reports ──────────────────────────────────────────────────────────────────
 
 export function useAdminReports(params?: { targetType?: AdminReportTargetType; status?: ReportStatus; targetId?: string; reporterId?: string }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminReports', // SPRINT-41:
     initialParams: { limit: 20, ...params }, // SPRINT-41:
     fetchPage: async ({ page, limit, targetType, status, targetId, reporterId }) => { // SPRINT-41:
       const res = await adminGetReports({ page, limit, targetType, status, targetId, reporterId }); // SPRINT-41:
@@ -628,7 +608,7 @@ export function useReportActionMutation() {
 // ─── Notifications ──────────────────────────────────────────────────────────
 
 export function useAdminNotifications() { // SPRINT-41:
-  return useAsyncData(async () => { // SPRINT-41:
+  return useAsyncData('useAdminNotifications', async () => { // SPRINT-41:
     const res = await adminGetBroadcastHistory({ page: 1, pageSize: 50 }); // SPRINT-41:
     return { // SPRINT-41:
       data: res.data.map((row) => // SPRINT-41:
@@ -668,7 +648,7 @@ export function useSendBroadcastMutation() { // SPRINT-41:
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
 export function useAdminBadgeApplications() { // SPRINT-41:
-  return useAdminListState<BadgeApplication, { limit?: number }>({ // SPRINT-41:
+  return useAdminListState<BadgeApplication, { limit?: number }>({ key: 'useAdminBadgeApplications', // SPRINT-41:
     initialParams: { limit: 50 }, // SPRINT-41:
     fetchPage: async ({ page, limit }) => { // SPRINT-41:
       const res = await adminGetBadgeApplications({ page, limit }); // SPRINT-41:
@@ -692,7 +672,7 @@ export function useRejectBadgeMutation() { // SPRINT-41:
 // ─── Polls ────────────────────────────────────────────────────────────────────
 
 export function useAdminPolls(params: { page: number; pageSize: number }) { // SPRINT-41:
-  return useAsyncData( // SPRINT-41:
+  return useAsyncData('useAdminPolls', // SPRINT-41:
     () => adminGetPolls(params), // SPRINT-41: raw AdminPoll[] — no legacy Poll mapping
     [params.page, params.pageSize], // SPRINT-41:
   ); // SPRINT-41:
@@ -727,7 +707,7 @@ export function useDeletePollMutation() { // SPRINT-41:
 // with no indication. If the backend adds page/pageSize + meta to this endpoint,
 // migrate this hook to useAdminListState like its siblings.
 export function useAdminTrendingPosts() { // SPRINT-41:
-  return useAsyncData(async () => { // SPRINT-41:
+  return useAsyncData('useAdminTrendingPosts', async () => { // SPRINT-41:
     const res = await adminGetTrendingPosts({ page: 1, pageSize: 50 }); // SPRINT-57: real pagination, no 200-row stopgap
     const rows = (res.data ?? []) as unknown as Record<string, unknown>[]; // SPRINT-57:
     return rows.map((row) => mapApiRowToTrendingPost(row)); // SPRINT-41:
@@ -735,7 +715,7 @@ export function useAdminTrendingPosts() { // SPRINT-41:
 } // SPRINT-41:
 
 export function useAdminAllPosts(initialParams?: { search?: string; category?: string; published?: boolean }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminAllPosts', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search, category, published }) => { // SPRINT-41:
       const res = await adminGetFeedPosts({ page, pageSize, search, category, published }); // SPRINT-41:
@@ -754,7 +734,7 @@ export function useFeaturePostMutation() { // SPRINT-41:
 } // SPRINT-41:
 
 export function useAdminFeedPosts(initialParams?: { search?: string; category?: string; published?: boolean }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminFeedPosts', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search, category, published }) => { // SPRINT-41:
       const res = await adminGetFeedPosts({ page, pageSize, search, category, published }); // SPRINT-41:
@@ -794,7 +774,7 @@ function mapAreaRow(row: Record<string, unknown>, index: number) { // SPRINT-41:
 } // SPRINT-41:
 
 export function useAdminAreaData() { // SPRINT-41:
-  return useAsyncData(async () => { // SPRINT-41:
+  return useAsyncData('useAdminAreaData', async () => { // SPRINT-41:
     const raw = await adminGetAreas(); // SPRINT-41:
     const arr = Array.isArray(raw) ? raw : []; // SPRINT-41:
     return { data: arr.map((row, i) => mapAreaRow(row as Record<string, unknown>, i)) }; // SPRINT-41: wrap bare array
@@ -821,7 +801,7 @@ export function useAdminSupportTickets(params?: AdminSupportTicketsParams) { // 
   const page = params?.page ?? 1; // SPRINT-41:
   const pageSize = params?.pageSize ?? 50; // SPRINT-41:
   const status = params?.status; // SPRINT-41:
-  return useAsyncData(async () => { // SPRINT-41:
+  return useAsyncData('useAdminSupportTickets', async () => { // SPRINT-41:
     const res = await adminGetSupportTickets({ page, pageSize, status }); // SPRINT-41:
     return { ...res, data: res.data.map(mapApiSupportRowToTicket) }; // SPRINT-41:
   }, [page, pageSize, status]); // SPRINT-41: deps refetch
@@ -853,7 +833,7 @@ type AdminAuthSessionsParams = { // SPRINT-41:
 
 /** // SPRINT-41: Returns AdminSessionsResponse AS-IS (data + truncated) — no AuthSession mock mapping */
 export function useAdminAuthSessions(params: AdminAuthSessionsParams) { // SPRINT-41:
-  return useAsyncData<AdminSessionsResponse>( // SPRINT-41:
+  return useAsyncData<AdminSessionsResponse>('useAdminAuthSessions', // SPRINT-41:
     () => adminGetSessions(params), // SPRINT-41:
     [params.page, params.pageSize, params.userId], // SPRINT-41:
   ); // SPRINT-41:
@@ -884,7 +864,7 @@ export function useTerminateUserSessionsMutation() { // SPRINT-41:
 // ─── Community ────────────────────────────────────────────────────────────────
 
 export function useAdminCommunityPosts(initialParams?: { search?: string; category?: string }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminCommunityPosts', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search, category }) => { // SPRINT-41:
       const res = (await adminGetCommunityQuestions({ page, pageSize, search, category })) as AdminPaginatedResponse<Record<string, unknown>>; // SPRINT-41: adminGetCommunityQuestions uses buildPageSizeQuery like its paginated siblings (restaurants/feed/roommates) but lacks an explicit AdminPaginatedResponse annotation — cast matches the same envelope shape those siblings declare.
@@ -919,7 +899,7 @@ export function usePinCommunityPostMutation() { // SPRINT-41:
 // question with `answers` populated) instead of adding a new admin endpoint —
 // this is an authenticated GET that works fine with an admin session token.
 export function useAdminCommunityQuestionDetail(questionId: string | null) { // SPRINT-42:
-  return useAsyncData( // SPRINT-42:
+  return useAsyncData('useAdminCommunityQuestionDetail', // SPRINT-42:
     async () => (questionId ? getQuestion(questionId) : null), // SPRINT-42:
     [questionId], // SPRINT-42:
     Boolean(questionId), // SPRINT-42:
@@ -929,7 +909,7 @@ export function useAdminCommunityQuestionDetail(questionId: string | null) { // 
 // ─── Roommates ────────────────────────────────────────────────────────────────
 
 export function useAdminRoommates(initialParams?: { search?: string }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminRoommates', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search }) => { // SPRINT-41:
       const res = await adminGetRoommates({ page, pageSize, search }); // SPRINT-41:
@@ -957,7 +937,7 @@ export function useSuspendRoommateMutation() { // SPRINT-41:
 // ─── Food / Restaurants ───────────────────────────────────────────────────────
 
 export function useAdminFoodListings(initialParams?: { search?: string; isVerified?: boolean }) { // SPRINT-41:
-  return useAdminListState({ // SPRINT-41:
+  return useAdminListState({ key: 'useAdminFoodListings', // SPRINT-41:
     initialParams: { pageSize: 20, ...initialParams }, // SPRINT-41:
     fetchPage: async ({ page, pageSize, search, isVerified }) => { // SPRINT-41:
       const res = await adminGetRestaurants({ page, pageSize, search, isVerified }); // SPRINT-41:
@@ -978,7 +958,7 @@ export function useSuspendFoodListingMutation() { // SPRINT-41:
 // ─── User Safety Case File ──────────────────────────────────────────────────────
 
 export function useAdminUserWarnings(userId: string | null) {
-  return useAdminListState({
+  return useAdminListState({ key: `useAdminUserWarnings:${userId}`,
     initialParams: { limit: 20 },
     enabled: Boolean(userId),
     fetchPage: async ({ page, limit }) => {
@@ -989,7 +969,7 @@ export function useAdminUserWarnings(userId: string | null) {
 }
 
 export function useAdminUserBanHistory(userId: string | null) {
-  return useAdminListState({
+  return useAdminListState({ key: `useAdminUserBanHistory:${userId}`,
     initialParams: { limit: 20 },
     enabled: Boolean(userId),
     fetchPage: async ({ page, limit }) => {
@@ -1010,7 +990,7 @@ export function useAdminReportsByUser(userId: string | null) {
 // ─── Admin Action Audit Log ──────────────────────────────────────────────────────
 
 export function useAdminAuditLog(initialParams?: { action?: string; targetType?: string; search?: string }) {
-  return useAdminListState({
+  return useAdminListState({ key: 'useAdminAuditLog',
     initialParams: { limit: 30, ...initialParams },
     fetchPage: async ({ page, limit, action, targetType, search }) => {
       const res = await adminGetAuditLog({ page, limit, action, targetType, search });
@@ -1022,7 +1002,7 @@ export function useAdminAuditLog(initialParams?: { action?: string; targetType?:
 // ─── Data Privacy / GDPR ─────────────────────────────────────────────────────────
 
 export function useAdminPrivacyRequests(initialParams?: { status?: PrivacyRequestStatus; type?: PrivacyRequestType }) {
-  return useAdminListState({
+  return useAdminListState({ key: 'useAdminPrivacyRequests',
     initialParams: { limit: 20, ...initialParams },
     fetchPage: async ({ page, limit, status, type }) => {
       const res = await adminGetPrivacyRequests({ page, limit, status, type });
@@ -1056,11 +1036,11 @@ export function useAdminReportedMessages() {
 }
 
 export function useAdminConversationDetail(id: string | null) {
-  return useAsyncData(async () => (id ? adminGetConversation(id) : null), [id], Boolean(id));
+  return useAsyncData('useAdminConversationDetail', async () => (id ? adminGetConversation(id) : null), [id], Boolean(id));
 }
 
 export function useAdminConversationMessages(id: string | null) {
-  return useAdminListState({
+  return useAdminListState({ key: `useAdminConversationMessages:${id}`,
     initialParams: { limit: 30 },
     enabled: Boolean(id),
     fetchPage: async ({ page, limit }) => {
@@ -1077,7 +1057,7 @@ export function useDeleteChatMessageMutation() {
 // ─── Stories Moderation ───────────────────────────────────────────────────────────
 
 export function useAdminStories(initialParams?: { search?: string; status?: 'active' | 'reported' | 'expired' }) {
-  return useAdminListState({
+  return useAdminListState({ key: 'useAdminStories',
     initialParams: { pageSize: 20, ...initialParams },
     fetchPage: async ({ page, pageSize, search, status }) => {
       const res = await adminGetStories({ page, pageSize, search, status });

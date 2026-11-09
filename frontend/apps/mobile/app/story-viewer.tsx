@@ -5,6 +5,7 @@ import { rs } from "../src/utils/responsive";
  * Params: authorIndex, storyIndex (optional, default 0)
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   View,
   Text,
@@ -299,36 +300,48 @@ export default function StoryViewerScreen() {
     }
   }, [currentAuthorIndex, authorOpacity]);
 
+  // The open story's detail and like status come through React Query (TR-013), fetched fresh per story.
+  const storyId = currentStory?.id;
   useEffect(() => {
-    if (!currentStory?.id) return;
+    if (!storyId) return;
     setProgress(0);
     setMediaError(false);
     setStoryLiked(false);
-    setStoryLikeCount(currentStory.likeCount ?? 0);
-    let cancelled = false;
-    void getStory(currentStory.id)
-      .then((detail) => {
-        if (cancelled || !detail?.id) return;
-        patchStorySaved(detail.id, storySavedFlag(detail));
-        if (typeof detail.commentCount === "number") {
-          patchStoryFields(detail.id, { commentCount: detail.commentCount });
-        }
-        if (typeof detail.likeCount === "number") {
-          setStoryLikeCount(detail.likeCount);
-          patchStoryFields(detail.id, { likeCount: detail.likeCount });
-        }
-      })
-      .catch(() => {});
-    void getStoryLikeStatus(currentStory.id)
-      .then((res) => {
-        if (cancelled) return;
-        setStoryLiked(res.likedByMe);
-        setStoryLikeCount(res.likeCount);
-        patchStoryFields(currentStory.id, { likeCount: res.likeCount });
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [currentStory?.id, patchStoryFields, patchStorySaved]);
+    setStoryLikeCount(currentStory?.likeCount ?? 0);
+    // Reset only when the story changes; the like count read here is the list's starting value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storyId]);
+  const storyDetailQuery = useQuery({
+    queryKey: ["stories", "detail", storyId ?? ""],
+    queryFn: () => getStory(String(storyId)),
+    enabled: !!storyId,
+    staleTime: 0,
+  });
+  const storyLikeQuery = useQuery({
+    queryKey: ["stories", "like", storyId ?? ""],
+    queryFn: () => getStoryLikeStatus(String(storyId)),
+    enabled: !!storyId,
+    staleTime: 0,
+  });
+  const storyDetail = storyDetailQuery.data;
+  useEffect(() => {
+    if (!storyDetail?.id || storyDetail.id !== storyId) return;
+    patchStorySaved(storyDetail.id, storySavedFlag(storyDetail));
+    if (typeof storyDetail.commentCount === "number") {
+      patchStoryFields(storyDetail.id, { commentCount: storyDetail.commentCount });
+    }
+    if (typeof storyDetail.likeCount === "number") {
+      setStoryLikeCount(storyDetail.likeCount);
+      patchStoryFields(storyDetail.id, { likeCount: storyDetail.likeCount });
+    }
+  }, [storyDetail, storyId, patchStoryFields, patchStorySaved]);
+  const likeStatus = storyLikeQuery.data;
+  useEffect(() => {
+    if (!likeStatus || !storyId) return;
+    setStoryLiked(likeStatus.likedByMe);
+    setStoryLikeCount(likeStatus.likeCount);
+    patchStoryFields(storyId, { likeCount: likeStatus.likeCount });
+  }, [likeStatus, storyId, patchStoryFields]);
 
   const handleLike = useCallback(async () => {
     if (!requireAuth(undefined, "Sign in to like stories from your neighbors.")) return;
