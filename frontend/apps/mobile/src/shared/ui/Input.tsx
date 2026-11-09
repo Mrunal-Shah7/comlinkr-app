@@ -1,3 +1,4 @@
+import { palette } from "../../theme/palette";
 import { forwardRef, useState } from "react";
 import {
   TextInput,
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: Colors.text.error,
-    backgroundColor: "#FEF2F2",
+    backgroundColor: palette.red50,
   },
   iconLeft: {
     marginRight: 10,

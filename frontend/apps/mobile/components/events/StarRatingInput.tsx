@@ -1,4 +1,5 @@
 // SPRINT-42: interactive 1–5 star input for event review composer (restaurant-visual, event-owned).
+import { palette } from "../../src/theme/palette";
 import React from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,7 +8,7 @@ export function StarRatingInput({
   value,
   onChange,
   size = 32,
-  color = "#F59E0B",
+  color = palette.amber500,
   disabled = false,
 }: {
   value: number;

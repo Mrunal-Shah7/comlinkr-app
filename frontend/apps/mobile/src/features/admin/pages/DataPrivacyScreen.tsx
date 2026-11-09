@@ -5,6 +5,7 @@
 // request for a user directly — so admins never need to touch the database to
 // answer a data-subject request.
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,10 +29,10 @@ import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
 
 const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
-  PENDING: { color: '#F59E0B', bg: '#FFF3E6', label: 'Pending' },
+  PENDING: { color: palette.amber500, bg: palette.legacyOrangeLight, label: 'Pending' },
   PROCESSING: { color: Colors.brand.blue, bg: Colors.brand.blueLight, label: 'Processing' },
   COMPLETED: { color: Colors.brand.green, bg: Colors.brand.greenLight, label: 'Completed' },
-  REJECTED: { color: '#EF4444', bg: '#FEF2F2', label: 'Rejected' },
+  REJECTED: { color: palette.red500, bg: palette.red50, label: 'Rejected' },
 };
 
 function relativeTime(date: string): string {
@@ -88,14 +89,14 @@ function ManualLookup() {
           autoCapitalize="none"
         />
         <Pressable style={s.lookupBtn} onPress={() => setActiveId(lookupId.trim() || null)}>
-          <Ionicons name="search" size={16} color="#FFF" />
+          <Ionicons name="search" size={16} color={palette.white} />
         </Pressable>
       </View>
 
       {activeId && isLoading ? (
         <ActivityIndicator color={Colors.brand.blue} style={{ marginTop: 12 }} />
       ) : activeId && errorMessage ? (
-        <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 12 }}>{errorMessage}</Text>
+        <Text style={{ color: palette.red500, fontSize: 12, marginTop: 12 }}>{errorMessage}</Text>
       ) : activeId && user ? (
         <View style={s.lookupResult}>
           <Text style={s.lookupName}>{user.fullName ?? user.name ?? user.username}</Text>
@@ -113,7 +114,7 @@ function ManualLookup() {
               <Text style={s.exportBtnText}>Generate Data Export</Text>
             </Pressable>
             <Pressable style={s.erasureBtn} onPress={() => setShowErasureInput((p) => !p)} disabled={isErasing}>
-              <Ionicons name="trash-outline" size={14} color="#EF4444" />
+              <Ionicons name="trash-outline" size={14} color={palette.red500} />
               <Text style={s.erasureBtnText}>Submit Erasure Request</Text>
             </Pressable>
           </View>
@@ -128,7 +129,7 @@ function ManualLookup() {
                 multiline
               />
               <Pressable style={s.erasureSendBtn} onPress={handleErasure} disabled={!erasureReason.trim() || isErasing}>
-                <Ionicons name="send" size={14} color="#FFF" />
+                <Ionicons name="send" size={14} color={palette.white} />
               </Pressable>
             </View>
           )}
@@ -186,8 +187,8 @@ export default function DataPrivacyScreen() {
             <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#8B5CF6', '#6D3FD1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="lock-closed" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.violet500, palette.legacyPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="lock-closed" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -220,7 +221,7 @@ export default function DataPrivacyScreen() {
 
           {isError && errorMessage ? (
             <View style={s.emptyCard}>
-              <Text style={{ color: '#EF4444', textAlign: 'center' }}>{errorMessage}</Text>
+              <Text style={{ color: palette.red500, textAlign: 'center' }}>{errorMessage}</Text>
               <Pressable onPress={refresh} style={{ marginTop: 12 }}>
                 <Text style={{ color: Colors.brand.blue, fontWeight: '700' }}>Retry</Text>
               </Pressable>
@@ -266,7 +267,7 @@ export default function DataPrivacyScreen() {
                               multiline
                             />
                             <Pressable style={s.erasureSendBtn} onPress={handleSendReject} disabled={!rejectReason.trim() || hasMutation}>
-                              <Ionicons name="send" size={14} color="#FFF" />
+                              <Ionicons name="send" size={14} color={palette.white} />
                             </Pressable>
                           </View>
                         )}
@@ -300,22 +301,22 @@ export default function DataPrivacyScreen() {
 }
 
 const s = createThemedStyles({
-  root: { flex: 1, backgroundColor: '#EBF5FF' },
+  root: { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 18, paddingBottom: 48 },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub: { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title: { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
-  urgentBadge: { backgroundColor: '#FFF3E6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
-  urgentText: { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
+  urgentBadge: { backgroundColor: palette.legacyOrangeLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
+  urgentText: { fontSize: 12, fontWeight: '700', color: palette.amber500 },
 
   sectionLabel: { fontSize: 11, fontWeight: '900', color: Colors.text.tertiary, letterSpacing: 1.2, marginBottom: 10 },
 
-  card: { backgroundColor: '#FFF', borderRadius: 16, padding: 14, marginBottom: 12 },
+  card: { backgroundColor: palette.white, borderRadius: 16, padding: 14, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
   cardTitle: { fontSize: 13, fontWeight: '800', color: Colors.text.primary },
   cardSub: { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
@@ -325,25 +326,25 @@ const s = createThemedStyles({
   statusChipText: { fontSize: 10, fontWeight: '800' },
 
   actionsRow: { flexDirection: 'row', gap: 8 },
-  rejectBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB' },
+  rejectBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: palette.gray300, backgroundColor: palette.gray50 },
   rejectBtnText: { fontSize: 12, fontWeight: '700', color: Colors.text.secondary },
   approveBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, backgroundColor: Colors.brand.green },
-  approveBtnText: { fontSize: 12, fontWeight: '800', color: '#FFF' },
+  approveBtnText: { fontSize: 12, fontWeight: '800', color: palette.white },
   downloadNote: { fontSize: 11, color: Colors.brand.green, marginTop: 6 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText: { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard: { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle: { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub: { fontSize: 13, color: Colors.text.tertiary },
 
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText: { fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
 
   lookupRow: { flexDirection: 'row', gap: 8 },
-  lookupInput: { flex: 1, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.15)', backgroundColor: '#F8FAFC', paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: Colors.text.primary },
+  lookupInput: { flex: 1, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.15)', backgroundColor: palette.slate50, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: Colors.text.primary },
   lookupBtn: { width: 42, height: 42, borderRadius: 10, backgroundColor: Colors.brand.blue, alignItems: 'center', justifyContent: 'center' },
-  lookupResult: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#F0F3F7' },
+  lookupResult: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: palette.neutralL95_6 },
   lookupName: { fontSize: 14, fontWeight: '800', color: Colors.text.primary },
   lookupSub: { fontSize: 12, color: Colors.text.tertiary, marginTop: 2 },
   lookupCountsRow: { marginTop: 8 },
@@ -351,9 +352,9 @@ const s = createThemedStyles({
   lookupActionsRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   exportBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', backgroundColor: Colors.brand.blueLight },
   exportBtnText: { fontSize: 12, fontWeight: '700', color: Colors.brand.blue },
-  erasureBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)', backgroundColor: '#FEF2F2' },
-  erasureBtnText: { fontSize: 12, fontWeight: '700', color: '#EF4444' },
+  erasureBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)', backgroundColor: palette.red50 },
+  erasureBtnText: { fontSize: 12, fontWeight: '700', color: palette.red500 },
   erasureInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 10 },
-  erasureInput: { flex: 1, minHeight: 40, maxHeight: 100, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)', backgroundColor: '#FEF2F2', paddingHorizontal: 10, paddingVertical: 8, fontSize: 12, color: Colors.text.primary },
-  erasureSendBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#EF4444', alignItems: 'center', justifyContent: 'center' },
+  erasureInput: { flex: 1, minHeight: 40, maxHeight: 100, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)', backgroundColor: palette.red50, paddingHorizontal: 10, paddingVertical: 8, fontSize: 12, color: Colors.text.primary },
+  erasureSendBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: palette.red500, alignItems: 'center', justifyContent: 'center' },
 });

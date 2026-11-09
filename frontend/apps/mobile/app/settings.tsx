@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback, useEffect, useRef } from "react";
@@ -70,28 +71,28 @@ const BADGE_ITEMS: {
   {
     key: "landlord",
     icon: "home-outline",
-    iconColors: [Colors.brand.blue, "#0052CC"] as [string, string],
+    iconColors: [Colors.brand.blue, palette.blueL40] as [string, string],
     title: "Landlord Badge",
     desc: "Trusted-host badge for your property listings",
   },
   {
     key: "restaurant_owner",
     icon: "restaurant-outline",
-    iconColors: [Colors.brand.green, "#256B49"] as [string, string],
+    iconColors: [Colors.brand.green, palette.brandGreenDark] as [string, string],
     title: "Restaurant Owner Badge",
     desc: "Trusted badge on your restaurant listings",
   },
   {
     key: "agency",
     icon: "business-outline",
-    iconColors: [Colors.brand.orange, "#E56800"] as [string, string],
+    iconColors: [Colors.brand.orange, palette.orangeL45] as [string, string],
     title: "Agency Badge",
     desc: "Apply for agency-level access",
   },
   {
     key: "local_reviewer",
     icon: "star-outline",
-    iconColors: ["#8B5CF6", "#6D3FD1"] as [string, string],
+    iconColors: [palette.violet500, palette.legacyPurple] as [string, string],
     title: "Local Reviewer Badge",
     desc: "Share trusted reviews in your area",
   },
@@ -967,7 +968,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="location-outline"
-            iconColors={["#257A86", "#F59E0B"]}
+            iconColors={[palette.brandTeal, palette.amber500]}
             title="Show location"
             desc="Display city on profile"
             enabled={showLocation}
@@ -976,7 +977,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="flash-outline"
-            iconColors={["#16A34A", "#22C55E"]}
+            iconColors={[palette.green600, palette.green500]}
             title="Activity status"
             desc="Show when you're online"
             enabled={showActivity}
@@ -1018,7 +1019,7 @@ export default function SettingsScreen() {
                         style={s.blockedAvatarImg}
                       />
                     ) : (
-                      <View style={[s.blockedAvatar, { backgroundColor: isDark ? tc.inputBg : "#E5E7EB" }]}>
+                      <View style={[s.blockedAvatar, { backgroundColor: isDark ? tc.inputBg : palette.gray200 }]}>
                         <Ionicons name="person" size={18} color={tc.textTertiary} />
                       </View>
                     )}
@@ -1091,7 +1092,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="chatbubble-outline"
-            iconColors={["#7C3AED", "#A855F7"]}
+            iconColors={[palette.violet600, palette.purple500]}
             title="Comments"
             desc="Replies to your posts"
             enabled={notiComments}
@@ -1100,7 +1101,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="heart-outline"
-            iconColors={["#EC4899", "#F43F5E"]}
+            iconColors={[palette.pink500, palette.rose500]}
             title="Likes"
             desc="When someone likes your post"
             enabled={notiLikes}
@@ -1109,7 +1110,7 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             icon="mail-outline"
-            iconColors={[Colors.brand.blue, "#0052CC"]}
+            iconColors={[Colors.brand.blue, palette.blueL40]}
             title="Messages"
             desc="Direct messages"
             enabled={notiMessages}
@@ -1125,7 +1126,7 @@ export default function SettingsScreen() {
 }
 
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F0F3F8" },
+  safe: { flex: 1, backgroundColor: palette.neutralL96 },
   content: { paddingHorizontal: rs(16), paddingTop: rs(8) },
 
   errorBanner: {
@@ -1144,34 +1145,34 @@ const s = createThemedStyles({
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: rs(16), paddingVertical: rs(14),
-    backgroundColor: "#FFF",
-    borderBottomWidth: 1, borderBottomColor: "#EEF0F4",
+    backgroundColor: palette.white,
+    borderBottomWidth: 1, borderBottomColor: palette.neutralL95_2,
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "#F0F5FF",
+    backgroundColor: palette.neutralL97_2,
     alignItems: "center", justifyContent: "center",
   },
   headerTitle: { fontSize: rs(18), fontWeight: "800", color: Colors.text.primary, letterSpacing: -0.3 },
 
   // Section label
   sectionLabel: {
-    fontSize: rs(11), fontWeight: "700", color: "#8FA0B4",
+    fontSize: rs(11), fontWeight: "700", color: palette.skyL63_2,
     letterSpacing: 1.2, marginTop: rs(22), marginBottom: rs(10),
   },
 
   // Card shell (handles shadow + bg + border + radius)
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     marginBottom: rs(8),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.07,
     shadowRadius: rs(8),
     shadowOffset: { width: 0, height: rs(2) },
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#ECEEF2",
+    borderColor: palette.neutralL94_3,
   },
 
   // Inner row (always horizontal)
@@ -1193,26 +1194,26 @@ const s = createThemedStyles({
   cardDesc: { fontSize: rs(12), color: Colors.text.secondary, marginTop: rs(1) },
   chevronBox: {
     width: rs(26), height: rs(26), borderRadius: rs(8),
-    backgroundColor: "#F0F3F8",
+    backgroundColor: palette.neutralL96,
     alignItems: "center", justifyContent: "center",
     flexShrink: 0,
   },
 
   // Version badge
   versionBadge: {
-    backgroundColor: "#EEF5FF", borderRadius: rs(20),
+    backgroundColor: palette.blueL97_2, borderRadius: rs(20),
     paddingHorizontal: rs(12), paddingVertical: rs(4),
   },
   versionText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
 
   // Danger cards
-  dangerCard: { borderColor: "#FECACA" },
-  deleteCard: { borderColor: "#FCA5A5" },
+  dangerCard: { borderColor: palette.red200 },
+  deleteCard: { borderColor: palette.red300 },
   dangerBtn: {
     borderRadius: rs(16), borderWidth: 1.5,
     marginBottom: rs(10), overflow: "hidden",
   },
-  deleteBtnBorder: { borderColor: "#FCA5A5" },
+  deleteBtnBorder: { borderColor: palette.red300 },
   dangerBtnInner: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: rs(16), paddingVertical: rs(14), gap: rs(12),
@@ -1222,44 +1223,44 @@ const s = createThemedStyles({
     alignItems: "center", justifyContent: "center",
     flexShrink: 0,
   },
-  dangerBtnTitle: { fontSize: rs(15), fontWeight: "700", color: "#DC2626" },
+  dangerBtnTitle: { fontSize: rs(15), fontWeight: "700", color: palette.red600 },
   dangerBtnDesc: { fontSize: rs(12), fontWeight: "500", marginTop: rs(2) },
 
   // Modal
   overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.45)" },
   sheet: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderTopLeftRadius: rs(26), borderTopRightRadius: rs(26),
     maxHeight: "82%", paddingBottom: rs(36),
   },
   handle: {
-    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: "#D1D5DB",
+    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: palette.gray300,
     alignSelf: "center", marginTop: rs(10), marginBottom: rs(6),
   },
   sheetHead: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: rs(20), paddingVertical: rs(14),
-    borderBottomWidth: 1, borderBottomColor: "#F3F4F6",
+    borderBottomWidth: 1, borderBottomColor: palette.gray100,
   },
   sheetTitle: { fontSize: rs(17), fontWeight: "800", color: Colors.text.primary },
   closeBtn: {
     width: rs(32), height: rs(32), borderRadius: rs(16),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center", justifyContent: "center",
   },
   modalBody: { padding: rs(20) },
   blockedRow: { flexDirection: "row", alignItems: "center", gap: rs(12), paddingVertical: rs(12), borderBottomWidth: StyleSheet.hairlineWidth },
   blockedAvatar: { width: rs(42), height: rs(42), borderRadius: rs(21), alignItems: "center", justifyContent: "center" },
-  blockedAvatarImg: { width: rs(42), height: rs(42), borderRadius: rs(21), backgroundColor: "#E5E7EB" },
-  unblockBtn: { paddingHorizontal: rs(14), paddingVertical: rs(6), borderRadius: rs(8), backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB" },
-  unblockBtnText: { fontSize: rs(12), fontWeight: "700", color: "#374151" },
+  blockedAvatarImg: { width: rs(42), height: rs(42), borderRadius: rs(21), backgroundColor: palette.gray200 },
+  unblockBtn: { paddingHorizontal: rs(14), paddingVertical: rs(6), borderRadius: rs(8), backgroundColor: palette.gray100, borderWidth: 1, borderColor: palette.gray200 },
+  unblockBtnText: { fontSize: rs(12), fontWeight: "700", color: palette.gray700 },
 
   inputLabel: { fontSize: rs(13), fontWeight: "600", color: Colors.text.primary, marginBottom: rs(6) },
   input: {
-    backgroundColor: "#F3F4F6", borderRadius: rs(12),
+    backgroundColor: palette.gray100, borderRadius: rs(12),
     paddingHorizontal: rs(14), paddingVertical: rs(12),
     fontSize: rs(15), color: Colors.text.primary,
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: palette.gray200,
   },
   inputRow: {
     flexDirection: "row",
@@ -1279,9 +1280,9 @@ const s = createThemedStyles({
     marginTop: rs(20), backgroundColor: Colors.brand.blue,
     borderRadius: rs(14), paddingVertical: rs(14), alignItems: "center",
   },
-  saveBtnText: { fontSize: rs(15), fontWeight: "700", color: "#FFF" },
+  saveBtnText: { fontSize: rs(15), fontWeight: "700", color: palette.white },
 
-  pill: { backgroundColor: "#EEF5FF", borderRadius: rs(20), paddingHorizontal: rs(14), paddingVertical: rs(6) },
+  pill: { backgroundColor: palette.blueL97_2, borderRadius: rs(20), paddingHorizontal: rs(14), paddingVertical: rs(6) },
   pillText: { fontSize: rs(13), fontWeight: "600", color: Colors.brand.blue },
 
   // Verification status "View All" badge
@@ -1289,7 +1290,7 @@ const s = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
-    backgroundColor: "#E3F1EA",
+    backgroundColor: palette.brandGreenLight,
     borderRadius: rs(20),
     paddingHorizontal: rs(10),
     paddingVertical: rs(5),
@@ -1303,7 +1304,7 @@ const s = createThemedStyles({
     paddingHorizontal: rs(12),
     paddingVertical: rs(5),
     borderWidth: 1,
-    borderColor: "#C8DEFF",
+    borderColor: palette.blueL89,
   },
   applyBadgeBtnText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
 
@@ -1314,8 +1315,8 @@ const s = createThemedStyles({
     borderWidth: 1,
     flexShrink: 0,
   },
-  accessStatusPillTextPending: { fontSize: rs(12), fontWeight: "800", color: "#D97706" },
-  accessStatusPillTextBlocked: { fontSize: rs(10), fontWeight: "900", color: "#9CA3AF", letterSpacing: 0.3 },
+  accessStatusPillTextPending: { fontSize: rs(12), fontWeight: "800", color: palette.amber600 },
+  accessStatusPillTextBlocked: { fontSize: rs(10), fontWeight: "900", color: palette.gray400, letterSpacing: 0.3 },
 
   bizPreviewSection: {
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -1336,7 +1337,7 @@ const s = createThemedStyles({
     width: rs(44),
     height: rs(44),
     borderRadius: rs(10),
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
   bizPreviewThumbPh: { alignItems: "center", justifyContent: "center" },
   bizPreviewTitle: { fontSize: rs(13), fontWeight: "700" },
@@ -1345,10 +1346,10 @@ const s = createThemedStyles({
 
   // Admin badge
   adminBadge: {
-    backgroundColor: "#0F172A",
+    backgroundColor: palette.slate900,
     borderRadius: rs(8),
     paddingHorizontal: rs(10),
     paddingVertical: rs(4),
   },
-  adminBadgeText: { fontSize: rs(10), fontWeight: "900", color: "#FFF", letterSpacing: 0.8 },
+  adminBadgeText: { fontSize: rs(10), fontWeight: "900", color: palette.white, letterSpacing: 0.8 },
 });

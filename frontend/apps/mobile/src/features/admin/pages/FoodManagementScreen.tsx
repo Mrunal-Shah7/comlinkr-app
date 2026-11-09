@@ -1,5 +1,6 @@
 // src/features/admin/pages/FoodManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Linking } from 'react-native';
 import { Image } from 'expo-image';
@@ -20,15 +21,15 @@ import { createThemedStyles } from '../../../theme/themedStyles';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   active:    { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Active'    },
-  pending:   { color: '#F59E0B',            bg: '#FFF3E6',               icon: 'time',             label: 'Pending'   },
-  suspended: { color: '#EF4444',            bg: '#FEF2F2',               icon: 'close-circle',     label: 'Suspended' },
+  pending:   { color: palette.amber500,            bg: palette.legacyOrangeLight,               icon: 'time',             label: 'Pending'   },
+  suspended: { color: palette.red500,            bg: palette.red50,               icon: 'close-circle',     label: 'Suspended' },
 };
 
 const PRICE_COLOR: Record<string, string> = {
   '$':    Colors.brand.green,
-  '$$':   '#F59E0B',
-  '$$$':  '#EF4444',
-  '$$$$': '#8B5CF6',
+  '$$':   palette.amber500,
+  '$$$':  palette.red500,
+  '$$$$': palette.violet500,
 };
 
 function FoodCard({
@@ -50,10 +51,10 @@ function FoodCard({
           <Ionicons name={meta.icon as any} size={11} color={meta.color} />
           <Text style={[s.chipText, { color: meta.color }]}>{meta.label}</Text>
         </View>
-        <View style={[s.chip, { backgroundColor: '#F3F4F6' }]}>
+        <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
           <Text style={[s.chipText, { color: PRICE_COLOR[listing.price] ?? Colors.text.secondary, fontWeight: '900' }]}>{listing.price}</Text>
         </View>
-        <View style={[s.chip, { backgroundColor: listing.openNow ? Colors.brand.greenLight : '#F3F4F6' }]}>
+        <View style={[s.chip, { backgroundColor: listing.openNow ? Colors.brand.greenLight : palette.gray100 }]}>
           <Ionicons name={listing.openNow ? 'checkmark-circle' : 'time'} size={11} color={listing.openNow ? Colors.brand.green : Colors.text.tertiary} />
           <Text style={[s.chipText, { color: listing.openNow ? Colors.brand.green : Colors.text.tertiary }]}>
             {listing.openNow ? 'Open' : 'Closed'}
@@ -68,7 +69,7 @@ function FoodCard({
       </View>
       <View style={s.statsRow}>
         <View style={s.statItem}>
-          <Ionicons name="star" size={12} color="#F59E0B" />
+          <Ionicons name="star" size={12} color={palette.amber500} />
           <Text style={s.statText}>{listing.rating} ({listing.reviews})</Text>
         </View>
         <View style={s.statItem}>
@@ -94,7 +95,7 @@ function FoodCard({
                   <Image
                     key={idx}
                     source={{ uri: resolveApiAssetUrl(img) }}
-                    style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: '#F3F4F6' }}
+                    style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: palette.gray100 }}
                     contentFit="cover"
                   />
                 ))}
@@ -216,11 +217,11 @@ export default function FoodManagementScreen() {
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#FF7B00', '#E05000']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="restaurant" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.legacyOrange, palette.orangeL44]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="restaurant" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -228,8 +229,8 @@ export default function FoodManagementScreen() {
             </View>
             {pendingCount > 0 && (
               <View style={s.alertPill}>
-                <View style={[s.alertDot, { backgroundColor: '#F59E0B' }]} />
-                <Text style={[s.alertText, { color: '#F59E0B' }]}>{pendingCount} pending</Text>
+                <View style={[s.alertDot, { backgroundColor: palette.amber500 }]} />
+                <Text style={[s.alertText, { color: palette.amber500 }]}>{pendingCount} pending</Text>
               </View>
             )}
           </View>
@@ -237,9 +238,9 @@ export default function FoodManagementScreen() {
           {/* Summary */}
           <View style={s.summaryRow}>
             {[
-              { label: 'Total',   value: listings.length,                                    color: '#FF7B00'           },
+              { label: 'Total',   value: listings.length,                                    color: palette.legacyOrange           },
               { label: 'Active',  value: listings.filter(l => l.status === 'active').length, color: Colors.brand.green  },
-              { label: 'Pending', value: pendingCount,                                       color: '#F59E0B'           },
+              { label: 'Pending', value: pendingCount,                                       color: palette.amber500           },
               { label: 'Open',    value: openNowCount,                                       color: Colors.brand.blue   },
             ].map((item) => (
               <View key={item.label} style={s.summaryCard}>
@@ -293,7 +294,7 @@ export default function FoodManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 18, paddingBottom: 48 },
@@ -302,18 +303,18 @@ const s = createThemedStyles({
   headerIcon:  { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5, marginBottom: 2 },
   title:       { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5 },
-  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFF3E6', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
+  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: palette.legacyOrangeLight, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
   alertDot:    { width: 6, height: 6, borderRadius: 3 },
   alertText:   { fontSize: 12, fontWeight: '700' },
 
   summaryRow:  { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  summaryCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  summaryCard: { flex: 1, backgroundColor: palette.white, borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   summaryVal:  { fontSize: 20, fontWeight: '900' },
   summaryLbl:  { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   loadingText: { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
-  emptyCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  emptyCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   emptyTitle:  { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   emptySub:    { fontSize: 13, color: Colors.text.tertiary },
 
@@ -323,17 +324,17 @@ const s = createThemedStyles({
   statsRow:    { flexDirection: 'row', gap: 14, flexWrap: 'wrap', marginBottom: 4 },
   statItem:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText:    { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600' },
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText:{ fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
 
-  expandBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6', marginTop: 6, marginBottom: 4 },
+  expandBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, borderTopWidth: 1, borderTopColor: palette.gray100, marginTop: 6, marginBottom: 4 },
   expandText:  { fontSize: 12, fontWeight: '700', color: Colors.brand.blue },
   expandPanel: { paddingTop: 4, marginBottom: 10 },
   sectionLabel:{ fontSize: 10, fontWeight: '900', letterSpacing: 1.2, color: Colors.text.tertiary, marginBottom: 7 },
-  descBox:     { backgroundColor: '#F8FAFC', borderRadius: 11, padding: 12, borderWidth: 1, borderColor: '#E8ECF0', marginBottom: 4 },
+  descBox:     { backgroundColor: palette.slate50, borderRadius: 11, padding: 12, borderWidth: 1, borderColor: palette.neutralL93_3, marginBottom: 4 },
   descText:    { fontSize: 13, color: Colors.text.secondary, lineHeight: 19 },
-  detailsBlock:{ backgroundColor: '#F8FAFC', borderRadius: 13, borderWidth: 1, borderColor: '#E8ECF0', overflow: 'hidden', marginBottom: 4 },
-  detailRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8ECF0' },
+  detailsBlock:{ backgroundColor: palette.slate50, borderRadius: 13, borderWidth: 1, borderColor: palette.neutralL93_3, overflow: 'hidden', marginBottom: 4 },
+  detailRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL93_3 },
   detailIconBox: { width: 28, height: 28, borderRadius: 8, backgroundColor: Colors.brand.blueLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
   detailKey:   { fontSize: 10, fontWeight: '700', color: Colors.text.tertiary, marginBottom: 2, letterSpacing: 0.3 },
   detailVal:   { fontSize: 13, fontWeight: '600', color: Colors.text.primary },

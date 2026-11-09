@@ -1,3 +1,4 @@
+import { palette } from "../../../src/theme/palette";
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
@@ -688,7 +689,7 @@ export default function HousingScreen() {
                     label="Filters"
                     on={!!(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null)}
                     onPress={() => setShowFilterSheet(true)}
-                    icon={<Ionicons name="options-outline" size={14} color={(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) ? "#FFF" : tc.textSecondary} />}
+                    icon={<Ionicons name="options-outline" size={14} color={(minPriceFilter || maxPriceFilter || bedsFilter != null || petsFilter != null) ? palette.white : tc.textSecondary} />}
                   />
                 </GHScrollView>
 
@@ -815,7 +816,7 @@ export default function HousingScreen() {
                               onPress={() => openRmPrefsModal()}
                               style={{ paddingVertical: 11, paddingHorizontal: 18, borderRadius: 12, backgroundColor: Colors.brand.blue }}
                             >
-                              <Text style={{ color: "#FFF", fontWeight: "800" }}>{hasPrefs ? "Edit Preferences" : "Set Up Preferences"}</Text>
+                              <Text style={{ color: palette.white, fontWeight: "800" }}>{hasPrefs ? "Edit Preferences" : "Set Up Preferences"}</Text>
                             </Pressable>
                           </View>
                         </View>
@@ -874,8 +875,8 @@ export default function HousingScreen() {
                       onPress={() => void loadListings()}
                       style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: Colors.brand.blue, borderRadius: 999, paddingHorizontal: 20, paddingVertical: 10, marginTop: 14 }}
                     >
-                      <Ionicons name="refresh" size={16} color="#FFF" />
-                      <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>Retry</Text>
+                      <Ionicons name="refresh" size={16} color={palette.white} />
+                      <Text style={{ color: palette.white, fontSize: 13, fontWeight: "800" }}>Retry</Text>
                     </Pressable>
                   </View>
                 )}
@@ -978,7 +979,7 @@ export default function HousingScreen() {
                     borderColor: bedsFilter === n ? tc.mint : tc.borderLight,
                   }}
                 >
-                  <Text style={{ fontSize: 13, fontFamily: "Manrope_700Bold", color: bedsFilter === n ? "#FFF" : tc.textSecondary }}>
+                  <Text style={{ fontSize: 13, fontFamily: "Manrope_700Bold", color: bedsFilter === n ? palette.white : tc.textSecondary }}>
                     {n === null ? "Any" : n === 0 ? "Studio" : `${n}+`}
                   </Text>
                 </Pressable>
@@ -1001,7 +1002,7 @@ export default function HousingScreen() {
                     borderColor: petsFilter === opt.value ? tc.mint : tc.borderLight,
                   }}
                 >
-                  <Text style={{ fontSize: 12, fontFamily: "Manrope_700Bold", color: petsFilter === opt.value ? "#FFF" : tc.textSecondary }} numberOfLines={1}>
+                  <Text style={{ fontSize: 12, fontFamily: "Manrope_700Bold", color: petsFilter === opt.value ? palette.white : tc.textSecondary }} numberOfLines={1}>
                     {opt.label}
                   </Text>
                 </Pressable>
@@ -1025,8 +1026,8 @@ export default function HousingScreen() {
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowFilterSheet(false); }}
                 style={{ flex: 1, borderRadius: 14, overflow: "hidden" }}
               >
-                <LinearGradient colors={["#1A6BAE", "#257A86", "#30855B"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 13, alignItems: "center" }}>
-                  <Text style={{ fontSize: 14, fontFamily: "Manrope_800ExtraBold", color: "#FFF" }}>Show results</Text>
+                <LinearGradient colors={[palette.brandBlue, palette.brandTeal, palette.brandGreen]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 13, alignItems: "center" }}>
+                  <Text style={{ fontSize: 14, fontFamily: "Manrope_800ExtraBold", color: palette.white }}>Show results</Text>
                 </LinearGradient>
               </Pressable>
             </View>
@@ -1052,7 +1053,7 @@ export default function HousingScreen() {
               <Text style={{ fontSize: rs(16), fontWeight: "800", color: tc.textPrimary }}>Roommate Preferences</Text>
               <Pressable onPress={() => void saveRmPrefs()} hitSlop={12} disabled={rmSaving}
                 style={{ backgroundColor: Colors.brand.blue, borderRadius: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(7), opacity: rmSaving ? 0.65 : 1 }}>
-                {rmSaving ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={{ color: "#FFF", fontWeight: "800", fontSize: rs(13) }}>Save</Text>}
+                {rmSaving ? <ActivityIndicator color={palette.white} size="small" /> : <Text style={{ color: palette.white, fontWeight: "800", fontSize: rs(13) }}>Save</Text>}
               </Pressable>
             </View>
 
@@ -1123,7 +1124,7 @@ export default function HousingScreen() {
                           style={{ paddingHorizontal: rs(14), paddingVertical: rs(9), borderRadius: rs(10), borderWidth: 1.5,
                             borderColor: cfg.val === opt ? cfg.color : tc.borderLight,
                             backgroundColor: cfg.val === opt ? cfg.color : tc.inputBg }}>
-                          <Text style={{ fontSize: rs(13), fontWeight: "700", color: cfg.val === opt ? "#FFF" : tc.textSecondary }}>{opt}</Text>
+                          <Text style={{ fontSize: rs(13), fontWeight: "700", color: cfg.val === opt ? palette.white : tc.textSecondary }}>{opt}</Text>
                         </Pressable>
                       ))}
                     </View>
@@ -1148,8 +1149,8 @@ export default function HousingScreen() {
                     style={{ flexDirection: "row", alignItems: "center", paddingVertical: rs(13), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.borderLight }}>
                     <Ionicons name={item.icon} size={18} color={tc.textSecondary} style={{ marginRight: rs(12) }} />
                     <Text style={{ flex: 1, fontSize: rs(14), fontWeight: "600", color: tc.textPrimary }}>{item.label}</Text>
-                    <View style={{ width: rs(48), height: rs(26), borderRadius: rs(13), backgroundColor: item.val ? Colors.brand.green : (isDark ? tc.borderMedium : "#CBD5E1"), justifyContent: "center", paddingHorizontal: rs(3) }}>
-                      <View style={{ width: rs(20), height: rs(20), borderRadius: rs(10), backgroundColor: "#FFF", transform: [{ translateX: item.val ? rs(22) : 0 }] }} />
+                    <View style={{ width: rs(48), height: rs(26), borderRadius: rs(13), backgroundColor: item.val ? Colors.brand.green : (isDark ? tc.borderMedium : palette.slate300), justifyContent: "center", paddingHorizontal: rs(3) }}>
+                      <View style={{ width: rs(20), height: rs(20), borderRadius: rs(10), backgroundColor: palette.white, transform: [{ translateX: item.val ? rs(22) : 0 }] }} />
                     </View>
                   </Pressable>
                 ))}

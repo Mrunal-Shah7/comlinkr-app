@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { memo } from "react";
 import { View, Text, Pressable, Share, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -40,7 +41,7 @@ export const QuestCard = memo(function QuestCard({
   return (
     <BentoTile style={{ minHeight: 0 }}>
       <View style={s.head}>
-        <GradientFill style={s.icon}><Ionicons name={TYPE_ICON[quest.type] ?? "trophy-outline"} size={20} color="#fff" /></GradientFill>
+        <GradientFill style={s.icon}><Ionicons name={TYPE_ICON[quest.type] ?? "trophy-outline"} size={20} color={palette.white} /></GradientFill>
         <View style={{ flex: 1 }}>
           <TileLabel>{[quest.type, timeLeft].filter(Boolean).join(" · ")}</TileLabel>
           <Text style={[display(700), { fontSize: 17, lineHeight: 20, color: tc.textPrimary, marginTop: 2 }]} numberOfLines={2}>{quest.title}</Text>

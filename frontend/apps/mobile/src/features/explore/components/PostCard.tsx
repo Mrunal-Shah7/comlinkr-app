@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, ActivityIndicator } from "react-native";
@@ -15,7 +16,7 @@ import { showToast } from "../../../shared/ui/Toast";
 import { appAlert } from "../../../shared/ui/Dialogs";
 import { type PostCardModel } from "../models";
 
-const LIKE = "#F0457E";
+const LIKE = palette.pinkL61;
 
 function Pop({ on, name, onName, color, onColor, label, count, onPress }: {
   on: boolean; name: keyof typeof Ionicons.glyphMap; onName: keyof typeof Ionicons.glyphMap; color: string; onColor: string; label: string; count?: number | string; onPress?: () => void;
@@ -98,7 +99,7 @@ export function PostCard({
 }
 
 const pcd = StyleSheet.create({
-  bubble: { padding: 16, paddingBottom: 8, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderBottomLeftRadius: 6, marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  bubble: { padding: 16, paddingBottom: 8, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderBottomLeftRadius: 6, marginBottom: 12, shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   head: { flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: { width: 32, height: 32, borderRadius: 16 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -173,7 +174,7 @@ export function ReportPostModal({
               <Ionicons
                 name={selected === reason ? "radio-button-on" : "radio-button-off"}
                 size={18}
-                color={selected === reason ? "#DC2626" : tc.textTertiary}
+                color={selected === reason ? palette.red600 : tc.textTertiary}
               />
               <Text style={[rpm.reasonText, { color: tc.textPrimary }]}>{reason}</Text>
             </Pressable>
@@ -183,7 +184,7 @@ export function ReportPostModal({
             disabled={submitting}
             style={[rpm.submitBtn, { opacity: submitting ? 0.6 : 1 }]}
           >
-            {submitting ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={rpm.submitText}>Submit Report</Text>}
+            {submitting ? <ActivityIndicator color={palette.white} size="small" /> : <Text style={rpm.submitText}>Submit Report</Text>}
           </Pressable>
         </Pressable>
       </Pressable>
@@ -193,29 +194,29 @@ export function ReportPostModal({
 
 export const rpm = StyleSheet.create({
   overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" },
-  sheet: { backgroundColor: "#FFF", borderTopLeftRadius: rs(20), borderTopRightRadius: rs(20), padding: rs(20), paddingBottom: rs(32) },
+  sheet: { backgroundColor: palette.white, borderTopLeftRadius: rs(20), borderTopRightRadius: rs(20), padding: rs(20), paddingBottom: rs(32) },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(6) },
   title: { fontSize: rs(17), fontWeight: "900" },
   closeBtn: { width: rs(30), height: rs(30), borderRadius: rs(15), alignItems: "center", justifyContent: "center" },
   subtitle: { fontSize: rs(13), fontWeight: "600", marginBottom: rs(14) },
   reasonRow: { flexDirection: "row", alignItems: "center", gap: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(13), borderRadius: rs(12), borderWidth: 1.5, marginBottom: rs(8) },
-  reasonRowActive: { borderColor: "#DC2626", backgroundColor: "#FEE2E2" },
+  reasonRowActive: { borderColor: palette.red600, backgroundColor: palette.red100 },
   reasonText: { fontSize: rs(14), fontWeight: "700" },
-  submitBtn: { marginTop: rs(8), backgroundColor: "#DC2626", borderRadius: rs(14), paddingVertical: rs(14), alignItems: "center" },
-  submitText: { color: "#FFF", fontSize: rs(15), fontWeight: "800" },
+  submitBtn: { marginTop: rs(8), backgroundColor: palette.red600, borderRadius: rs(14), paddingVertical: rs(14), alignItems: "center" },
+  submitText: { color: palette.white, fontSize: rs(15), fontWeight: "800" },
 });
 
 export const pc = StyleSheet.create({
-  card: { backgroundColor: "#FFF", borderRadius: rs(18), marginBottom: rs(14), borderWidth: 1, borderColor: "#ECEEF1", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: rs(8), elevation: 2, overflow: "hidden" },
+  card: { backgroundColor: palette.white, borderRadius: rs(18), marginBottom: rs(14), borderWidth: 1, borderColor: palette.neutralL94_2, shadowColor: palette.black, shadowOpacity: 0.05, shadowRadius: rs(8), elevation: 2, overflow: "hidden" },
   img: { width: "100%", height: rs(185) },
   body: { padding: rs(14) },
   head: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: rs(10), marginBottom: rs(10) },
   headLeft: { flexDirection: "row", alignItems: "center", gap: rs(10), flex: 1, minWidth: 0 },
-  deleteBtn: { width: rs(36), height: rs(36), borderRadius: rs(10), backgroundColor: "#FEF2F2", alignItems: "center", justifyContent: "center" },
+  deleteBtn: { width: rs(36), height: rs(36), borderRadius: rs(10), backgroundColor: palette.red50, alignItems: "center", justifyContent: "center" },
   avatar: { width: rs(38), height: rs(38), borderRadius: rs(19) },
   nameRow: { flexDirection: "row", alignItems: "center", gap: rs(6) },
   author: { fontSize: rs(14), fontWeight: "700", color: Colors.text.primary },
-  vBadge: { backgroundColor: "#DCFCE7", borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2) },
+  vBadge: { backgroundColor: palette.green100, borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2) },
   vText: { fontSize: rs(10), fontWeight: "700", color: Colors.brand.green },
   time: { fontSize: rs(12), color: Colors.text.tertiary, marginTop: rs(1) },
   title: { fontSize: rs(15), fontWeight: "700", color: Colors.text.primary, marginBottom: rs(4) },
@@ -223,8 +224,8 @@ export const pc = StyleSheet.create({
   tags: { flexDirection: "row", gap: rs(6), marginTop: rs(10), flexWrap: "wrap" },
   tag: { backgroundColor: Colors.brand.blueLight, borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(3) },
   tagText: { fontSize: rs(11), fontWeight: "600", color: Colors.brand.blue },
-  actions: { flexDirection: "row", gap: rs(16), marginTop: rs(12), paddingTop: rs(12), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#ECEEF1", alignItems: "center" },
+  actions: { flexDirection: "row", gap: rs(16), marginTop: rs(12), paddingTop: rs(12), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.neutralL94_2, alignItems: "center" },
   action: { flexDirection: "row", alignItems: "center", gap: rs(5) },
   actionText: { fontSize: rs(13), fontWeight: "600", color: Colors.text.secondary },
-  reportBtn: { width: rs(30), height: rs(30), borderRadius: rs(8), backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" },
+  reportBtn: { width: rs(30), height: rs(30), borderRadius: rs(8), backgroundColor: palette.gray100, alignItems: "center", justifyContent: "center" },
 });

@@ -1,5 +1,6 @@
 // src/features/admin/components/FilterBar.tsx
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,13 +76,13 @@ const s = createThemedStyles({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FFF',
+    backgroundColor: palette.white,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1.5,
     borderColor: Colors.border.light,
-    shadowColor: '#0A2540',
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -98,10 +99,10 @@ const s = createThemedStyles({
     paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: palette.white,
     borderWidth: 1.5,
     borderColor: Colors.border.light,
-    shadowColor: '#0A2540',
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
@@ -111,11 +112,11 @@ const s = createThemedStyles({
   chipPressed:       { opacity: 0.82 },
   activeDot:         { width: 5, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.7)' },
   chipText:          { fontSize: 12, color: Colors.text.secondary, fontWeight: '700' },
-  chipTextActive:    { color: '#FFF', fontWeight: '800' },
-  countBadge:        { backgroundColor: '#EEF0F3', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, minWidth: 18, alignItems: 'center' },
+  chipTextActive:    { color: palette.white, fontWeight: '800' },
+  countBadge:        { backgroundColor: palette.neutralL94_4, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, minWidth: 18, alignItems: 'center' },
   countBadgeActive:  { backgroundColor: 'rgba(255,255,255,0.25)' },
   countText:         { fontSize: 10, fontWeight: '800', color: Colors.text.secondary },
-  countTextActive:   { color: '#FFF' },
+  countTextActive:   { color: palette.white },
 });
 
 export default FilterBar;

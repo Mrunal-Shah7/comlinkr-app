@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback } from "react";
@@ -194,10 +195,10 @@ const INTEREST_MAP: Record<string, { icon: string; label: string }> = {
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { v: "—", l: "Posts",     icon: "document-text" as const, c: [Colors.brand.orange, "#CC5500"] as [string, string] },
+  { v: "—", l: "Posts",     icon: "document-text" as const, c: [Colors.brand.orange, palette.orangeL40] as [string, string] },
   { v: "—", l: "Saved",     icon: "bookmark"      as const, c: [Colors.brand.green, Colors.brand.greenDark] as [string, string] },
-  { v: "—", l: "Events",    icon: "calendar"      as const, c: [Colors.brand.orange, "#E56800"] as [string, string] },
-  { v: "—", l: "Neighbors", icon: "people"        as const, c: [Colors.brand.blue, "#0055CC"] as [string, string] },
+  { v: "—", l: "Events",    icon: "calendar"      as const, c: [Colors.brand.orange, palette.orangeL45] as [string, string] },
+  { v: "—", l: "Neighbors", icon: "people"        as const, c: [Colors.brand.blue, palette.blueL40_3] as [string, string] },
 ];
 
 const ACCOUNT_GRID: {
@@ -209,15 +210,15 @@ const ACCOUNT_GRID: {
   route: string;
   badge?: number;
 }[] = [
-  { id: "myposts",       label: "My Posts",           sublabel: "All your content",      icon: "document-text",      colors: [Colors.brand.orange, "#CC5500"],            route: "/myposts" },
-  { id: "messages",      label: "Messages",           sublabel: "Your conversations",    icon: "chatbubbles",        colors: [Colors.brand.blue, "#0055CC"],             route: "/chat" },
-  { id: "edit-profile",  label: "Edit Profile",       sublabel: "Name, photo & bio",     icon: "person",             colors: [Colors.brand.blue, "#0055CC"],             route: "/edit-profile" },
+  { id: "myposts",       label: "My Posts",           sublabel: "All your content",      icon: "document-text",      colors: [Colors.brand.orange, palette.orangeL40],            route: "/myposts" },
+  { id: "messages",      label: "Messages",           sublabel: "Your conversations",    icon: "chatbubbles",        colors: [Colors.brand.blue, palette.blueL40_3],             route: "/chat" },
+  { id: "edit-profile",  label: "Edit Profile",       sublabel: "Name, photo & bio",     icon: "person",             colors: [Colors.brand.blue, palette.blueL40_3],             route: "/edit-profile" },
   { id: "communities",   label: "My Communities",     sublabel: "Manage & update groups", icon: "people",             colors: [Colors.brand.green, Colors.brand.greenDark], route: "/edit-profile" },
-  { id: "notifications", label: "Notifications",      sublabel: "Alerts & push",         icon: "notifications",      colors: [Colors.brand.orange, "#E56800"],           route: "/notifications" },
-  { id: "privacy",       label: "Privacy",            sublabel: "Security settings",     icon: "shield-checkmark",   colors: [Colors.brand.blue, "#0055CC"],             route: "/settings" },
+  { id: "notifications", label: "Notifications",      sublabel: "Alerts & push",         icon: "notifications",      colors: [Colors.brand.orange, palette.orangeL45],           route: "/notifications" },
+  { id: "privacy",       label: "Privacy",            sublabel: "Security settings",     icon: "shield-checkmark",   colors: [Colors.brand.blue, palette.blueL40_3],             route: "/settings" },
   { id: "language",      label: "Language",           sublabel: "Region & locale",       icon: "language",           colors: [Colors.brand.green, Colors.brand.greenDark], route: "/settings" },
-  { id: "help",          label: "Help & Support",     sublabel: "FAQs, contact us",      icon: "help-circle",        colors: ["#0EA5E9", "#0284C7"],                     route: "/settings" },
-  { id: "about",         label: "About",              sublabel: "Version & terms",       icon: "information-circle", colors: ["#5A6A7E", "#3D4F61"],                     route: "/settings" },
+  { id: "help",          label: "Help & Support",     sublabel: "FAQs, contact us",      icon: "help-circle",        colors: [palette.sky500, palette.sky600],                     route: "/settings" },
+  { id: "about",         label: "About",              sublabel: "Version & terms",       icon: "information-circle", colors: [palette.skyL42, palette.skyL31],                     route: "/settings" },
 ];
 
 const ACHIEVEMENTS = [
@@ -451,10 +452,10 @@ export default function ProfileScreen() {
 
   const statsRow = hasAnyStats
     ? [
-        { v: String(mergedPosts),     l: "Content",   icon: "layers"   as const, c: [Colors.brand.blue,   "#0055CC"]                           as [string, string] },
+        { v: String(mergedPosts),     l: "Content",   icon: "layers"   as const, c: [Colors.brand.blue,   palette.blueL40_3]                           as [string, string] },
         { v: String(mergedSaved),     l: "Saved",     icon: "bookmark" as const, c: [Colors.brand.green,  Colors.brand.greenDark]               as [string, string] },
-        { v: String(mergedEvents),    l: "Events",    icon: "calendar" as const, c: [Colors.brand.orange, "#E56800"]                            as [string, string] },
-        { v: mergedNeighbors > 0 ? String(mergedNeighbors) : "—", l: "Neighbors", icon: "people" as const, c: [Colors.brand.blue, "#0055CC"] as [string, string] },
+        { v: String(mergedEvents),    l: "Events",    icon: "calendar" as const, c: [Colors.brand.orange, palette.orangeL45]                            as [string, string] },
+        { v: mergedNeighbors > 0 ? String(mergedNeighbors) : "—", l: "Neighbors", icon: "people" as const, c: [Colors.brand.blue, palette.blueL40_3] as [string, string] },
       ]
     : STATS;
 
@@ -720,7 +721,7 @@ export default function ProfileScreen() {
               ) : avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" cachePolicy="memory-disk" transition={200} />
               ) : (
-                <GradientFill style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><Text style={[display(800), { color: "#fff", fontSize: 30 }]}>{initials}</Text></GradientFill>
+                <GradientFill style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}><Text style={[display(800), { color: palette.white, fontSize: 30 }]}>{initials}</Text></GradientFill>
               )}
             </View>
           </GradientFill>
@@ -942,35 +943,35 @@ export default function ProfileScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: palette.white },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: rs(48) },
 
   // Submitted/status pill
-  submittedPill: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "#DCFCE7", borderWidth: 1, borderColor: "#BBF7D0", paddingHorizontal: rs(9), paddingVertical: rs(4), borderRadius: rs(999) },
-  submittedPillText: { fontSize: rs(10), fontWeight: "800", color: "#16A34A" },
+  submittedPill: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: palette.green100, borderWidth: 1, borderColor: palette.green200, paddingHorizontal: rs(9), paddingVertical: rs(4), borderRadius: rs(999) },
+  submittedPillText: { fontSize: rs(10), fontWeight: "800", color: palette.green600 },
 
   // Promo cards (Verify + Feature sections)
-  promoCard: { backgroundColor: "#FFF", borderRadius: rs(18), borderWidth: 1, borderColor: "#E5EBF4", overflow: "hidden", shadowColor: "#0A2540", shadowOpacity: 0.07, shadowRadius: rs(12), shadowOffset: { width: 0, height: rs(4) }, elevation: 4 },
+  promoCard: { backgroundColor: palette.white, borderRadius: rs(18), borderWidth: 1, borderColor: palette.neutralL93, overflow: "hidden", shadowColor: palette.navy, shadowOpacity: 0.07, shadowRadius: rs(12), shadowOffset: { width: 0, height: rs(4) }, elevation: 4 },
   promoCardHeader: { flexDirection: "row", alignItems: "center", gap: rs(12), padding: rs(14) },
   promoIconWrap: {},
   promoIcon: { width: rs(46), height: rs(46), borderRadius: rs(14), alignItems: "center", justifyContent: "center" },
-  promoCardTitle: { fontSize: rs(15), fontWeight: "800", color: "#0A2540", letterSpacing: -0.2 },
+  promoCardTitle: { fontSize: rs(15), fontWeight: "800", color: palette.navy, letterSpacing: -0.2 },
   promoCardSub: { fontSize: rs(12), color: Colors.text.secondary, marginTop: rs(2), lineHeight: rs(17) },
   promoBenefitsRow: { paddingHorizontal: rs(14), paddingBottom: rs(12), gap: rs(6) },
   promoBenefit: { flexDirection: "row", alignItems: "center", gap: rs(7) },
   promoBenefitText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.green },
   promoActionBtn: { marginHorizontal: rs(14), marginBottom: rs(14), borderRadius: rs(14), overflow: "hidden" },
   promoActionGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(7), paddingVertical: rs(13) },
-  promoActionText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  promoActionText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
 
   // Plan cards for featured listing
   planRow: { flexDirection: "row", gap: rs(8), paddingHorizontal: rs(14), paddingBottom: rs(14) },
-  planCard: { flex: 1, alignItems: "center", paddingVertical: rs(12), borderRadius: rs(14), borderWidth: 1.5, borderColor: "#E5EBF4", backgroundColor: "#F8FAFF" },
-  planCardActive: { borderColor: Colors.brand.orange, backgroundColor: "#FFF7ED" },
-  planCardHighlight: { borderColor: "#FDE68A", backgroundColor: "#FFFBEB" },
+  planCard: { flex: 1, alignItems: "center", paddingVertical: rs(12), borderRadius: rs(14), borderWidth: 1.5, borderColor: palette.neutralL93, backgroundColor: palette.neutralL99 },
+  planCardActive: { borderColor: Colors.brand.orange, backgroundColor: palette.orange50 },
+  planCardHighlight: { borderColor: palette.amber200, backgroundColor: palette.amber50 },
   planPopularBadge: { position: "absolute", top: rs(-8), backgroundColor: Colors.brand.orange, borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2) },
-  planPopularText: { fontSize: rs(8), fontWeight: "900", color: "#FFF", letterSpacing: 0.3 },
+  planPopularText: { fontSize: rs(8), fontWeight: "900", color: palette.white, letterSpacing: 0.3 },
   planLabel: { fontSize: rs(12), fontWeight: "700", color: Colors.text.secondary },
   planLabelActive: { color: Colors.brand.orange },
   planPrice: { fontSize: rs(15), fontWeight: "900", color: Colors.text.primary, marginTop: rs(3) },
@@ -981,21 +982,21 @@ const s = createThemedStyles({
   sectionLabelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(10) },
   sectionLabelLeft: { flexDirection: "row", alignItems: "center", gap: rs(7) },
   sectionLabelText: { fontSize: rs(11), fontWeight: "900", color: Colors.text.tertiary, letterSpacing: 1.4, textTransform: "uppercase" },
-  sectionCountPill: { backgroundColor: Colors.brand.blueLight, borderWidth: 1, borderColor: "#D6E8FF", paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(999) },
+  sectionCountPill: { backgroundColor: Colors.brand.blueLight, borderWidth: 1, borderColor: palette.skyL92_2, paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(999) },
   sectionCountText: { fontSize: rs(11), fontWeight: "800", color: Colors.brand.blue },
   sectionLinkText:  { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
 
   // Badge rows
-  badgeRow: { flexDirection: "row", alignItems: "center", gap: rs(10), paddingVertical: rs(10), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#F3F4F6" },
+  badgeRow: { flexDirection: "row", alignItems: "center", gap: rs(10), paddingVertical: rs(10), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.gray100 },
   badgeRowIcon: { width: rs(36), height: rs(36), borderRadius: rs(11), alignItems: "center", justifyContent: "center" },
-  badgeRowLabel: { flex: 1, fontSize: rs(13), fontWeight: "700", color: "#0A2540" },
+  badgeRowLabel: { flex: 1, fontSize: rs(13), fontWeight: "700", color: palette.navy },
   badgeStatusPill: { flexDirection: "row", alignItems: "center", gap: rs(4), paddingHorizontal: rs(8), paddingVertical: rs(4), borderRadius: rs(8) },
   badgeStatusText: { fontSize: rs(10), fontWeight: "700" },
   badgeApplyBtn: { backgroundColor: Colors.brand.blue, borderRadius: rs(8), paddingHorizontal: rs(10), paddingVertical: rs(5) },
-  badgeApplyBtnText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  badgeApplyBtnText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
 
   // Change button
-  changeBtn: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.blueLight, borderWidth: 1, borderColor: "#D6E8FF", paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rs(999) },
+  changeBtn: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.blueLight, borderWidth: 1, borderColor: palette.skyL92_2, paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rs(999) },
   changeBtnText: { fontSize: rs(11), fontWeight: "800", color: Colors.brand.blue },
 
   // Hero
@@ -1007,47 +1008,47 @@ const s = createThemedStyles({
   heroTopBar: { position: "absolute", top: rs(48), left: rs(12), right: rs(16), flexDirection: "row", alignItems: "center", justifyContent: "space-between", zIndex: 100, elevation: 100 },
   heroActions: { flexDirection: "row", alignItems: "center", gap: rs(10) },
   heroBackBtn: {},
-  heroBackCircle: { width: rs(40), height: rs(40), borderRadius: rs(20), backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(2) }, elevation: 8 },
-  heroIconBtn: { width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
-  heroEditBtn: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", paddingHorizontal: rs(14), height: rs(36), borderRadius: rs(999), shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
+  heroBackCircle: { width: rs(40), height: rs(40), borderRadius: rs(20), backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)", alignItems: "center", justifyContent: "center", shadowColor: palette.black, shadowOpacity: 0.12, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(2) }, elevation: 8 },
+  heroIconBtn: { width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", alignItems: "center", justifyContent: "center", shadowColor: palette.black, shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
+  heroEditBtn: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: "rgba(255,255,255,0.92)", borderWidth: 1, borderColor: "rgba(26,107,174,0.18)", paddingHorizontal: rs(14), height: rs(36), borderRadius: rs(999), shadowColor: palette.black, shadowOpacity: 0.08, shadowRadius: rs(4), shadowOffset: { width: 0, height: rs(2) }, elevation: 3 },
   heroEditText: { fontSize: rs(12), fontWeight: "900", color: Colors.brand.blue },
 
   // Avatar
   avatarWrap: { position: "absolute", bottom: rs(-50), left: rs(16), zIndex: 2 },
-  avatarGrad: { width: rs(100), height: rs(100), borderRadius: rs(50), alignItems: "center", justifyContent: "center", borderWidth: 4, borderColor: "#FFFFFF", shadowColor: Colors.brand.blue, shadowOpacity: 0.28, shadowRadius: rs(18), shadowOffset: { width: 0, height: rs(6) }, elevation: 12 },
-  avatarImage: { width: rs(100), height: rs(100), borderRadius: rs(50), borderWidth: 4, borderColor: "#FFFFFF" },
+  avatarGrad: { width: rs(100), height: rs(100), borderRadius: rs(50), alignItems: "center", justifyContent: "center", borderWidth: 4, borderColor: palette.white, shadowColor: Colors.brand.blue, shadowOpacity: 0.28, shadowRadius: rs(18), shadowOffset: { width: 0, height: rs(6) }, elevation: 12 },
+  avatarImage: { width: rs(100), height: rs(100), borderRadius: rs(50), borderWidth: 4, borderColor: palette.white },
   errorBanner: { marginHorizontal: rs(16), marginTop: rs(8), padding: rs(12), borderRadius: rs(12), borderWidth: 1 },
   errorBannerText: { fontSize: rs(13), fontWeight: "600", textAlign: "center" },
-  avatarText: { fontSize: rs(34), fontWeight: "900", color: "#FFF" },
-  onlineDot: { position: "absolute", bottom: rs(6), right: rs(4), width: rs(16), height: rs(16), borderRadius: rs(8), backgroundColor: "#22C55E", borderWidth: 3, borderColor: "#FFFFFF" },
+  avatarText: { fontSize: rs(34), fontWeight: "900", color: palette.white },
+  onlineDot: { position: "absolute", bottom: rs(6), right: rs(4), width: rs(16), height: rs(16), borderRadius: rs(8), backgroundColor: palette.green500, borderWidth: 3, borderColor: palette.white },
 
   // Info card
-  infoCard: { backgroundColor: "#FFF", paddingHorizontal: rs(16), paddingBottom: rs(16), borderBottomWidth: 1, borderBottomColor: "#F0F4FA", alignItems: "flex-start" },
+  infoCard: { backgroundColor: palette.white, paddingHorizontal: rs(16), paddingBottom: rs(16), borderBottomWidth: 1, borderBottomColor: palette.neutralL96_2, alignItems: "flex-start" },
   nameRow: { flexDirection: "row", alignItems: "center", gap: rs(8), flexWrap: "wrap", marginBottom: rs(4) },
   userName: { fontSize: rs(22), fontWeight: "900", color: Colors.text.primary, letterSpacing: -0.5 },
   proBadge: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: Colors.brand.orange, paddingHorizontal: rs(8), paddingVertical: rs(4), borderRadius: rs(999) },
-  proBadgeText: { fontSize: rs(9), fontWeight: "900", color: "#FFF", letterSpacing: 0.6 },
-  verifiedPill: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "#DCFCE7", borderWidth: 1, borderColor: "#BBF7D0", paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(999) },
+  proBadgeText: { fontSize: rs(9), fontWeight: "900", color: palette.white, letterSpacing: 0.6 },
+  verifiedPill: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: palette.green100, borderWidth: 1, borderColor: palette.green200, paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(999) },
   verifiedText: { fontSize: rs(10), fontWeight: "900", color: Colors.brand.green },
   userHandle: { fontSize: rs(14), fontWeight: "700", color: Colors.text.secondary, marginBottom: rs(10) },
   metaRow: { flexDirection: "row", flexWrap: "wrap", gap: rs(8), marginBottom: rs(12) },
-  metaPill: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: "#F5F8FF", borderWidth: 1, borderColor: "#E5EEF9", paddingHorizontal: rs(12), paddingVertical: rs(7), borderRadius: rs(999) },
+  metaPill: { flexDirection: "row", alignItems: "center", gap: rs(6), backgroundColor: palette.neutralL98_2, borderWidth: 1, borderColor: palette.skyL94_3, paddingHorizontal: rs(12), paddingVertical: rs(7), borderRadius: rs(999) },
   metaPillText: { fontSize: rs(11), fontWeight: "800", color: Colors.text.secondary },
   bio: { fontSize: rs(13), color: Colors.text.secondary, lineHeight: rs(20), fontWeight: "600" },
 
   // Stats — single row, compact
-  statsGrid: { paddingHorizontal: rs(16), paddingTop: rs(16), paddingBottom: rs(6), backgroundColor: "#FFF" },
+  statsGrid: { paddingHorizontal: rs(16), paddingTop: rs(16), paddingBottom: rs(6), backgroundColor: palette.white },
   statsRow: { flexDirection: "row", gap: rs(10) },
   statCard: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     paddingVertical: rs(14),
     paddingHorizontal: rs(4),
     borderWidth: 1,
-    borderColor: "#E7EFFA",
-    shadowColor: "#0A2540",
+    borderColor: palette.skyL94_6,
+    shadowColor: palette.navy,
     shadowOpacity: 0.04,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(3) },
@@ -1060,17 +1061,17 @@ const s = createThemedStyles({
 
   // Achievements
   achieveRow: { flexDirection: "row", gap: rs(10), paddingRight: rs(8) },
-  achieveChip: { alignItems: "center", backgroundColor: "#FFF", borderRadius: rs(14), paddingHorizontal: rs(16), paddingVertical: rs(14), borderWidth: 1, borderColor: "#E7EFFA", shadowColor: "#0A2540", shadowOpacity: 0.04, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(3) }, elevation: 2, gap: rs(6), minWidth: 90, position: "relative" },
-  achieveChipLocked: { backgroundColor: "#F9FAFB", borderColor: "#E5E7EB" },
+  achieveChip: { alignItems: "center", backgroundColor: palette.white, borderRadius: rs(14), paddingHorizontal: rs(16), paddingVertical: rs(14), borderWidth: 1, borderColor: palette.skyL94_6, shadowColor: palette.navy, shadowOpacity: 0.04, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(3) }, elevation: 2, gap: rs(6), minWidth: 90, position: "relative" },
+  achieveChipLocked: { backgroundColor: palette.gray50, borderColor: palette.gray200 },
   achieveEmoji: { fontSize: rs(22) },
   achieveLabel: { fontSize: rs(10), fontWeight: "900", color: Colors.text.secondary, textAlign: "center" },
   achieveLabelLocked: { color: Colors.text.tertiary },
-  lockBadge: { position: "absolute", top: rs(7), right: rs(7), width: rs(16), height: rs(16), borderRadius: rs(8), backgroundColor: "#E5E7EB", alignItems: "center", justifyContent: "center" },
+  lockBadge: { position: "absolute", top: rs(7), right: rs(7), width: rs(16), height: rs(16), borderRadius: rs(8), backgroundColor: palette.gray200, alignItems: "center", justifyContent: "center" },
 
   // Location pref card
-  prefCard: { backgroundColor: "#FFF", borderRadius: rs(16), borderWidth: 1, borderColor: "#E7EFFA", overflow: "hidden", shadowColor: "#0A2540", shadowOpacity: 0.04, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(3) }, elevation: 2 },
+  prefCard: { backgroundColor: palette.white, borderRadius: rs(16), borderWidth: 1, borderColor: palette.skyL94_6, overflow: "hidden", shadowColor: palette.navy, shadowOpacity: 0.04, shadowRadius: rs(8), shadowOffset: { width: 0, height: rs(3) }, elevation: 2 },
   locRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: rs(16), paddingVertical: rs(14), gap: rs(14) },
-  locDivider: { height: StyleSheet.hairlineWidth, backgroundColor: "#EDF2F8", marginHorizontal: rs(16) },
+  locDivider: { height: StyleSheet.hairlineWidth, backgroundColor: palette.neutralL95, marginHorizontal: rs(16) },
   locIcon: { width: rs(38), height: rs(38), borderRadius: rs(13), alignItems: "center", justifyContent: "center" },
   locText: { flex: 1 },
   locFieldLabel: { fontSize: rs(10), fontWeight: "800", color: Colors.text.tertiary, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: rs(2) },
@@ -1079,14 +1080,14 @@ const s = createThemedStyles({
 
   // Tags
   tagWrap: { flexDirection: "row", flexWrap: "wrap", gap: rs(8) },
-  tagOrange: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.orangeLight, borderWidth: 1, borderColor: "#FECBA1", borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
-  tagGreen:  { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.greenLight,  borderWidth: 1, borderColor: "#A7F3A0", borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
-  tagBlue:   { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.blueLight,   borderWidth: 1, borderColor: "#B3D9FF", borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
+  tagOrange: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.orangeLight, borderWidth: 1, borderColor: palette.orangeL81, borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
+  tagGreen:  { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.greenLight,  borderWidth: 1, borderColor: palette.greenL79, borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
+  tagBlue:   { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: Colors.brand.blueLight,   borderWidth: 1, borderColor: palette.skyL85, borderRadius: rs(999), paddingHorizontal: rs(12), paddingVertical: rs(6) },
   tagText: { fontSize: rs(12), fontWeight: "700", color: Colors.text.secondary },
 
   // Empty pref state
-  emptyPrefCard: { flexDirection: "row", alignItems: "center", gap: rs(14), backgroundColor: "#F8FAFC", borderRadius: rs(16), borderWidth: 1, borderColor: "#E7EFFA", paddingHorizontal: rs(16), paddingVertical: rs(16), shadowColor: "#0A2540", shadowOpacity: 0.03, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 1 },
-  emptyPrefIconWrap: { width: rs(40), height: rs(40), borderRadius: rs(12), backgroundColor: "#EEF4FF", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  emptyPrefCard: { flexDirection: "row", alignItems: "center", gap: rs(14), backgroundColor: palette.slate50, borderRadius: rs(16), borderWidth: 1, borderColor: palette.skyL94_6, paddingHorizontal: rs(16), paddingVertical: rs(16), shadowColor: palette.navy, shadowOpacity: 0.03, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 1 },
+  emptyPrefIconWrap: { width: rs(40), height: rs(40), borderRadius: rs(12), backgroundColor: palette.blueL97, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   emptyPrefTitle: { fontSize: rs(14), fontWeight: "800", color: Colors.text.primary, marginBottom: rs(3) },
   emptyPrefSub: { fontSize: rs(12), color: Colors.text.tertiary, fontWeight: "600", lineHeight: rs(17) },
 
@@ -1096,13 +1097,13 @@ const s = createThemedStyles({
   accountGridCard: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     paddingVertical: rs(14),
     paddingHorizontal: rs(6),
     borderWidth: 1,
-    borderColor: "#E7EFFA",
-    shadowColor: "#0A2540",
+    borderColor: palette.skyL94_6,
+    shadowColor: palette.navy,
     shadowOpacity: 0.04,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(3) },
@@ -1111,8 +1112,8 @@ const s = createThemedStyles({
   },
   accountCardIconWrap: { position: "relative", marginBottom: rs(1) },
   accountCardIcon: { width: rs(38), height: rs(38), borderRadius: rs(13), alignItems: "center", justifyContent: "center" },
-  accountCardBadge: { position: "absolute", top: rs(-4), right: rs(-4), minWidth: 16, height: rs(16), borderRadius: rs(8), backgroundColor: Colors.brand.orange, alignItems: "center", justifyContent: "center", paddingHorizontal: rs(3), borderWidth: 2, borderColor: "#FFF" },
-  accountCardBadgeText: { fontSize: rs(8), fontWeight: "900", color: "#FFF" },
+  accountCardBadge: { position: "absolute", top: rs(-4), right: rs(-4), minWidth: 16, height: rs(16), borderRadius: rs(8), backgroundColor: Colors.brand.orange, alignItems: "center", justifyContent: "center", paddingHorizontal: rs(3), borderWidth: 2, borderColor: palette.white },
+  accountCardBadgeText: { fontSize: rs(8), fontWeight: "900", color: palette.white },
   accountCardLabel: { fontSize: rs(11), fontWeight: "800", color: Colors.text.primary, textAlign: "center" },
   accountCardSub: { fontSize: rs(9), fontWeight: "600", color: Colors.text.tertiary, textAlign: "center" },
 
@@ -1127,13 +1128,13 @@ const s = createThemedStyles({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     paddingVertical: rs(14),
     paddingHorizontal: rs(8),
     borderWidth: 1,
-    borderColor: "#E7EFFA",
-    shadowColor: "#0A2540",
+    borderColor: palette.skyL94_6,
+    shadowColor: palette.navy,
     shadowOpacity: 0.04,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(3) },
@@ -1191,7 +1192,7 @@ const s = createThemedStyles({
     gap: rs(8),
     backgroundColor: Colors.brand.blueLight,
     borderWidth: 1,
-    borderColor: "#D6E8FF",
+    borderColor: palette.skyL92_2,
     borderRadius: rs(12),
     paddingHorizontal: rs(12),
     paddingVertical: rs(10),
@@ -1205,7 +1206,7 @@ const s = createThemedStyles({
   },
 
   // Roommate Edit Modal
-  rmModalSafe: { flex: 1, backgroundColor: "#FFFFFF" },
+  rmModalSafe: { flex: 1, backgroundColor: palette.white },
   rmModalHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -1213,11 +1214,11 @@ const s = createThemedStyles({
     paddingHorizontal: rs(16),
     paddingVertical: rs(14),
     borderBottomWidth: 1,
-    borderBottomColor: "#E7EFFA",
+    borderBottomColor: palette.skyL94_6,
   },
   rmModalTitle: { fontSize: rs(17), fontWeight: "900", color: Colors.text.primary, letterSpacing: -0.3 },
   rmModalSaveBtn: { paddingHorizontal: rs(18), paddingVertical: rs(8), borderRadius: rs(999) },
-  rmModalSaveBtnText: { fontSize: rs(13), fontWeight: "900", color: "#FFF" },
+  rmModalSaveBtnText: { fontSize: rs(13), fontWeight: "900", color: palette.white },
   rmModalScroll: { flex: 1 },
   rmModalScrollContent: { padding: rs(16) },
   rmFormSection: { marginBottom: rs(24) },
@@ -1229,9 +1230,9 @@ const s = createThemedStyles({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderWidth: 1.5,
-    borderColor: "#E7EFFA",
+    borderColor: palette.skyL94_6,
     borderRadius: rs(14),
     paddingHorizontal: rs(14),
     paddingVertical: rs(12),
@@ -1241,9 +1242,9 @@ const s = createThemedStyles({
   rmBudgetDash: { fontSize: rs(16), fontWeight: "700", color: Colors.text.tertiary },
   rmBudgetSuffix: { fontSize: rs(12), fontWeight: "700", color: Colors.text.tertiary },
   rmFullInput: {
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderWidth: 1.5,
-    borderColor: "#E7EFFA",
+    borderColor: palette.skyL94_6,
     borderRadius: rs(14),
     paddingHorizontal: rs(16),
     paddingVertical: rs(14),
@@ -1257,9 +1258,9 @@ const s = createThemedStyles({
     paddingHorizontal: rs(16),
     paddingVertical: rs(10),
     borderRadius: rs(12),
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderWidth: 1.5,
-    borderColor: "#E7EFFA",
+    borderColor: palette.skyL94_6,
   },
   rmOptionChipActive: {
     backgroundColor: Colors.brand.blueLight,
@@ -1275,7 +1276,7 @@ const s = createThemedStyles({
     paddingVertical: rs(14),
     paddingHorizontal: rs(4),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#F0F4FA",
+    borderBottomColor: palette.neutralL96_2,
   },
   rmToggleLeft: { flexDirection: "row", alignItems: "center", gap: rs(12) },
   rmToggleLabel: { fontSize: rs(14), fontWeight: "700", color: Colors.text.primary },
@@ -1283,7 +1284,7 @@ const s = createThemedStyles({
     width: rs(48),
     height: rs(28),
     borderRadius: rs(14),
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
     justifyContent: "center",
     padding: rs(2),
   },
@@ -1292,8 +1293,8 @@ const s = createThemedStyles({
     width: rs(24),
     height: rs(24),
     borderRadius: rs(12),
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
+    backgroundColor: palette.white,
+    shadowColor: palette.black,
     shadowOpacity: 0.15,
     shadowRadius: rs(4),
     shadowOffset: { width: 0, height: rs(2) },
@@ -1305,11 +1306,11 @@ const s = createThemedStyles({
   signOutSection: { paddingHorizontal: rs(16), marginTop: rs(24) },
   signOutBtn: { borderRadius: rs(18), overflow: "hidden" },
   signOutGrad: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(10), paddingVertical: rs(16) },
-  signOutText: { fontSize: rs(16), fontWeight: "900", color: "#FFF", letterSpacing: 0.3 },
+  signOutText: { fontSize: rs(16), fontWeight: "900", color: palette.white, letterSpacing: 0.3 },
 
   // Footer
   footer: { alignItems: "center", paddingTop: rs(28), paddingBottom: rs(12), gap: rs(4) },
-  footerRule: { width: rs(48), height: rs(3), borderRadius: rs(2), backgroundColor: "#E5E7EB", marginBottom: rs(12) },
+  footerRule: { width: rs(48), height: rs(3), borderRadius: rs(2), backgroundColor: palette.gray200, marginBottom: rs(12) },
   footerBrand: { fontSize: rs(13), fontWeight: "900", color: Colors.text.secondary, letterSpacing: 0.5 },
   footerMeta: { fontSize: rs(11), color: Colors.text.tertiary, fontWeight: "700" },
   footerHeart: { fontSize: rs(11), color: Colors.text.tertiary, fontWeight: "700" },

@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
 
@@ -6,13 +7,13 @@ export const ar = StyleSheet.create({
   // ── Card ──
   card: {
     marginHorizontal: 16, marginBottom: 16,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 22,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08, shadowRadius: 14, elevation: 4,
-    borderWidth: 1, borderColor: "#EEF2F8",
+    borderWidth: 1, borderColor: palette.neutralL95_4,
   },
   imageWrap: { height: 190, position: "relative" },
   image: { width: "100%", height: 190 },
@@ -22,15 +23,15 @@ export const ar = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
   },
-  typeBadgeText: { fontSize: 10, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
+  typeBadgeText: { fontSize: 10, fontWeight: "800", color: palette.white, letterSpacing: 0.5 },
   availBadge: {
     position: "absolute", top: 12, right: 12,
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: Colors.brand.green,
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20,
   },
-  availDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#86EFAC" },
-  availBadgeText: { fontSize: 10, fontWeight: "800", color: "#FFF" },
+  availDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.green300 },
+  availBadgeText: { fontSize: 10, fontWeight: "800", color: palette.white },
   compatChip: {
     position: "absolute", bottom: 12, left: 12,
     borderRadius: 12, paddingHorizontal: 8, paddingVertical: 5,
@@ -42,7 +43,7 @@ export const ar = StyleSheet.create({
     position: "absolute", bottom: 12, right: 12,
     flexDirection: "row", alignItems: "baseline", gap: 2,
   },
-  priceText: { fontSize: 22, fontWeight: "900", color: "#FFF" },
+  priceText: { fontSize: 22, fontWeight: "900", color: palette.white },
   priceSub: { fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: "500" },
   // ── Body ──
   body: { paddingHorizontal: 14, paddingTop: 12, paddingBottom: 6 },
@@ -54,7 +55,7 @@ export const ar = StyleSheet.create({
     width: 14, height: 14, borderRadius: 7,
     backgroundColor: Colors.brand.green,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#FFF",
+    borderWidth: 1.5, borderColor: palette.white,
   },
   hostName: { fontSize: 13, fontWeight: "800", color: Colors.text.primary },
   hostOccupation: { fontSize: 11, color: Colors.text.secondary, marginTop: 1 },
@@ -62,7 +63,7 @@ export const ar = StyleSheet.create({
   apartmentPillText: { fontSize: 10, fontWeight: "700", color: Colors.brand.blue },
   locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 },
   locationText: { fontSize: 12, color: Colors.text.secondary, fontWeight: "600" },
-  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: "#D1D5DB", marginHorizontal: 2 },
+  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: palette.gray300, marginHorizontal: 2 },
   dateText: { fontSize: 12, color: Colors.text.secondary },
   chipsRow: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: 8 },
   chip: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
@@ -78,7 +79,7 @@ export const ar = StyleSheet.create({
   ctaRow: {
     flexDirection: "row", gap: 8, alignItems: "center",
     paddingHorizontal: 14, paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#F0F2F5",
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.neutralL95_5,
   },
   msgBtn: {
     flexDirection: "row", alignItems: "center", gap: 6,
@@ -88,13 +89,13 @@ export const ar = StyleSheet.create({
   },
   msgBtnText: { fontSize: 12, fontWeight: "700", color: Colors.brand.blue },
   requestBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 12 },
-  requestBtnText: { fontSize: 12, fontWeight: "800", color: "#FFF" },
+  requestBtnText: { fontSize: 12, fontWeight: "800", color: palette.white },
   // ── Detail modal ──
   detailCard: {
     marginHorizontal: 14, marginTop: 12,
-    backgroundColor: "#FFF", borderRadius: 18,
-    padding: 14, borderWidth: 1, borderColor: "#EEF2F8",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    backgroundColor: palette.white, borderRadius: 18,
+    padding: 14, borderWidth: 1, borderColor: palette.neutralL95_4,
+    shadowColor: palette.black, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
   },
   detailHostRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
@@ -102,17 +103,17 @@ export const ar = StyleSheet.create({
     fontSize: 11, fontWeight: "800", color: Colors.text.tertiary,
     textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 12,
   },
-  statBox: { width: "30%", alignItems: "center", backgroundColor: "#F8FAFF", borderRadius: 14, padding: 12, borderWidth: 1, borderColor: "#EEF2F8" },
+  statBox: { width: "30%", alignItems: "center", backgroundColor: palette.neutralL99, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: palette.neutralL95_4 },
   statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", marginBottom: 6 },
   statVal: { fontSize: 13, fontWeight: "800", color: Colors.text.primary, textAlign: "center" },
   statLabel: { fontSize: 10, color: Colors.text.tertiary, fontWeight: "600", marginTop: 2, textAlign: "center" },
-  amenityChip: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#DCFCE7", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  amenityChip: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: palette.green100, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
   amenityText: { fontSize: 12, fontWeight: "700", color: Colors.brand.green },
   detailCta: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", gap: 10, alignItems: "center",
     paddingHorizontal: 14, paddingTop: 12,
-    backgroundColor: "#FFF", borderTopWidth: 1, borderTopColor: "#F0F2F5",
+    backgroundColor: palette.white, borderTopWidth: 1, borderTopColor: palette.neutralL95_5,
   },
   detailMsgBtn: {
     flexDirection: "row", alignItems: "center", gap: 7,
@@ -122,7 +123,7 @@ export const ar = StyleSheet.create({
   },
   detailMsgText: { fontSize: 13, fontWeight: "700", color: Colors.brand.blue },
   detailRequestBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 14 },
-  detailRequestText: { fontSize: 15, fontWeight: "900", color: "#FFF" },
+  detailRequestText: { fontSize: 15, fontWeight: "900", color: palette.white },
   // ── List Your Space form ──
   listLabel: {
     fontSize: 10, fontWeight: "800", color: Colors.text.tertiary,
@@ -130,12 +131,12 @@ export const ar = StyleSheet.create({
   },
   listInput: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "#FFF", borderRadius: 14, borderWidth: 1.5, borderColor: "#E5E7EB",
+    backgroundColor: palette.white, borderRadius: 14, borderWidth: 1.5, borderColor: palette.gray200,
     paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14,
   },
   toggle: {
     flex: 1, flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: "#FFF", borderRadius: 12, borderWidth: 1.5, borderColor: "#E5E7EB",
+    backgroundColor: palette.white, borderRadius: 12, borderWidth: 1.5, borderColor: palette.gray200,
     paddingHorizontal: 10, paddingVertical: 12,
   },
   toggleText: { fontSize: 12, fontWeight: "700", color: Colors.text.secondary, flex: 1 },
@@ -153,8 +154,8 @@ export const ar = StyleSheet.create({
   },
   listYourSpaceBannerGrad: { flexDirection: "row", alignItems: "center", padding: 16, gap: 14 },
   listYourSpaceIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.22)", alignItems: "center", justifyContent: "center" },
-  listYourSpaceTitle: { fontSize: 15, fontWeight: "900", color: "#FFF" },
+  listYourSpaceTitle: { fontSize: 15, fontWeight: "900", color: palette.white },
   listYourSpaceSub: { fontSize: 12, color: "rgba(255,255,255,0.82)", marginTop: 2, lineHeight: 17 },
   listYourSpaceArrow: { width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
-  dividerStrip: { height: 6, backgroundColor: "#EEF2F8", marginVertical: 14 },
+  dividerStrip: { height: 6, backgroundColor: palette.neutralL95_4, marginVertical: 14 },
 });

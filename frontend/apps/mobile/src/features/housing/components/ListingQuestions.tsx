@@ -2,6 +2,7 @@
 // photos, kind, rent, size, where, a few words, then a summary with optional extras as "+" chips. City, state,
 // country and currency come from the profile. The draft is kept on the phone if you close it.
 // It drives the composer's own state and submit, so validation and the server calls are the composer's.
+import { palette } from "../../../theme/palette";
 import { Switch } from "../../../shared/ui/Switch";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -181,8 +182,8 @@ export function ListingQuestions(p: ListingQuestionsProps) {
                       {img ? (
                         <>
                           <Image source={{ uri: img.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                          <View style={st.x}><Ionicons name="close" size={14} color="#fff" /></View>
-                          {i === 0 ? <View style={st.cover}><Text style={[body(700), { fontSize: 11, color: "#fff" }]}>Cover</Text></View> : null}
+                          <View style={st.x}><Ionicons name="close" size={14} color={palette.white} /></View>
+                          {i === 0 ? <View style={st.cover}><Text style={[body(700), { fontSize: 11, color: palette.white }]}>Cover</Text></View> : null}
                         </>
                       ) : (
                         <Ionicons name={i === 0 ? "camera-outline" : "add"} size={i === 0 ? 32 : 22} color={tc.textTertiary} />
@@ -202,7 +203,7 @@ export function ListingQuestions(p: ListingQuestionsProps) {
                   return (
                     <PressableScale key={k} onPress={() => p.propType[1](k)} accessibilityRole="radio" accessibilityState={{ selected: on }}
                       style={[st.choice, { backgroundColor: tc.cardBg, borderColor: on ? tc.accent : tc.glassLine, borderWidth: on ? 2 : 1 }]}>
-                      <View style={[st.gi, { backgroundColor: on ? tc.accent : tc.accentSoft }]}><Ionicons name={icon} size={20} color={on ? "#fff" : tc.accentText} /></View>
+                      <View style={[st.gi, { backgroundColor: on ? tc.accent : tc.accentSoft }]}><Ionicons name={icon} size={20} color={on ? palette.white : tc.accentText} /></View>
                       <View style={{ flex: 1 }}>
                         <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{k}</Text>
                         <Text style={[TYPE.small, { color: tc.textSecondary }]}>{sub}</Text>

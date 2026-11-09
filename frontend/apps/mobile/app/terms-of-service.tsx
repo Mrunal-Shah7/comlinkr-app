@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useRef } from "react";
 import {
@@ -11,8 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LegalDoc } from "../src/shared/d/LegalDoc";
 
-const BRAND_BLUE = "#1A6BAE";
-const BRAND_GREEN = "#30855B";
+const BRAND_BLUE = palette.brandBlue;
+const BRAND_GREEN = palette.brandGreen;
 
 export const TERMS_VERSION = "1.1";
 const LAST_UPDATED = "July 7, 2026";

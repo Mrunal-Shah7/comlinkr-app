@@ -1,5 +1,6 @@
 // src/features/admin/components/AdminCard.tsx
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import { useTheme } from '@theme/useTheme';
@@ -63,7 +64,7 @@ export function AdminCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [cardStyle, pressed && { backgroundColor: isDark ? tc.cardElevated : '#F8FBFF', transform: [{ scale: 0.99 }] }]}
+      style={({ pressed }) => [cardStyle, pressed && { backgroundColor: isDark ? tc.cardElevated : palette.neutralL99_2, transform: [{ scale: 0.99 }] }]}
     >
       {content}
     </Pressable>
@@ -72,10 +73,10 @@ export function AdminCard({
 
 const s = createThemedStyles({
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: palette.white,
     borderRadius: 18,
     marginBottom: 10,
-    shadowColor: '#0A2540',
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07,
     shadowRadius: 14,
@@ -85,7 +86,7 @@ const s = createThemedStyles({
     overflow: 'hidden',
     flexDirection: 'row',
   },
-  cardPressed:   { backgroundColor: '#F8FBFF', transform: [{ scale: 0.99 }] },
+  cardPressed:   { backgroundColor: palette.neutralL99_2, transform: [{ scale: 0.99 }] },
   accentBar:     { width: 4, borderTopLeftRadius: 18, borderBottomLeftRadius: 18, flexShrink: 0 },
   inner:         { flex: 1, padding: 15 },
   innerIndented: { paddingLeft: 14 },
@@ -97,7 +98,7 @@ const s = createThemedStyles({
   badge:         { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
   badgeDot:      { width: 5, height: 5, borderRadius: 3 },
   badgeText:     { fontSize: 10, fontWeight: '800', letterSpacing: 0.2 },
-  body:          { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F0F2F5' },
+  body:          { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.neutralL95_5 },
 });
 
 export default AdminCard;

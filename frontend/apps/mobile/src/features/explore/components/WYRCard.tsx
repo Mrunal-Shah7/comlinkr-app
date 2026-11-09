@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, Easing } from "react-native-reanimated";
@@ -65,7 +66,7 @@ export function WYRCard({
 }
 
 const s = StyleSheet.create({
-  card: { borderRadius: 24, padding: 16, marginHorizontal: 16, marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  card: { borderRadius: 24, padding: 16, marginHorizontal: 16, marginBottom: 12, shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   meta: { flexDirection: "row", alignItems: "center", gap: 8 },
   tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   nav: { width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" },

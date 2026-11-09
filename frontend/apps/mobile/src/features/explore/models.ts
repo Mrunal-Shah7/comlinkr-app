@@ -1,3 +1,4 @@
+import { palette } from "../../theme/palette";
 import { Ionicons } from "@expo/vector-icons";
 import { resolveApiAssetUrl, type Post as FeedPost } from "../../api/feed.api";
 import { type ApiEvent } from "../../api/events.api";
@@ -236,7 +237,7 @@ export function buildHeroTickerRows(args: {
         target,
         icon: postIcon(String(p.category)),
         time: formatHeroRelativeTime(p.createdAt),
-        color: "#60A5FA",
+        color: palette.blue400,
         nav: pickNavForPost(p),
         postId: p.id, // SPRINT-30
       },
@@ -256,7 +257,7 @@ export function buildHeroTickerRows(args: {
         target: e.title.slice(0, 38),
         icon: "calendar",
         time: formatHeroRelativeTime(e.createdAt),
-        color: "#A78BFA",
+        color: palette.violet400,
         nav: "events",
         eventId: e.id, // SPRINT-30
         averageRating: Number(e.averageRating ?? 0) || 0, // SPRINT-42:
@@ -278,7 +279,7 @@ export function buildHeroTickerRows(args: {
         target: (L.title || L.neighborhood || "Listing").slice(0, 38),
         icon: "home",
         time: formatHeroRelativeTime(L.createdAt),
-        color: "#4ECDC4",
+        color: palette.tealL55,
         nav: "housing",
       },
     });
@@ -299,7 +300,7 @@ export function buildHeroTickerRows(args: {
         target: (s.title || s.category || "Story").slice(0, 38),
         icon: s.mediaType === "REEL" ? "videocam" : "image",
         time: formatHeroRelativeTime(s.createdAt),
-        color: "#FFB347",
+        color: palette.orangeL64,
         nav: "stories",
       },
     });

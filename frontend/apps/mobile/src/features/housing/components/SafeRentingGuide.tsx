@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,7 +26,7 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   {
     icon: "shield-checkmark-outline",
     color: Colors.brand.blue,
-    bg: "#EEF5FF",
+    bg: palette.blueL97_2,
     market: null,
     title: "Verify before you pay",
     desc: "Always confirm the landlord has a Verified badge. Never pay a deposit without seeing proof of ownership.",
@@ -33,23 +34,23 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   {
     icon: "home-outline",
     color: Colors.brand.green,
-    bg: "#E3F1EA",
+    bg: palette.brandGreenLight,
     market: null,
     title: "Visit before you commit",
     desc: "Always visit the property in person before paying anything. Refuse to pay anyone who won't let you see the property.",
   },
   {
     icon: "videocam-outline",
-    color: "#7C3AED",
-    bg: "#F3E8FF",
+    color: palette.violet600,
+    bg: palette.purple100,
     market: null,
     title: "Relocating? Ask for a live video walkthrough",
     desc: "If you can't visit in person, message the landlord in-app to arrange a live video call — not a pre-recorded clip. Ask them to pan the camera at your direction and show their photo ID on screen.",
   },
   {
     icon: "lock-closed-outline",
-    color: "#059669",
-    bg: "#DCFCE7",
+    color: palette.emerald600,
+    bg: palette.green100,
     market: null,
     title: "Your deposit is held in escrow — never pay outside the app",
     desc: "ComLinkr holds your security deposit in secure escrow until you physically confirm move-in in-app. If anyone asks you to pay via bank transfer, Zelle, crypto, or gift cards before that point — it is a scam. Report the listing immediately using the 'Report this listing' button.",
@@ -57,15 +58,15 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   {
     icon: "chatbubble-ellipses-outline",
     color: Colors.brand.blue,
-    bg: "#EEF5FF",
+    bg: palette.blueL97_2,
     market: null,
     title: "Keep all comms in ComLinkr chat",
     desc: "All messages and agreements are logged in-app. Avoid email or WhatsApp to protect yourself legally.",
   },
   {
     icon: "document-text-outline",
-    color: "#7C3AED",
-    bg: "#F3E8FF",
+    color: palette.violet600,
+    bg: palette.purple100,
     market: null,
     title: "Use the in-app agreement",
     desc: "Sign the digital tenancy agreement within ComLinkr. Never sign a handwritten document outside the platform.",
@@ -73,24 +74,24 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   // ── US-specific ──
   {
     icon: "card-outline",
-    color: "#059669",
-    bg: "#DCFCE7",
+    color: palette.emerald600,
+    bg: palette.green100,
     market: "US",
     title: "US: Security deposit limits & return",
     desc: "Most states cap deposits at 1–2 months' rent. Landlords must return it within 14–30 days of move-out with an itemised list of any deductions.",
   },
   {
     icon: "people-outline",
-    color: "#B45309",
-    bg: "#FEF9C3",
+    color: palette.amber700,
+    bg: palette.yellow100,
     market: "US",
     title: "US: Fair Housing Act protection",
     desc: "Landlords cannot discriminate based on race, religion, national origin, sex, disability, or familial status. File a complaint with HUD (hud.gov) if you face discrimination.",
   },
   {
     icon: "construct-outline",
-    color: "#7C3AED",
-    bg: "#F3E8FF",
+    color: palette.violet600,
+    bg: palette.purple100,
     market: "US",
     title: "US: Right to habitable housing",
     desc: "Landlords must maintain heat, hot water, structural safety, and pest control. Serious unresolved repairs may entitle you to withhold rent — check your state laws.",
@@ -98,24 +99,24 @@ export const SAFE_RENTING_STEPS: RentingStep[] = [
   // ── UK-specific ──
   {
     icon: "card-outline",
-    color: "#DC2626",
-    bg: "#FEE2E2",
+    color: palette.red600,
+    bg: palette.red100,
     market: "UK",
     title: "UK: Deposit must be protected",
     desc: "Your landlord must place your deposit in a government-approved scheme (DPS, MyDeposits, or TDS) within 30 days or face a penalty of up to 3× the deposit amount.",
   },
   {
     icon: "alert-circle-outline",
-    color: "#1A6BAE",
-    bg: "#EEF5FF",
+    color: palette.brandBlue,
+    bg: palette.blueL97_2,
     market: "UK",
     title: "UK: Know your tenant rights",
     desc: "You're entitled to a Gas Safety Record, EPC (min. rating E), and at least 2 months' notice under Section 21 before eviction. Report illegal eviction to your local council.",
   },
   {
     icon: "business-outline",
-    color: "#30855B",
-    bg: "#E3F1EA",
+    color: palette.brandGreen,
+    bg: palette.brandGreenLight,
     market: "UK",
     title: "UK: Check if agent is registered",
     desc: "Lettings agents in England must be registered with an approved redress scheme (Property Ombudsman or PRS) and hold Client Money Protection. Ask to see their certificates.",
@@ -205,12 +206,12 @@ export const sg = createThemedStyles({
   card: {
     marginHorizontal: 16,
     marginBottom: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "#FECACA",
+    borderColor: palette.red200,
     overflow: "hidden",
-    shadowColor: "#DC2626",
+    shadowColor: palette.red600,
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
@@ -231,11 +232,11 @@ export const sg = createThemedStyles({
   headerTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#7F1D1D",
+    color: palette.redL31,
   },
   headerSub: {
     fontSize: 11,
-    color: "#991B1B",
+    color: palette.red800,
     marginTop: 1,
   },
   body: {
@@ -243,7 +244,7 @@ export const sg = createThemedStyles({
     paddingBottom: 14,
     gap: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#FECACA",
+    borderTopColor: palette.red200,
   },
   step: {
     flexDirection: "row",
@@ -268,7 +269,7 @@ export const sg = createThemedStyles({
   stepTitle: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#0A2540",
+    color: palette.navy,
     flex: 1,
   },
   marketPill: {
@@ -283,7 +284,7 @@ export const sg = createThemedStyles({
   },
   stepDesc: {
     fontSize: 11,
-    color: "#4B5563",
+    color: palette.gray600,
     lineHeight: 16,
   },
   footer: {
@@ -292,7 +293,7 @@ export const sg = createThemedStyles({
     gap: 7,
     marginTop: 4,
     padding: 10,
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     borderRadius: 10,
   },
   footerText: {

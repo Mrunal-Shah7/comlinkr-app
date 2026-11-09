@@ -1,6 +1,7 @@
 // The RSVP sheet (design D, `event-register` and `event-ticket`): the event, a ticket stepper, name and email
 // from your profile (Change opens the fields), Confirm · price. After confirming, the ticket flips in
 // (perspective 800, rotateX −80° → 0 on the sheet spring) with the QR from the server.
+import { palette } from "../../../theme/palette";
 import React, { useState, useEffect, useRef, useCallback } from "react"; // SPRINT-42:
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { Image } from "expo-image"; // SPRINT-31:
@@ -270,7 +271,7 @@ const st = StyleSheet.create({
   sb: { paddingHorizontal: 18, paddingBottom: 8 },
   evRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingBottom: 14 },
   evImg: { width: 56, height: 56, borderRadius: 12, overflow: "hidden" },
-  ticket: { marginHorizontal: 6, marginTop: 4, borderRadius: 28, overflow: "hidden", shadowColor: "#0F283C", shadowOpacity: 0.16, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
+  ticket: { marginHorizontal: 6, marginTop: 4, borderRadius: 28, overflow: "hidden", shadowColor: palette.shadowNavy, shadowOpacity: 0.16, shadowRadius: 18, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
   tq: { alignItems: "center", padding: 20, borderTopWidth: 2, borderStyle: "dashed" },
-  qrContrast: { backgroundColor: "#FFFFFF", padding: 10, borderRadius: 14 },
+  qrContrast: { backgroundColor: palette.white, padding: 10, borderRadius: 14 },
 });

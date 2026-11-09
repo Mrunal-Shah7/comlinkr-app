@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useState, useCallback } from "react";
 import {
@@ -36,10 +37,10 @@ import { GradientButton, GradientFill, Reveal, SoftButton } from '../src/shared/
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
 const BADGE_META: Record<string, { label: string; icon: string; gradient: [string, string]; unlocks: string }> = {
-  landlord:         { label: "Verified landlord",         icon: "home",       gradient: ["#1A6BAE", "#0054CC"], unlocks: "Post housing listings & manage properties" },
-  restaurant_owner: { label: "Verified restaurant owner", icon: "restaurant", gradient: ["#30855B", "#256B49"], unlocks: "List & manage your restaurant" },
-  agency:           { label: "Verified agency",           icon: "business",   gradient: ["#257A86", "#E56800"], unlocks: "Post unlimited listings with agency branding" },
-  local_reviewer:   { label: "Local reviewer",            icon: "star",       gradient: ["#8B5CF6", "#6D3FD1"], unlocks: "Share trusted local reviews & recommendations" },
+  landlord:         { label: "Verified landlord",         icon: "home",       gradient: [palette.brandBlue, palette.blueL40_2], unlocks: "Post housing listings & manage properties" },
+  restaurant_owner: { label: "Verified restaurant owner", icon: "restaurant", gradient: [palette.brandGreen, palette.brandGreenDark], unlocks: "List & manage your restaurant" },
+  agency:           { label: "Verified agency",           icon: "business",   gradient: [palette.brandTeal, palette.orangeL45], unlocks: "Post unlimited listings with agency branding" },
+  local_reviewer:   { label: "Local reviewer",            icon: "star",       gradient: [palette.violet500, palette.legacyPurple], unlocks: "Share trusted local reviews & recommendations" },
 };
 
 const STATUS_CONFIG: Record<VerificationStatus, {
@@ -53,33 +54,33 @@ const STATUS_CONFIG: Record<VerificationStatus, {
   none: {
     label: "Not applied",
     icon: "ellipse-outline",
-    color: "#9CA3AF",
-    bg: "#F9FAFB",
-    border: "#E5E7EB",
+    color: palette.gray400,
+    bg: palette.gray50,
+    border: palette.gray200,
     desc: "Apply for this badge to show verified trust on your listings and profile.",
   },
   pending: {
     label: "In review",
     icon: "time",
-    color: "#D97706",
-    bg: "#FFFBEB",
-    border: "#FDE68A",
+    color: palette.amber600,
+    bg: palette.amber50,
+    border: palette.amber200,
     desc: "Your application is being reviewed by our team. You'll be notified within 48 hours.",
   },
   verified: {
     label: "Verified",
     icon: "checkmark-circle",
-    color: "#16A34A",
-    bg: "#F0FDF4",
-    border: "#86EFAC",
+    color: palette.green600,
+    bg: palette.green50,
+    border: palette.green300,
     desc: "Your badge is active. You have full access to all associated features.",
   },
   rejected: {
     label: "Not approved",
     icon: "close-circle",
-    color: "#DC2626",
-    bg: "#FEF2F2",
-    border: "#FECACA",
+    color: palette.red600,
+    bg: palette.red50,
+    border: palette.red200,
     desc: "Your application was not approved. You can review the reason below and re-apply.",
   },
 };
@@ -112,7 +113,7 @@ function BadgeStatusCard({
     <Reveal style={{ marginHorizontal: 16, marginBottom: 12, padding: 14, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         {status === "verified" ? (
-          <GradientFill style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" }}><Ionicons name={ICON[badge] ?? "ribbon-outline"} size={20} color="#fff" /></GradientFill>
+          <GradientFill style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" }}><Ionicons name={ICON[badge] ?? "ribbon-outline"} size={20} color={palette.white} /></GradientFill>
         ) : (
           <View style={{ width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: tc.accentSoft }}><Ionicons name={ICON[badge] ?? "ribbon-outline"} size={20} color={tc.accentText} /></View>
         )}
@@ -317,7 +318,7 @@ const styles = createThemedStyles({
     paddingBottom: rs(14),
     gap: rs(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(4),
     elevation: 2,
@@ -329,8 +330,8 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { fontSize: rs(17), fontWeight: "800", color: "#0A2540", letterSpacing: -0.3 },
-  headerSub: { fontSize: rs(12), color: "#6B7280", marginTop: rs(1) },
+  headerTitle: { fontSize: rs(17), fontWeight: "800", color: palette.navy, letterSpacing: -0.3 },
+  headerSub: { fontSize: rs(12), color: palette.gray500, marginTop: rs(1) },
   scroll: { paddingHorizontal: rs(16), paddingTop: rs(16) },
 
   introCard: {
@@ -341,13 +342,13 @@ const styles = createThemedStyles({
     borderRadius: rs(16),
     marginBottom: rs(20),
   },
-  introTitle: { fontSize: rs(15), fontWeight: "800", color: "#FFF", marginBottom: rs(4) },
+  introTitle: { fontSize: rs(15), fontWeight: "800", color: palette.white, marginBottom: rs(4) },
   introDesc: { fontSize: rs(12), color: "rgba(255,255,255,0.85)", lineHeight: rs(17) },
 
   sectionLabel: {
     fontSize: rs(11),
     fontWeight: "800",
-    color: "#9CA3AF",
+    color: palette.gray400,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: rs(10),
@@ -373,8 +374,8 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeLabel: { fontSize: rs(14), fontWeight: "800", color: "#0A2540", marginBottom: rs(2) },
-  badgeUnlocks: { fontSize: rs(11), color: "#6B7280", fontWeight: "500" },
+  badgeLabel: { fontSize: rs(14), fontWeight: "800", color: palette.navy, marginBottom: rs(2) },
+  badgeUnlocks: { fontSize: rs(11), color: palette.gray500, fontWeight: "500" },
   statusPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -384,27 +385,27 @@ const styles = createThemedStyles({
     borderRadius: rs(10),
   },
   statusPillText: { fontSize: rs(10), fontWeight: "800" },
-  statusDesc: { fontSize: rs(12), color: "#4B5563", lineHeight: rs(17), marginBottom: rs(10) },
+  statusDesc: { fontSize: rs(12), color: palette.gray600, lineHeight: rs(17), marginBottom: rs(10) },
   rejectionBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(6),
-    backgroundColor: "#FEE2E2",
+    backgroundColor: palette.red100,
     padding: rs(10),
     borderRadius: rs(10),
     marginBottom: rs(10),
   },
-  rejectionText: { flex: 1, fontSize: rs(12), color: "#991B1B", lineHeight: rs(16) },
+  rejectionText: { flex: 1, fontSize: rs(12), color: palette.red800, lineHeight: rs(16) },
   verifiedFeatures: {
     flexDirection: "column",
-    backgroundColor: "#DCFCE7",
+    backgroundColor: palette.green100,
     padding: rs(10),
     borderRadius: rs(10),
     marginBottom: rs(10),
     gap: rs(4),
   },
-  verifiedClaimedTitle: { fontSize: rs(13), fontWeight: "800", color: "#166534" },
-  verifiedFeaturesText: { fontSize: rs(12), color: "#166534", fontWeight: "600", lineHeight: rs(17) },
+  verifiedClaimedTitle: { fontSize: rs(13), fontWeight: "800", color: palette.green800 },
+  verifiedFeaturesText: { fontSize: rs(12), color: palette.green800, fontWeight: "600", lineHeight: rs(17) },
   statusCardActions: { flexDirection: "row", alignItems: "center", gap: rs(10), flexWrap: "wrap" },
   applyBtn: { borderRadius: rs(10), overflow: "hidden" },
   applyBtnGrad: {
@@ -414,9 +415,9 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(14),
     paddingVertical: rs(8),
   },
-  applyBtnText: { fontSize: rs(12), fontWeight: "800", color: "#FFF" },
+  applyBtnText: { fontSize: rs(12), fontWeight: "800", color: palette.white },
   pendingNote: { flexDirection: "row", alignItems: "center", gap: rs(6) },
-  pendingNoteText: { fontSize: rs(12), color: "#D97706", fontWeight: "600" },
+  pendingNoteText: { fontSize: rs(12), color: palette.amber600, fontWeight: "600" },
   demoBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -436,9 +437,9 @@ const styles = createThemedStyles({
   },
   protectionHeader: { flexDirection: "row", alignItems: "center", gap: rs(10), marginBottom: rs(12) },
   protectionIcon: { width: rs(32), height: rs(32), borderRadius: rs(10), alignItems: "center", justifyContent: "center" },
-  protectionTitle: { fontSize: rs(14), fontWeight: "800", color: "#0A2540" },
+  protectionTitle: { fontSize: rs(14), fontWeight: "800", color: palette.navy },
   protectionRow: { flexDirection: "row", alignItems: "flex-start", gap: rs(8), marginBottom: rs(8) },
-  protectionText: { flex: 1, fontSize: rs(13), color: "#374151", lineHeight: rs(18) },
+  protectionText: { flex: 1, fontSize: rs(13), color: palette.gray700, lineHeight: rs(18) },
 
   helpCard: {
     flexDirection: "row",

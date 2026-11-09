@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,7 +34,7 @@ export function AvailableRoomCard({
   const currencyCode = getUserCurrencyCode(user);
   const compat = computeRoomCompatibility(room, buildCurrentUserForMatch(user));
   const compatColor = compat >= 80 ? Colors.brand.green : compat >= 60 ? Colors.brand.blue : Colors.brand.orange;
-  const compatBg = compat >= 80 ? "#DCFCE7" : compat >= 60 ? "#E3EDF6" : "#E2F0F1";
+  const compatBg = compat >= 80 ? palette.green100 : compat >= 60 ? palette.brandBlueLight : palette.brandTealLight;
 
   return (
     <View style={[ar.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
@@ -47,7 +48,7 @@ export function AvailableRoomCard({
         />
         {/* Room type badge */}
         <View style={ar.typeBadge}>
-          <Ionicons name="home" size={10} color="#FFF" />
+          <Ionicons name="home" size={10} color={palette.white} />
           <Text style={ar.typeBadgeText}>{room.roomType}</Text>
         </View>
         {/* Available badge */}
@@ -77,7 +78,7 @@ export function AvailableRoomCard({
             <FadeImage uri={room.hostAvatar} style={ar.hostAvatar} />
             {room.hostVerified && (
               <View style={ar.hostVerifiedBadge}>
-                <Ionicons name="shield-checkmark" size={9} color="#FFF" />
+                <Ionicons name="shield-checkmark" size={9} color={palette.white} />
               </View>
             )}
           </View>
@@ -107,14 +108,14 @@ export function AvailableRoomCard({
 
         {/* Quick chips */}
         <View style={ar.chipsRow}>
-          <View style={[ar.chip, { backgroundColor: room.furnished ? "#E3EDF6" : "#F3F4F6" }]}>
+          <View style={[ar.chip, { backgroundColor: room.furnished ? palette.brandBlueLight : palette.gray100 }]}>
             <Ionicons name="cube-outline" size={11} color={room.furnished ? Colors.brand.blue : Colors.text.tertiary} />
             <Text style={[ar.chipText, { color: room.furnished ? Colors.brand.blue : Colors.text.tertiary }]}>
               {room.furnished ? "Furnished" : "Unfurnished"}
             </Text>
           </View>
           {room.petFriendly && (
-            <View style={[ar.chip, { backgroundColor: "#E2F0F1" }]}>
+            <View style={[ar.chip, { backgroundColor: palette.brandTealLight }]}>
               <Ionicons name="paw-outline" size={11} color={Colors.brand.orange} />
               <Text style={[ar.chipText, { color: Colors.brand.orange }]}>Pets OK</Text>
             </View>
@@ -150,12 +151,12 @@ export function AvailableRoomCard({
             onPress={!requested ? onRequest : undefined}
           >
             <LinearGradient
-              colors={requested ? ["#F59E0B", "#D97706"] : [Colors.brand.blue, Colors.brand.green]}
+              colors={requested ? [palette.amber500, palette.amber600] : [Colors.brand.blue, Colors.brand.green]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={ar.requestBtn}
             >
-              <Ionicons name={requested ? "time-outline" : "key-outline"} size={14} color="#FFF" />
+              <Ionicons name={requested ? "time-outline" : "key-outline"} size={14} color={palette.white} />
               <Text style={ar.requestBtnText}>{requested ? "Request Sent" : "Request to Move In"}</Text>
             </LinearGradient>
           </Pressable>

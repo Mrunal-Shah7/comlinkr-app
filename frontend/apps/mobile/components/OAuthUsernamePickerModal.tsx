@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -139,7 +140,7 @@ export default function OAuthUsernamePickerModal({
             ]}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={palette.white} />
             ) : (
               <Text style={styles.primaryBtnText}>Continue</Text>
             )}
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   inlineError: {
-    color: "#EF4444",
+    color: palette.red500,
     fontSize: 13,
     marginTop: 8,
     marginLeft: 2,
@@ -214,7 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primaryBtnText: {
-    color: "#FFFFFF",
+    color: palette.white,
     fontSize: 16,
     fontWeight: "700",
   },

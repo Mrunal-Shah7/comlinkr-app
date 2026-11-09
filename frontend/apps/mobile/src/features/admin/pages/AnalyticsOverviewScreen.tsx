@@ -1,6 +1,7 @@
 // src/features/admin/pages/AnalyticsOverviewScreen.tsx
 // SPRINT-41: Show only real AdminAnalytics fields — no period/trends/DAU/retention fabrications
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Pressable, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,7 +21,7 @@ function StatCard({ label, value, icon, gradient, sub }: { // SPRINT-41: removed
   return (
     <View style={sc.card}>
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={sc.iconBox}>
-        <Ionicons name={icon as any} size={16} color="#FFF" />
+        <Ionicons name={icon as any} size={16} color={palette.white} />
       </LinearGradient>
       <Text style={sc.value}>{value}</Text>
       <Text style={sc.label}>{label}</Text>
@@ -36,7 +37,7 @@ function MetricRow({ // SPRINT-41:
 }) {
   return (
     <View
-      style={[s.totalsRow, !isFirst && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F0F2F5' }]}
+      style={[s.totalsRow, !isFirst && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.neutralL95_5 }]}
     >
       <View style={[s.totalsIconBox, { backgroundColor: `${color}15` }]}>
         <Ionicons name={icon as any} size={15} color={color} />
@@ -81,7 +82,7 @@ export default function AnalyticsOverviewScreen() {
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
             <LinearGradient colors={[Colors.brand.green, Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="bar-chart" size={22} color="#FFF" />
+              <Ionicons name="bar-chart" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -96,7 +97,7 @@ export default function AnalyticsOverviewScreen() {
           {isLoading ? (
             <View style={s.loadingCard}>
               <LinearGradient colors={[Colors.brand.green, Colors.brand.blue]} style={s.loadingIcon}>
-                <Ionicons name="hourglass" size={20} color="#FFF" />
+                <Ionicons name="hourglass" size={20} color={palette.white} />
               </LinearGradient>
               <Text style={s.loadingText}>Loading analytics data...</Text>
               <Text style={s.loadingSubText}>Fetching live platform totals</Text>
@@ -112,10 +113,10 @@ export default function AnalyticsOverviewScreen() {
               {/* SPRINT-41: Users — total / active / newThisWeek / newThisMonth */}
               <Text style={s.sectionTitle}>USERS</Text>
               <View style={s.kpiGrid}>
-                <StatCard label="Total Users" value={u?.total ?? '—'} icon="people" gradient={[Colors.brand.blue, '#0054CC']} />
-                <StatCard label="Active Users" value={u?.active ?? '—'} icon="pulse" gradient={[Colors.brand.green, '#1a8a18']} />
-                <StatCard label="New This Week" value={u?.newThisWeek ?? '—'} icon="person-add" gradient={['#FF7B00', '#E05000']} />
-                <StatCard label="New This Month" value={u?.newThisMonth ?? '—'} icon="calendar" gradient={['#8B5CF6', '#6D3FD1']} />
+                <StatCard label="Total Users" value={u?.total ?? '—'} icon="people" gradient={[Colors.brand.blue, palette.blueL40_2]} />
+                <StatCard label="Active Users" value={u?.active ?? '—'} icon="pulse" gradient={[Colors.brand.green, palette.greenL32]} />
+                <StatCard label="New This Week" value={u?.newThisWeek ?? '—'} icon="person-add" gradient={[palette.legacyOrange, palette.orangeL44]} />
+                <StatCard label="New This Month" value={u?.newThisMonth ?? '—'} icon="calendar" gradient={[palette.violet500, palette.legacyPurple]} />
               </View>
 
               {/* SPRINT-41: Content — seven contract types */}
@@ -123,19 +124,19 @@ export default function AnalyticsOverviewScreen() {
               <View style={s.card}>
                 <View style={s.cardHeader}>
                   <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.cardHeaderIcon}>
-                    <Ionicons name="layers" size={14} color="#FFF" />
+                    <Ionicons name="layers" size={14} color={palette.white} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
                     <Text style={s.cardTitle}>Content Counts</Text>
                     <Text style={s.cardSubTitle}>Live totals from GET /admin/analytics</Text>
                   </View>
                 </View>
-                <MetricRow isFirst icon="create" label="Feed Posts" value={c?.feedPosts ?? '—'} color="#8B5CF6" />
-                <MetricRow icon="home" label="Housing Listings" value={c?.housingListings ?? '—'} color="#F59E0B" />
+                <MetricRow isFirst icon="create" label="Feed Posts" value={c?.feedPosts ?? '—'} color={palette.violet500} />
+                <MetricRow icon="home" label="Housing Listings" value={c?.housingListings ?? '—'} color={palette.amber500} />
                 <MetricRow icon="restaurant" label="Restaurants" value={c?.restaurants ?? '—'} color={Colors.brand.green} />
-                <MetricRow icon="calendar" label="Events" value={c?.events ?? '—'} color="#FF7B00" />
+                <MetricRow icon="calendar" label="Events" value={c?.events ?? '—'} color={palette.legacyOrange} />
                 <MetricRow icon="book" label="Stories" value={c?.stories ?? '—'} color={Colors.brand.blue} />
-                <MetricRow icon="trophy" label="Challenges" value={c?.challenges ?? '—'} color="#8B5CF6" />
+                <MetricRow icon="trophy" label="Challenges" value={c?.challenges ?? '—'} color={palette.violet500} />
                 <MetricRow icon="help-circle" label="Community Questions" value={c?.communityQuestions ?? '—'} color={Colors.brand.blue} />
               </View>
 
@@ -143,26 +144,26 @@ export default function AnalyticsOverviewScreen() {
               <Text style={s.sectionTitle}>ENGAGEMENT</Text>
               <View style={s.card}>
                 <View style={s.cardHeader}>
-                  <LinearGradient colors={[Colors.brand.green, '#1a8a18']} style={s.cardHeaderIcon}>
-                    <Ionicons name="heart" size={14} color="#FFF" />
+                  <LinearGradient colors={[Colors.brand.green, palette.greenL32]} style={s.cardHeaderIcon}>
+                    <Ionicons name="heart" size={14} color={palette.white} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
                     <Text style={s.cardTitle}>Engagement Totals</Text>
                     <Text style={s.cardSubTitle}>Likes, comments, messages, reviews</Text>
                   </View>
                 </View>
-                <MetricRow isFirst icon="heart" label="Total Likes" value={e?.totalLikes ?? '—'} color="#EF4444" />
+                <MetricRow isFirst icon="heart" label="Total Likes" value={e?.totalLikes ?? '—'} color={palette.red500} />
                 <MetricRow icon="chatbubble" label="Total Comments" value={e?.totalComments ?? '—'} color={Colors.brand.blue} />
                 <MetricRow icon="mail" label="Total Messages" value={e?.totalMessages ?? '—'} color={Colors.brand.green} />
-                <MetricRow icon="star" label="Total Reviews" value={e?.totalReviews ?? '—'} color="#F59E0B" />
+                <MetricRow icon="star" label="Total Reviews" value={e?.totalReviews ?? '—'} color={palette.amber500} />
               </View>
 
               {/* SPRINT-41: Reports + badges */}
               <Text style={s.sectionTitle}>MODERATION</Text>
               <View style={s.kpiGrid}>
-                <StatCard label="Pending Reports" value={r?.pending ?? '—'} icon="flag" gradient={['#EF4444', '#C72626']} />
-                <StatCard label="Badge Pending" value={b?.pendingApplications ?? '—'} icon="time" gradient={['#FF7B00', '#E05000']} />
-                <StatCard label="Badges Approved" value={b?.totalApproved ?? '—'} icon="shield-checkmark" gradient={['#8B5CF6', '#6D3FD1']} />
+                <StatCard label="Pending Reports" value={r?.pending ?? '—'} icon="flag" gradient={[palette.red500, palette.redL46]} />
+                <StatCard label="Badge Pending" value={b?.pendingApplications ?? '—'} icon="time" gradient={[palette.legacyOrange, palette.orangeL44]} />
+                <StatCard label="Badges Approved" value={b?.totalApproved ?? '—'} icon="shield-checkmark" gradient={[palette.violet500, palette.legacyPurple]} />
               </View>
             </>
           )}
@@ -173,18 +174,18 @@ export default function AnalyticsOverviewScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 20, paddingBottom: 48 },
   decorCircle: { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(38,179,36,0.06)', top: -60, right: -60 },
 
   header:      { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
-  backBtn:     { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn:     { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon:  { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:       { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
-  livePill:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#DCFCE7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(38,179,36,0.25)' },
+  livePill:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.green100, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(38,179,36,0.25)' },
   liveDot:     { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.brand.green },
   liveText:    { fontSize: 11, fontWeight: '800', color: Colors.brand.green },
 
@@ -192,18 +193,18 @@ const s = createThemedStyles({
 
   kpiGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
 
-  loadingCard:    { backgroundColor: '#FFF', borderRadius: 20, padding: 36, alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  loadingCard:    { backgroundColor: palette.white, borderRadius: 20, padding: 36, alignItems: 'center', gap: 12, shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   loadingIcon:    { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   loadingText:    { color: Colors.text.primary, fontSize: 15, fontWeight: '700' },
   loadingSubText: { color: Colors.text.tertiary, fontSize: 12 },
 
-  card:           { backgroundColor: '#FFF', borderRadius: 20, padding: 18, marginBottom: 14, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
+  card:           { backgroundColor: palette.white, borderRadius: 20, padding: 18, marginBottom: 14, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
   cardHeader:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   cardHeaderIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   cardTitle:      { fontSize: 15, fontWeight: '800', color: Colors.text.primary },
   cardSubTitle:   { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
 
-  noDataCard:  { backgroundColor: '#FFF', borderRadius: 20, padding: 44, alignItems: 'center', gap: 8 },
+  noDataCard:  { backgroundColor: palette.white, borderRadius: 20, padding: 44, alignItems: 'center', gap: 8 },
   noDataTitle: { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   noDataSub:   { fontSize: 13, color: Colors.text.tertiary, textAlign: 'center' },
 
@@ -215,7 +216,7 @@ const s = createThemedStyles({
 });
 
 const sc = createThemedStyles({
-  card:     { width: '47.5%', backgroundColor: '#FFF', borderRadius: 16, padding: 13, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
+  card:     { width: '47.5%', backgroundColor: palette.white, borderRadius: 16, padding: 13, shadowColor: palette.navy, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
   iconBox:  { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
   value:    { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5, marginBottom: 2 },
   label:    { fontSize: 11, fontWeight: '600', color: Colors.text.tertiary, marginBottom: 4 },

@@ -1,5 +1,6 @@
 // src/features/admin/pages/NotificationManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
@@ -74,7 +75,7 @@ function ComposeForm({ onSent }: { onSent: () => void }) {
     <View style={c.card}>
       <View style={c.cardHeader}>
         <View style={c.iconWrap}>
-          <Ionicons name="create" size={18} color="#8B5CF6" />
+          <Ionicons name="create" size={18} color={palette.violet500} />
         </View>
         <Text style={c.cardTitle}>Compose Notification</Text>
       </View>
@@ -139,9 +140,9 @@ function ComposeForm({ onSent }: { onSent: () => void }) {
           style={c.sendBtnGrad}
         >
           {isPending
-            ? <ActivityIndicator color="#FFF" size="small" />
+            ? <ActivityIndicator color={palette.white} size="small" />
             : <>
-                <Ionicons name="send" size={16} color="#FFF" />
+                <Ionicons name="send" size={16} color={palette.white} />
                 <Text style={c.sendBtnText}>Send Notification</Text>
               </>
           }
@@ -226,15 +227,15 @@ export default function NotificationManagementScreen() {
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#8B5CF6" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.violet500} />}
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#8B5CF6', '#6D3FD1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="notifications" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.violet500, palette.legacyPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="notifications" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -253,11 +254,11 @@ export default function NotificationManagementScreen() {
           {/* Tab Toggle */}
           <View style={s.tabToggle}>
             <Pressable onPress={() => setTab('compose')} style={[s.tabBtn, tab === 'compose' && s.tabBtnActive]}>
-              <Ionicons name="create" size={16} color={tab === 'compose' ? '#8B5CF6' : Colors.text.tertiary} />
+              <Ionicons name="create" size={16} color={tab === 'compose' ? palette.violet500 : Colors.text.tertiary} />
               <Text style={[s.tabBtnText, tab === 'compose' && s.tabBtnTextActive]}>Compose</Text>
             </Pressable>
             <Pressable onPress={() => setTab('history')} style={[s.tabBtn, tab === 'history' && s.tabBtnActive]}>
-              <Ionicons name="time" size={16} color={tab === 'history' ? '#8B5CF6' : Colors.text.tertiary} />
+              <Ionicons name="time" size={16} color={tab === 'history' ? palette.violet500 : Colors.text.tertiary} />
               <Text style={[s.tabBtnText, tab === 'history' && s.tabBtnTextActive]}>History</Text>
             </Pressable>
           </View>
@@ -270,7 +271,7 @@ export default function NotificationManagementScreen() {
               <Text style={s.sectionLabel}>SENT & SCHEDULED</Text>
               {isLoading ? (
                 <View style={s.loadingCard}>
-                  <ActivityIndicator color="#8B5CF6" />
+                  <ActivityIndicator color={palette.violet500} />
                   <Text style={s.loadingText}>Loading notifications...</Text>
                 </View>
               ) : notifications.length === 0 ? (
@@ -292,7 +293,7 @@ export default function NotificationManagementScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const s = createThemedStyles({
-  root:          { flex: 1, backgroundColor: '#EBF5FF' },
+  root:          { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:          { flex: 1 },
   scroll:        { flex: 1 },
   content:       { padding: 20, paddingBottom: 48 },
@@ -303,29 +304,29 @@ const s = createThemedStyles({
   headerSub:     { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:         { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
 
-  miniStats:     { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(139,92,246,0.06)' },
+  miniStats:     { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(139,92,246,0.06)' },
   miniStat:      { flex: 1, alignItems: 'center' },
   miniStatNum:   { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   miniStatLabel: { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', marginTop: 2 },
-  miniStatDivider:{ width: 1, backgroundColor: '#F0F2F5' },
+  miniStatDivider:{ width: 1, backgroundColor: palette.neutralL95_5 },
 
-  tabToggle:     { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 14, padding: 4, marginBottom: 18, gap: 4, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  tabToggle:     { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 14, padding: 4, marginBottom: 18, gap: 4, shadowColor: palette.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   tabBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 10, borderRadius: 11 },
-  tabBtnActive:  { backgroundColor: '#F3E8FF' },
+  tabBtnActive:  { backgroundColor: palette.purple100 },
   tabBtnText:    { fontSize: 14, fontWeight: '700', color: Colors.text.tertiary },
-  tabBtnTextActive:{ color: '#8B5CF6' },
+  tabBtnTextActive:{ color: palette.violet500 },
 
   sectionLabel:  { fontSize: 11, fontWeight: '800', color: Colors.text.tertiary, letterSpacing: 1.5, marginBottom: 12 },
-  loadingCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center', gap: 10 },
+  loadingCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center', gap: 10 },
   loadingText:   { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard:     { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 8 },
+  emptyCard:     { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 8 },
   emptyTitle:    { fontSize: 15, fontWeight: '700', color: Colors.text.primary },
 });
 
 const c = createThemedStyles({
-  card:          { backgroundColor: '#FFF', borderRadius: 20, padding: 20, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 4, borderWidth: 1, borderColor: 'rgba(139,92,246,0.07)' },
+  card:          { backgroundColor: palette.white, borderRadius: 20, padding: 20, shadowColor: palette.navy, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 4, borderWidth: 1, borderColor: 'rgba(139,92,246,0.07)' },
   cardHeader:    { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
-  iconWrap:      { width: 36, height: 36, borderRadius: 11, backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center' },
+  iconWrap:      { width: 36, height: 36, borderRadius: 11, backgroundColor: palette.purple100, alignItems: 'center', justifyContent: 'center' },
   cardTitle:     { fontSize: 16, fontWeight: '800', color: Colors.text.primary },
 
   fieldLabel:    { fontSize: 12, fontWeight: '700', color: Colors.text.secondary, marginBottom: 7, marginTop: 14 },
@@ -344,18 +345,18 @@ const c = createThemedStyles({
 
   sendBtn:       { borderRadius: 16, overflow: 'hidden', shadowColor: Colors.brand.blue, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 6 },
   sendBtnGrad:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 54, borderRadius: 16 },
-  sendBtnText:   { fontSize: 16, fontWeight: '800', color: '#FFF', letterSpacing: 0.3 },
+  sendBtnText:   { fontSize: 16, fontWeight: '800', color: palette.white, letterSpacing: 0.3 },
 });
 
 const h = createThemedStyles({
-  card:          { backgroundColor: '#FFF', borderRadius: 18, padding: 16, marginBottom: 10, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
+  card:          { backgroundColor: palette.white, borderRadius: 18, padding: 16, marginBottom: 10, shadowColor: palette.navy, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
   topRow:        { flexDirection: 'row', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
   statusChip:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
   statusDot:     { width: 6, height: 6, borderRadius: 3 },
   statusText:    { fontSize: 10, fontWeight: '800', letterSpacing: 0.3 },
   priorityChip:  { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   priorityText:  { fontSize: 10, fontWeight: '800' },
-  audienceChip:  { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: '#F3F4F6' },
+  audienceChip:  { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, backgroundColor: palette.gray100 },
   audienceText:  { fontSize: 10, fontWeight: '700', color: Colors.text.secondary, textTransform: 'capitalize' },
   title:         { fontSize: 15, fontWeight: '800', color: Colors.text.primary, marginBottom: 4 },
   body:          { fontSize: 13, color: Colors.text.secondary, lineHeight: 19, marginBottom: 12 },

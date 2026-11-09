@@ -1,5 +1,6 @@
 // src/features/admin/pages/ListingManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl,
@@ -30,7 +31,7 @@ type AdminListing = Listing & { propertyType?: string; backendStatus?: string };
 // SPRINT-41: active = AVAILABLE; inactive = RENTED / UNLISTED
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   active:   { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Active'   }, // SPRINT-41:
-  inactive: { color: Colors.text.tertiary, bg: '#F3F4F6',               icon: 'eye-off',          label: 'Inactive' }, // SPRINT-41:
+  inactive: { color: Colors.text.tertiary, bg: palette.gray100,               icon: 'eye-off',          label: 'Inactive' }, // SPRINT-41:
 };
 
 const PROPERTY_TYPES = [ // SPRINT-41:
@@ -177,7 +178,7 @@ function ListingCard({
                     <Image
                       key={idx}
                       source={{ uri: resolveApiAssetUrl(img) }}
-                      style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: '#F3F4F6' }}
+                      style={{ width: 120, height: 90, borderRadius: 10, backgroundColor: palette.gray100 }}
                       contentFit="cover"
                     />
                   ))}
@@ -246,28 +247,28 @@ function ListingCard({
           {listing.status === 'active' ? ( // SPRINT-41:
             <>
               <Pressable style={lc.unlistBtn} onPress={handleUnlist}>
-                <Ionicons name="eye-off" size={14} color="#F59E0B" />
+                <Ionicons name="eye-off" size={14} color={palette.amber500} />
                 <Text style={lc.unlistBtnText}>Unlist</Text>
               </Pressable>
               <Pressable style={lc.deleteBtn} onPress={handleDelete}>
-                <Ionicons name="trash" size={14} color="#EF4444" />
+                <Ionicons name="trash" size={14} color={palette.red500} />
                 <Text style={lc.deleteBtnText}>Delete</Text>
               </Pressable>
             </>
           ) : ( // SPRINT-41:
             <>
               <Pressable style={lc.unlistBtn} onPress={handleUnlist}>
-                <Ionicons name="eye-off" size={14} color="#F59E0B" />
+                <Ionicons name="eye-off" size={14} color={palette.amber500} />
                 <Text style={lc.unlistBtnText}>Unlist</Text>
               </Pressable>
               <Pressable style={lc.actionBtnWrap} disabled={isApproving} onPress={handleApprove}>
-                <LinearGradient colors={[Colors.brand.green, '#1a8a18']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={lc.actionBtnGrad}>
-                  <Ionicons name="checkmark-circle" size={14} color="#FFF" />
+                <LinearGradient colors={[Colors.brand.green, palette.greenL32]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={lc.actionBtnGrad}>
+                  <Ionicons name="checkmark-circle" size={14} color={palette.white} />
                   <Text style={lc.actionBtnText}>{isApproving ? 'Approving...' : 'Approve'}</Text>
                 </LinearGradient>
               </Pressable>
               <Pressable style={lc.deleteBtn} onPress={handleDelete}>
-                <Ionicons name="trash" size={14} color="#EF4444" />
+                <Ionicons name="trash" size={14} color={palette.red500} />
                 <Text style={lc.deleteBtnText}>Delete</Text>
               </Pressable>
             </>
@@ -323,8 +324,8 @@ export default function ListingManagementScreen() {
             <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="list" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.amber500, palette.amber600]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="list" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -371,7 +372,7 @@ export default function ListingManagementScreen() {
 
           {isError && errorMessage ? ( // SPRINT-41:
             <View style={s.emptyCard}>
-              <Text style={{ color: '#EF4444', textAlign: 'center' }}>{errorMessage}</Text>
+              <Text style={{ color: palette.red500, textAlign: 'center' }}>{errorMessage}</Text>
               <Pressable onPress={refresh} style={{ marginTop: 12 }}>
                 <Text style={{ color: Colors.brand.blue, fontWeight: '700' }}>Retry</Text>
               </Pressable>
@@ -407,13 +408,13 @@ export default function ListingManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:         { flex: 1, backgroundColor: '#EBF5FF' },
+  root:         { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:         { flex: 1 },
   scroll:       { flex: 1 },
   content:      { padding: 18, paddingBottom: 48 },
 
   header:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  backBtn:      { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn:      { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon:   { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub:    { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:        { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
@@ -422,22 +423,22 @@ const s = createThemedStyles({
 
   catScroll:         { marginBottom: 14 },
   catContent:        { gap: 7, paddingRight: 4 },
-  catChip:           { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFF', borderWidth: 1.5, borderColor: Colors.border.light },
+  catChip:           { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.white, borderWidth: 1.5, borderColor: Colors.border.light },
   catChipActive:     { backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   catChipText:       { fontSize: 11, fontWeight: '700', color: Colors.text.secondary },
   catChipTextActive: { color: Colors.brand.blue },
 
-  loadingCard:  { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard:  { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText:  { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard:    { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard:    { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle:   { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub:     { fontSize: 13, color: Colors.text.tertiary },
-  loadMoreBtn:  { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' }, // SPRINT-41:
+  loadMoreBtn:  { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' }, // SPRINT-41:
   loadMoreText: { fontSize: 14, fontWeight: '700', color: Colors.brand.blue }, // SPRINT-41:
 });
 
 const lc = createThemedStyles({
-  card:            { backgroundColor: '#FFF', borderRadius: 18, marginBottom: 12, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)', overflow: 'hidden', flexDirection: 'row' },
+  card:            { backgroundColor: palette.white, borderRadius: 18, marginBottom: 12, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)', overflow: 'hidden', flexDirection: 'row' },
   accentLine:      { width: 4, flexShrink: 0 },
   inner:           { flex: 1, padding: 14 },
 
@@ -450,26 +451,26 @@ const lc = createThemedStyles({
   backendStatus:   { fontSize: 9, fontWeight: '700', color: Colors.text.tertiary, letterSpacing: 0.5 }, // SPRINT-41:
 
   chipsRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
-  chip:            { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: '#F3F4F6' },
+  chip:            { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, backgroundColor: palette.gray100 },
   chipText:        { fontSize: 11, fontWeight: '600', color: Colors.text.secondary },
 
-  ownerRow:        { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 10, backgroundColor: '#F8FAFC', borderRadius: 11, padding: 9, borderWidth: 1, borderColor: '#E8ECF0' },
+  ownerRow:        { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 10, backgroundColor: palette.slate50, borderRadius: 11, padding: 9, borderWidth: 1, borderColor: palette.neutralL93_3 },
   ownerAvatar:     { width: 30, height: 30, borderRadius: 9, backgroundColor: Colors.brand.blueLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   ownerAvatarText: { fontSize: 11, fontWeight: '900', color: Colors.brand.blue },
   ownerName:       { fontSize: 12, fontWeight: '700', color: Colors.text.primary },
   ownerEmail:      { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
 
-  expandBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6', marginBottom: 4 },
+  expandBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 8, borderTopWidth: 1, borderTopColor: palette.gray100, marginBottom: 4 },
   expandText:      { fontSize: 12, fontWeight: '700', color: Colors.brand.blue },
 
   expandPanel:     { paddingTop: 8, marginBottom: 10 },
   sectionLabel:    { fontSize: 10, fontWeight: '900', letterSpacing: 1.2, color: Colors.text.tertiary, marginBottom: 7 },
 
-  descBox:         { backgroundColor: '#F8FAFC', borderRadius: 11, padding: 12, borderWidth: 1, borderColor: '#E8ECF0', marginBottom: 4 },
+  descBox:         { backgroundColor: palette.slate50, borderRadius: 11, padding: 12, borderWidth: 1, borderColor: palette.neutralL93_3, marginBottom: 4 },
   descText:        { fontSize: 13, color: Colors.text.secondary, lineHeight: 19 },
 
-  detailsBlock:    { backgroundColor: '#F8FAFC', borderRadius: 13, borderWidth: 1, borderColor: '#E8ECF0', overflow: 'hidden', marginBottom: 4 },
-  detailRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8ECF0' },
+  detailsBlock:    { backgroundColor: palette.slate50, borderRadius: 13, borderWidth: 1, borderColor: palette.neutralL93_3, overflow: 'hidden', marginBottom: 4 },
+  detailRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL93_3 },
   detailIconBox:   { width: 28, height: 28, borderRadius: 8, backgroundColor: Colors.brand.blueLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
   detailKey:       { fontSize: 10, fontWeight: '700', color: Colors.text.tertiary, marginBottom: 2, letterSpacing: 0.3 },
   detailVal:       { fontSize: 13, fontWeight: '600', color: Colors.text.primary },
@@ -480,9 +481,9 @@ const lc = createThemedStyles({
   actions:         { flexDirection: 'row', gap: 8, marginTop: 4, flexWrap: 'wrap' },
   actionBtnWrap:   { flex: 1, borderRadius: 11, overflow: 'hidden', minWidth: 100 },
   actionBtnGrad:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9 },
-  actionBtnText:   { fontSize: 13, fontWeight: '800', color: '#FFF' },
-  unlistBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 11, backgroundColor: '#FFF3E6', borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.2)' }, // SPRINT-41:
-  unlistBtnText:   { fontSize: 12, fontWeight: '700', color: '#F59E0B' }, // SPRINT-41:
-  deleteBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 11, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
-  deleteBtnText:   { fontSize: 12, fontWeight: '700', color: '#EF4444' },
+  actionBtnText:   { fontSize: 13, fontWeight: '800', color: palette.white },
+  unlistBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 11, backgroundColor: palette.legacyOrangeLight, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.2)' }, // SPRINT-41:
+  unlistBtnText:   { fontSize: 12, fontWeight: '700', color: palette.amber500 }, // SPRINT-41:
+  deleteBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 11, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
+  deleteBtnText:   { fontSize: 12, fontWeight: '700', color: palette.red500 },
 });

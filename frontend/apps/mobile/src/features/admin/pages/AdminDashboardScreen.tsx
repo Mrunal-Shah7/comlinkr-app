@@ -1,5 +1,6 @@
 // src/features/admin/pages/AdminDashboardScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
@@ -30,8 +31,8 @@ const ACTION_GROUPS: { title: string; icon: string; items: ActionItem[] }[] = [
     icon: 'newspaper',
     items: [
       { label: 'Feed Management',    route: '/admin/feed',          icon: 'newspaper',        gradient: [Colors.brand.blue,  Colors.brand.green], desc: 'Manage feed posts & events'       },
-      { label: 'All Posts',          route: '/admin/posts',         icon: 'documents',        gradient: [Colors.brand.blue,  '#0054CC'],           desc: 'Review & moderate all content'    },
-      { label: 'Trending Posts',     route: '/admin/trending',      icon: 'trending-up',      gradient: ['#FF7B00',          Colors.brand.blue],   desc: 'Monitor viral & flagged posts'    },
+      { label: 'All Posts',          route: '/admin/posts',         icon: 'documents',        gradient: [Colors.brand.blue,  palette.blueL40_2],           desc: 'Review & moderate all content'    },
+      { label: 'Trending Posts',     route: '/admin/trending',      icon: 'trending-up',      gradient: [palette.legacyOrange,          Colors.brand.blue],   desc: 'Monitor viral & flagged posts'    },
       { label: 'Community Polls',    route: '/admin/polls',         icon: 'bar-chart',        gradient: [Colors.brand.blue,  Colors.brand.green],  desc: 'Create & manage community polls'  },
     ],
   },
@@ -39,24 +40,24 @@ const ACTION_GROUPS: { title: string; icon: string; items: ActionItem[] }[] = [
     title: 'APP SECTIONS',
     icon: 'apps',
     items: [
-      { label: 'Community',          route: '/admin/community',     icon: 'chatbubbles',      gradient: ['#8B5CF6',          '#6D3FD1'],            desc: 'Questions, tips & discussions'    },
-      { label: 'Roommates',          route: '/admin/roommates',     icon: 'people',           gradient: [Colors.brand.blue,  '#0054CC'],            desc: 'Review roommate profiles'         },
-      { label: 'Food & Restaurants', route: '/admin/food',          icon: 'restaurant',       gradient: ['#FF7B00',          '#E05000'],            desc: 'Manage restaurant listings'       },
+      { label: 'Community',          route: '/admin/community',     icon: 'chatbubbles',      gradient: [palette.violet500,          palette.legacyPurple],            desc: 'Questions, tips & discussions'    },
+      { label: 'Roommates',          route: '/admin/roommates',     icon: 'people',           gradient: [Colors.brand.blue,  palette.blueL40_2],            desc: 'Review roommate profiles'         },
+      { label: 'Food & Restaurants', route: '/admin/food',          icon: 'restaurant',       gradient: [palette.legacyOrange,          palette.orangeL44],            desc: 'Manage restaurant listings'       },
     ],
   },
   {
     title: 'USERS & VERIFICATION',
     icon: 'people',
     items: [
-      { label: 'Manage Users',        route: '/admin/users',         icon: 'people',           gradient: [Colors.brand.blue,  '#0054CC'],            desc: 'View, suspend, manage accounts'   },
-      { label: 'Badge Verifications', route: '/admin/verifications', icon: 'shield-checkmark', gradient: ['#FF7B00',          Colors.brand.blue],    desc: 'Approve badge applications'       },
+      { label: 'Manage Users',        route: '/admin/users',         icon: 'people',           gradient: [Colors.brand.blue,  palette.blueL40_2],            desc: 'View, suspend, manage accounts'   },
+      { label: 'Badge Verifications', route: '/admin/verifications', icon: 'shield-checkmark', gradient: [palette.legacyOrange,          Colors.brand.blue],    desc: 'Approve badge applications'       },
     ],
   },
   {
     title: 'LISTINGS & AREA',
     icon: 'home',
     items: [
-      { label: 'Manage Listings',    route: '/admin/listings',      icon: 'list',             gradient: ['#F59E0B',          '#D97706'],            desc: 'Approve, reject, verify listings' },
+      { label: 'Manage Listings',    route: '/admin/listings',      icon: 'list',             gradient: [palette.amber500,          palette.amber600],            desc: 'Approve, reject, verify listings' },
       { label: 'Area Management',    route: '/admin/area',          icon: 'map',              gradient: [Colors.brand.green, Colors.brand.blue],   desc: 'Control active neighborhoods'     },
     ],
   },
@@ -64,9 +65,9 @@ const ACTION_GROUPS: { title: string; icon: string; items: ActionItem[] }[] = [
     title: 'MODERATION & ANALYTICS',
     icon: 'stats-chart',
     items: [
-      { label: 'Review Reports',     route: '/admin/reports',       icon: 'flag',             gradient: ['#EF4444',          '#C72626'],            desc: 'Handle content reports'           },
+      { label: 'Review Reports',     route: '/admin/reports',       icon: 'flag',             gradient: [palette.red500,          palette.redL46],            desc: 'Handle content reports'           },
       { label: 'Analytics',          route: '/admin/analytics',     icon: 'stats-chart',      gradient: [Colors.brand.green, Colors.brand.blue],   desc: 'Growth, retention & engagement'   },
-      { label: 'Send Notifications', route: '/admin/notifications', icon: 'notifications',    gradient: ['#8B5CF6',          '#6D3FD1'],            desc: 'Broadcast to users'               },
+      { label: 'Send Notifications', route: '/admin/notifications', icon: 'notifications',    gradient: [palette.violet500,          palette.legacyPurple],            desc: 'Broadcast to users'               },
     ],
   },
   {
@@ -74,17 +75,17 @@ const ACTION_GROUPS: { title: string; icon: string; items: ActionItem[] }[] = [
     icon: 'headset',
     items: [
       { label: 'Support Requests',   route: '/admin/support',       icon: 'headset',          gradient: [Colors.brand.blue,  Colors.brand.green],  desc: 'View & resolve user tickets'      },
-      { label: 'Auth Sessions',      route: '/admin/auth',          icon: 'lock-closed',      gradient: ['#8B5CF6',          '#6D3FD1'],            desc: 'Monitor logins & revoke sessions' },
+      { label: 'Auth Sessions',      route: '/admin/auth',          icon: 'lock-closed',      gradient: [palette.violet500,          palette.legacyPurple],            desc: 'Monitor logins & revoke sessions' },
     ],
   },
   {
     title: 'SAFETY & PRIVACY',
     icon: 'shield-checkmark',
     items: [
-      { label: 'Audit Log',          route: '/admin/audit-log',       icon: 'time',             gradient: ['#64748B',          '#334155'],           desc: 'Track every admin action'         },
-      { label: 'Data Privacy',       route: '/admin/privacy',         icon: 'lock-closed',      gradient: ['#8B5CF6',          '#6D3FD1'],            desc: 'GDPR export & erasure requests'   },
-      { label: 'Chat Moderation',    route: '/admin/chat-moderation', icon: 'chatbox-ellipses', gradient: ['#EF4444',          '#C72626'],            desc: 'Review reported conversations'    },
-      { label: 'Stories Moderation', route: '/admin/stories',         icon: 'images',           gradient: ['#FF7B00',          '#E05000'],            desc: 'Moderate story posts'             },
+      { label: 'Audit Log',          route: '/admin/audit-log',       icon: 'time',             gradient: [palette.slate500,          palette.slate700],           desc: 'Track every admin action'         },
+      { label: 'Data Privacy',       route: '/admin/privacy',         icon: 'lock-closed',      gradient: [palette.violet500,          palette.legacyPurple],            desc: 'GDPR export & erasure requests'   },
+      { label: 'Chat Moderation',    route: '/admin/chat-moderation', icon: 'chatbox-ellipses', gradient: [palette.red500,          palette.redL46],            desc: 'Review reported conversations'    },
+      { label: 'Stories Moderation', route: '/admin/stories',         icon: 'images',           gradient: [palette.legacyOrange,          palette.orangeL44],            desc: 'Moderate story posts'             },
     ],
   },
 ];
@@ -143,11 +144,11 @@ export default function AdminDashboardScreen() {
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#FFF" />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.white} />}
         >
           {/* ── Hero Card ── */}
           <LinearGradient
-            colors={[Colors.brand.blue, '#0048B8', Colors.brand.green]}
+            colors={[Colors.brand.blue, palette.blueL36, Colors.brand.green]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={s.heroCard}
@@ -165,7 +166,7 @@ export default function AdminDashboardScreen() {
                 colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.1)']}
                 style={s.heroAvatarBg}
               >
-                <Ionicons name="shield-checkmark" size={28} color="#FFF" />
+                <Ionicons name="shield-checkmark" size={28} color={palette.white} />
               </LinearGradient>
             </View>
 
@@ -193,16 +194,16 @@ export default function AdminDashboardScreen() {
           {(pendingBadges > 0 || openTickets > 0 || (analytics?.reports?.pending ?? 0) > 0) && (
             <View style={s.alertsSection}>
               <View style={s.sectionHeader}>
-                <View style={[s.sectionIconBox, { backgroundColor: '#FEF2F2' }]}>
-                  <Ionicons name="alert-circle" size={13} color="#EF4444" />
+                <View style={[s.sectionIconBox, { backgroundColor: palette.red50 }]}>
+                  <Ionicons name="alert-circle" size={13} color={palette.red500} />
                 </View>
-                <Text style={[s.sectionLabel, { color: '#EF4444' }]}>ACTION REQUIRED</Text>
+                <Text style={[s.sectionLabel, { color: palette.red500 }]}>ACTION REQUIRED</Text>
               </View>
               <View style={s.alertsCard}>
                 {pendingBadges > 0 && (
                   <Pressable style={s.alertRow} onPress={() => router.push('/admin/verifications' as any)}>
-                    <LinearGradient colors={['#FF7B00', Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.alertIcon}>
-                      <Ionicons name="shield-checkmark" size={16} color="#FFF" />
+                    <LinearGradient colors={[palette.legacyOrange, Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.alertIcon}>
+                      <Ionicons name="shield-checkmark" size={16} color={palette.white} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={s.alertTitle}>{pendingBadges} badge verification{pendingBadges > 1 ? 's' : ''} pending</Text>
@@ -214,7 +215,7 @@ export default function AdminDashboardScreen() {
                 {openTickets > 0 && (
                   <Pressable style={[s.alertRow, pendingBadges > 0 && s.alertRowBorder]} onPress={() => router.push('/admin/support' as any)}>
                     <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.alertIcon}>
-                      <Ionicons name="headset" size={16} color="#FFF" />
+                      <Ionicons name="headset" size={16} color={palette.white} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={s.alertTitle}>{openTickets} open support ticket{openTickets > 1 ? 's' : ''}</Text>
@@ -225,14 +226,14 @@ export default function AdminDashboardScreen() {
                 )}
                 {(analytics?.reports?.pending ?? 0) > 0 && (
                   <Pressable style={[s.alertRow, (pendingBadges > 0 || openTickets > 0) && s.alertRowBorder]} onPress={() => router.push('/admin/reports' as any)}>
-                    <LinearGradient colors={['#EF4444', '#C72626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.alertIcon}>
-                      <Ionicons name="flag" size={16} color="#FFF" />
+                    <LinearGradient colors={[palette.red500, palette.redL46]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.alertIcon}>
+                      <Ionicons name="flag" size={16} color={palette.white} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={s.alertTitle}>{analytics!.reports.pending} report{analytics!.reports.pending > 1 ? 's' : ''} need attention</Text>
                       <Text style={s.alertSub}>Content flagged by community members</Text>
                     </View>
-                    <View style={[s.alertBadge, { backgroundColor: '#EF4444' }]}><Text style={s.alertBadgeText}>{analytics!.reports.pending}</Text></View>
+                    <View style={[s.alertBadge, { backgroundColor: palette.red500 }]}><Text style={s.alertBadgeText}>{analytics!.reports.pending}</Text></View>
                   </Pressable>
                 )}
               </View>
@@ -242,7 +243,7 @@ export default function AdminDashboardScreen() {
           {/* ── Error banner ── */}
           {isError && (
             <View style={s.errorBanner}>
-              <Ionicons name="alert-circle" size={16} color="#EF4444" />
+              <Ionicons name="alert-circle" size={16} color={palette.red500} />
               <Text style={s.errorText}>Failed to load stats. Pull to refresh.</Text>
             </View>
           )}
@@ -265,10 +266,10 @@ export default function AdminDashboardScreen() {
                 {/* SPRINT-41: real AdminAnalytics fields only — no fabricated trends / pendingListings */}
                 <StatsWidget label="Total Users"    value={analytics?.users?.total ?? 0} icon="people"       color={Colors.brand.blue} />
                 <StatsWidget label="Active Users"   value={analytics?.users?.active ?? 0} icon="pulse"        color={Colors.brand.green} />
-                <StatsWidget label="Listings"       value={analytics?.content?.housingListings ?? 0} icon="home" color="#F59E0B" />
-                <StatsWidget label="Pending Badges" value={analytics?.badges?.pendingApplications ?? pendingBadges} icon="time" color="#FF7B00" />
-                <StatsWidget label="Open Reports"   value={analytics?.reports?.pending ?? 0} icon="flag"         color="#EF4444" />
-                <StatsWidget label="Badge Queue"    value={pendingBadges}               icon="shield"       color="#8B5CF6" />
+                <StatsWidget label="Listings"       value={analytics?.content?.housingListings ?? 0} icon="home" color={palette.amber500} />
+                <StatsWidget label="Pending Badges" value={analytics?.badges?.pendingApplications ?? pendingBadges} icon="time" color={palette.legacyOrange} />
+                <StatsWidget label="Open Reports"   value={analytics?.reports?.pending ?? 0} icon="flag"         color={palette.red500} />
+                <StatsWidget label="Badge Queue"    value={pendingBadges}               icon="shield"       color={palette.violet500} />
               </View>
             )}
           </View>
@@ -299,7 +300,7 @@ export default function AdminDashboardScreen() {
                       end={{ x: 1, y: 1 }}
                       style={s.actionIcon}
                     >
-                      <Ionicons name={item.icon as any} size={18} color="#FFF" />
+                      <Ionicons name={item.icon as any} size={18} color={palette.white} />
                     </LinearGradient>
                     <View style={{ flex: 1 }}>
                       <Text style={s.actionLabel}>{item.label}</Text>
@@ -329,11 +330,11 @@ export default function AdminDashboardScreen() {
 }
 
 const s = createThemedStyles({
-  root:           { flex: 1, backgroundColor: '#EBF5FF' },
+  root:           { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:           { flex: 1 },
   topBar:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10 },
-  backBtn:        { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
-  refreshBtn:     { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(38,179,36,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(38,179,36,0.3)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  backBtn:        { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  refreshBtn:     { width: 38, height: 38, borderRadius: 12, backgroundColor: 'rgba(38,179,36,0.12)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(38,179,36,0.3)', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
   topBarTitle:    { fontSize: 16, fontWeight: '800', color: Colors.brand.blue, letterSpacing: -0.2 },
   scroll:         { flex: 1 },
   content:        { padding: 18, paddingBottom: 64 },
@@ -347,21 +348,21 @@ const s = createThemedStyles({
   heroTop:        { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 22 },
   heroLeft:       { flex: 1 },
   heroGreeting:   { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 5 },
-  heroTitle:      { fontSize: 30, fontWeight: '900', color: '#FFF', letterSpacing: -0.8, marginBottom: 3 },
+  heroTitle:      { fontSize: 30, fontWeight: '900', color: palette.white, letterSpacing: -0.8, marginBottom: 3 },
   heroSub:        { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '500' },
   heroAvatarBg:   { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)' },
   heroStats:      { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 16, paddingVertical: 14 },
   heroStat:       { flex: 1, alignItems: 'center', gap: 3 },
-  heroStatValue:  { fontSize: 19, fontWeight: '900', color: '#FFF', letterSpacing: -0.4 },
+  heroStatValue:  { fontSize: 19, fontWeight: '900', color: palette.white, letterSpacing: -0.4 },
   heroStatLabel:  { fontSize: 10, color: 'rgba(255,255,255,0.65)', fontWeight: '600' },
   heroDivider:    { width: 1, backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'stretch', marginVertical: 4 },
 
   // Error
-  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FEF2F2', borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
-  errorText:      { color: '#EF4444', fontSize: 13, fontWeight: '500', flex: 1 },
+  errorBanner:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: palette.red50, borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
+  errorText:      { color: palette.red500, fontSize: 13, fontWeight: '500', flex: 1 },
 
   // Loading
-  loadingCard:    { backgroundColor: '#FFF', borderRadius: 20, padding: 36, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3 },
+  loadingCard:    { backgroundColor: palette.white, borderRadius: 20, padding: 36, alignItems: 'center', gap: 10, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3 },
   loadingText:    { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
 
   // Sections
@@ -373,7 +374,7 @@ const s = createThemedStyles({
 
   // Action groups
   actionsCard:     {
-    backgroundColor: '#FFF',
+    backgroundColor: palette.white,
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: Colors.brand.blue,
@@ -385,26 +386,26 @@ const s = createThemedStyles({
     borderColor: 'rgba(0,118,235,0.06)',
   },
   actionRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
-  actionRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F0F3F7' },
-  actionRowPressed:{ backgroundColor: '#F5F9FF' },
+  actionRowBorder: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL95_6 },
+  actionRowPressed:{ backgroundColor: palette.neutralL98_3 },
   actionIcon:      { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   actionLabel:     { fontSize: 14, fontWeight: '800', color: Colors.text.primary, marginBottom: 2 },
   actionDesc:      { fontSize: 11, color: Colors.text.tertiary, lineHeight: 15 },
   actionRight:     { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actionBadge:     { backgroundColor: '#EF4444', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2, minWidth: 22, alignItems: 'center' },
-  actionBadgeText: { fontSize: 11, fontWeight: '900', color: '#FFF' },
-  chevronWrap:     { width: 24, height: 24, borderRadius: 8, backgroundColor: '#F3F5F8', alignItems: 'center', justifyContent: 'center' },
+  actionBadge:     { backgroundColor: palette.red500, borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2, minWidth: 22, alignItems: 'center' },
+  actionBadgeText: { fontSize: 11, fontWeight: '900', color: palette.white },
+  chevronWrap:     { width: 24, height: 24, borderRadius: 8, backgroundColor: palette.neutralL96_5, alignItems: 'center', justifyContent: 'center' },
 
   footer:         { textAlign: 'center', fontSize: 11, color: Colors.text.tertiary, fontWeight: '500', marginTop: 8 },
 
   // Alerts section
   alertsSection:  { marginBottom: 20 },
-  alertsCard:     { backgroundColor: '#FFF', borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.1)', shadowColor: '#EF4444', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3 },
+  alertsCard:     { backgroundColor: palette.white, borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.1)', shadowColor: palette.red500, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3 },
   alertRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 15, paddingVertical: 13 },
-  alertRowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#FEF2F2' },
+  alertRowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.red50 },
   alertIcon:      { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   alertTitle:     { fontSize: 13, fontWeight: '800', color: Colors.text.primary, marginBottom: 1 },
   alertSub:       { fontSize: 11, color: Colors.text.tertiary },
-  alertBadge:     { backgroundColor: '#EF4444', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3, minWidth: 26, alignItems: 'center' },
-  alertBadgeText: { fontSize: 12, fontWeight: '900', color: '#FFF' },
+  alertBadge:     { backgroundColor: palette.red500, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 3, minWidth: 26, alignItems: 'center' },
+  alertBadgeText: { fontSize: 12, fontWeight: '900', color: palette.white },
 });

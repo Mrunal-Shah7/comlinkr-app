@@ -1,5 +1,6 @@
 // src/features/admin/pages/AreaManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
@@ -19,12 +20,12 @@ import { showToast } from '../../../shared/ui/Toast';
 
 function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: string, active: boolean) => void }) {
   const activeColor = area.isActive ? Colors.brand.green : Colors.text.tertiary;
-  const activeBg    = area.isActive ? Colors.brand.greenLight : '#F3F4F6';
+  const activeBg    = area.isActive ? Colors.brand.greenLight : palette.gray100;
 
   return (
     <View style={[c.card, !area.isActive && c.cardInactive]}>
       <View style={c.topRow}>
-        <View style={[c.areaIcon, { backgroundColor: area.isActive ? Colors.brand.blueLight : '#F3F4F6' }]}>
+        <View style={[c.areaIcon, { backgroundColor: area.isActive ? Colors.brand.blueLight : palette.gray100 }]}>
           <Ionicons name="map" size={18} color={area.isActive ? Colors.brand.blue : Colors.text.tertiary} />
         </View>
         <View style={{ flex: 1 }}>
@@ -51,7 +52,7 @@ function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: s
       <View style={c.statsGrid}>
         <View style={c.statItem}>
           <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.statIcon}>
-            <Ionicons name="people" size={12} color="#FFF" />
+            <Ionicons name="people" size={12} color={palette.white} />
           </LinearGradient>
           <View>
             <Text style={c.statNum}>{area.activeUsers}</Text>
@@ -59,8 +60,8 @@ function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: s
           </View>
         </View>
         <View style={c.statItem}>
-          <LinearGradient colors={[Colors.brand.green, '#1a8a18']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.statIcon}>
-            <Ionicons name="list" size={12} color="#FFF" />
+          <LinearGradient colors={[Colors.brand.green, palette.greenL32]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.statIcon}>
+            <Ionicons name="list" size={12} color={palette.white} />
           </LinearGradient>
           <View>
             <Text style={c.statNum}>{area.listingCount}</Text>
@@ -68,8 +69,8 @@ function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: s
           </View>
         </View>
         <View style={c.statItem}>
-          <LinearGradient colors={['#FF7B00', '#E56800']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.statIcon}>
-            <Ionicons name="calendar" size={12} color="#FFF" />
+          <LinearGradient colors={[palette.legacyOrange, palette.orangeL45]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.statIcon}>
+            <Ionicons name="calendar" size={12} color={palette.white} />
           </LinearGradient>
           <View>
             <Text style={c.statNum}>{area.eventCount}</Text>
@@ -129,11 +130,11 @@ export default function AreaManagementScreen() {
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
             <LinearGradient colors={[Colors.brand.green, Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.headerIcon}>
-              <Ionicons name="map" size={22} color="#FFF" />
+              <Ionicons name="map" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -201,7 +202,7 @@ export default function AreaManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 20, paddingBottom: 48 },
@@ -209,34 +210,34 @@ const s = createThemedStyles({
   decorCircle2:{ position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(0,118,235,0.05)', bottom: 80, left: -50 },
 
   header:      { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  backBtn:     { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn:     { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon:  { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:       { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
 
-  statsRow:    { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 14, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
+  statsRow:    { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 16, padding: 16, marginBottom: 14, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
   statCard:    { flex: 1, alignItems: 'center' },
   statNum:     { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   statLabel:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', marginTop: 2 },
-  statDivider: { width: 1, backgroundColor: '#F0F2F5' },
+  statDivider: { width: 1, backgroundColor: palette.neutralL95_5 },
 
   infoBanner:  { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: Colors.brand.blueLight, borderRadius: 13, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   infoText:    { fontSize: 12, color: Colors.brand.blue, flex: 1, lineHeight: 17, fontWeight: '500' },
 
   filterRow:   { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  filterChip:  { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1.5, borderColor: Colors.border.light },
+  filterChip:  { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 12, backgroundColor: palette.white, borderWidth: 1.5, borderColor: Colors.border.light },
   filterChipActive:{ backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   filterText:  { fontSize: 12, fontWeight: '700', color: Colors.text.secondary },
   filterTextActive:{ color: Colors.brand.blue },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText: { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle:  { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
 });
 
 const c = createThemedStyles({
-  card:           { backgroundColor: '#FFF', borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
+  card:           { backgroundColor: palette.white, borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
   cardInactive:   { opacity: 0.75 },
   topRow:         { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   areaIcon:       { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
@@ -246,8 +247,8 @@ const c = createThemedStyles({
 
   toggleBtn:      { width: 44, height: 26, borderRadius: 13, padding: 3, justifyContent: 'center' },
   toggleBtnActive:{ backgroundColor: Colors.brand.green },
-  toggleBtnInactive:{ backgroundColor: '#D1D5DB' },
-  toggleThumb:    { width: 20, height: 20, borderRadius: 10, backgroundColor: '#FFF', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 },
+  toggleBtnInactive:{ backgroundColor: palette.gray300 },
+  toggleThumb:    { width: 20, height: 20, borderRadius: 10, backgroundColor: palette.white, shadowColor: palette.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 },
   toggleThumbActive:  { alignSelf: 'flex-end' },
   toggleThumbInactive:{ alignSelf: 'flex-start' },
 
@@ -256,7 +257,7 @@ const c = createThemedStyles({
   statusText:     { fontSize: 12, fontWeight: '700' },
 
   statsGrid:      { flexDirection: 'row', gap: 10 },
-  statItem:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8FAFC', padding: 10, borderRadius: 12 },
+  statItem:       { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: palette.slate50, padding: 10, borderRadius: 12 },
   statIcon:       { width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   statNum:        { fontSize: 16, fontWeight: '900', color: Colors.text.primary },
   statLabel:      { fontSize: 10, color: Colors.text.tertiary, fontWeight: '600', marginTop: 1 },

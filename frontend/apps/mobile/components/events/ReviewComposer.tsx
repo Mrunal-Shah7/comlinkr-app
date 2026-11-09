@@ -1,4 +1,5 @@
 // SPRINT-42: create/edit event review composer with contract bounds (create content max 1000, update max 2000).
+import { palette } from "../../src/theme/palette";
 import React, { useState } from "react";
 import {
   View,
@@ -80,12 +81,12 @@ export function ReviewComposer({
         onPress={handleSubmit}
         disabled={!content.trim() || rating < 1 || submitting}
       >
-        <LinearGradient colors={[Colors.brand.green, "#256B49"]} style={styles.submitGrad}>
+        <LinearGradient colors={[Colors.brand.green, palette.brandGreenDark]} style={styles.submitGrad}>
           {submitting ? (
-            <ActivityIndicator color="#FFF" size="small" />
+            <ActivityIndicator color={palette.white} size="small" />
           ) : (
             <>
-              <Ionicons name={mode === "edit" ? "save-outline" : "send"} size={14} color="#FFF" />
+              <Ionicons name={mode === "edit" ? "save-outline" : "send"} size={14} color={palette.white} />
               <Text style={styles.submitText}>{mode === "edit" ? "Save Changes" : "Submit Review"}</Text>
             </>
           )}
@@ -119,5 +120,5 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
   }, // SPRINT-42:
-  submitText: { color: "#FFF", fontWeight: "800", fontSize: 14 }, // SPRINT-42:
+  submitText: { color: palette.white, fontWeight: "800", fontSize: 14 }, // SPRINT-42:
 });

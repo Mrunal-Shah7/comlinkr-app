@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useWindowDimensions } from "react-native";
@@ -41,17 +42,17 @@ import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 // ─── Status helpers ────────────────────────────────────────────────────────────
 
 const STATUS_META: Record<ApplicationStatus, { label: string; color: string; bg: string; icon: string }> = {
-  draft:        { label: "Draft",        color: "#6B7280", bg: "#F3F4F6",  icon: "document-outline" },
-  submitted:    { label: "Submitted",    color: "#0060D0", bg: "#EEF5FF",  icon: "paper-plane-outline" },
-  under_review: { label: "Under Review", color: "#D97706", bg: "#FFF8E6",  icon: "hourglass-outline" },
-  approved:     { label: "Approved",     color: "#16A34A", bg: "#F0FDF4",  icon: "checkmark-circle" },
-  rejected:     { label: "Rejected",     color: "#DC2626", bg: "#FEF2F2",  icon: "close-circle" },
-  signed:       { label: "Signed",       color: "#8B5CF6", bg: "#F5F3FF",  icon: "create-outline" },
-  withdrawn:    { label: "Withdrawn",    color: "#9CA3AF", bg: "#F9FAFB",  icon: "remove-circle-outline" },
+  draft:        { label: "Draft",        color: palette.gray500, bg: palette.gray100,  icon: "document-outline" },
+  submitted:    { label: "Submitted",    color: palette.skyL41, bg: palette.blueL97_2,  icon: "paper-plane-outline" },
+  under_review: { label: "Under Review", color: palette.amber600, bg: palette.yellowL95,  icon: "hourglass-outline" },
+  approved:     { label: "Approved",     color: palette.green600, bg: palette.green50,  icon: "checkmark-circle" },
+  rejected:     { label: "Rejected",     color: palette.red600, bg: palette.red50,  icon: "close-circle" },
+  signed:       { label: "Signed",       color: palette.violet500, bg: palette.violet50,  icon: "create-outline" },
+  withdrawn:    { label: "Withdrawn",    color: palette.gray400, bg: palette.gray50,  icon: "remove-circle-outline" },
 };
 
 function statusMeta(s: ApplicationStatus) {
-  return STATUS_META[s] ?? { label: s, color: "#6B7280", bg: "#F3F4F6", icon: "help-circle-outline" };
+  return STATUS_META[s] ?? { label: s, color: palette.gray500, bg: palette.gray100, icon: "help-circle-outline" };
 }
 
 function formatDate(iso?: string) {
@@ -329,8 +330,8 @@ const st = createThemedStyles({
     shadowColor: Colors.brand.green, shadowOpacity: 0.15, shadowRadius: 10, elevation: 4,
   },
   heroRow: { flexDirection: "row", alignItems: "center", gap: rs(6), marginBottom: rs(6) },
-  heroLabel: { fontSize: rs(10), fontWeight: "800", color: "#A7F3D0", letterSpacing: 2 },
-  heroTitle: { fontSize: rs(20), fontWeight: "900", color: "#FFF", letterSpacing: -0.3 },
+  heroLabel: { fontSize: rs(10), fontWeight: "800", color: palette.greenL80, letterSpacing: 2 },
+  heroTitle: { fontSize: rs(20), fontWeight: "900", color: palette.white, letterSpacing: -0.3 },
   heroSub: { fontSize: rs(12), color: "rgba(255,255,255,0.85)", marginTop: rs(4), fontWeight: "500" },
 
   summaryRow: { flexDirection: "row", gap: rs(10), paddingHorizontal: rs(16), marginBottom: rs(16) },
@@ -349,7 +350,7 @@ const st = createThemedStyles({
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(6), paddingVertical: rs(9), borderRadius: rs(10),
   },
-  tabBtnActive: { shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  tabBtnActive: { shadowColor: palette.black, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
   tabBtnText: { fontSize: rs(13), fontWeight: "700" },
 
   sectionHdr: {
@@ -387,7 +388,7 @@ const st = createThemedStyles({
     padding: rs(20), maxHeight: "90%",
   },
   sheetHandle: {
-    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: "#D1D5DB",
+    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: palette.gray300,
     alignSelf: "center", marginBottom: rs(16),
   },
   detailHeader: { marginBottom: rs(16) },
@@ -409,15 +410,15 @@ const st = createThemedStyles({
   decisionBtns: { flexDirection: "row", gap: rs(10) },
   rejectBtn: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: rs(6), borderRadius: rs(12), borderWidth: 1.5, borderColor: "#DC2626",
-    paddingVertical: rs(13), backgroundColor: "#FEF2F2",
+    gap: rs(6), borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.red600,
+    paddingVertical: rs(13), backgroundColor: palette.red50,
   },
-  rejectBtnText: { fontSize: rs(14), fontWeight: "700", color: "#DC2626" },
+  rejectBtnText: { fontSize: rs(14), fontWeight: "700", color: palette.red600 },
   approveGrad: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(6), paddingVertical: rs(13), borderRadius: rs(12),
   },
-  approveBtnText: { fontSize: rs(14), fontWeight: "700", color: "#FFF" },
+  approveBtnText: { fontSize: rs(14), fontWeight: "700", color: palette.white },
 
   closeSheetBtn: {
     marginTop: rs(12), paddingVertical: rs(14), borderRadius: rs(14), alignItems: "center",

@@ -1,4 +1,5 @@
 // app/admin/_layout.tsx — thin wrapper, all logic lives in apps/mobile/admin/
+import { palette } from "../../src/theme/palette";
 import { Stack } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { useAdminGuard } from '@features/admin/hooks/useAdminGuard';
@@ -10,8 +11,8 @@ export default function AdminLayout() {
 
   if (!isAdmin) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F172A' }}>
-        <ActivityIndicator color="#6366F1" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.slate900 }}>
+        <ActivityIndicator color={palette.indigo500} />
       </View>
     );
   }

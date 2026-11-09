@@ -1,5 +1,6 @@
 // src/features/admin/components/ActionButtons.tsx
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,11 +17,11 @@ const VARIANT_CONFIG: Record<Variant, {
   textColor: string;
   iconColor: string;
 }> = {
-  success: { gradient: [Colors.brand.green,  '#1A8A18'],  textColor: '#FFF', iconColor: '#FFF' },
-  danger:  { gradient: ['#EF4444',            '#C72626'],  textColor: '#FFF', iconColor: '#FFF' },
-  warning: { gradient: ['#F59E0B',            '#D97706'],  textColor: '#FFF', iconColor: '#FFF' },
-  primary: { gradient: [Colors.brand.blue,    '#0054CC'],  textColor: '#FFF', iconColor: '#FFF' },
-  ghost:   { gradient: ['#F3F4F6',            '#E8EAED'],  textColor: Colors.text.secondary, iconColor: Colors.text.tertiary },
+  success: { gradient: [Colors.brand.green,  palette.greenL32],  textColor: palette.white, iconColor: palette.white },
+  danger:  { gradient: [palette.red500,            palette.redL46],  textColor: palette.white, iconColor: palette.white },
+  warning: { gradient: [palette.amber500,            palette.amber600],  textColor: palette.white, iconColor: palette.white },
+  primary: { gradient: [Colors.brand.blue,    palette.blueL40_2],  textColor: palette.white, iconColor: palette.white },
+  ghost:   { gradient: [palette.gray100,            palette.neutralL92],  textColor: Colors.text.secondary, iconColor: Colors.text.tertiary },
 };
 
 const ACTION_ICONS: Record<AdminActionType, string> = {
@@ -93,7 +94,7 @@ export function ActionButtons({ actions, onAction }: ActionButtonsProps) {
 
 const s = createThemedStyles({
   row:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  btnWrap:    { borderRadius: 11, overflow: 'hidden', shadowColor: '#0A2540', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 3 },
+  btnWrap:    { borderRadius: 11, overflow: 'hidden', shadowColor: palette.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 3 },
   btnPressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
   btn:        { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 11 },
   btnText:    { fontSize: 12, fontWeight: '800', letterSpacing: 0.1 },

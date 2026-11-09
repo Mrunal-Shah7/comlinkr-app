@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useEffect, useMemo } from "react";
 import { queryKeys } from "../src/services/cache/queryKeys";
@@ -290,7 +291,7 @@ export default function EventsScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { padding: rs(16), gap: rs(14) },
 
@@ -301,13 +302,13 @@ const s = createThemedStyles({
     justifyContent: "space-between",
     paddingHorizontal: rs(16),
     paddingVertical: rs(12),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
+    borderBottomColor: palette.gray100,
   },
   backBtn: {
     width: rs(38), height: rs(38), borderRadius: rs(19),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center", justifyContent: "center",
   },
   headerTitle: { fontSize: rs(18), fontWeight: "800", color: Colors.text.primary },
@@ -320,10 +321,10 @@ const s = createThemedStyles({
     paddingHorizontal: rs(20),
     paddingVertical: rs(18),
   },
-  heroTitle: { fontSize: rs(19), fontWeight: "900", color: "#FFF", letterSpacing: -0.3 },
+  heroTitle: { fontSize: rs(19), fontWeight: "900", color: palette.white, letterSpacing: -0.3 },
   heroDesc: { fontSize: rs(12), color: "rgba(255,255,255,0.88)", marginTop: rs(3), fontWeight: "500" },
   heroStat: { alignItems: "center" },
-  heroStatNum: { fontSize: rs(28), fontWeight: "900", color: "#FFF" },
+  heroStatNum: { fontSize: rs(28), fontWeight: "900", color: palette.white },
   heroStatLbl: { fontSize: rs(9), fontWeight: "700", color: "rgba(255,255,255,0.8)", letterSpacing: 1.2, textTransform: "uppercase" },
 
   // Tabs
@@ -332,35 +333,35 @@ const s = createThemedStyles({
     paddingHorizontal: rs(16),
     paddingVertical: rs(10),
     gap: rs(8),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F2F5",
+    borderBottomColor: palette.neutralL95_5,
   },
   tab: {
     flex: 1, paddingVertical: rs(9), borderRadius: rs(12),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center", justifyContent: "center",
     flexDirection: "row", gap: rs(5),
   },
   tabActive: { backgroundColor: Colors.brand.orange },
   tabText: { fontSize: rs(13), fontWeight: "700", color: Colors.text.secondary },
-  tabTextActive: { color: "#FFF" },
+  tabTextActive: { color: palette.white },
   tabBadge: {
     minWidth: 18, height: rs(18), borderRadius: rs(9),
     backgroundColor: "rgba(0,0,0,0.15)",
     alignItems: "center", justifyContent: "center",
     paddingHorizontal: rs(4),
   },
-  tabBadgeText: { fontSize: rs(10), fontWeight: "900", color: "#FFF" },
+  tabBadgeText: { fontSize: rs(10), fontWeight: "900", color: palette.white },
 
   // Card
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(18),
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#F0F2F5",
-    shadowColor: "#0A2540",
+    borderColor: palette.neutralL95_5,
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: rs(2) },
     shadowOpacity: 0.06,
     shadowRadius: rs(10),
@@ -373,7 +374,7 @@ const s = createThemedStyles({
     paddingHorizontal: rs(10), paddingVertical: rs(4),
     borderRadius: rs(10),
   },
-  priceOverlayText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  priceOverlayText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
   saveOverlay: {
     position: "absolute",
     top: rs(10), right: rs(12),
@@ -396,7 +397,7 @@ const s = createThemedStyles({
   cardMetaText: { fontSize: rs(11), color: Colors.text.tertiary, fontWeight: "500" },
 
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: rs(6), marginBottom: rs(12) },
-  tag: { backgroundColor: "#F3F4F6", paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(8) },
+  tag: { backgroundColor: palette.gray100, paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(8) },
   tagText: { fontSize: rs(11), fontWeight: "600", color: Colors.text.secondary },
   attendeeChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
@@ -418,7 +419,7 @@ const s = createThemedStyles({
   },
   interestedBtnText: { fontSize: rs(13), fontWeight: "700", color: Colors.brand.orange },
   rsvpBtn: { paddingHorizontal: rs(22), paddingVertical: rs(10), borderRadius: rs(12), alignItems: "center", justifyContent: "center" },
-  rsvpBtnText: { fontSize: rs(13), fontWeight: "800", color: "#FFF" },
+  rsvpBtnText: { fontSize: rs(13), fontWeight: "800", color: palette.white },
 
   emptyState: { alignItems: "center", marginTop: rs(80), gap: rs(10) },
   emptyTitle: { fontSize: rs(17), fontWeight: "800", color: Colors.text.primary },
@@ -427,7 +428,7 @@ const s = createThemedStyles({
 
 // ── Modal styles ──────────────────────────────────────────────────────────────
 const edm = createThemedStyles({
-  root: { flex: 1, backgroundColor: "#F9FAFB" },
+  root: { flex: 1, backgroundColor: palette.gray50 },
 
   heroWrap: { height: rs(290), position: "relative" },
   heroImg: { width: "100%", height: "100%" },
@@ -452,13 +453,13 @@ const edm = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: rs(5),
     paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(10),
   },
-  badgeText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  badgeText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
   heroBottom: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     paddingHorizontal: rs(18), paddingBottom: rs(20),
   },
   heroEmoji: { fontSize: rs(26), marginBottom: rs(4) },
-  heroTitle: { fontSize: rs(22), fontWeight: "900", color: "#FFF", letterSpacing: -0.5, lineHeight: rs(28) },
+  heroTitle: { fontSize: rs(22), fontWeight: "900", color: palette.white, letterSpacing: -0.5, lineHeight: rs(28) },
   heroMeta: {
     flexDirection: "row", alignItems: "center", gap: rs(5), marginTop: rs(8), flexWrap: "wrap",
   },
@@ -470,25 +471,25 @@ const edm = createThemedStyles({
 
   statsRow: {
     flexDirection: "row",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20),
     padding: rs(20),
     marginBottom: rs(16),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: rs(2) },
     shadowOpacity: 0.06,
     shadowRadius: rs(12),
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#F0F2F5",
+    borderColor: palette.neutralL95_5,
   },
   statItem: { flex: 1, alignItems: "center", gap: rs(4) },
   statNum: { fontSize: rs(16), fontWeight: "900", color: Colors.text.primary },
   statLbl: { fontSize: rs(10), fontWeight: "700", color: Colors.text.tertiary, letterSpacing: 0.5 },
-  statDiv: { width: rs(1), height: rs(48), backgroundColor: "#F0F2F5" },
+  statDiv: { width: rs(1), height: rs(48), backgroundColor: palette.neutralL95_5 },
 
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: rs(6), marginBottom: rs(16) },
-  tag: { backgroundColor: "#F0F2F5", paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rs(10) },
+  tag: { backgroundColor: palette.neutralL95_5, paddingHorizontal: rs(12), paddingVertical: rs(5), borderRadius: rs(10) },
   tagText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
 
   section: { marginBottom: rs(20) },
@@ -500,13 +501,13 @@ const edm = createThemedStyles({
 
   detailGrid: {
     borderRadius: rs(16), overflow: "hidden",
-    borderWidth: 1, borderColor: "#F0F2F5",
+    borderWidth: 1, borderColor: palette.neutralL95_5,
   },
   detailRow: {
     flexDirection: "row", alignItems: "center", gap: rs(12),
     paddingHorizontal: rs(14), paddingVertical: rs(12),
-    backgroundColor: "#FFF",
-    borderBottomWidth: 1, borderBottomColor: "#F8F9FA",
+    backgroundColor: palette.white,
+    borderBottomWidth: 1, borderBottomColor: palette.neutralL98_5,
   },
   detailIconBox: {
     width: rs(36), height: rs(36), borderRadius: rs(10),
@@ -523,9 +524,9 @@ const edm = createThemedStyles({
   cta: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
     paddingHorizontal: rs(16), paddingVertical: rs(14), paddingBottom: rs(44),
-    backgroundColor: "#FFF",
-    borderTopWidth: 1, borderTopColor: "#F0F2F5",
-    shadowColor: "#000",
+    backgroundColor: palette.white,
+    borderTopWidth: 1, borderTopColor: palette.neutralL95_5,
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: rs(-3) },
     shadowOpacity: 0.05,
     shadowRadius: rs(10),
@@ -553,7 +554,7 @@ const edm = createThemedStyles({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(8), paddingVertical: rs(15), borderRadius: rs(16),
   },
-  ctaRSVPText: { fontSize: rs(14), fontWeight: "900", color: "#FFF", letterSpacing: 0.3 },
+  ctaRSVPText: { fontSize: rs(14), fontWeight: "900", color: palette.white, letterSpacing: 0.3 },
 });
 
 // ── Registration modal styles ─────────────────────────────────────────────────
@@ -564,7 +565,7 @@ const rm = createThemedStyles({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     borderTopLeftRadius: rs(28),
     borderTopRightRadius: rs(28),
     maxHeight: "92%",
@@ -572,7 +573,7 @@ const rm = createThemedStyles({
   },
   handle: {
     width: rs(40), height: rs(4), borderRadius: rs(2),
-    backgroundColor: "#D1D5DB",
+    backgroundColor: palette.gray300,
     alignSelf: "center",
     marginTop: rs(10),
   },
@@ -585,7 +586,7 @@ const rm = createThemedStyles({
     backgroundColor: Colors.brand.orange,
     paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(20),
   },
-  registerPillText: { fontSize: rs(9), fontWeight: "800", color: "#FFF", letterSpacing: 1, textTransform: "uppercase" },
+  registerPillText: { fontSize: rs(9), fontWeight: "800", color: palette.white, letterSpacing: 1, textTransform: "uppercase" },
   imgCloseBtn: {
     position: "absolute", top: rs(10), right: rs(14),
     width: rs(30), height: rs(30), borderRadius: rs(15),
@@ -597,7 +598,7 @@ const rm = createThemedStyles({
     paddingHorizontal: rs(16), paddingBottom: rs(14),
   },
   imgHeaderEmoji: { fontSize: rs(22), marginBottom: rs(2) },
-  imgHeaderTitle: { fontSize: rs(18), fontWeight: "900", color: "#FFF", lineHeight: rs(23) },
+  imgHeaderTitle: { fontSize: rs(18), fontWeight: "900", color: palette.white, lineHeight: rs(23) },
   imgHeaderMeta: { flexDirection: "row", alignItems: "center", gap: rs(5), marginTop: rs(5) },
   imgHeaderMetaText: { fontSize: rs(11), color: "rgba(255,255,255,0.85)", fontWeight: "500" },
 
@@ -613,13 +614,13 @@ const rm = createThemedStyles({
 
   // ── Form card ──
   formCard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(18), borderWidth: 1, borderColor: "#F0F2F5",
+    backgroundColor: palette.white,
+    borderRadius: rs(18), borderWidth: 1, borderColor: palette.neutralL95_5,
     overflow: "hidden", marginBottom: rs(10),
-    shadowColor: "#000", shadowOffset: { width: 0, height: rs(1) },
+    shadowColor: palette.black, shadowOffset: { width: 0, height: rs(1) },
     shadowOpacity: 0.04, shadowRadius: rs(6), elevation: 1,
   },
-  formDivider: { height: rs(1), backgroundColor: "#F3F4F6", marginHorizontal: rs(14) },
+  formDivider: { height: rs(1), backgroundColor: palette.gray100, marginHorizontal: rs(14) },
   fieldGroup: { paddingHorizontal: rs(14), paddingVertical: rs(12) },
   fieldLabel: {
     fontSize: rs(10), fontWeight: "700", color: Colors.text.tertiary,
@@ -627,8 +628,8 @@ const rm = createThemedStyles({
   },
   inputWrap: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    borderRadius: rs(12), borderWidth: 1.5, borderColor: "#E8EAED",
+    backgroundColor: palette.gray50,
+    borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.neutralL92,
     paddingHorizontal: rs(12), paddingVertical: rs(10), gap: rs(10),
   },
   inputIcon: { flexShrink: 0 },
@@ -636,10 +637,10 @@ const rm = createThemedStyles({
 
   // ── Ticket step card ──
   ticketStepCard: {
-    backgroundColor: "#FFF",
-    borderRadius: rs(18), borderWidth: 1, borderColor: "#F0F2F5",
+    backgroundColor: palette.white,
+    borderRadius: rs(18), borderWidth: 1, borderColor: palette.neutralL95_5,
     padding: rs(14), marginBottom: rs(10),
-    shadowColor: "#000", shadowOffset: { width: 0, height: rs(1) },
+    shadowColor: palette.black, shadowOffset: { width: 0, height: rs(1) },
     shadowOpacity: 0.04, shadowRadius: rs(6), elevation: 1,
   },
   ticketStepTitle: {
@@ -653,11 +654,11 @@ const rm = createThemedStyles({
     borderWidth: 1, borderColor: Colors.brand.orange + "30",
     alignItems: "center", justifyContent: "center",
   },
-  ticketBtnDisabled: { backgroundColor: "#F3F4F6", borderColor: "#E5E7EB" },
+  ticketBtnDisabled: { backgroundColor: palette.gray100, borderColor: palette.gray200 },
   ticketCount: {
     minWidth: 58, alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: rs(12), borderWidth: 1.5, borderColor: "#E5E7EB",
+    backgroundColor: palette.white,
+    borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.gray200,
     paddingVertical: rs(8), paddingHorizontal: rs(12),
   },
   ticketCountNum: { fontSize: rs(20), fontWeight: "900", color: Colors.text.primary },
@@ -674,9 +675,9 @@ const rm = createThemedStyles({
   // ── Hosted by ──
   hostedRow: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16), padding: rs(12),
-    borderWidth: 1, borderColor: "#F0F2F5",
+    borderWidth: 1, borderColor: palette.neutralL95_5,
   },
   hostedAvatar: {
     width: rs(38), height: rs(38), borderRadius: rs(12),
@@ -694,8 +695,8 @@ const rm = createThemedStyles({
   // ── CTA ──
   ctaWrap: {
     paddingHorizontal: rs(16), paddingTop: rs(12), paddingBottom: rs(30),
-    backgroundColor: "#FFF",
-    borderTopWidth: 1, borderTopColor: "#F0F2F5",
+    backgroundColor: palette.white,
+    borderTopWidth: 1, borderTopColor: palette.neutralL95_5,
   },
   confirmBtn: { borderRadius: rs(16), overflow: "hidden" },
   confirmBtnDisabled: { opacity: 0.55 },
@@ -703,7 +704,7 @@ const rm = createThemedStyles({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(8), paddingVertical: rs(16),
   },
-  confirmBtnText: { fontSize: rs(15), fontWeight: "900", color: "#FFF", letterSpacing: 0.2 },
+  confirmBtnText: { fontSize: rs(15), fontWeight: "900", color: palette.white, letterSpacing: 0.2 },
 
   // ── Success ──
   successWrap: { alignItems: "center", paddingHorizontal: rs(22), paddingTop: rs(22) },
@@ -711,7 +712,7 @@ const rm = createThemedStyles({
     width: rs(88), height: rs(88), borderRadius: rs(44),
     alignItems: "center", justifyContent: "center",
     marginBottom: rs(16),
-    shadowColor: "#16A34A",
+    shadowColor: palette.green600,
     shadowOffset: { width: 0, height: rs(8) },
     shadowOpacity: 0.35, shadowRadius: rs(18), elevation: 10,
   },
@@ -721,12 +722,12 @@ const rm = createThemedStyles({
   // ── Ticket visual ──
   ticketVisual: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20), overflow: "hidden",
     marginBottom: rs(20),
-    shadowColor: "#000", shadowOffset: { width: 0, height: rs(6) },
+    shadowColor: palette.black, shadowOffset: { width: 0, height: rs(6) },
     shadowOpacity: 0.12, shadowRadius: rs(18), elevation: 6,
-    borderWidth: 1, borderColor: "#F0F2F5",
+    borderWidth: 1, borderColor: palette.neutralL95_5,
   },
   ticketVisualHeader: {
     flexDirection: "row", alignItems: "center", gap: rs(12), padding: rs(16),
@@ -736,7 +737,7 @@ const rm = createThemedStyles({
     fontSize: rs(9), fontWeight: "800", color: "rgba(255,255,255,0.75)",
     letterSpacing: 1.2, textTransform: "uppercase",
   },
-  ticketVisualName: { fontSize: rs(16), fontWeight: "900", color: "#FFF", lineHeight: rs(22), marginTop: rs(2) },
+  ticketVisualName: { fontSize: rs(16), fontWeight: "900", color: palette.white, lineHeight: rs(22), marginTop: rs(2) },
   ticketDetailBlock: { padding: rs(14), gap: rs(10) },
   ticketDetailRow: { flexDirection: "row", alignItems: "center", gap: rs(10) },
   ticketDetailIcon: {
@@ -750,24 +751,24 @@ const rm = createThemedStyles({
   },
   ticketTearCircleL: {
     width: rs(20), height: rs(20), borderRadius: rs(10),
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     marginLeft: rs(-10),
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: palette.gray200,
   },
   ticketTearLine: {
     flex: 1, height: rs(1),
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
   ticketTearCircleR: {
     width: rs(20), height: rs(20), borderRadius: rs(10),
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     marginRight: rs(-10),
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: palette.gray200,
   },
   ticketQRStub: { alignItems: "center", paddingVertical: rs(18), gap: rs(6) },
   ticketQRHint: { fontSize: rs(12), color: Colors.text.tertiary, fontWeight: "600" },
 
   doneBtn: { width: "100%", borderRadius: rs(16), overflow: "hidden" },
   doneBtnGrad: { alignItems: "center", justifyContent: "center", paddingVertical: rs(16) },
-  doneBtnText: { fontSize: rs(15), fontWeight: "900", color: "#FFF" },
+  doneBtnText: { fontSize: rs(15), fontWeight: "900", color: palette.white },
 });

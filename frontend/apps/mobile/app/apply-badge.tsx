@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
@@ -82,7 +83,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   landlord: {
     label: "Verified Property Host",
     icon: "home",
-    gradient: ["#1A6BAE", "#30855B"],
+    gradient: [palette.brandBlue, palette.brandGreen],
     description: "List your property for rent, accommodation sharing, or short-stay on ComLinkr. Open to property owners and authorized managers.",
     unlocks: ["Verified trust badge on all your listings", "Priority placement in housing search results", "Direct tenant messaging"],
     requirements: ["Passport or government-issued photo ID", "Proof of right to list the property (ownership deed, tenancy agreement, or management authorization)", "Contact phone number", "Property address you intend to list"],
@@ -94,7 +95,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   restaurant_owner: {
     label: "Verified Restaurant Owner",
     icon: "restaurant",
-    gradient: ["#1A6BAE", "#30855B"],
+    gradient: [palette.brandBlue, palette.brandGreen],
     description: "Register your restaurant on ComLinkr and connect with local food lovers.",
     unlocks: ["Verified Business badge on your restaurant posts", "Priority placement in food search results", "Reply to community reviews", "Manage menu & hours"],
     requirements: ["Business registration number / license", "Government-issued ID", "Business phone and email", "Restaurant physical address"],
@@ -106,7 +107,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   agency: {
     label: "Verified Agency",
     icon: "business",
-    gradient: ["#1A6BAE", "#30855B"],
+    gradient: [palette.brandBlue, palette.brandGreen],
     description: "Manage and list properties on behalf of multiple landlords. Ideal for lettings agencies.",
     unlocks: ["Unlimited listings", "Agency branding on all listings", "Priority search placement", "Multi-agent team support", "Agency Dashboard"],
     requirements: ["Registered company/agency name", "Business registration certificate", "Agency license number (if applicable)", "Primary contact name and title", "Business phone and email"],
@@ -118,7 +119,7 @@ const BADGE_CONFIG: Record<UserBadge, {
   local_reviewer: {
     label: "Local Reviewer",
     icon: "star",
-    gradient: ["#1A6BAE", "#30855B"],
+    gradient: [palette.brandBlue, palette.brandGreen],
     description: "Share trusted restaurant recommendations and community reviews as a verified local.",
     unlocks: [
       "Trusted reviewer badge on your profile and all reviews",
@@ -420,7 +421,7 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
     optionalDoc: "Property / Business Photo (optional)",
     marketDisplayName: "United States",
     docsCardTitle: "US Accepted Documents",
-    docsCardGradient: ["#002868", "#BF0A30"],
+    docsCardGradient: [palette.blueL20, palette.redL39],
   },
   UK: {
     govIdDoc: "Passport, Driving Licence, or BRP",
@@ -431,7 +432,7 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
     marketDisplayName: "United Kingdom",
     docsCardTitle: "UK Accepted Documents",
     docsCardNote: "Documents in Welsh are also accepted. Foreign-language documents must include a certified English translation.",
-    docsCardGradient: ["#003087", "#1A6BAE"],
+    docsCardGradient: [palette.blueL26, palette.brandBlue],
   },
   // CA: {
   //   govIdDoc: "Passport, Provincial ID, or PR Card",
@@ -440,7 +441,7 @@ const MARKET_LABELS: Record<string, MarketLabels> = {
   //   optionalDoc: "Property / Business Photo (optional)",
   //   marketDisplayName: "Canada",
   //   docsCardTitle: "CA Accepted Documents",
-  //   docsCardGradient: ["#FF0000", "#D80000"],
+  //   docsCardGradient: [palette.redL50, palette.redL42],
   // },
 };
 
@@ -534,7 +535,7 @@ function DocUploadRow({
     <PressableScale onPress={onPress} accessibilityRole="button" accessibilityLabel={label}
       style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, marginBottom: 10, borderRadius: 18, borderWidth: 1, borderStyle: uploaded ? "solid" : "dashed", borderColor: uploaded ? tc.mint : tc.borderMedium, backgroundColor: uploaded ? tc.mintSoft : tc.cardBg }}>
       <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: uploaded ? tc.mint : tc.accentSoft }}>
-        <Ionicons name={uploaded ? "checkmark" : "cloud-upload-outline"} size={18} color={uploaded ? "#FFF" : tc.accentText} />
+        <Ionicons name={uploaded ? "checkmark" : "cloud-upload-outline"} size={18} color={uploaded ? palette.white : tc.accentText} />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>
@@ -690,9 +691,9 @@ export default function ApplyBadgeScreen() {
             onPress={() => router.push("/verification-status" as any)}
             style={{ marginTop: rs(16) }}
           >
-            <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={[palette.brandBlue, palette.brandGreen]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>Open verification status</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFF" />
+              <Ionicons name="arrow-forward" size={16} color={palette.white} />
             </LinearGradient>
           </Pressable>
         </View>
@@ -739,7 +740,7 @@ export default function ApplyBadgeScreen() {
                 colors={isSelected ? cfg.gradient : [tc.borderLight, tc.borderMedium]}
                 style={styles.badgeOptionIcon}
               >
-                <Ionicons name={cfg.icon as any} size={20} color="#FFF" />
+                <Ionicons name={cfg.icon as any} size={20} color={palette.white} />
               </LinearGradient>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.badgeOptionLabel, { color: tc.textPrimary }, isSelected && { color: cfg.gradient[0] }]}>
@@ -760,13 +761,13 @@ export default function ApplyBadgeScreen() {
           disabled={!selectedBadge || badgeStatusLoading}
         >
           <LinearGradient
-            colors={selectedBadge ? BADGE_CONFIG[selectedBadge].gradient : ["#9CA3AF", "#6B7280"]}
+            colors={selectedBadge ? BADGE_CONFIG[selectedBadge].gradient : [palette.gray400, palette.gray500]}
             style={styles.nextBtn}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
             <Text style={styles.nextBtnText}>Continue</Text>
-            <Ionicons name="arrow-forward" size={16} color="#FFF" />
+            <Ionicons name="arrow-forward" size={16} color={palette.white} />
           </LinearGradient>
         </Pressable>
       </View>
@@ -781,13 +782,13 @@ export default function ApplyBadgeScreen() {
         <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>What you get</Text>
         <View style={[styles.unlockCard, { borderColor: tc.borderLight }]}>
           <LinearGradient colors={config.gradient} style={styles.unlockCardHeader}>
-            <Ionicons name={config.icon as any} size={22} color="#FFF" />
+            <Ionicons name={config.icon as any} size={22} color={palette.white} />
             <Text style={styles.unlockCardTitle}>{config.label}</Text>
           </LinearGradient>
           <View style={[styles.unlockCardBody, { backgroundColor: tc.cardBg }]}>
             {config.unlocks.map((u, i) => (
               <View key={i} style={styles.unlockRow}>
-                <Ionicons name="checkmark-circle" size={14} color="#30855B" />
+                <Ionicons name="checkmark-circle" size={14} color={palette.brandGreen} />
                 <Text style={[styles.unlockText, { color: tc.textSecondary }]}>{u}</Text>
               </View>
             ))}
@@ -809,7 +810,7 @@ export default function ApplyBadgeScreen() {
         {/* Market-specific guidance */}
         <View style={[styles.marketNote, isDark && { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
           <Ionicons name="flag" size={13} color={Colors.brand.blue} />
-          <Text style={[styles.marketNoteText, isDark && { color: "#93C5FD" }]}>
+          <Text style={[styles.marketNoteText, isDark && { color: palette.blue300 }]}>
             <Text style={{ fontWeight: "700" }}>{labels.marketDisplayName}: </Text>
             {config.marketNotes[market] ?? config.marketNotes["US"]}
           </Text>
@@ -826,7 +827,7 @@ export default function ApplyBadgeScreen() {
           <Pressable onPress={() => setStep(2)} style={{ flex: 1 }}>
             <LinearGradient colors={config.gradient} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>Start</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFF" />
+              <Ionicons name="arrow-forward" size={16} color={palette.white} />
             </LinearGradient>
           </Pressable>
         </View>
@@ -977,7 +978,7 @@ export default function ApplyBadgeScreen() {
           >
             <LinearGradient colors={config.gradient} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>{selectedBadge === "restaurant_owner" ? "Review & Submit" : "Upload Documents"}</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFF" />
+              <Ionicons name="arrow-forward" size={16} color={palette.white} />
             </LinearGradient>
           </Pressable>
         </View>
@@ -1035,15 +1036,15 @@ export default function ApplyBadgeScreen() {
                 {group.items.map((item, i) => (
                   <View key={i} style={styles.ukDocsItem}>
                     <Ionicons name="document-text-outline" size={12} color={Colors.brand.blue} />
-                    <Text style={[styles.ukDocsItemText, isDark && { color: "#93C5FD" }]}>{item}</Text>
+                    <Text style={[styles.ukDocsItemText, isDark && { color: palette.blue300 }]}>{item}</Text>
                   </View>
                 ))}
               </View>
             ))}
             {labels.docsCardNote && (
-              <View style={[styles.ukDocsNote, isDark && { backgroundColor: "#0A1628" }]}>
-                <Ionicons name="information-circle-outline" size={13} color="#60A5FA" />
-                <Text style={[styles.ukDocsNoteText, isDark && { color: "#93C5FD" }]}>{labels.docsCardNote}</Text>
+              <View style={[styles.ukDocsNote, isDark && { backgroundColor: palette.blueL10 }]}>
+                <Ionicons name="information-circle-outline" size={13} color={palette.blue400} />
+                <Text style={[styles.ukDocsNoteText, isDark && { color: palette.blue300 }]}>{labels.docsCardNote}</Text>
               </View>
             )}
           </View>
@@ -1075,17 +1076,17 @@ export default function ApplyBadgeScreen() {
         )}
 
         {/* Fraud guidelines */}
-        <View style={[styles.fraudCard, isDark && { backgroundColor: "#1A0505", borderColor: "#7F1D1D" }]}>
+        <View style={[styles.fraudCard, isDark && { backgroundColor: palette.redL06, borderColor: palette.redL31 }]}>
           <View style={styles.fraudHeader}>
-            <LinearGradient colors={["#DC2626", "#EF4444"]} style={styles.fraudIcon}>
-              <Ionicons name="shield-checkmark" size={14} color="#FFF" />
+            <LinearGradient colors={[palette.red600, palette.red500]} style={styles.fraudIcon}>
+              <Ionicons name="shield-checkmark" size={14} color={palette.white} />
             </LinearGradient>
-            <Text style={[styles.fraudTitle, isDark && { color: "#FCA5A5" }]}>ComLinkr Safety Guidelines</Text>
+            <Text style={[styles.fraudTitle, isDark && { color: palette.red300 }]}>ComLinkr Safety Guidelines</Text>
           </View>
           {FRAUD_GUIDELINES.map((g, i) => (
             <View key={i} style={styles.fraudRow}>
               <View style={styles.fraudDot} />
-              <Text style={[styles.fraudText, isDark && { color: "#FCA5A5" }]}>{g}</Text>
+              <Text style={[styles.fraudText, isDark && { color: palette.red300 }]}>{g}</Text>
             </View>
           ))}
         </View>
@@ -1099,7 +1100,7 @@ export default function ApplyBadgeScreen() {
           <Pressable onPress={() => step3Valid && setStep(4)} style={[{ flex: 1 }, !step3Valid && { opacity: 0.4 }]}>
             <LinearGradient colors={config.gradient} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.nextBtnText}>Review & Submit</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFF" />
+              <Ionicons name="arrow-forward" size={16} color={palette.white} />
             </LinearGradient>
           </Pressable>
         </View>
@@ -1189,7 +1190,7 @@ export default function ApplyBadgeScreen() {
 
         <View style={[styles.summaryCard, { borderColor: tc.borderLight }]}>
           <LinearGradient colors={config.gradient} style={styles.summaryHeader} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            <Ionicons name={config.icon as any} size={20} color="#FFF" />
+            <Ionicons name={config.icon as any} size={20} color={palette.white} />
             <Text style={styles.summaryHeaderText}>{config.label}</Text>
           </LinearGradient>
           <View style={[styles.summaryBody, { backgroundColor: tc.cardBg }]}>
@@ -1224,7 +1225,7 @@ export default function ApplyBadgeScreen() {
         {/* Terms agreement */}
         <Pressable onPress={() => setTermsAgreed((v) => !v)} style={styles.termsRow}>
           <View style={[styles.checkbox, { borderColor: tc.borderMedium }, termsAgreed && styles.checkboxActive]}>
-            {termsAgreed && <Ionicons name="checkmark" size={12} color="#FFF" />}
+            {termsAgreed && <Ionicons name="checkmark" size={12} color={palette.white} />}
           </View>
           <Text style={[styles.termsText, { color: tc.textSecondary }]}>
             I confirm all information provided is accurate and I agree to ComLinkr's{" "}
@@ -1244,7 +1245,7 @@ export default function ApplyBadgeScreen() {
             style={[{ flex: 1 }, (!termsAgreed || submitting) && { opacity: 0.5 }]}
           >
             <LinearGradient colors={config.gradient} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Ionicons name="send" size={16} color="#FFF" />
+              <Ionicons name="send" size={16} color={palette.white} />
               <Text style={styles.nextBtnText}>{submitting ? "Submitting..." : "Submit Application"}</Text>
             </LinearGradient>
           </Pressable>
@@ -1256,8 +1257,8 @@ export default function ApplyBadgeScreen() {
   // ── Step 5: Confirmation ────────────────────────────────────────────────────
   const renderConfirmation = () => (
     <View style={[styles.section, { alignItems: "center", paddingTop: rs(40) }]}>
-      <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.successCircle}>
-        <Ionicons name="checkmark" size={40} color="#FFF" />
+      <LinearGradient colors={[palette.brandBlue, palette.brandGreen]} style={styles.successCircle}>
+        <Ionicons name="checkmark" size={40} color={palette.white} />
       </LinearGradient>
       <Text style={[styles.successTitle, { color: tc.textPrimary }]}>Application Submitted!</Text>
       <Text style={[styles.successDesc, { color: tc.textSecondary }]}>
@@ -1271,7 +1272,7 @@ export default function ApplyBadgeScreen() {
           "Once approved, your badge activates immediately",
         ].map((step, i) => (
           <View key={i} style={styles.nextStepRow}>
-            <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextStepNum}>
+            <LinearGradient colors={[palette.brandBlue, palette.brandGreen]} style={styles.nextStepNum}>
               <Text style={styles.nextStepNumText}>{i + 1}</Text>
             </LinearGradient>
             <Text style={[styles.nextStepText, { color: tc.textSecondary }]}>{step}</Text>
@@ -1284,7 +1285,7 @@ export default function ApplyBadgeScreen() {
           <Text style={styles.outlineBtnText}>See status</Text>
         </Pressable>
         <Pressable onPress={() => { if (router.canGoBack()) router.back(); else router.replace("/(tabs)/feed" as any); }} style={{ flex: 1 }}>
-          <LinearGradient colors={["#1A6BAE", "#30855B"]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+          <LinearGradient colors={[palette.brandBlue, palette.brandGreen]} style={styles.nextBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             <Text style={styles.nextBtnText}>Back to Home</Text>
           </LinearGradient>
         </Pressable>
@@ -1345,7 +1346,7 @@ const styles = createThemedStyles({
     paddingBottom: rs(14),
     gap: rs(10),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(4),
     elevation: 2,
@@ -1418,7 +1419,7 @@ const styles = createThemedStyles({
     gap: rs(10),
     padding: rs(14),
   },
-  unlockCardTitle: { fontSize: rs(15), fontWeight: "800", color: "#FFF" },
+  unlockCardTitle: { fontSize: rs(15), fontWeight: "800", color: palette.white },
   unlockCardBody: { padding: rs(14), gap: rs(8) },
   unlockRow: { flexDirection: "row", alignItems: "center", gap: rs(8) },
   unlockText: { fontSize: rs(13), fontWeight: "500", flex: 1 },
@@ -1433,26 +1434,26 @@ const styles = createThemedStyles({
     justifyContent: "center",
     marginTop: rs(1),
   },
-  requirementNumText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  requirementNumText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
   requirementText: { flex: 1, fontSize: rs(13), lineHeight: rs(18) },
   marketNote: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(8),
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     padding: rs(12),
     borderRadius: rs(12),
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
     marginBottom: rs(16),
   },
-  marketNoteText: { flex: 1, fontSize: rs(12), color: "#1E40AF", lineHeight: rs(17) },
+  marketNoteText: { flex: 1, fontSize: rs(12), color: palette.blue800, lineHeight: rs(17) },
 
   // ── Form fields ──
   field: { marginBottom: rs(14) },
   fieldLabel: { fontSize: rs(12), fontWeight: "700", marginBottom: rs(4), textTransform: "uppercase", letterSpacing: 0.3 },
   fieldHint: { fontSize: rs(11), marginBottom: rs(6), lineHeight: rs(15) },
-  required: { color: "#EF4444" },
+  required: { color: palette.red500 },
   fieldInput: {
     borderRadius: rs(12),
     borderWidth: 1.5,
@@ -1462,7 +1463,7 @@ const styles = createThemedStyles({
   },
   fieldInputMulti: { height: rs(80), textAlignVertical: "top" },
   fieldErrorRow: { flexDirection: "row", alignItems: "center", gap: rs(5), marginTop: rs(5) },
-  fieldErrorText: { fontSize: rs(11), color: "#DC2626", flex: 1, lineHeight: rs(15) },
+  fieldErrorText: { fontSize: rs(11), color: palette.red600, flex: 1, lineHeight: rs(15) },
   ownershipRow: { flexDirection: "row", gap: rs(10) },
   ownershipBtn: {
     flex: 1,
@@ -1487,7 +1488,7 @@ const styles = createThemedStyles({
     borderWidth: 1.5,
     marginBottom: rs(10),
   },
-  docRowUploaded: { borderColor: "#86EFAC", backgroundColor: "#F0FDF4" },
+  docRowUploaded: { borderColor: palette.green300, backgroundColor: palette.green50 },
   docIcon: {
     width: rs(36),
     height: rs(36),
@@ -1501,10 +1502,10 @@ const styles = createThemedStyles({
 
   // ── UK document guide ──
   ukDocsCard: {
-    backgroundColor: "#F0F4FF",
+    backgroundColor: palette.neutralL97,
     borderRadius: rs(14),
     borderWidth: 1.5,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
     padding: rs(14),
     marginBottom: rs(14),
   },
@@ -1524,18 +1525,18 @@ const styles = createThemedStyles({
   ukDocsFlagText: {
     fontSize: rs(11),
     fontWeight: "900",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.5,
   },
   ukDocsTitle: {
     fontSize: rs(13),
     fontWeight: "800",
-    color: "#1E3A8A",
+    color: palette.blueL33,
     marginBottom: rs(1),
   },
   ukDocsSub: {
     fontSize: rs(11),
-    color: "#3B5998",
+    color: palette.blueL41,
   },
   ukDocsGroup: {
     marginBottom: rs(10),
@@ -1557,7 +1558,7 @@ const styles = createThemedStyles({
   ukDocsItemText: {
     flex: 1,
     fontSize: rs(12),
-    color: "#1E40AF",
+    color: palette.blue800,
     lineHeight: rs(17),
   },
   ukDocsNote: {
@@ -1566,13 +1567,13 @@ const styles = createThemedStyles({
     gap: rs(7),
     marginTop: rs(4),
     padding: rs(10),
-    backgroundColor: "#DBEAFE",
+    backgroundColor: palette.blue100,
     borderRadius: rs(10),
   },
   ukDocsNoteText: {
     flex: 1,
     fontSize: rs(11),
-    color: "#1E40AF",
+    color: palette.blue800,
     lineHeight: rs(16),
   },
 
@@ -1580,22 +1581,22 @@ const styles = createThemedStyles({
   fraudCard: {
     borderRadius: rs(14),
     borderWidth: 1.5,
-    borderColor: "#FECACA",
+    borderColor: palette.red200,
     padding: rs(14),
     marginTop: rs(12),
     marginBottom: rs(16),
   },
   fraudHeader: { flexDirection: "row", alignItems: "center", gap: rs(8), marginBottom: rs(10) },
   fraudIcon: { width: rs(26), height: rs(26), borderRadius: rs(8), alignItems: "center", justifyContent: "center" },
-  fraudTitle: { fontSize: rs(13), fontWeight: "800", color: "#7F1D1D" },
+  fraudTitle: { fontSize: rs(13), fontWeight: "800", color: palette.redL31 },
   fraudRow: { flexDirection: "row", alignItems: "flex-start", gap: rs(8), marginBottom: rs(6) },
-  fraudDot: { width: rs(5), height: rs(5), borderRadius: rs(3), backgroundColor: "#EF4444", marginTop: rs(5) },
-  fraudText: { flex: 1, fontSize: rs(12), color: "#991B1B", lineHeight: rs(17) },
+  fraudDot: { width: rs(5), height: rs(5), borderRadius: rs(3), backgroundColor: palette.red500, marginTop: rs(5) },
+  fraudText: { flex: 1, fontSize: rs(12), color: palette.red800, lineHeight: rs(17) },
 
   // ── Summary / review ──
   summaryCard: { borderRadius: rs(16), overflow: "hidden", borderWidth: 1, marginBottom: rs(16) },
   summaryHeader: { flexDirection: "row", alignItems: "center", gap: rs(10), padding: rs(14) },
-  summaryHeaderText: { fontSize: rs(15), fontWeight: "800", color: "#FFF" },
+  summaryHeaderText: { fontSize: rs(15), fontWeight: "800", color: palette.white },
   summaryBody: { padding: rs(14), gap: rs(10) },
   summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   summaryLabel: { fontSize: rs(12), fontWeight: "600", width: rs(90) },
@@ -1635,7 +1636,7 @@ const styles = createThemedStyles({
     paddingVertical: rs(14),
     borderRadius: rs(14),
   },
-  nextBtnText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  nextBtnText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
 
   // ── Success screen ──
   successCircle: {
@@ -1657,7 +1658,7 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  nextStepNumText: { fontSize: rs(12), fontWeight: "800", color: "#FFF" },
+  nextStepNumText: { fontSize: rs(12), fontWeight: "800", color: palette.white },
   nextStepText: { flex: 1, fontSize: rs(13), fontWeight: "500" },
   outlineBtn: {
     paddingVertical: rs(14),

@@ -1,6 +1,7 @@
 // AvailableRoomDetailModal — a room in a shared home (design D, plan 01: design screen "room-detail").
 // Photo hero with glass buttons, a body that overlaps it, the host with the match, the facts as one list, the rules
 // and amenities as chips, and a glass bar with Message and Apply. Apply with a note opens a D sheet.
+import { palette } from "../../../theme/palette";
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, useWindowDimensions, KeyboardAvoidingView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -71,7 +72,7 @@ export function AvailableRoomDetail({
     ["Smoking", room.smoking],
     ["Pets", room.petFriendly ? "Pet friendly" : "No pets"],
   ] as [string, string][]).filter(([, v]) => has(v));
-  const glassBtn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color = "#fff") => (
+  const glassBtn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color = palette.white) => (
     <Pressable onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
       style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(10,20,28,0.42)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}>
       <Ionicons name={icon} size={19} color={color} />
@@ -115,7 +116,7 @@ export function AvailableRoomDetail({
           </View>
           {room.images.length > 1 ? (
             <View style={{ position: "absolute", bottom: 40, right: 16, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 }}>
-              <Text style={[TYPE.label, { color: "#fff" }]}>{imgIdx + 1} / {room.images.length}</Text>
+              <Text style={[TYPE.label, { color: palette.white }]}>{imgIdx + 1} / {room.images.length}</Text>
             </View>
           ) : null}
         </View>
@@ -138,7 +139,7 @@ export function AvailableRoomDetail({
               <FadeImage uri={room.hostAvatar} style={{ width: 50, height: 50, borderRadius: 25 }} />
               {room.hostVerified ? (
                 <View style={{ position: "absolute", right: -2, bottom: -2, width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, borderWidth: 2, borderColor: tc.cardBg }}>
-                  <Ionicons name="checkmark" size={10} color="#fff" />
+                  <Ionicons name="checkmark" size={10} color={palette.white} />
                 </View>
               ) : null}
             </View>

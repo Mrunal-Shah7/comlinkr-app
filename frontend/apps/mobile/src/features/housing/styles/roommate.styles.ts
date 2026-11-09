@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
 import { rs } from "../../../utils/responsive";
@@ -8,12 +9,12 @@ export const rm = StyleSheet.create({
   card: {
     marginHorizontal: rs(16),
     marginBottom: rs(16),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20),
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#E6EEF9",
-    shadowColor: "#0A2540",
+    borderColor: palette.skyL94_5,
+    shadowColor: palette.navy,
     shadowOpacity: 0.08,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
@@ -62,7 +63,7 @@ export const rm = StyleSheet.create({
   cardBannerVerifiedText: {
     fontSize: rs(10),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.2,
   },
   cardConnectionBadge: {
@@ -76,7 +77,7 @@ export const rm = StyleSheet.create({
   cardConnectionText: {
     fontSize: rs(10),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.2,
   },
   cardScoreBadge: {
@@ -110,7 +111,7 @@ export const rm = StyleSheet.create({
     height: rs(70),
     borderRadius: rs(35),
     borderWidth: 3,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
   cardVerified: {
     position: "absolute",
@@ -123,7 +124,7 @@ export const rm = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2.5,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
   // Card body starts below avatar bottom
   cardBody: {
@@ -158,12 +159,12 @@ export const rm = StyleSheet.create({
   cardQuickStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFF",
+    backgroundColor: palette.neutralL99,
     borderRadius: 14,
     padding: 10,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E4EBF8",
+    borderColor: palette.blueL93_2,
   },
   cardQuickStat: {
     flex: 1,
@@ -186,7 +187,7 @@ export const rm = StyleSheet.create({
   cardQuickStatDivider: {
     width: 1,
     height: 36,
-    backgroundColor: "#D4DFF0",
+    backgroundColor: palette.blueL89_2,
   },
   cardBio: {
     fontSize: 13,
@@ -215,12 +216,12 @@ export const rm = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#DCFCE7",
+    backgroundColor: palette.green100,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: palette.green200,
   },
   cardSharedEmoji: { fontSize: 12 },
   cardSharedText: {
@@ -232,7 +233,7 @@ export const rm = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#EDF2F8",
+    borderTopColor: palette.neutralL95,
     paddingTop: 12,
     paddingHorizontal: 14,
     paddingBottom: 14,
@@ -247,7 +248,7 @@ export const rm = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: Colors.brand.blueLight,
     borderWidth: 1,
-    borderColor: "#D6E8FF",
+    borderColor: palette.skyL92_2,
   },
   cardMsgText: {
     fontSize: 12,
@@ -268,7 +269,7 @@ export const rm = StyleSheet.create({
   cardViewText: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
   },
 
   // Shared tag pill (used in modal)
@@ -276,12 +277,12 @@ export const rm = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#DCFCE7",
+    backgroundColor: palette.green100,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: palette.green200,
   },
   sharedTagEmoji: { fontSize: 13 },
   sharedTagText: {
@@ -306,7 +307,7 @@ export const rm = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: palette.neutralL97_10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -344,7 +345,7 @@ export const rm = StyleSheet.create({
   modalHeaderTitle: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: -0.2,
   },
   modalProfileHero: {
@@ -353,7 +354,7 @@ export const rm = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#EDF2F8",
+    borderBottomColor: palette.neutralL95,
   },
   modalAvatarWrap: { position: "relative", marginBottom: 14 },
   modalAvatar: {
@@ -361,7 +362,7 @@ export const rm = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 3,
-    borderColor: "#E6EEF9",
+    borderColor: palette.skyL94_5,
   },
   modalVerifiedBadge: {
     position: "absolute",
@@ -374,7 +375,7 @@ export const rm = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2.5,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
   modalName: {
     fontSize: 22,
@@ -411,19 +412,19 @@ export const rm = StyleSheet.create({
   modalConnectionText: {
     fontSize: 12,
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.2,
   },
   modalScoreCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderRadius: 16,
     padding: 14,
     marginTop: 18,
     borderWidth: 1,
-    borderColor: "#E4EBF8",
+    borderColor: palette.blueL93_2,
     alignSelf: "stretch",
   },
   modalScoreRing: {
@@ -433,7 +434,7 @@ export const rm = StyleSheet.create({
     borderWidth: 3.5,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
   },
   modalScoreNum: {
     fontSize: 18,
@@ -472,13 +473,13 @@ export const rm = StyleSheet.create({
   },
   modalStatCard: {
     flex: 1,
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderRadius: 14,
     padding: 14,
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderColor: "#E4EBF8",
+    borderColor: palette.blueL93_2,
   },
   modalStatVal: {
     fontSize: 13,
@@ -517,8 +518,8 @@ export const rm = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#EEF2F8",
-    backgroundColor: "#FFF",
+    borderTopColor: palette.neutralL95_4,
+    backgroundColor: palette.white,
   },
   modalCtaSecondary: {
     flexDirection: "row",
@@ -545,6 +546,6 @@ export const rm = StyleSheet.create({
   modalCtaPrimaryText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
 });

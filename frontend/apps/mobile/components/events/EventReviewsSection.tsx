@@ -1,4 +1,5 @@
 // SPRINT-42: full event reviews section — newest-first pagination, eligibility, create/edit/delete + aggregate refetch.
+import { palette } from "../../src/theme/palette";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
@@ -279,8 +280,8 @@ export function EventReviewsSection({
                 hitSlop={8}
                 style={styles.ownActionBtn}
               >
-                <Ionicons name="trash-outline" size={16} color="#DC2626" />
-                <Text style={{ color: "#DC2626", fontWeight: "700", fontSize: 12 }}>Delete</Text>
+                <Ionicons name="trash-outline" size={16} color={palette.red600} />
+                <Text style={{ color: palette.red600, fontWeight: "700", fontSize: 12 }}>Delete</Text>
               </Pressable>
             </View>
             <ReviewRow review={myReview} />

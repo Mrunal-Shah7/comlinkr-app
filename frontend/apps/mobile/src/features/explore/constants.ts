@@ -1,12 +1,13 @@
+import { palette } from "../../theme/palette";
 import { Colors } from "../../theme/colors";
 import { type NeighborhoodMood } from "../../api/feed.api";
 
 export const HERO_MOOD_OPTIONS: { mood: NeighborhoodMood; emoji: string; label: string; color: string }[] = [
-  { mood: "GREAT", emoji: "😊", label: "Great", color: "#4ADE80" },
-  { mood: "EXCITING", emoji: "🎉", label: "Exciting", color: "#FBBF24" },
-  { mood: "CHILL", emoji: "😌", label: "Chill", color: "#60A5FA" },
-  { mood: "MEH", emoji: "🤔", label: "Meh", color: "#F97316" },
-  { mood: "NOISY", emoji: "😤", label: "Noisy", color: "#EF4444" },
+  { mood: "GREAT", emoji: "😊", label: "Great", color: palette.green400 },
+  { mood: "EXCITING", emoji: "🎉", label: "Exciting", color: palette.amber400 },
+  { mood: "CHILL", emoji: "😌", label: "Chill", color: palette.blue400 },
+  { mood: "MEH", emoji: "🤔", label: "Meh", color: palette.orange500 },
+  { mood: "NOISY", emoji: "😤", label: "Noisy", color: palette.red500 },
 ];
 
 export const POSTS = [
@@ -271,12 +272,12 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
 ];
 
 export const STORY_CATEGORY_META: Record<Exclude<StoryCategory, "All">, { icon: string; color: string; bg: string; darkBg: string }> = {
-  Events:       { icon: "calendar-outline",      color: "#257A86", bg: "#E2F0F1", darkBg: "rgba(37,122,134,0.18)" },
-  Food:         { icon: "restaurant-outline",    color: "#EF4444", bg: "#FEE2E2", darkBg: "rgba(239,68,68,0.18)" },
+  Events:       { icon: "calendar-outline",      color: palette.brandTeal, bg: palette.brandTealLight, darkBg: "rgba(37,122,134,0.18)" },
+  Food:         { icon: "restaurant-outline",    color: palette.red500, bg: palette.red100, darkBg: "rgba(239,68,68,0.18)" },
   Housing:      { icon: "home-outline",           color: Colors.brand.blue, bg: Colors.brand.blueLight, darkBg: "rgba(26,107,174,0.18)" },
-  Culture:      { icon: "color-palette-outline",  color: "#8B5CF6", bg: "#F3F0FF", darkBg: "rgba(139,92,246,0.18)" },
+  Culture:      { icon: "color-palette-outline",  color: palette.violet500, bg: palette.neutralL97_7, darkBg: "rgba(139,92,246,0.18)" },
   "Local News": { icon: "newspaper-outline",     color: Colors.brand.green, bg: Colors.brand.greenLight, darkBg: "rgba(48,133,91,0.18)" },
-  General:      { icon: "images-outline",        color: "#4F6470", bg: "#E7EEF1", darkBg: "rgba(138,157,168,0.18)" },
+  General:      { icon: "images-outline",        color: palette.inkSecondary, bg: palette.neutralL93_2, darkBg: "rgba(138,157,168,0.18)" },
 };
 
 // ── My Area Live Data ──────────────────────────────────
@@ -430,19 +431,19 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
 ];
 
 export const LIVE_CATEGORY_META: Record<Exclude<LiveCategory, "All">, { emoji: string; icon: string; color: string; bg: string }> = {
-  Housing:   { emoji: "🏠", icon: "home-outline",          color: Colors.brand.blue, bg: "#E8F0FE" },
-  Roommates: { emoji: "🤝", icon: "people-outline",        color: "#8B5CF6",         bg: "#F3F0FF" },
-  Food:      { emoji: "🍜", icon: "restaurant-outline",    color: "#EF4444",         bg: "#FEE2E2" },
-  Events:    { emoji: "🎉", icon: "calendar-outline",      color: "#257A86",         bg: "#E2F0F1" },
-  Alerts:    { emoji: "⚠️", icon: "warning-outline",       color: "#D97706",         bg: "#FEF3C7" },
-  News:      { emoji: "📰", icon: "newspaper-outline",     color: Colors.brand.green, bg: "#E3F1EA" },
+  Housing:   { emoji: "🏠", icon: "home-outline",          color: Colors.brand.blue, bg: palette.blueL95 },
+  Roommates: { emoji: "🤝", icon: "people-outline",        color: palette.violet500,         bg: palette.neutralL97_7 },
+  Food:      { emoji: "🍜", icon: "restaurant-outline",    color: palette.red500,         bg: palette.red100 },
+  Events:    { emoji: "🎉", icon: "calendar-outline",      color: palette.brandTeal,         bg: palette.brandTealLight },
+  Alerts:    { emoji: "⚠️", icon: "warning-outline",       color: palette.amber600,         bg: palette.amber100 },
+  News:      { emoji: "📰", icon: "newspaper-outline",     color: Colors.brand.green, bg: palette.brandGreenLight },
 };
 
 // ── Event category badge colors ─────────────────────────
 export const CATEGORY_COLOR: Record<string, { bg: string; text: string }> = {
-  Community: { bg: "#E0F7FA", text: "#0891B2" },
-  Food:      { bg: "#E2F0F1", text: "#257A86" },
-  Arts:      { bg: "#E3F1EA", text: "#30855B" },
-  Tech:      { bg: "#EBF4FF", text: "#1A6BAE" },
-  Wellness:  { bg: "#E3F1EA", text: "#30855B" },
+  Community: { bg: palette.tealL93, text: palette.cyan600 },
+  Food:      { bg: palette.brandTealLight, text: palette.brandTeal },
+  Arts:      { bg: palette.brandGreenLight, text: palette.brandGreen },
+  Tech:      { bg: palette.skyL96, text: palette.brandBlue },
+  Wellness:  { bg: palette.brandGreenLight, text: palette.brandGreen },
 };

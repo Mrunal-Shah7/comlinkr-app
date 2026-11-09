@@ -1,4 +1,5 @@
 // SPRINT-31: shared expo-image replacement for Animated.Image fade-in helpers
+import { palette } from "../src/theme/palette";
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Image, type ImageContentFit } from "expo-image";
@@ -57,8 +58,8 @@ export function FadeImage({
   onError?: () => void; // SPRINT-42: optional caller notification after the shared fallback engages.
 }) {
   const { isDark, tc } = useTheme();
-  const bg = placeholderBg ?? (isDark ? tc.skeletonBg : "#E8EDF5");
-  const iconColor = isDark ? tc.textTertiary : "#B0B8C9";
+  const bg = placeholderBg ?? (isDark ? tc.skeletonBg : palette.neutralL94);
+  const iconColor = isDark ? tc.textTertiary : palette.blueL74;
   const [activeUri, setActiveUri] = useState(() => resolveImageUri(uri));
   const [usedFallback, setUsedFallback] = useState(false);
   const [errored, setErrored] = useState(false);

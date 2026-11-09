@@ -1,5 +1,6 @@
 // app/index.tsx
 
+import { palette } from "../src/theme/palette";
 import { Redirect } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
@@ -12,14 +13,14 @@ export default function Index() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.white }}>
         <Image
           source={require('../assets/images/brand/logo.jpg')}
           style={{ width: 160, height: 160, marginBottom: 32 }}
           contentFit="contain"
           transition={200}
         />
-        <ActivityIndicator size="large" color="#1A6BAE" />
+        <ActivityIndicator size="large" color={palette.brandBlue} />
       </View>
     );
   }

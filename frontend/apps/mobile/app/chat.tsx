@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
@@ -97,15 +98,15 @@ function MessageTick({ isOwn, read }: { isOwn: boolean; read?: boolean }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", marginLeft: rs(3) }}>
       {/* first tick */}
-      <Ionicons name="checkmark" size={rs(12)} color={read ? "#30855B" : "#8A9DA8"} />
+      <Ionicons name="checkmark" size={rs(12)} color={read ? palette.brandGreen : palette.inkTertiary} />
       {/* second tick offset left to overlap = double tick look */}
-      <Ionicons name="checkmark" size={rs(12)} color={read ? "#30855B" : "#8A9DA8"} style={{ marginLeft: rs(-5) }} />
+      <Ionicons name="checkmark" size={rs(12)} color={read ? palette.brandGreen : palette.inkTertiary} style={{ marginLeft: rs(-5) }} />
     </View>
   );
 }
 
 // ── Avatar helpers ────────────────────────────────────────────────────────────
-const AVATAR_COLORS = ["#1A6BAE", "#257A86", "#30855B", "#155A93", "#256B49"];
+const AVATAR_COLORS = [palette.brandBlue, palette.brandTeal, palette.brandGreen, palette.brandBlueDark, palette.brandGreenDark];
 
 function getAvatarColor(name: string): string {
   let h = 0;
@@ -141,7 +142,7 @@ function Avatar({
             transition={200}
           />
         ) : (
-          <Text style={[display(800), { fontSize: size * 0.34, color: "#FFF", letterSpacing: 0.5 }]}>
+          <Text style={[display(800), { fontSize: size * 0.34, color: palette.white, letterSpacing: 0.5 }]}>
             {initials}
           </Text>
         )}
@@ -240,10 +241,10 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
 function SwipeRemove({ progress }: { progress: SharedValue<number> }) {
   const a = useAnimatedStyle(() => ({ transform: [{ scale: Math.min(1, 0.6 + progress.get() * 0.4) }], opacity: Math.min(1, progress.get() * 1.5) }));
   return (
-    <View style={{ width: 96, alignItems: "center", justifyContent: "center", backgroundColor: "#C53030" }}>
+    <View style={{ width: 96, alignItems: "center", justifyContent: "center", backgroundColor: palette.redL48 }}>
       <Reanimated.View style={[{ alignItems: "center", gap: 2 }, a]}>
-        <Ionicons name="trash-outline" size={22} color="#fff" />
-        <Text style={[TYPE.label, { color: "#fff" }]}>Remove</Text>
+        <Ionicons name="trash-outline" size={22} color={palette.white} />
+        <Text style={[TYPE.label, { color: palette.white }]}>Remove</Text>
       </Reanimated.View>
     </View>
   );
@@ -344,7 +345,7 @@ function ConvList({
             >
               {isEvent ? (
                 <GradientFill style={{ width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" }}>
-                  <Ionicons name="people" size={22} color="#fff" />
+                  <Ionicons name="people" size={22} color={palette.white} />
                 </GradientFill>
               ) : (
                 <Avatar name={item.name} size={52} online={item.online} uri={item.avatarUrl} />
@@ -372,7 +373,7 @@ function ConvList({
                     </View>
                   ) : unread ? (
                     <Reanimated.View entering={ZoomIn.springify().damping(14).stiffness(260).mass(1)} style={{ minWidth: 22, height: 22, paddingHorizontal: 7, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent }}>
-                      <Text style={[TYPE.label, { color: "#fff", fontSize: 11.5 }]}>{item.unread > 99 ? "99+" : item.unread}</Text>
+                      <Text style={[TYPE.label, { color: palette.white, fontSize: 11.5 }]}>{item.unread > 99 ? "99+" : item.unread}</Text>
                     </Reanimated.View>
                   ) : null}
                 </View>
@@ -395,56 +396,56 @@ function ConvList({
 const l = StyleSheet.create({
   searchBar: {
     flexDirection: "row", alignItems: "center",
-    paddingHorizontal: rs(16), backgroundColor: "#FFF",
-    borderRadius: rs(16), borderWidth: 1.5, borderColor: "#D0DCEE",
+    paddingHorizontal: rs(16), backgroundColor: palette.white,
+    borderRadius: rs(16), borderWidth: 1.5, borderColor: palette.blueL87,
     height: rs(48),
-    shadowColor: "#0A2540", shadowOpacity: 0.07, shadowRadius: rs(8),
+    shadowColor: palette.navy, shadowOpacity: 0.07, shadowRadius: rs(8),
     shadowOffset: { width: 0, height: rs(3) }, elevation: 3,
   },
-  searchInput: { flex: 1, fontSize: rs(14), color: "#0A2540", fontWeight: "500", marginHorizontal: rs(8) },
+  searchInput: { flex: 1, fontSize: rs(14), color: palette.navy, fontWeight: "500", marginHorizontal: rs(8) },
 
   tab: {
     flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(6),
     paddingVertical: rs(9), borderRadius: rs(12),
-    backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#D0DCEE",
+    backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.blueL87,
   },
   tabActive: { backgroundColor: Colors.brand.blue, borderColor: Colors.brand.blue },
-  tabText: { fontSize: rs(13), fontWeight: "700", color: "#5A6A7E" },
-  tabTextActive: { color: "#FFF" },
+  tabText: { fontSize: rs(13), fontWeight: "700", color: palette.skyL42 },
+  tabTextActive: { color: palette.white },
   tabBadge: {
     minWidth: 20, height: rs(20), borderRadius: rs(10), paddingHorizontal: rs(5),
-    backgroundColor: "#EEF4FF", alignItems: "center", justifyContent: "center",
+    backgroundColor: palette.blueL97, alignItems: "center", justifyContent: "center",
   },
   tabBadgeActive: { backgroundColor: "rgba(255,255,255,0.22)" },
   tabBadgeText: { fontSize: rs(11), fontWeight: "800", color: Colors.brand.blue },
-  tabBadgeTextActive: { color: "#FFF" },
+  tabBadgeTextActive: { color: palette.white },
 
-  convName: { fontSize: rs(15), fontWeight: "600", color: "#1E2F44", flex: 1 },
-  convNameBold: { fontWeight: "800", color: "#0A1E35" },
-  convTime: { fontSize: rs(11), color: "#8A9DB5", fontWeight: "500" },
+  convName: { fontSize: rs(15), fontWeight: "600", color: palette.skyL19, flex: 1 },
+  convNameBold: { fontWeight: "800", color: palette.skyL12 },
+  convTime: { fontSize: rs(11), color: palette.skyL63, fontWeight: "500" },
   convTimeBold: { color: Colors.brand.blue, fontWeight: "700" },
-  convMsg: { fontSize: rs(13), color: "#7A90AC", fontWeight: "400" },
-  convMsgBold: { color: "#0A2540", fontWeight: "600" },
+  convMsg: { fontSize: rs(13), color: palette.skyL58, fontWeight: "400" },
+  convMsgBold: { color: palette.navy, fontWeight: "600" },
 
   ctxTag: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
     paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(7),
   },
-  ctxEvent: { backgroundColor: "#E2F0F1" },
-  ctxListing: { backgroundColor: "#EEF5FF" },
+  ctxEvent: { backgroundColor: palette.brandTealLight },
+  ctxListing: { backgroundColor: palette.blueL97_2 },
   ctxText: { fontSize: rs(9), fontWeight: "800", letterSpacing: 0.3 },
   ctxNameTag: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
     paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(7),
-    backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB",
+    backgroundColor: palette.gray100, borderWidth: 1, borderColor: palette.gray200,
     maxWidth: rs(140),
   },
   ctxNameText: { fontSize: rs(9), fontWeight: "700", flex: 1 },
   groupTag: {
-    backgroundColor: "#F3F4F6", paddingHorizontal: rs(7), paddingVertical: rs(3),
+    backgroundColor: palette.gray100, paddingHorizontal: rs(7), paddingVertical: rs(3),
     borderRadius: rs(7),
   },
-  groupTagText: { fontSize: rs(9), fontWeight: "800", color: "#6B7280", letterSpacing: 0.4 },
+  groupTagText: { fontSize: rs(9), fontWeight: "800", color: palette.gray500, letterSpacing: 0.4 },
 
   // Pending
   pendingChip: {
@@ -469,21 +470,21 @@ const l = StyleSheet.create({
     marginLeft: rs(8), flexShrink: 0,
     shadowColor: Colors.brand.blue, shadowOpacity: 0.45, shadowRadius: rs(8),
     shadowOffset: { width: 0, height: rs(2) }, elevation: 5,
-    borderWidth: 2, borderColor: "#FFF",
+    borderWidth: 2, borderColor: palette.white,
   },
 
   eventAvatar: {
     width: rs(50), height: rs(50), borderRadius: rs(16),
-    backgroundColor: "#E2F0F1", alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#FFD0A8",
+    backgroundColor: palette.brandTealLight, alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: palette.orangeL83,
   },
 
   emptyIcon: {
     width: rs(80), height: rs(80), borderRadius: rs(40),
-    backgroundColor: "#EEF5FF", alignItems: "center", justifyContent: "center", marginBottom: rs(14),
+    backgroundColor: palette.blueL97_2, alignItems: "center", justifyContent: "center", marginBottom: rs(14),
   },
-  emptyTitle: { fontSize: rs(17), fontWeight: "800", color: "#0A2540", marginBottom: rs(6) },
-  emptyDesc: { fontSize: rs(13), color: "#7A90AC", textAlign: "center", paddingHorizontal: rs(40), fontWeight: "500" },
+  emptyTitle: { fontSize: rs(17), fontWeight: "800", color: palette.navy, marginBottom: rs(6) },
+  emptyDesc: { fontSize: rs(13), color: palette.skyL58, textAlign: "center", paddingHorizontal: rs(40), fontWeight: "500" },
 });
 
 // ── Emoji categories (static, defined outside component to avoid re-creation) ──
@@ -1004,7 +1005,7 @@ function Thread({
           <Pressable style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }} onPress={() => isGroupChat && setShowGroupInfo(!showGroupInfo)} disabled={!isGroupChat}
             accessibilityRole={isGroupChat ? "button" : undefined} accessibilityLabel={isGroupChat ? "Group info" : conv.name}>
             {isGroupChat ? (
-              <GradientFill style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}><Ionicons name="people" size={17} color="#fff" /></GradientFill>
+              <GradientFill style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" }}><Ionicons name="people" size={17} color={palette.white} /></GradientFill>
             ) : (
               <Avatar name={conv.name} size={36} online={conv.online && !isPending} uri={conv.avatarUrl} />
             )}
@@ -1171,12 +1172,12 @@ function Thread({
                 <View style={{ maxWidth: "82%", gap: rs(3) }}>
                   {isGroupChat && !isMe ? (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), marginBottom: rs(2), marginLeft: rs(4) }}>
-                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? "#C45200" : "#5A6A7E" }}>
+                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? palette.orangeL38_2 : palette.skyL42 }}>
                         {msg.senderName}
                       </Text>
                       {isHost ? (
                         <View style={th.inlineAdminBadge}>
-                          <Ionicons name="shield-checkmark" size={8} color="#FFF" />
+                          <Ionicons name="shield-checkmark" size={8} color={palette.white} />
                           <Text style={th.inlineAdminText}>ADMIN</Text>
                         </View>
                       ) : null}
@@ -1209,12 +1210,12 @@ function Thread({
                 <View style={{ maxWidth: "74%", gap: rs(3) }}>
                   {isGroupChat && !isMe && (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), marginBottom: rs(2), marginLeft: rs(4) }}>
-                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? "#C45200" : "#5A6A7E" }}>
+                      <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? palette.orangeL38_2 : palette.skyL42 }}>
                         {msg.senderName}
                       </Text>
                       {isHost && (
                         <View style={th.inlineAdminBadge}>
-                          <Ionicons name="shield-checkmark" size={8} color="#FFF" />
+                          <Ionicons name="shield-checkmark" size={8} color={palette.white} />
                           <Text style={th.inlineAdminText}>ADMIN</Text>
                         </View>
                       )}
@@ -1247,12 +1248,12 @@ function Thread({
               <View style={{ maxWidth: "74%", gap: rs(3) }}>
                 {isGroupChat && !isMe && (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: rs(5), marginBottom: rs(2), marginLeft: rs(4) }}>
-                    <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? "#C45200" : "#5A6A7E" }}>
+                    <Text style={{ fontSize: rs(11), fontWeight: "700", color: isHost ? palette.orangeL38_2 : palette.skyL42 }}>
                       {msg.senderName}
                     </Text>
                     {isHost && (
                       <View style={th.inlineAdminBadge}>
-                        <Ionicons name="shield-checkmark" size={8} color="#FFF" />
+                        <Ionicons name="shield-checkmark" size={8} color={palette.white} />
                         <Text style={th.inlineAdminText}>ADMIN</Text>
                       </View>
                     )}
@@ -1260,7 +1261,7 @@ function Thread({
                 )}
                 {isMe ? (
                   <GradientFill style={[th.bubble, { borderRadius: 20, borderBottomRightRadius: 6 }]}>
-                    <LinkifiedText text={msg.text} style={[TYPE.body, { color: "#FFF" }]} linkStyle={{ color: "#FFF", fontFamily: "Manrope_700Bold", textDecorationLine: "underline" }} />
+                    <LinkifiedText text={msg.text} style={[TYPE.body, { color: palette.white }]} linkStyle={{ color: palette.white, fontFamily: "Manrope_700Bold", textDecorationLine: "underline" }} />
                   </GradientFill>
                 ) : isHost ? (
                   <View style={[th.bubble, { borderRadius: 20, borderBottomLeftRadius: 6, backgroundColor: tc.accentSoft }]}>
@@ -1361,7 +1362,7 @@ function Thread({
             accessibilityRole="button" accessibilityLabel="Send"
           >
             <GradientFill style={StyleSheet.absoluteFill} />
-            <Ionicons name="send" size={17} color="#FFF" />
+            <Ionicons name="send" size={17} color={palette.white} />
           </TouchableOpacity>
         </Reanimated.View>
       </View>
@@ -1385,7 +1386,7 @@ function Thread({
               >
                 <Text style={{ fontSize: rs(14) }}>{cat.icon}</Text>
                 {emojiCat === cat.key && (
-                  <Text style={[TYPE.label, { color: "#FFF" }]}>{cat.label}</Text>
+                  <Text style={[TYPE.label, { color: palette.white }]}>{cat.label}</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -1529,17 +1530,17 @@ const th = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.16)",
     alignItems: "center", justifyContent: "center",
   },
-  hdrName: { fontSize: rs(16), fontWeight: "800", color: "#FFF", letterSpacing: -0.2 },
+  hdrName: { fontSize: rs(16), fontWeight: "800", color: palette.white, letterSpacing: -0.2 },
   groupAvatar: {
     width: rs(40), height: rs(40), borderRadius: rs(12),
-    backgroundColor: "#E2F0F1",
+    backgroundColor: palette.brandTealLight,
     alignItems: "center", justifyContent: "center",
     borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
   },
 
   // ── Message Request Banner ──
   requestBanner: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.brand.orange + "25",
     padding: rs(14),
@@ -1571,48 +1572,48 @@ const th = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(6), paddingVertical: rs(11), borderRadius: rs(12),
   },
-  requestAcceptText: { fontSize: rs(13), fontWeight: "800", color: "#FFF" },
+  requestAcceptText: { fontSize: rs(13), fontWeight: "800", color: palette.white },
   requestDeclineBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(6), paddingVertical: rs(11), paddingHorizontal: rs(16),
-    borderRadius: rs(12), backgroundColor: "#F3F4F6",
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderRadius: rs(12), backgroundColor: palette.gray100,
+    borderWidth: 1, borderColor: palette.gray200,
   },
   requestDeclineText: { fontSize: rs(13), fontWeight: "700", color: Colors.text.secondary },
 
   // ── Group info ──
   groupInfoPanel: {
-    backgroundColor: "#FFF",
-    borderBottomWidth: 1, borderBottomColor: "#E5EFF8",
-    shadowColor: "#0A2540", shadowOpacity: 0.06, shadowRadius: rs(10),
+    backgroundColor: palette.white,
+    borderBottomWidth: 1, borderBottomColor: palette.skyL94_4,
+    shadowColor: palette.navy, shadowOpacity: 0.06, shadowRadius: rs(10),
     shadowOffset: { width: 0, height: rs(3) }, elevation: 4,
   },
   groupInfoSection: {
     paddingHorizontal: rs(16), paddingVertical: rs(12),
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#EEF2F8",
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL95_4,
   },
-  groupInfoLabel: { fontSize: rs(9), fontWeight: "800", color: "#8A9DB5", letterSpacing: 1, textTransform: "uppercase", marginBottom: rs(8) },
+  groupInfoLabel: { fontSize: rs(9), fontWeight: "800", color: palette.skyL63, letterSpacing: 1, textTransform: "uppercase", marginBottom: rs(8) },
   groupInfoRow: { flexDirection: "row", alignItems: "center", marginBottom: rs(4) },
-  groupInfoName: { fontSize: rs(14), fontWeight: "700", color: "#0A2540" },
-  groupInfoSub: { fontSize: rs(11), color: "#7A90AC", marginTop: rs(1) },
+  groupInfoName: { fontSize: rs(14), fontWeight: "700", color: palette.navy },
+  groupInfoSub: { fontSize: rs(11), color: palette.skyL58, marginTop: rs(1) },
   adminBadge: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
-    backgroundColor: "#257A86", borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2),
+    backgroundColor: palette.brandTeal, borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2),
   },
-  adminBadgeText: { fontSize: rs(8), fontWeight: "900", color: "#FFF", letterSpacing: 0.5 },
+  adminBadgeText: { fontSize: rs(8), fontWeight: "900", color: palette.white, letterSpacing: 0.5 },
   inlineAdminBadge: {
     flexDirection: "row", alignItems: "center", gap: rs(2),
-    backgroundColor: "#257A86", borderRadius: rs(5), paddingHorizontal: rs(5), paddingVertical: rs(2),
+    backgroundColor: palette.brandTeal, borderRadius: rs(5), paddingHorizontal: rs(5), paddingVertical: rs(2),
   },
-  inlineAdminText: { fontSize: rs(7), fontWeight: "900", color: "#FFF", letterSpacing: 0.5 },
+  inlineAdminText: { fontSize: rs(7), fontWeight: "900", color: palette.white, letterSpacing: 0.5 },
 
   // ── Messages ──
   systemMsg: {
     flexDirection: "row", alignItems: "center", gap: rs(7), alignSelf: "center",
-    backgroundColor: "#EEF5FF", borderRadius: rs(12), paddingHorizontal: rs(14), paddingVertical: rs(8),
-    maxWidth: "88%", borderWidth: 1, borderColor: "#D0E4FF",
+    backgroundColor: palette.blueL97_2, borderRadius: rs(12), paddingHorizontal: rs(14), paddingVertical: rs(8),
+    maxWidth: "88%", borderWidth: 1, borderColor: palette.skyL91,
   },
-  systemMsgText: { fontSize: rs(12), fontWeight: "600", color: "#4A6A9A", flex: 1, lineHeight: rs(17) },
+  systemMsgText: { fontSize: rs(12), fontWeight: "600", color: palette.blueL45, flex: 1, lineHeight: rs(17) },
   bubble: {
     paddingHorizontal: rs(14), paddingVertical: rs(10), borderRadius: rs(18),
   },
@@ -2077,10 +2078,10 @@ export default function ChatScreen() {
 
 const m = StyleSheet.create({
   headerWhite: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-    shadowColor: "#000",
+    borderBottomColor: palette.neutralL91_2,
+    shadowColor: palette.black,
     shadowOpacity: 0.06,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(2) },
@@ -2088,13 +2089,13 @@ const m = StyleSheet.create({
   },
   iconBtnWhite: {
     width: rs(38), height: rs(38), borderRadius: rs(12),
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     alignItems: "center", justifyContent: "center",
   },
   title: { fontSize: rs(20), fontWeight: "900", color: Colors.brand.blue, letterSpacing: -0.4 },
   unreadChip: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#E3F1EA", borderWidth: 1, borderColor: "#BBF7D0",
+    backgroundColor: palette.brandGreenLight, borderWidth: 1, borderColor: palette.green200,
     paddingHorizontal: rs(10), paddingVertical: rs(4), borderRadius: rs(12),
     alignSelf: "flex-start", marginTop: rs(4),
     

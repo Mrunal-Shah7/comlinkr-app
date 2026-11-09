@@ -2,6 +2,7 @@
 // to 1.25 on a springy curve; the label under the row names the rating. Touches use React Native's own responder
 // (not gesture-handler) so the picker also works inside the native @expo/ui sheet, which has no gesture-handler root
 // (plan 02).
+import { palette } from "../../theme/palette";
 import { useEffect, useRef, useState } from 'react';
 import { Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
@@ -11,7 +12,7 @@ import { useTheme } from '../../theme/useTheme';
 import { TYPE } from '../../theme/d';
 
 export const STAR_LABELS = ['Not good', 'Okay', 'Good', 'Very good', 'Loved it'];
-const GOLD = '#F5B300';
+const GOLD = palette.yellowL48;
 
 function Star({ on, size }: { on: boolean; size: number }) {
   const { tc } = useTheme();

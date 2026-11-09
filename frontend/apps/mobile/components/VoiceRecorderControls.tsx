@@ -1,4 +1,5 @@
 // SPRINT-40: tap-to-record composer controls, permission handling, duration, and cleanup
+import { palette } from "../src/theme/palette";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AppState, Keyboard, Linking, Pressable, StyleSheet, Text, View } from "react-native"; // SPRINT-40:
 import { Ionicons } from "@expo/vector-icons";
@@ -303,7 +304,7 @@ export function VoiceRecorderControls({
           onPress={() => void finishRecording(false)}
           style={styles.sendButton}
         >
-          <Ionicons name="send" size={rs(16)} color="#FFFFFF" />
+          <Ionicons name="send" size={rs(16)} color={palette.white} />
         </Pressable>
       </View>
     );
@@ -328,7 +329,7 @@ export function VoiceRecorderControls({
           }}
           style={styles.sendButton}
         >
-          <Ionicons name="send" size={rs(16)} color="#FFFFFF" />
+          <Ionicons name="send" size={rs(16)} color={palette.white} />
         </Pressable>
       </View>
     );

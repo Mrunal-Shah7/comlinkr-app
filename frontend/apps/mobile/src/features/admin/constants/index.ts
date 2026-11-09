@@ -1,5 +1,6 @@
 // src/features/admin/constants/index.ts
 
+import { palette } from "../../../theme/palette";
 export const ADMIN_ROUTES = {
   DASHBOARD:     '/admin',
   USERS:         '/admin/users',
@@ -15,39 +16,39 @@ export const ADMIN_ROUTES = {
 } as const;
 
 export const ROLE_COLORS: Record<string, string> = {
-  USER:        '#64748B',
-  ADMIN:       '#0076EB',
-  SUPER_ADMIN: '#F59E0B',
-  MODERATOR:   '#26B324',
+  USER:        palette.slate500,
+  ADMIN:       palette.skyL46,
+  SUPER_ADMIN: palette.amber500,
+  MODERATOR:   palette.greenL42,
 };
 
 export const STATUS_COLORS = {
   listing: {
-    active:    { color: '#26B324', bg: '#EAFBE9' },
-    pending:   { color: '#F59E0B', bg: '#FFF3E6' },
-    rejected:  { color: '#EF4444', bg: '#FEF2F2' },
-    suspended: { color: '#64748B', bg: '#F3F4F6' },
-    inactive:  { color: '#64748B', bg: '#F3F4F6' },
+    active:    { color: palette.greenL42, bg: palette.greenL95 },
+    pending:   { color: palette.amber500, bg: palette.legacyOrangeLight },
+    rejected:  { color: palette.red500, bg: palette.red50 },
+    suspended: { color: palette.slate500, bg: palette.gray100 },
+    inactive:  { color: palette.slate500, bg: palette.gray100 },
   },
   report: {
-    open:         { color: '#EF4444', bg: '#FEF2F2' },
-    under_review: { color: '#F59E0B', bg: '#FFF3E6' },
-    resolved:     { color: '#26B324', bg: '#EAFBE9' },
-    dismissed:    { color: '#64748B', bg: '#F3F4F6' },
+    open:         { color: palette.red500, bg: palette.red50 },
+    under_review: { color: palette.amber500, bg: palette.legacyOrangeLight },
+    resolved:     { color: palette.greenL42, bg: palette.greenL95 },
+    dismissed:    { color: palette.slate500, bg: palette.gray100 },
   },
   notification: {
-    draft:     { color: '#64748B', bg: '#F3F4F6' },
-    scheduled: { color: '#0076EB', bg: '#EBF5FF'  },
-    sent:      { color: '#26B324', bg: '#EAFBE9'  },
-    failed:    { color: '#EF4444', bg: '#FEF2F2'  },
+    draft:     { color: palette.slate500, bg: palette.gray100 },
+    scheduled: { color: palette.skyL46, bg: palette.legacyBlueLight  },
+    sent:      { color: palette.greenL42, bg: palette.greenL95  },
+    failed:    { color: palette.red500, bg: palette.red50  },
   },
 } as const;
 
 export const PRIORITY_COLORS: Record<string, { color: string; bg: string }> = {
-  low:    { color: '#64748B', bg: '#F3F4F6' },
-  normal: { color: '#0076EB', bg: '#EBF5FF' },
-  high:   { color: '#F59E0B', bg: '#FFF3E6' },
-  urgent: { color: '#EF4444', bg: '#FEF2F2' },
+  low:    { color: palette.slate500, bg: palette.gray100 },
+  normal: { color: palette.skyL46, bg: palette.legacyBlueLight },
+  high:   { color: palette.amber500, bg: palette.legacyOrangeLight },
+  urgent: { color: palette.red500, bg: palette.red50 },
 };
 
 export const CATEGORY_ICONS: Record<string, string> = {

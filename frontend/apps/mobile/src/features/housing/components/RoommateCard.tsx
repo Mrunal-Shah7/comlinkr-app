@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import type { ReactElement } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -58,7 +59,7 @@ export function RoommateCard({
       <PressableScale onPress={onPress} style={s.top} accessibilityRole="button" accessibilityLabel={`${roommate.name}, ${score}% match`}>
         <GradientFill colors={[tc.mint, tc.accent] as const} style={s.ring}>
           <View style={[s.ringIn, { borderColor: tc.cardBg }]}>
-            {roommate.avatar ? <FadeImage uri={roommate.avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: "#fff" }]}>{roommate.initials}</Text></GradientFill>}
+            {roommate.avatar ? <FadeImage uri={roommate.avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: palette.white }]}>{roommate.initials}</Text></GradientFill>}
           </View>
         </GradientFill>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -86,7 +87,7 @@ export function RoommateCard({
 }
 
 const s = StyleSheet.create({
-  card: { marginHorizontal: 16, marginBottom: 10, borderRadius: 24, padding: 14, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  card: { marginHorizontal: 16, marginBottom: 10, borderRadius: 24, padding: 14, shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   top: { flexDirection: "row", alignItems: "center", gap: 14 },
   ring: { width: 60, height: 60, borderRadius: 30, alignItems: "center", justifyContent: "center" },
   ringIn: { width: 56, height: 56, borderRadius: 28, borderWidth: 2.5, overflow: "hidden", alignItems: "center", justifyContent: "center" },

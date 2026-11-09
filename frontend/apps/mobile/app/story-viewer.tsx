@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 /**
  * Fullscreen immersive story viewer (Sprint 14).
@@ -66,13 +67,13 @@ function mediaUri(url: string | null | undefined): string {
 
 function categoryUi(cat: string): { label: string; color: string; bg: string } {
   const c = (cat || "").toUpperCase();
-  if (c === "EVENTS")     return { label: "Events",     color: "#257A86", bg: "rgba(37,122,134,0.2)" };
-  if (c === "FOOD")       return { label: "Food",       color: "#30855B", bg: "rgba(48,133,91,0.2)" };
-  if (c === "HOUSING")    return { label: "Housing",    color: "#1A6BAE", bg: "rgba(26,107,174,0.2)" };
-  if (c === "CULTURE")    return { label: "Culture",    color: "#A78BFA", bg: "rgba(167,139,250,0.2)" };
-  if (c === "LOCAL_NEWS") return { label: "Local News", color: "#F87171", bg: "rgba(248,113,113,0.2)" };
-  if (c === "GENERAL" || !c) return { label: "Story", color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
-  return { label: cat, color: "#94A3B8", bg: "rgba(148,163,184,0.2)" };
+  if (c === "EVENTS")     return { label: "Events",     color: palette.brandTeal, bg: "rgba(37,122,134,0.2)" };
+  if (c === "FOOD")       return { label: "Food",       color: palette.brandGreen, bg: "rgba(48,133,91,0.2)" };
+  if (c === "HOUSING")    return { label: "Housing",    color: palette.brandBlue, bg: "rgba(26,107,174,0.2)" };
+  if (c === "CULTURE")    return { label: "Culture",    color: palette.violet400, bg: "rgba(167,139,250,0.2)" };
+  if (c === "LOCAL_NEWS") return { label: "Local News", color: palette.red400, bg: "rgba(248,113,113,0.2)" };
+  if (c === "GENERAL" || !c) return { label: "Story", color: palette.slate400, bg: "rgba(148,163,184,0.2)" };
+  return { label: cat, color: palette.slate400, bg: "rgba(148,163,184,0.2)" };
 }
 
 function timeAgoShort(iso: string): string {
@@ -183,7 +184,7 @@ function StoryVideoLayer({
       <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="cover" nativeControls={false} />
       {isBuffering ? (
         <View style={[StyleSheet.absoluteFill, styles.videoBufferOverlay]} pointerEvents="none">
-          <ActivityIndicator color="#FFF" size="large" />
+          <ActivityIndicator color={palette.white} size="large" />
         </View>
       ) : null}
     </View>
@@ -525,7 +526,7 @@ export default function StoryViewerScreen() {
       <View style={[st.root, st.center, { width: W, height: H }]}>
         <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
         <StatusBar style="light" hidden />
-        <ActivityIndicator color="#FFF" size="large" />
+        <ActivityIndicator color={palette.white} size="large" />
         <Text style={{ color: "rgba(255,255,255,0.6)", marginTop: rs(12), fontSize: rs(13) }}>Loading stories…</Text>
       </View>
     );
@@ -585,7 +586,7 @@ export default function StoryViewerScreen() {
         />
       ) : (
         <LinearGradient
-          colors={["#0C1A2E", "#1A6BAE", "#001A40"]}
+          colors={[palette.blueL11, palette.brandBlue, palette.blueL13]}
           style={StyleSheet.absoluteFill}
         />
       )}
@@ -674,7 +675,7 @@ export default function StoryViewerScreen() {
               hitSlop={10}
               accessibilityLabel="Delete story"
             >
-              <Ionicons name="trash-outline" size={rs(18)} color="#FFF" />
+              <Ionicons name="trash-outline" size={rs(18)} color={palette.white} />
             </Pressable>
           ) : null}
           <Pressable
@@ -683,7 +684,7 @@ export default function StoryViewerScreen() {
             hitSlop={10}
             accessibilityLabel="Close"
           >
-            <Ionicons name="close" size={rs(20)} color="#FFF" />
+            <Ionicons name="close" size={rs(20)} color={palette.white} />
           </Pressable>
         </View>
       </Reanimated.View>
@@ -725,7 +726,7 @@ export default function StoryViewerScreen() {
               style={st.muteBtn}
               onPress={() => { setVideoMuted((m) => !m); Haptics.selectionAsync(); }}
             >
-              <Ionicons name={videoMuted ? "volume-mute" : "volume-high"} size={rs(18)} color="#FFF" />
+              <Ionicons name={videoMuted ? "volume-mute" : "volume-high"} size={rs(18)} color={palette.white} />
             </Pressable>
           ) : <View style={{ width: rs(40) }} />}
 
@@ -742,7 +743,7 @@ export default function StoryViewerScreen() {
               <Ionicons
                 name={storyLiked || likedIds.has(currentStory.id) ? "heart" : "heart-outline"}
                 size={rs(24)}
-                color={storyLiked || likedIds.has(currentStory.id) ? "#F87171" : "#FFF"}
+                color={storyLiked || likedIds.has(currentStory.id) ? palette.red400 : palette.white}
               />
               <Text style={st.actionBtnLabel}>
                 {storyLiked || likedIds.has(currentStory.id) ? "Liked" : "Like"}
@@ -758,7 +759,7 @@ export default function StoryViewerScreen() {
                 openCommentsSheet();
               }}
             >
-              <Ionicons name="chatbubble-outline" size={rs(20)} color="#FFF" />
+              <Ionicons name="chatbubble-outline" size={rs(20)} color={palette.white} />
               <Text style={st.actionBtnLabel}>{currentStory.commentCount ?? 0}</Text>
             </Pressable>
 
@@ -767,7 +768,7 @@ export default function StoryViewerScreen() {
               style={[st.actionBtn, isSaved && st.actionBtnSaved]}
               onPress={() => void onToggleSave()}
             >
-              <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={rs(20)} color={isSaved ? "#FBBF24" : "#FFF"} />
+              <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={rs(20)} color={isSaved ? palette.amber400 : palette.white} />
               <Text style={st.actionBtnLabel}>{isSaved ? "Saved" : "Save"}</Text>
             </Pressable>
           </View>
@@ -871,7 +872,7 @@ export default function StoryViewerScreen() {
                           transition={200}
                         />
                       ) : (
-                        <View style={[st.commentAvatar, st.commentAvatarPh, { backgroundColor: isDark ? "#334155" : "#E2E8F0" }]}>
+                        <View style={[st.commentAvatar, st.commentAvatarPh, { backgroundColor: isDark ? palette.slate700 : palette.slate200 }]}>
                           <Text style={[st.commentAvatarPhText, { color: tc.textPrimary }]}>{initials}</Text>
                         </View>
                       )}
@@ -887,7 +888,7 @@ export default function StoryViewerScreen() {
             )}
 
             {commentSheetError ? (
-              <Text style={{ color: "#DC2626", textAlign: "center", paddingHorizontal: 16, marginBottom: 6, fontSize: rs(13) }}>
+              <Text style={{ color: palette.red600, textAlign: "center", paddingHorizontal: 16, marginBottom: 6, fontSize: rs(13) }}>
                 {commentSheetError}
               </Text>
             ) : null}
@@ -924,8 +925,8 @@ export default function StoryViewerScreen() {
               >
                 <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={st.sheetSendGrad}>
                   {commentSending
-                    ? <ActivityIndicator size="small" color="#FFF" />
-                    : <Ionicons name="send" size={rs(16)} color="#FFF" />}
+                    ? <ActivityIndicator size="small" color={palette.white} />
+                    : <Ionicons name="send" size={rs(16)} color={palette.white} />}
                 </LinearGradient>
               </Pressable>
             </View>
@@ -938,7 +939,7 @@ export default function StoryViewerScreen() {
 }
 
 const st = createDTypeStyles({
-  root: { flex: 1, backgroundColor: "#000" },
+  root: { flex: 1, backgroundColor: palette.black },
   center: { alignItems: "center", justifyContent: "center" },
 
   emptyText: { color: "rgba(255,255,255,0.8)", fontSize: rs(17), fontWeight: "700", marginTop: rs(16) },
@@ -951,7 +952,7 @@ const st = createDTypeStyles({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.25)",
   },
-  emptyBtnText: { color: "#FFF", fontWeight: "800", fontSize: rs(15) },
+  emptyBtnText: { color: palette.white, fontWeight: "800", fontSize: rs(15) },
 
   progressRow: {
     position: "absolute",
@@ -970,7 +971,7 @@ const st = createDTypeStyles({
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(2),
   },
 
@@ -997,9 +998,9 @@ const st = createDTypeStyles({
   },
   avatar: { width: "100%", height: "100%" },
   avatarPh: { alignItems: "center", justifyContent: "center" },
-  avatarPhText: { color: "#FFF", fontSize: rs(13), fontWeight: "900" },
+  avatarPhText: { color: palette.white, fontSize: rs(13), fontWeight: "900" },
   authorName: {
-    color: "#FFF",
+    color: palette.white,
     fontWeight: "600",
     fontSize: 15,
     textShadowColor: "rgba(0,0,0,0.9)",
@@ -1065,7 +1066,7 @@ const st = createDTypeStyles({
   catDot: { width: rs(6), height: rs(6), borderRadius: rs(3) },
   catPillText: { fontSize: rs(11), fontWeight: "900", letterSpacing: 0.4 },
   footerTitle: {
-    color: "#FFF",
+    color: palette.white,
     fontSize: 22,
     fontWeight: "800",
     marginBottom: 6,
@@ -1127,7 +1128,7 @@ const st = createDTypeStyles({
     backgroundColor: "rgba(251,191,36,0.2)",
     borderColor: "rgba(251,191,36,0.5)",
   },
-  actionBtnLabel: { color: "#FFF", fontSize: rs(12), fontWeight: "800" },
+  actionBtnLabel: { color: palette.white, fontSize: rs(12), fontWeight: "800" },
 
   sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" },
   sheetCard: {
@@ -1142,7 +1143,7 @@ const st = createDTypeStyles({
     width: rs(36),
     height: rs(4),
     borderRadius: rs(2),
-    backgroundColor: "#D1D5DB",
+    backgroundColor: palette.gray300,
     marginTop: rs(10),
     marginBottom: rs(4),
   },
@@ -1160,7 +1161,7 @@ const st = createDTypeStyles({
     width: rs(32),
     height: rs(32),
     borderRadius: rs(16),
-    backgroundColor: "#F1F5F9",
+    backgroundColor: palette.slate100,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,5 +1,6 @@
 // Design D `compose-story`: a black screen, photo or video first. The picked media fills the preview (it settles
 // in: scale 0.94 → 1 with a fade), a caption is optional, a topic is optional, Share posts it.
+import { palette } from "../../../theme/palette";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Animated, { Keyframe, useReducedMotion } from "react-native-reanimated";
 import { Image } from "expo-image";
@@ -21,13 +22,13 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
   const insets = useSafeAreaInsets();
   const reduce = useReducedMotion();
   return (
-    <View style={{ flex: 1, backgroundColor: "#000" }}>
+    <View style={{ flex: 1, backgroundColor: palette.black }}>
       <StatusBar style="light" />
       <View style={[st.bar, { paddingTop: 4 }]}>
         <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back" style={st.ib}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color={palette.white} />
         </Pressable>
-        <Text style={[TYPE.bar, { color: "#fff", flex: 1, textAlign: "center" }]}>New story</Text>
+        <Text style={[TYPE.bar, { color: palette.white, flex: 1, textAlign: "center" }]}>New story</Text>
         <GradientButton small label="Share" disabled={!media} loading={submitting} onPress={onShare} outerStyle={{ marginRight: 6 }} />
       </View>
 
@@ -42,27 +43,27 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
                 <Text style={[body(600), { color: "rgba(255,255,255,0.8)", marginTop: 6 }]}>Video ready</Text>
               </View>
             )}
-            <View style={st.change}><Ionicons name="images-outline" size={15} color="#fff" /><Text style={[body(700), { color: "#fff", fontSize: 13 }]}>Change</Text></View>
+            <View style={st.change}><Ionicons name="images-outline" size={15} color={palette.white} /><Text style={[body(700), { color: palette.white, fontSize: 13 }]}>Change</Text></View>
           </Animated.View>
         ) : (
           <View style={[st.center, { opacity: 0.75 }]}>
-            <Ionicons name="camera-outline" size={40} color="#fff" />
-            <Text style={[body(600), { color: "#fff", marginTop: 8 }]}>Pick a photo or video</Text>
+            <Ionicons name="camera-outline" size={40} color={palette.white} />
+            <Text style={[body(600), { color: palette.white, marginTop: 8 }]}>Pick a photo or video</Text>
           </View>
         )}
       </Pressable>
 
       <View style={st.caption}>
         <TextInput value={caption} onChangeText={onCaption} maxLength={120} placeholder="Add a caption (optional)" placeholderTextColor="rgba(255,255,255,0.55)"
-          style={[body(500), { color: "#fff", fontSize: 15.5, paddingVertical: 0 }]} accessibilityLabel="Caption" />
+          style={[body(500), { color: palette.white, fontSize: 15.5, paddingVertical: 0 }]} accessibilityLabel="Caption" />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: insets.bottom + 24 }} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, alignItems: "center" }}>
         {topics.map((t) => {
           const on = topic === t;
           return (
             <Pressable key={t} onPress={() => onTopic(on ? "" : t)} accessibilityRole="button" accessibilityState={{ selected: on }}
-              style={[st.topic, on && { backgroundColor: "#30855B", borderColor: "#30855B" }]}>
-              <Text style={[body(600), { color: "#fff", fontSize: 13.5 }]}>{t}</Text>
+              style={[st.topic, on && { backgroundColor: palette.brandGreen, borderColor: palette.brandGreen }]}>
+              <Text style={[body(600), { color: palette.white, fontSize: 13.5 }]}>{t}</Text>
             </Pressable>
           );
         })}
@@ -74,7 +75,7 @@ export function StoryComposer({ media, onPick, caption, onCaption, topics, topic
 const st = StyleSheet.create({
   bar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingBottom: 8 },
   ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  preview: { flex: 1, marginHorizontal: 12, borderRadius: 20, overflow: "hidden", backgroundColor: "#111" },
+  preview: { flex: 1, marginHorizontal: 12, borderRadius: 20, overflow: "hidden", backgroundColor: palette.neutralL07 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   change: { position: "absolute", right: 10, bottom: 10, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.5)" },
   caption: { marginHorizontal: 12, marginTop: 10, marginBottom: 10, minHeight: 50, borderRadius: 16, paddingHorizontal: 14, justifyContent: "center", backgroundColor: "rgba(255,255,255,0.1)" },

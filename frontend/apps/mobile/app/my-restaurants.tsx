@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import { useEffect, useState } from "react";
@@ -38,8 +39,8 @@ import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const VERIF_CONFIG = {
-  verified:    { label: "Verified",    color: "#1A6BAE", bg: "#EEF5FF" },
-  unverified:  { label: "Basic",       color: "#6B7280", bg: "#F3F4F6" },
+  verified:    { label: "Verified",    color: palette.brandBlue, bg: palette.blueL97_2 },
+  unverified:  { label: "Basic",       color: palette.gray500, bg: palette.gray100 },
 };
 
 function StarRow({ rating }: { rating: number }) {
@@ -50,7 +51,7 @@ function StarRow({ rating }: { rating: number }) {
           key={s}
           name={s <= Math.round(rating) ? "star" : "star-outline"}
           size={10}
-          color={s <= Math.round(rating) ? "#F59E0B" : "#D1D5DB"}
+          color={s <= Math.round(rating) ? palette.amber500 : palette.gray300}
         />
       ))}
     </View>
@@ -139,7 +140,7 @@ function RestaurantCard({
   return (
     <Reveal style={{ marginHorizontal: 16, marginBottom: 16, borderRadius: 24, overflow: "hidden", backgroundColor: tc.cardBg, borderWidth: 1, borderColor: tc.glassLine }}>
       {photo ? <Image source={{ uri: photo }} style={{ width: "100%", height: 150 }} contentFit="cover" transition={200} /> : (
-        <GradientFill style={{ height: 90, alignItems: "center", justifyContent: "center" }}><Ionicons name="restaurant" size={28} color="#fff" /></GradientFill>
+        <GradientFill style={{ height: 90, alignItems: "center", justifyContent: "center" }}><Ionicons name="restaurant" size={28} color={palette.white} /></GradientFill>
       )}
       <View style={{ padding: 14, gap: 6 }}>
         <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{restaurant.name}</Text>
@@ -306,7 +307,7 @@ export default function MyRestaurantsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const badgeGradient: [string, string] = ["#30855B", "#256B49"];
+  const badgeGradient: [string, string] = [palette.brandGreen, palette.brandGreenDark];
   const totalReviews  = restaurants.reduce((acc, r) => acc + (r.reviews ?? 0), 0);
   const avgRating     = restaurants.length
     ? (restaurants.reduce((acc, r) => acc + r.rating, 0) / restaurants.length).toFixed(1)
@@ -370,7 +371,7 @@ export default function MyRestaurantsScreen() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F5F6FA" },
+  safe: { flex: 1, backgroundColor: palette.neutralL97_9 },
 
   header: {
     flexDirection: "row",
@@ -379,10 +380,10 @@ const styles = createThemedStyles({
     paddingTop: rs(12),
     paddingBottom: rs(14),
     gap: rs(10),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-    shadowColor: "#000",
+    borderBottomColor: palette.neutralL91_2,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(4),
     elevation: 2,
@@ -391,12 +392,12 @@ const styles = createThemedStyles({
     width: rs(36),
     height: rs(36),
     borderRadius: rs(12),
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { fontSize: rs(17), fontWeight: "800", color: "#0A2540", letterSpacing: -0.3 },
-  headerSub:   { fontSize: rs(12), color: "#6B7280", marginTop: rs(1) },
+  headerTitle: { fontSize: rs(17), fontWeight: "800", color: palette.navy, letterSpacing: -0.3 },
+  headerSub:   { fontSize: rs(12), color: palette.gray500, marginTop: rs(1) },
   addBtn:      { borderRadius: rs(12), overflow: "hidden" },
   addBtnGrad:  { width: rs(36), height: rs(36), alignItems: "center", justifyContent: "center" },
 
@@ -410,8 +411,8 @@ const styles = createThemedStyles({
     padding: rs(32),
     gap: rs(12),
   },
-  emptyTitle: { fontSize: rs(18), fontWeight: "800", color: "#0A2540" },
-  emptyDesc:  { fontSize: rs(13), color: "#6B7280", textAlign: "center", lineHeight: rs(19) },
+  emptyTitle: { fontSize: rs(18), fontWeight: "800", color: palette.navy },
+  emptyDesc:  { fontSize: rs(13), color: palette.gray500, textAlign: "center", lineHeight: rs(19) },
   applyBtn:   { borderRadius: rs(14), overflow: "hidden", marginTop: rs(8) },
   applyBtnGrad: {
     flexDirection: "row",
@@ -421,7 +422,7 @@ const styles = createThemedStyles({
     paddingVertical: rs(13),
     gap: rs(8),
   },
-  applyBtnText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  applyBtnText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
 
   // ── Badge banner ────
   badgeBanner: {
@@ -433,29 +434,29 @@ const styles = createThemedStyles({
     marginBottom: rs(10),
   },
   badgeBannerLeft:  { flexDirection: "row", alignItems: "center", gap: rs(10), flex: 1 },
-  badgeBannerTitle: { fontSize: rs(13), fontWeight: "800", color: "#FFF", marginBottom: rs(2) },
+  badgeBannerTitle: { fontSize: rs(13), fontWeight: "800", color: palette.white, marginBottom: rs(2) },
   badgeBannerSub:   { fontSize: rs(11), color: "rgba(255,255,255,0.85)" },
-  badgeBannerLink:  { fontSize: rs(12), fontWeight: "800", color: "#FFF", textDecorationLine: "underline" },
+  badgeBannerLink:  { fontSize: rs(12), fontWeight: "800", color: palette.white, textDecorationLine: "underline" },
 
   // ── Fraud banner ────
   fraudBanner: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(8),
-    backgroundColor: "#FEF2F2",
+    backgroundColor: palette.red50,
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: palette.red200,
     borderRadius: rs(12),
     padding: rs(12),
     marginBottom: rs(16),
   },
-  fraudText: { flex: 1, fontSize: rs(12), color: "#991B1B", lineHeight: rs(17) },
+  fraudText: { flex: 1, fontSize: rs(12), color: palette.red800, lineHeight: rs(17) },
 
   // ── Section label ────
   sectionLabel: {
     fontSize: rs(11),
     fontWeight: "800",
-    color: "#9CA3AF",
+    color: palette.gray400,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: rs(10),
@@ -466,27 +467,27 @@ const styles = createThemedStyles({
   statsRow:       { flexDirection: "row", gap: rs(10), marginBottom: rs(20) },
   overviewCard: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(12),
     alignItems: "center",
     gap: rs(4),
   },
   overviewIconBox: { width: rs(36), height: rs(36), borderRadius: rs(12), alignItems: "center", justifyContent: "center" },
-  overviewValue:   { fontSize: rs(16), fontWeight: "800", color: "#0A2540" },
-  overviewLabel:   { fontSize: rs(10), color: "#9CA3AF", fontWeight: "600", textAlign: "center" },
+  overviewValue:   { fontSize: rs(16), fontWeight: "800", color: palette.navy },
+  overviewLabel:   { fontSize: rs(10), color: palette.gray400, fontWeight: "600", textAlign: "center" },
 
   // ── Restaurant card ────
   restaurantCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(18),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(14),
     marginBottom: rs(14),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(2) },
@@ -505,15 +506,15 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  restaurantName: { fontSize: rs(15), fontWeight: "800", color: "#0A2540" },
-  restaurantMeta: { fontSize: rs(12), color: "#6B7280", marginTop: rs(2) },
+  restaurantName: { fontSize: rs(15), fontWeight: "800", color: palette.navy },
+  restaurantMeta: { fontSize: rs(12), color: palette.gray500, marginTop: rs(2) },
   openPill: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: palette.green100,
     borderRadius: rs(6),
     paddingHorizontal: rs(6),
     paddingVertical: rs(2),
   },
-  openPillText: { fontSize: rs(10), fontWeight: "700", color: "#16A34A" },
+  openPillText: { fontSize: rs(10), fontWeight: "700", color: palette.green600 },
   statusPill: {
     borderRadius: rs(8),
     paddingHorizontal: rs(8),
@@ -530,7 +531,7 @@ const styles = createThemedStyles({
     gap: rs(4),
     marginBottom: rs(10),
   },
-  addressText: { flex: 1, fontSize: rs(12), color: "#6B7280" },
+  addressText: { flex: 1, fontSize: rs(12), color: palette.gray500 },
 
   verifyRatingRow: {
     flexDirection: "row",
@@ -548,13 +549,13 @@ const styles = createThemedStyles({
   },
   verifPillText: { fontSize: rs(11), fontWeight: "700" },
   ratingGroup:   { flexDirection: "row", alignItems: "center", gap: rs(5) },
-  ratingText:    { fontSize: rs(11), color: "#6B7280", fontWeight: "600" },
+  ratingText:    { fontSize: rs(11), color: palette.gray500, fontWeight: "600" },
 
   // ── Stats grid ────
   statsGrid: {
     flexDirection: "row",
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: palette.gray100,
     paddingTop: rs(12),
     marginBottom: rs(12),
   },
@@ -571,8 +572,8 @@ const styles = createThemedStyles({
     justifyContent: "center",
     marginBottom: rs(2),
   },
-  statValue: { fontSize: rs(13), fontWeight: "800", color: "#0A2540" },
-  statLabel: { fontSize: rs(10), color: "#9CA3AF", fontWeight: "600" },
+  statValue: { fontSize: rs(13), fontWeight: "800", color: palette.navy },
+  statLabel: { fontSize: rs(10), color: palette.gray400, fontWeight: "600" },
 
   // ── Services row ────
   servicesRow: {
@@ -586,13 +587,13 @@ const styles = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
-    backgroundColor: "#F0FDF4",
+    backgroundColor: palette.green50,
     borderRadius: rs(8),
     paddingHorizontal: rs(8),
     paddingVertical: rs(4),
   },
-  serviceChipText: { fontSize: rs(11), color: "#16A34A", fontWeight: "600" },
-  listedSince:     { fontSize: rs(11), color: "#9CA3AF", marginLeft: "auto" as any },
+  serviceChipText: { fontSize: rs(11), color: palette.green600, fontWeight: "600" },
+  listedSince:     { fontSize: rs(11), color: palette.gray400, marginLeft: "auto" as any },
 
   // ── Analytics grid ────
   analyticsGrid: {
@@ -622,7 +623,7 @@ const styles = createThemedStyles({
   analyticsLabel: {
     fontSize: rs(9),
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: palette.gray400,
     textAlign: "center",
   },
 
@@ -631,7 +632,7 @@ const styles = createThemedStyles({
     flexDirection: "row",
     gap: rs(8),
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: palette.gray100,
     paddingTop: rs(12),
     flexWrap: "wrap",
   },
@@ -643,8 +644,8 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(12),
     paddingVertical: rs(8),
     borderWidth: 1.5,
-    borderColor: "#BFDBFE",
-    backgroundColor: "#EEF5FF",
+    borderColor: palette.blue200,
+    backgroundColor: palette.blueL97_2,
     borderRadius: rs(10),
   },
   msgBtn:       {},
@@ -655,11 +656,11 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(12),
     paddingVertical: rs(8),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
     borderRadius: rs(10),
   },
-  deactivateBtn: { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+  deactivateBtn: { borderColor: palette.red200, backgroundColor: palette.red50 },
   actionBtnGrad: {
     flexDirection: "row",
     alignItems: "center",
@@ -678,14 +679,14 @@ const styles = createThemedStyles({
     gap: rs(8),
     paddingVertical: rs(14),
   },
-  addRestaurantText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  addRestaurantText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
 
   // ── Reviews ────
   reviewCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(12),
     marginBottom: rs(10),
   },
@@ -699,52 +700,52 @@ const styles = createThemedStyles({
     width: rs(34),
     height: rs(34),
     borderRadius: rs(17),
-    backgroundColor: "#30855B",
+    backgroundColor: palette.brandGreen,
     alignItems: "center",
     justifyContent: "center",
   },
-  reviewAvatarText:  { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
-  reviewerName:      { fontSize: rs(13), fontWeight: "700", color: "#0A2540" },
-  reviewRestaurant:  { fontSize: rs(11), color: "#9CA3AF", marginTop: rs(1) },
-  reviewTime:        { fontSize: rs(10), color: "#9CA3AF" },
-  reviewComment:     { fontSize: rs(13), color: "#374151", lineHeight: rs(18), marginBottom: rs(8) },
+  reviewAvatarText:  { fontSize: rs(14), fontWeight: "800", color: palette.white },
+  reviewerName:      { fontSize: rs(13), fontWeight: "700", color: palette.navy },
+  reviewRestaurant:  { fontSize: rs(11), color: palette.gray400, marginTop: rs(1) },
+  reviewTime:        { fontSize: rs(10), color: palette.gray400 },
+  reviewComment:     { fontSize: rs(13), color: palette.gray700, lineHeight: rs(18), marginBottom: rs(8) },
   replyBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
     alignSelf: "flex-start",
   },
-  replyBtnText: { fontSize: rs(12), color: "#1A6BAE", fontWeight: "600" },
+  replyBtnText: { fontSize: rs(12), color: palette.brandBlue, fontWeight: "600" },
 
   // ── Compliance ────
   complianceCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(14),
     marginBottom: rs(12),
   },
   complianceHeader: { flexDirection: "row", alignItems: "center", gap: rs(10), marginBottom: rs(12) },
   complianceIcon:   { width: rs(32), height: rs(32), borderRadius: rs(10), alignItems: "center", justifyContent: "center" },
-  complianceTitle:  { fontSize: rs(14), fontWeight: "800", color: "#0A2540" },
+  complianceTitle:  { fontSize: rs(14), fontWeight: "800", color: palette.navy },
   complianceRow:    { flexDirection: "row", alignItems: "flex-start", gap: rs(8), marginBottom: rs(8) },
-  complianceText:   { flex: 1, fontSize: rs(13), color: "#374151", lineHeight: rs(18) },
+  complianceText:   { flex: 1, fontSize: rs(13), color: palette.gray700, lineHeight: rs(18) },
 
   // ── Help ────
   helpCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: rs(12),
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     padding: rs(14),
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
     marginBottom: rs(4),
   },
-  helpTitle: { fontSize: rs(13), fontWeight: "700", color: "#1E40AF", marginBottom: rs(2) },
-  helpDesc:  { fontSize: rs(11), color: "#3B82F6" },
+  helpTitle: { fontSize: rs(13), fontWeight: "700", color: palette.blue800, marginBottom: rs(2) },
+  helpDesc:  { fontSize: rs(11), color: palette.blue500 },
   helpLink:  { fontSize: rs(12), fontWeight: "800", color: Colors.brand.blue },
 
   // ── New card layout ────
@@ -766,7 +767,7 @@ const styles = createThemedStyles({
   cardTopName: {
     fontSize: rs(15),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     flex: 1,
   },
   cardTopCuisine: {
