@@ -1,4 +1,5 @@
 import { palette } from "../../../theme/palette";
+import { usePaletteColor } from "../../../theme/themedStyles";
 import { rs } from "../../../utils/responsive";
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
@@ -112,6 +113,7 @@ export function NewsLeadImage({
   /** Modal hero uses taller ComlinkrNewsImage */
   variant?: "card" | "modal";
 }) {
+  const pc = usePaletteColor();
   const remote = remoteUri?.trim();
   const hasFeedImage = !!remote;
   const placeholderUri = hasFeedImage ? getArticleImage(article, city, userCountry) : "";
@@ -125,7 +127,7 @@ export function NewsLeadImage({
   const comlinkrFeatured = variant === "modal" || featured;
 
   return (
-    <View style={[style, { backgroundColor: palette.neutralL94, overflow: "hidden" }]}>
+    <View style={[style, { backgroundColor: pc(palette.neutralL94, "backgroundColor"), overflow: "hidden" }]}>
       {hasFeedImage ? (
         <FadeImage // SPRINT-42: use the shared renderer for the feed-image placeholder layer.
           uri={normalizeImageUri(placeholderUri)} // SPRINT-42: normalize the placeholder asset.

@@ -132,6 +132,9 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.
+- 2026-11-09: [Palette colours in dark mode](build/2026-11-09-dark-mode-palette.md) (TR-017, point 1): a lightness
+  fallback in `createThemedStyles`, 15 screens' styles moved onto it (colour only), and `usePaletteColor()` for
+  colours passed as props. Walked on Android, including a toggle with screens left mounted.
 - 2026-11-09: [Native sheets](build/2026-11-09-native-sheets.md) (TR-017, point 2): React Native sheet modals
   moved to `DSheet`; on Android `DSheet` now sizes to its content and opens fully; the post preview and the photo
   gallery are modal routes. Walked on Android.

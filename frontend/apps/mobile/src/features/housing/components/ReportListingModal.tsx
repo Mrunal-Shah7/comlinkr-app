@@ -1,6 +1,6 @@
 import { palette } from "../../../theme/palette";
 import { useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput } from "react-native";
 import { DSheet } from "../../../shared/d/Sheet";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,6 +10,7 @@ import { ApiError } from "../../../api/client";
 import { rs } from "../../../utils/responsive";
 import { reportHousingListing } from "../../../api/housing.api";
 import { showToast } from "../../../shared/ui/Toast";
+import { createThemedStyles, usePaletteColor } from '../../../theme/themedStyles';
 
 // ── Report Listing Modal ──────────────────────────────────────────────────────
 export const REPORT_REASONS = [
@@ -38,6 +39,7 @@ export function ReportListingModal({
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { isDark, tc } = useTheme();
+  const pc = usePaletteColor();
   const { requireAuth } = useRequireAuth();
 
   const handleSubmit = async () => {
@@ -143,7 +145,7 @@ export function ReportListingModal({
                       rp.reasonIcon,
                       {
                         backgroundColor:
-                          selected === reason.label ? palette.red100 : palette.neutralL97_10,
+                          pc(selected === reason.label ? palette.red100 : palette.neutralL97_10, "backgroundColor"),
                       },
                     ]}
                   >
@@ -231,7 +233,7 @@ export function ReportListingModal({
   );
 }
 
-export const rp = StyleSheet.create({
+export const rp = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.52)",
@@ -412,4 +414,4 @@ export const rp = StyleSheet.create({
     fontWeight: "700",
     color: palette.white,
   },
-});
+}, { fonts: false });

@@ -2,8 +2,9 @@ import { palette } from "../theme/palette";
 import { StyleSheet } from "react-native";
 import { rs } from "../utils/responsive";
 import { Colors } from "../theme/colors";
+import { createThemedStyles } from '../theme/themedStyles';
 
-export const s = StyleSheet.create({
+export const s = createThemedStyles({
   safe:    { flex: 1, backgroundColor: palette.neutralL97_9 },
   scroll:  { flex: 1 },
   content: { paddingBottom: rs(20) },
@@ -462,10 +463,10 @@ export const s = StyleSheet.create({
   debateRow: { flexDirection: "row", gap: rs(8), height: rs(40) },
   debateBar: { borderRadius: rs(10), borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
   debateLabel: { fontSize: rs(12), fontWeight: "700" },
-});
+}, { fonts: false });
 
 // ΓöÇΓöÇ Stories tab styles (Redesigned) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-export const st = StyleSheet.create({
+export const st = createThemedStyles({
   // ΓöÇΓöÇ Compact Header ΓöÇΓöÇ
   headerBlock: {
     flexDirection: "row",
@@ -1593,10 +1594,10 @@ export const st = StyleSheet.create({
     fontSize: rs(11),
     fontWeight: "800",
   },
-});
+}, { fonts: false });
 
 // ΓöÇΓöÇ My Area Live styles ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-export const la = StyleSheet.create({
+export const la = createThemedStyles({
   // Banner
   banner: {
     margin: rs(14),
@@ -1958,4 +1959,4 @@ export const la = StyleSheet.create({
     marginTop: rs(4),
     textAlign: "center",
   },
-});
+}, { fonts: false });

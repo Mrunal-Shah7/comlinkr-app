@@ -63,6 +63,7 @@ import { useAppCity } from '../../../src/utils/useAppCity';
 import { GuestCityPickerModal } from '../../../components/GuestCityBanner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '../../../src/api/client';
+import { createThemedStyles } from '../../../src/theme/themedStyles';
 
 const TOPICS = ["All", "Housing", "Food", "Transit", "Events", "Safety", "General"];
 const ASK_TOPICS = ["Housing", "Food", "Transit", "Events", "Safety", "General"];
@@ -1183,7 +1184,7 @@ export default function CommunityScreen() {
   );
 }
 
-const s = StyleSheet.create({
+const s = createThemedStyles({
   safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: rs(20) },
@@ -1505,4 +1506,4 @@ const s = StyleSheet.create({
     borderRadius: rs(14),
   },
   modalSubmitText: { fontSize: rs(15), fontWeight: "700", color: palette.white },
-});
+}, { fonts: false });

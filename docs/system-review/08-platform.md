@@ -57,7 +57,10 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
   opener hands its in-memory data over through a small store [walked, Android]. React Native `Modal` remains in the
   ten files listed in TR-019 [code].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
-  colour [code].
+  colour [code]. Screens styled with the static `palette` follow dark mode through `createThemedStyles`. Its tables,
+  and a lightness fallback for colours they do not name, map light surfaces and dark text. Colours passed as props go
+  through `usePaletteColor()`. Brand colours and white on colour stay as they are. Screens dark in both themes use
+  `createDTypeStyles` [walked, Android].
 - Route map: [reference/Architecture.md](../reference/Architecture.md#route-map-expo-router).
 
 ## Rules it enforces

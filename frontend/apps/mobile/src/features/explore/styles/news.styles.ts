@@ -2,9 +2,10 @@ import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
 // ── News Styles ─────────────────────────────────────────
-export const nw = StyleSheet.create({
+export const nw = createThemedStyles({
   // Hero
   hero: { paddingHorizontal: rs(16), paddingTop: rs(16), paddingBottom: rs(14), marginTop: rs(4) },
   heroInner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
@@ -236,4 +237,4 @@ export const nw = StyleSheet.create({
   commentsInput: { flex: 1, borderWidth: 1, borderRadius: rs(12), paddingHorizontal: rs(12), paddingVertical: rs(10), fontSize: rs(14) },
   commentsSendBtn: { width: rs(36), height: rs(36), borderRadius: rs(18), backgroundColor: Colors.brand.blue, alignItems: "center", justifyContent: "center" },
   commentErr: { paddingHorizontal: rs(14), paddingBottom: rs(6), fontSize: rs(12), fontWeight: "600" },
-});
+}, { fonts: false });

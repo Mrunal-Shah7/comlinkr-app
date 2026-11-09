@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   Pressable,
   KeyboardAvoidingView,
   ScrollView,
@@ -25,6 +24,7 @@ import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
 import { PasswordRules, passwordOk } from '../../src/shared/d/PasswordRules';
 import Reanimated, { FadeInLeft, FadeInRight, useReducedMotion } from 'react-native-reanimated';
 import { DPage, goBackOr } from '../../src/shared/d/Page';
+import { createThemedStyles } from '../../src/theme/themedStyles';
 
 function GradientText({
   text,
@@ -241,7 +241,7 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: { flex: 1 },
   safe: { flex: 1 },
   flex: { flex: 1 },
@@ -375,4 +375,4 @@ const styles = StyleSheet.create({
   },
   footerText: { fontSize: rs(14) },
   footerLink: { fontSize: rs(14), fontWeight: "700" },
-});
+}, { fonts: false });

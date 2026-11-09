@@ -1,8 +1,9 @@
 import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
-export const s = StyleSheet.create({
+export const s = createThemedStyles({
   // ─────────────────────────────────────────────────────────────
   // Screen
   // ─────────────────────────────────────────────────────────────
@@ -892,4 +893,4 @@ export const s = StyleSheet.create({
     elevation: 3,
   },
   availNowDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.green400 },
-});
+}, { fonts: false });

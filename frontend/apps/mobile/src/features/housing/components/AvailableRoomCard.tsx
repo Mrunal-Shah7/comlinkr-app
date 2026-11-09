@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
+import { usePaletteColor } from "../../../theme/themedStyles";
 import { FadeImage } from "../../../../components/FadeImage";
 import { useAuthStore } from "../../../store/auth.store";
 import { formatPrice } from "../../../utils/currency";
@@ -30,11 +31,12 @@ export function AvailableRoomCard({
   isOwner?: boolean;
 }) {
   const { isDark, tc } = useTheme();
+  const pc = usePaletteColor();
   const user = useAuthStore((s) => s.user);
   const currencyCode = getUserCurrencyCode(user);
   const compat = computeRoomCompatibility(room, buildCurrentUserForMatch(user));
   const compatColor = compat >= 80 ? Colors.brand.green : compat >= 60 ? Colors.brand.blue : Colors.brand.orange;
-  const compatBg = compat >= 80 ? palette.green100 : compat >= 60 ? palette.brandBlueLight : palette.brandTealLight;
+  const compatBg = pc(compat >= 80 ? palette.green100 : compat >= 60 ? palette.brandBlueLight : palette.brandTealLight, "backgroundColor");
 
   return (
     <View style={[ar.card, isDark && { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
@@ -108,7 +110,7 @@ export function AvailableRoomCard({
 
         {/* Quick chips */}
         <View style={ar.chipsRow}>
-          <View style={[ar.chip, { backgroundColor: room.furnished ? palette.brandBlueLight : palette.gray100 }]}>
+          <View style={[ar.chip, { backgroundColor: pc(room.furnished ? palette.brandBlueLight : palette.gray100, "backgroundColor") }]}>
             <Ionicons name="cube-outline" size={11} color={room.furnished ? Colors.brand.blue : Colors.text.tertiary} />
             <Text style={[ar.chipText, { color: room.furnished ? Colors.brand.blue : Colors.text.tertiary }]}>
               {room.furnished ? "Furnished" : "Unfurnished"}

@@ -88,6 +88,7 @@ import { TYPE, display } from '../src/theme/d';
 import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton, Tag } from '../src/shared/d';
 const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
 import { DPage, goBackOr, type DPageList } from '../src/shared/d/Page';
+import { createThemedStyles } from '../src/theme/themedStyles';
 
 // SPRINT-39: typing emit debounce / remote expiry intervals
 const TYPING_STOP_IDLE_MS = 2000;
@@ -394,7 +395,7 @@ function ConvList({
   );
 }
 
-const l = StyleSheet.create({
+const l = createThemedStyles({
   searchBar: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: rs(16), backgroundColor: palette.white,
@@ -486,7 +487,7 @@ const l = StyleSheet.create({
   },
   emptyTitle: { fontSize: rs(17), fontWeight: "800", color: palette.navy, marginBottom: rs(6) },
   emptyDesc: { fontSize: rs(13), color: palette.skyL58, textAlign: "center", paddingHorizontal: rs(40), fontWeight: "500" },
-});
+}, { fonts: false });
 
 // ── Emoji categories (static, defined outside component to avoid re-creation) ──
 const EMOJI_CATS = [
@@ -1526,7 +1527,7 @@ function Thread({
   );
 }
 
-const th = StyleSheet.create({
+const th = createThemedStyles({
   hdr: { paddingBottom: rs(14) },
   hdrBtn: {
     width: rs(36), height: rs(36), borderRadius: rs(12),
@@ -1620,7 +1621,7 @@ const th = StyleSheet.create({
   bubble: {
     paddingHorizontal: rs(14), paddingVertical: rs(10), borderRadius: rs(18),
   },
-});
+}, { fonts: false });
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function ChatScreen() {
@@ -2079,7 +2080,7 @@ export default function ChatScreen() {
   );
 }
 
-const m = StyleSheet.create({
+const m = createThemedStyles({
   headerWhite: {
     backgroundColor: palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -2105,4 +2106,4 @@ const m = StyleSheet.create({
   },
   unreadDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: Colors.brand.green, marginRight: rs(5) },
   unreadChipText: { fontSize: rs(11), fontWeight: "700", color: Colors.brand.green, letterSpacing: 0.2 },
-});
+}, { fonts: false });
