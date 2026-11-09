@@ -1,6 +1,7 @@
 import { palette } from "../../../theme/palette";
-import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal } from "react-native";
+import { useRef, useState } from "react";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from "react-native";
+import { DSheet } from "../../../shared/d/Sheet";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../../theme/useTheme";
@@ -31,6 +32,7 @@ export function ReportListingModal({
   listingTitle: string;
   onClose: () => void;
 }) {
+  const scrollRef = useRef<ScrollView>(null);
   const [selected,  setSelected]  = useState<string | null>(null);
   const [details,   setDetails]   = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -67,15 +69,8 @@ export function ReportListingModal({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      statusBarTranslucent
-      onRequestClose={handleClose}
-    >
-      <View style={rp.overlay}>
-        <View style={[rp.sheet, isDark && { backgroundColor: tc.sheetBg }]}>
+    <DSheet visible={visible} onClose={handleClose}>
+        <View style={[rp.sheet, { backgroundColor: tc.sheetBg }]}>
           {/* Header */}
           <View style={rp.header}>
             <LinearGradient
@@ -121,7 +116,8 @@ export function ReportListingModal({
             </View>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled"
-              style={{ flex: 1 }}
+              ref={scrollRef}
+              style={{ flexGrow: 0 }}
               contentContainerStyle={{ paddingBottom: 32 }}
               showsVerticalScrollIndicator={false}
             >
@@ -185,6 +181,8 @@ export function ReportListingModal({
                 Additional details (optional)
               </Text>
               <TextInput
+                // The sheet shrinks when the keyboard opens; bring the field back into view.
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)}
                 style={[rp.detailsInput, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight, color: tc.textPrimary }]}
                 value={details}
                 onChangeText={setDetails}
@@ -229,8 +227,7 @@ export function ReportListingModal({
             </ScrollView>
           )}
         </View>
-      </View>
-    </Modal>
+    </DSheet>
   );
 }
 
@@ -245,8 +242,8 @@ export const rp = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    maxHeight: "86%",
+    paddingTop: 4,
+    flexShrink: 1,
   },
   header: {
     flexDirection: "row",

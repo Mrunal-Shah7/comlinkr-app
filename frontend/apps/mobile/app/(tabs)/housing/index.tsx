@@ -4,7 +4,8 @@ import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-nati
 import { ListingFeature, ListingTile, RoomTile } from "../../../src/features/housing/components/DListingCards";
 import { Chip, Segmented, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
-import { View, Text, ScrollView, FlatList, Pressable, TextInput, StyleSheet, Modal, RefreshControl, ActivityIndicator, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, FlatList, Pressable, TextInput, StyleSheet, RefreshControl, ActivityIndicator } from "react-native";
+import { DSheet } from "../../../src/shared/d/Sheet";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -925,22 +926,8 @@ export default function HousingScreen() {
       )}
 
       {/* ── Listings filter sheet (price / beds / pets) ── */}
-      <Modal
-        visible={showFilterSheet}
-        animationType="slide"
-        transparent
-        statusBarTranslucent
-        onRequestClose={() => setShowFilterSheet(false)}
-      >
-        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowFilterSheet(false)} />
-          <View style={{ backgroundColor: tc.sheetBg, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 20, paddingBottom: insets.bottom + 20 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-              <Text style={[TYPE.section, { color: tc.textPrimary }]}>Filters</Text>
-              <Pressable onPress={() => setShowFilterSheet(false)} hitSlop={10}>
-                <Ionicons name="close" size={22} color={tc.textSecondary} />
-              </Pressable>
-            </View>
+      <DSheet visible={showFilterSheet} onClose={() => setShowFilterSheet(false)} title="Filters">
+          <View style={{ paddingHorizontal: 20 }}>
 
             <Text style={{ fontSize: 12, fontFamily: "Manrope_800ExtraBold", color: tc.textTertiary, marginBottom: 8, letterSpacing: 0.4 }}>PRICE RANGE / MONTH</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -1032,19 +1019,11 @@ export default function HousingScreen() {
               </Pressable>
             </View>
           </View>
-        </View>
-      </Modal>
+      </DSheet>
 
       {/* ── Inline Roommate Prefs Modal ── */}
-      <Modal
-        visible={rmPrefsModalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setRmPrefsModalVisible(false)}
-      >
-        {/* Android: no "height" behavior — it can leave the sheet clipped at a fixed height after the keyboard closes (blank area below Lifestyle). */}
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
-          <SafeAreaView style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }} edges={["top", "bottom"]}>
+      <DSheet visible={rmPrefsModalVisible} onClose={() => setRmPrefsModalVisible(false)} full>
+          <View style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }}>
             {/* Header */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: rs(20), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight }}>
               <Pressable onPress={() => setRmPrefsModalVisible(false)} hitSlop={12}>
@@ -1158,9 +1137,8 @@ export default function HousingScreen() {
 
               <View style={{ height: rs(40) }} />
             </ScrollView>
-          </SafeAreaView>
-        </KeyboardAvoidingView>
-      </Modal>
+          </View>
+      </DSheet>
     </SafeAreaView>
   );
 }

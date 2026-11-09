@@ -4,7 +4,7 @@
 // moved out of app/(tabs)/food/index.tsx.
 import { palette } from "../../theme/palette";
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";

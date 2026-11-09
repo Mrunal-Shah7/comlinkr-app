@@ -1,10 +1,7 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
 import { palette } from "../../theme/palette";
-import { useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, Modal } from "react-native";
-import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
-import { SPRING } from "../../shared/motion/presets";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { DSheet } from "../../shared/d/Sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../theme/useTheme";
 import { createThemedStyles } from "../../theme/themedStyles";
@@ -31,61 +28,40 @@ export function MediaPickerSheet({
   title?: string;
 }) {
   const { tc } = useTheme();
-  const translateY = useSharedValue(300);
-
-  // Slide in when shown. Started from an effect: starting it during render restarted the spring on every render.
-  useEffect(() => {
-    if (visible) translateY.set(withSpring(0, SPRING.sheet));
-    else translateY.set(300);
-  }, [visible, translateY]);
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.get() }] }));
-
-  const dismiss = () => {
-    translateY.set(withTiming(300, { duration: 200 }, (done) => { if (done) scheduleOnRN(onClose); }));
+  // The native sheet (TR-017): close it first, then open the picker once it has slid away.
+  const pick = (open: () => void) => {
+    onClose();
+    setTimeout(open, 250);
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss} statusBarTranslucent>
-      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)" }} onPress={dismiss} />
-      <Reanimated.View style={[mps.sheet, { backgroundColor: tc.cardBg }, sheetStyle]}>
-        <View style={mps.handle} />
+    <DSheet visible={visible} onClose={onClose}>
+      <View style={[mps.sheet, { backgroundColor: tc.sheetBg }]}>
         {title ? <Text style={[mps.title, { color: tc.textSecondary }]}>{title}</Text> : null}
-        <Pressable
-          style={[mps.row, { borderBottomColor: tc.borderLight }]}
-          onPress={() => { dismiss(); setTimeout(onLibrary, 220); }}
-        >
+        <Pressable style={[mps.row, { borderBottomColor: tc.borderLight }]} onPress={() => pick(onLibrary)}>
           <View style={mps.iconBox}>
             <Ionicons name="images-outline" size={22} color={palette.brandBlue} />
           </View>
           <Text style={[mps.rowText, { color: tc.textPrimary }]}>Photo Library</Text>
           <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
         </Pressable>
-        <Pressable
-          style={[mps.row, { borderBottomColor: tc.borderLight }]}
-          onPress={() => { dismiss(); setTimeout(onCamera, 220); }}
-        >
+        <Pressable style={[mps.row, { borderBottomColor: tc.borderLight }]} onPress={() => pick(onCamera)}>
           <View style={[mps.iconBox, { backgroundColor: palette.brandTealLight }]}>
             <Ionicons name="camera-outline" size={22} color={palette.brandTeal} />
           </View>
           <Text style={[mps.rowText, { color: tc.textPrimary }]}>Camera</Text>
           <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
         </Pressable>
-        <Pressable style={mps.cancelBtn} onPress={dismiss}>
+        <Pressable style={mps.cancelBtn} onPress={onClose}>
           <Text style={mps.cancelText}>Cancel</Text>
         </Pressable>
-      </Reanimated.View>
-    </Modal>
+      </View>
+    </DSheet>
   );
 }
 
 export const mps = createThemedStyles({
-  sheet: {
-    position: "absolute", bottom: 0, left: 0, right: 0,
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingBottom: 34, paddingTop: 10,
-    shadowColor: palette.black, shadowOpacity: 0.25, shadowRadius: 20, elevation: 20,
-  },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: palette.gray300, alignSelf: "center", marginBottom: 16 },
+  sheet: { paddingBottom: 16, paddingTop: 4 },
   title: { fontSize: 12, fontWeight: "600", textAlign: "center", marginBottom: 10, letterSpacing: 0.5, textTransform: "uppercase" },
   row: {
     flexDirection: "row", alignItems: "center", gap: 14,

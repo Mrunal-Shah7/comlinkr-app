@@ -50,7 +50,10 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
   that opens the compose sheet, the native `Stack` with the platform's push animation (iOS edge swipe back, Android
   system Back). Pull-down-to-close detail modals (`DismissibleSheet`) stay [code].
 - **Controls:** `@expo/ui` switches, segmented controls and bottom sheet (`DSheet`); gesture-handler gestures do not
-  run inside the native sheet [code].
+  run inside the native sheet [code]. On Android `DSheet` is a full-height transparent Material sheet with the card
+  drawn at its bottom, so it fits its content and opens fully; tapping above the card closes it
+  (`SheetFrame.android.tsx`, [build note](../build/2026-11-09-native-sheets.md)) [walked, Android]. React Native
+  `Modal` remains in the preview, the image viewer and the ten files listed in TR-019 [code].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
   colour [code].
 - Route map: [reference/Architecture.md](../reference/Architecture.md#route-map-expo-router).

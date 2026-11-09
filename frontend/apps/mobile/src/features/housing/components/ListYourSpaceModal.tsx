@@ -1,6 +1,7 @@
 import { palette } from "../../../theme/palette";
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet } from "react-native";
+import { DSheet } from "../../../shared/d/Sheet";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -54,15 +55,8 @@ export function ListYourSpaceModal({
   const ROOM_TYPES: Array<"Private Room" | "Shared Room" | "Full Apartment"> = ["Private Room", "Shared Room", "Full Apartment"];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={reset}>
-      <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}
-        behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
-      >
-        <Pressable style={StyleSheet.absoluteFill} onPress={reset} />
-        <View style={{ backgroundColor: tc.sheetBg, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: "92%", overflow: "hidden" }} onStartShouldSetResponder={() => true}>
-          {/* Handle */}
-          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.gray300, alignSelf: "center", marginTop: 10, marginBottom: 4, ...(isDark && { backgroundColor: tc.borderMedium }) }} />
+    <DSheet visible={visible} onClose={reset} full>
+        <View style={{ flex: 1, backgroundColor: tc.sheetBg }}>
           {/* Header */}
           <LinearGradient
             colors={[Colors.brand.blue, Colors.brand.green]}
@@ -199,7 +193,6 @@ export function ListYourSpaceModal({
             </View>
           )}
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    </DSheet>
   );
 }

@@ -6,7 +6,9 @@
 
 import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert } from 'react-native';
+import { DSheet } from '../../../shared/d/Sheet';
+import { useLastNonNull } from '../../../hooks/useLastNonNull';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,16 +50,17 @@ function StoryDetailModal({
   onRemove: (id: string) => void;
   isDeleting: boolean;
 }) {
-  if (!story) return null;
+  // The native sheet stays mounted and keeps the last item while it slides away (TR-017).
+  story = useLastNonNull(story);
+  if (!story) return <DSheet visible={false} onClose={onClose}><View /></DSheet>;
   const expired = isExpired(story.expiresAt);
   const mediaUri = resolveApiAssetUrl(story.mediaUrl);
   const video = isVideoUrl(story.mediaUrl);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={dm.overlay}>
-        <ScrollView style={dm.sheet} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          <View style={dm.handle} />
+    <DSheet visible={visible} onClose={onClose}>
+      <View style={{ flexShrink: 1 }}>
+        <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
 
           <View style={dm.headerRow}>
             <Text style={dm.headerTitle}>Story Detail</Text>
@@ -160,7 +163,7 @@ function StoryDetailModal({
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </DSheet>
   );
 }
 
