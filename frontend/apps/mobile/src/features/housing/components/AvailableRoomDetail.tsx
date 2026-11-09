@@ -2,7 +2,7 @@
 // Photo hero with glass buttons, a body that overlaps it, the host with the match, the facts as one list, the rules
 // and amenities as chips, and a glass bar with Message and Apply. Apply with a note opens a D sheet.
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, useWindowDimensions, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, useWindowDimensions, KeyboardAvoidingView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -18,9 +18,9 @@ import { DSheet } from "../../../shared/d/Sheet";
 import { type AvailableRoom, computeRoomCompatibility, buildCurrentUserForMatch } from "../roommateModel";
 import { getUserCurrencyCode } from "../utils";
 
-export function AvailableRoomDetailModal({
+/** The body of the /room/[id] route (plan 03). */
+export function AvailableRoomDetail({
   room,
-  visible,
   onClose,
   requested,
   onRequest,
@@ -32,7 +32,6 @@ export function AvailableRoomDetailModal({
   onApplyWithMessage,
 }: {
   room: AvailableRoom | null;
-  visible: boolean;
   onClose: () => void;
   requested: boolean;
   onRequest: () => void;
@@ -91,8 +90,6 @@ export function AvailableRoomDetailModal({
   const h2 = (t: string) => <Text style={[TYPE.section, { color: tc.textPrimary, marginTop: 22, marginBottom: 10 }]}>{t}</Text>;
   const message = () => {
     if (!room.hostId) { appAlert("Host unavailable", "This host's contact details are not available."); return; }
-    // Dismiss this native Modal first; a route pushed while it is presented renders underneath it.
-    onClose();
     const { isAuthed, user: u } = useAuthStore.getState();
     if (!isAuthed) { router.push("/(auth)/login" as any); return; }
     if (!u?.onboardingDone) { router.push("/(auth)/onboarding" as any); return; }
@@ -104,8 +101,7 @@ export function AvailableRoomDetailModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
+    <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
         <View style={{ height: 320 }}>
           <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(e) => setImgIdx(Math.round(e.nativeEvent.contentOffset.x / windowWidth))}>
@@ -222,7 +218,6 @@ export function AvailableRoomDetailModal({
             </View>
           </KeyboardAvoidingView>
         </DSheet>
-      </View>
-    </Modal>
+    </View>
   );
 }

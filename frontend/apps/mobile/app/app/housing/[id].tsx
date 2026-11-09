@@ -3,10 +3,8 @@
 //
 // Bridges incoming universal/App Links of the form
 //   https://comlinkr.com/app/housing/<id>
-// (the same path shape the web app uses for ListingDetailPage) into the
-// existing, already-working listing deep-link handler in
-// app/(tabs)/housing/index.tsx, which watches the `openListing` query
-// param via useLocalSearchParams().
+// (the same path shape the web app uses for ListingDetailPage) to the listing detail route,
+// app/listing/[id].tsx (plan 03).
 //
 // This file renders nothing itself — it only exists so expo-router has a
 // matching route for this URL shape, then immediately hands off.
@@ -23,7 +21,7 @@ export default function HousingDeepLinkBridge() {
       router.replace("/housing");
       return;
     }
-    router.replace({ pathname: "/housing", params: { openListing: id } });
+    router.replace(`/listing/${encodeURIComponent(String(id))}` as never);
   }, [id]);
 
   return (

@@ -162,14 +162,14 @@ export default function SavedScreen() {
         const res = await getInterestedItems({ pageSize: 50 });
         return res.data.map((it) => ({
           id: it.id, title: it.title, sub: it.subtitle, image: it.image ? resolveApiAssetUrl(it.image) : undefined,
-          open: () => router.push({ pathname: "/(tabs)/housing", params: { openListing: it.contentId } } as never),
+          open: () => router.push(`/listing/${encodeURIComponent(it.contentId)}` as never),
           remove: async () => { await removeInterested(it.type, it.contentId); dropExtra("int", it.id); },
         }));
       }
       const res = await getFavoriteRestaurants();
       return res.map((r) => ({
         id: r.id, title: r.name, sub: [r.cuisine, r.city].filter(Boolean).join(" · ") || undefined, image: r.image,
-        open: () => router.push({ pathname: "/(tabs)/food", params: { openRestaurant: r.id } } as never),
+        open: () => router.push(`/restaurant/${encodeURIComponent(r.id)}` as never),
         remove: async () => { await toggleFavoriteRestaurant(r.id); dropExtra("fav", r.id); },
       }));
     },
@@ -260,13 +260,13 @@ export default function SavedScreen() {
         router.push({ pathname: "/(tabs)/feed", params: { openPost: id } } as never);
         return;
       case "events":
-        router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Events", openEvent: id } } as never);
+        router.push(`/events/${encodeURIComponent(id)}` as never);
         return;
       case "listings":
-        router.push({ pathname: "/(tabs)/housing", params: { openListing: id } } as never);
+        router.push(`/listing/${encodeURIComponent(id)}` as never);
         return;
       case "food":
-        router.push({ pathname: "/(tabs)/food", params: { openRestaurant: id } } as never);
+        router.push(`/restaurant/${encodeURIComponent(id)}` as never);
         return;
       case "community":
         router.push({ pathname: "/(tabs)/community", params: { openQuestion: id } } as never);
@@ -275,7 +275,7 @@ export default function SavedScreen() {
         router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Stories", openStory: id } } as never);
         return;
       case "roommates":
-        router.push({ pathname: "/(tabs)/housing", params: { openRoommate: id } } as never);
+        router.push(`/roommate/${encodeURIComponent(id)}` as never);
         return;
       default:
         return;

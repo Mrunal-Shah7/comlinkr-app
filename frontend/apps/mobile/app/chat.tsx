@@ -1036,8 +1036,8 @@ function Thread({
       {!isGroupChat && conv.contextName && conv.contextName !== "Listing inquiry" && conv.contextName !== "Event inquiry" && (conv.listingId || conv.eventId) ? (
         <Pressable
           onPress={() => router.push((conv.listingId
-            ? { pathname: "/(tabs)/housing", params: { openListing: conv.listingId } }
-            : { pathname: "/(tabs)/feed", params: { exploreTab: "Events", openEvent: conv.eventId } }) as never)}
+            ? `/listing/${encodeURIComponent(conv.listingId)}`
+            : `/events/${encodeURIComponent(String(conv.eventId))}`) as never)}
           accessibilityRole="button"
           accessibilityLabel={`Open ${conv.contextName}`}
           style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: pressed ? tc.inputBg : tc.cardBg, borderBottomWidth: 1, borderBottomColor: tc.borderLight }]}

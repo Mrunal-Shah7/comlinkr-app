@@ -1,51 +1,171 @@
-// SPRINT-30: deep link entry point for comlinkr://events/:id
-// SPRINT-42: moved to [id]/index.tsx so check-in can live at [id]/check-in.tsx
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+// An event's detail (plan 03). Opened from Explore, the Events screen, Saved, chat and links
+// (comlinkr://events/:id, /app/feed?openEvent=<id>). Check-in lives beside it at [id]/check-in.tsx.
+import { useState } from "react";
+import { View, Text, ActivityIndicator, Pressable } from "react-native";
+import { router } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getEvent, registerForEvent, unregisterFromEvent, toggleSaveEvent, type ApiEvent } from "../../../src/api/events.api";
+import { ApiError } from "../../../src/api/client";
+import { type ExploreEventRow, apiEventToExploreRow } from "../../../src/features/explore/models";
+import { EventDetail } from "../../../src/features/explore/components/EventDetail";
+import EventRegistrationModal from "../../../src/features/explore/components/EventRegistrationModal";
+import { useRequireAuth } from "../../../src/shared/hooks/useRequireAuth";
+import { useAuthStore } from "../../../src/store/auth.store";
+import { useSidebarStore } from "../../../src/store/sidebar.store";
+import { useNotificationStore } from "../../../src/store/notifications.store";
+import { showToast } from "../../../src/shared/ui/Toast";
+import { useTheme } from "../../../src/theme/useTheme";
 import { queryKeys } from "../../../src/services/cache/queryKeys";
-import { View, Text, ActivityIndicator, Pressable, StyleSheet } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { getEvent } from "../../../src/api/events.api";
+import { closeDetail, useIdParam } from "../../../src/hooks/useDetailRoute";
 
-export default function EventDeepLinkScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-  const eventId =
-    typeof id === "string" ? id.trim() : Array.isArray(id) ? String(id[0] ?? "").trim() : "";
-  const query = useQuery({
-    queryKey: queryKeys.event(eventId),
-    queryFn: () => getEvent(eventId),
-    enabled: !!eventId,
+type Detail = { api: ApiEvent; row: ExploreEventRow };
+
+export default function EventDetailScreen() {
+  const id = useIdParam();
+  const qc = useQueryClient();
+  const userId = useAuthStore((s) => s.user?.id);
+  const { requireAuth } = useRequireAuth();
+  const addNotification = useNotificationStore((s) => s.addNotification);
+  const { tc } = useTheme();
+  const [regOpen, setRegOpen] = useState(false);
+  const key = [...queryKeys.event(id), userId ?? ""];
+
+  const q = useQuery<Detail>({
+    queryKey: key,
+    queryFn: async () => {
+      const api = await getEvent(id);
+      return { api, row: apiEventToExploreRow(api) };
+    },
+    enabled: !!id,
+    staleTime: 0,
   });
-  const notFound = !eventId || query.isError || (query.isSuccess && !query.data);
 
-  useEffect(() => {
-    if (query.isSuccess && query.data) {
-      router.replace({ pathname: "/(tabs)/feed", params: { openEvent: eventId } } as never);
+  const patch = (fn: (r: ExploreEventRow) => ExploreEventRow) =>
+    qc.setQueryData<Detail>(key, (d) => (d ? { ...d, row: fn(d.row) } : d));
+  // Explore and the Events screen read their lists through the cache; send them to refetch.
+  const refreshLists = () => {
+    void qc.invalidateQueries({ queryKey: ["events", "list"] });
+    void qc.invalidateQueries({ queryKey: ["feed", "hero"] });
+    void qc.invalidateQueries({ queryKey: queryKeys.saved() });
+  };
+
+  const toggleSave = async (row: ExploreEventRow) => {
+    if (!requireAuth(undefined, "Sign in to save events for later.")) return;
+    try {
+      const res = await toggleSaveEvent(row.id);
+      const saved = res.saved === true;
+      patch((r) => ({ ...r, isSaved: saved }));
+      useSidebarStore.getState().incrementSaved(saved ? 1 : -1);
+      refreshLists();
+    } catch (e) {
+      showToast(e instanceof ApiError ? e.message : "Could not update save. Please try again.", "error");
     }
-  }, [query.isSuccess, query.data, eventId, router]);
+  };
 
-  if (notFound) {
+  const toggleGoing = async (row: ExploreEventRow) => {
+    if (!requireAuth(undefined, "Sign in to RSVP and get event updates.")) return;
+    const next = !row.registeredByMe;
+    const before = row;
+    patch((r) => ({ ...r, registeredByMe: next, interested: Math.max(0, r.interested + (next ? 1 : -1)) }));
+    try {
+      if (next) {
+        const res = await registerForEvent(row.id, {});
+        const cid = res.conversationId ?? undefined;
+        patch((r) => ({
+          ...r,
+          registeredByMe: true,
+          interested: typeof res.attendees === "number" ? res.attendees : r.interested,
+          conversationId: cid ?? r.conversationId,
+          canAccessChat: cid != null ? true : r.canAccessChat,
+        }));
+      } else {
+        const res = await unregisterFromEvent(row.id);
+        const attendees = typeof res.attendees === "number" ? res.attendees : undefined;
+        const cid = res.conversationId ?? undefined;
+        patch((r) => ({
+          ...r,
+          registeredByMe: false,
+          interested: attendees ?? r.interested,
+          conversationId: cid ?? r.conversationId,
+          canAccessChat: r.isOwner && (attendees ?? 0) > 0 && (cid ?? r.conversationId) != null,
+        }));
+      }
+      refreshLists();
+    } catch (e) {
+      patch(() => before);
+      showToast(
+        e instanceof ApiError ? e.message : next ? "Could not RSVP. Please try again." : "Could not cancel RSVP. Please try again.",
+        "error",
+      );
+    }
+  };
+
+  const row = q.data?.row ?? null;
+  if (!row) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.title}>Event not found</Text>
-        <Pressable onPress={() => router.replace("/(tabs)/feed" as never)} style={styles.btn}>
-          <Text style={styles.btnText}>Go to Home</Text>
-        </Pressable>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 14, backgroundColor: tc.pageBg, padding: 24 }}>
+        {q.isError || !id ? (
+          <>
+            <Text style={{ color: tc.textPrimary, fontSize: 17, fontWeight: "600" }}>Event not found</Text>
+            <Pressable onPress={closeDetail} accessibilityRole="button" hitSlop={8}>
+              <Text style={{ color: tc.accentText, fontSize: 16, fontWeight: "600" }}>Go back</Text>
+            </Pressable>
+          </>
+        ) : (
+          <ActivityIndicator color={tc.accentText} />
+        )}
       </View>
     );
   }
 
   return (
-    <View style={styles.center}>
-      <ActivityIndicator size="large" color="#1A6BAE" />
-    </View>
+    <>
+      <EventDetail
+        event={row}
+        apiEvent={q.data?.api}
+        onClose={closeDetail}
+        isSaved={!!row.isSaved}
+        onToggleSave={() => void toggleSave(row)}
+        isRegistered={!!row.registeredByMe}
+        onToggleGoing={() => void toggleGoing(row)}
+        onRegister={() => {
+          if (!requireAuth(undefined, "Sign in to register for this event.")) return;
+          setRegOpen(true);
+        }}
+        onMessageHost={() => {
+          if (!row.authorId) return;
+          if (!requireAuth(undefined, "Sign in to message the host.")) return;
+          router.push({ pathname: "/chat", params: { recipientId: row.authorId, recipientName: row.host, recipientType: "dm" } } as never);
+        }}
+      />
+      <EventRegistrationModal
+        visible={regOpen}
+        event={row}
+        onClose={() => setRegOpen(false)}
+        onRegistered={async ({ name, email, phone, tickets }) => {
+          addNotification({
+            type: "registration",
+            emoji: "🎟️",
+            title: `Registered for ${row.title}`,
+            desc: `${name} (${email}) reserved ${tickets} ticket${tickets === "1" ? "" : "s"}`,
+          });
+          const res = await registerForEvent(row.id, {
+            attendeeName: name,
+            attendeeEmail: email,
+            attendeePhone: phone || undefined,
+            ticketCount: parseInt(tickets, 10) || 1,
+          });
+          const cid = res.conversationId ?? undefined;
+          patch((r) => ({
+            ...r,
+            registeredByMe: true,
+            interested: typeof res.attendees === "number" ? res.attendees : r.interested + 1,
+            conversationId: cid ?? r.conversationId,
+            canAccessChat: cid != null ? true : r.canAccessChat,
+          }));
+          refreshLists();
+        }}
+      />
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  title: { fontSize: 18, fontWeight: "700", marginBottom: 12, color: "#111" },
-  btn: { paddingVertical: 10, paddingHorizontal: 16 },
-  btnText: { color: "#1A6BAE", fontWeight: "600", fontSize: 16 },
-});

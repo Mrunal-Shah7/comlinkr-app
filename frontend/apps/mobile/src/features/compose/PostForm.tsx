@@ -654,10 +654,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
       if (type.id === "story") {
         router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Stories" } } as any);
       } else if (type.id === "listing" && createdListingId) {
-        router.push({
-          pathname: "/(tabs)/housing",
-          params: { openListing: createdListingId },
-        } as any);
+        router.push(`/listing/${encodeURIComponent(createdListingId)}` as never);
       } else {
         router.push(targetRoute as any);
       }

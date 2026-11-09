@@ -28,7 +28,7 @@ export default function FeedDeepLinkBridge() {
       return;
     }
     if (openEvent) {
-      router.replace({ pathname: "/(tabs)/feed", params: { openEvent } });
+      router.replace(`/events/${encodeURIComponent(openEvent)}` as never);
       return;
     }
     if (openStory) {

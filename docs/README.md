@@ -122,6 +122,9 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [Detail routes](build/2026-11-09-detail-routes.md) (TR-013, point 7, plan 03): listing, roommate,
+  shared space, restaurant and event details are routes (`/listing/[id]` and the rest) seeded from the list cache;
+  `DismissibleSheet` and the event hero flight deleted. Walked on Android.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.

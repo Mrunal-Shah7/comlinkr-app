@@ -9,7 +9,6 @@ import { FadeImage } from "../../../../components/FadeImage";
 import { useTheme } from "../../../theme/useTheme";
 import { TYPE, body, display } from "../../../theme/d";
 import { PressableScale } from "../../../shared/d";
-import { rememberHero } from "../../../shared/d/Hero";
 import { SPRING } from "../../../shared/motion/presets";
 import { EVENT_IMAGE_BY_CATEGORY, type ExploreEventRow } from "../models";
 
@@ -26,7 +25,7 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
   const fallback = EVENT_IMAGE_BY_CATEGORY[event.category] ?? EVENT_IMAGE_BY_CATEGORY.Community;
   const meta = [event.interested > 0 ? `${event.interested} going` : "", event.price].filter(Boolean).join(" · ");
   return (
-    <PressableScale onPress={() => rememberHero(imgRef.current, event.image || fallback, () => onPress?.())} outerStyle={{ flex: 1 }} style={s.tile} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}>
+    <PressableScale onPress={() => onPress?.()} outerStyle={{ flex: 1 }} style={s.tile} accessibilityRole="button" accessibilityLabel={`${event.title}, ${event.date}`}>
       <View>
         <View ref={imgRef} collapsable={false}><FadeImage uri={event.image} fallbackUri={fallback} style={s.img} /></View>
         <View style={[s.chip, { backgroundColor: tc.glass, borderColor: tc.glassLine }]}>

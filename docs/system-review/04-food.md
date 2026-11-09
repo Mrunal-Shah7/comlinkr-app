@@ -29,7 +29,8 @@ restaurants.
 - Cards: image carousel with pinch-zoom, name, cuisine, rating, price range, open or closed computed on the phone
   in the restaurant's own time zone (`getAvailability`, `minutesNowInTimezone`), distance, verified owner badge,
   save heart [code].
-- **Restaurant Detail Modal**: stats, call, directions, website, reserve; hours, address, services, popular dishes,
+- **Restaurant detail**, the route `app/restaurant/[id].tsx` (helpers in `src/features/food/foodShared.tsx`,
+  [detail routes note](../build/2026-11-09-detail-routes.md)): stats, call, directions, website, reserve (Android Back closes the reservation form first); hours, address, services, popular dishes,
   tags; **Rate & Review** (one review per user, edit and delete); report [code].
 - Reservations: `POST /restaurants/:id/reservations` (date, time, party size); the owner confirms or cancels
   (`PATCH /restaurants/reservations/:id/confirm|cancel`) [code].

@@ -10,9 +10,7 @@ import { revealIn } from "../../../src/shared/motion/presets";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { runAfterTransition } from "../../../src/utils/afterTransition";
-import { DismissibleSheet, SheetDragArea } from "../../../src/shared/ui/DismissibleSheet";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams, useScrollToTop } from "expo-router";
@@ -29,32 +27,29 @@ import { useBlockStore } from "../../../src/store/block.store";
 import { blockUser as blockUserApi } from "../../../src/api/profile.api";
 import { useSidebarStore } from "../../../src/store/sidebar.store";
 import { getFeed, getPost, toggleLike as toggleFeedLike, toggleSave as toggleFeedSave, getComments, addComment, deletePost, subscribeToPostUpdates, getLatestPostUpdate, getNeighborhoodMood, voteNeighborhoodMood, resolveApiAssetUrl, type NeighborhoodMood, type NeighborhoodMoodSummary, type Post as FeedPost, type Comment as FeedComment } from "../../../src/api/feed.api";
-import { getEvent, getEvents, registerForEvent, unregisterFromEvent, toggleSaveEvent, type ApiEvent } from "../../../src/api/events.api";
+import { getEvents, registerForEvent, unregisterFromEvent, toggleSaveEvent } from "../../../src/api/events.api";
 import { getActiveStories, getMyStories, getStory, toggleStorySave, toggleStoryLike, getStoryLikeStatus, deleteStory, buildStoryAuthorGroups, type ApiStory, type StoryLikeStatus } from "../../../src/api/stories.api";
 import { getCommunityStats, type CommunityStats } from "../../../src/api/community-qa.api";
 import { getListings } from "../../../src/api/housing.api";
 import { addArticleComment, getArticleComments, getArticleStatsBatch, getNewsExplore, saveNewsArticle, toggleArticleLike, type NewsArticleComment } from "../../../src/api/news.api";
-import { getShareLink } from "../../../src/utils/shareLinks";
 import { LinkifiedText } from "../../../components/LinkifiedText";
 import { getPolls, votePoll, type Poll } from "../../../src/api/community.api";
 import { getChallenges, joinChallenge, type ApiChallenge } from "../../../src/api/challenges.api";
 import { ApiError } from "../../../src/api/client";
-import EventRegistrationModal from "../../../src/features/explore/components/EventRegistrationModal";
 import { useNotificationStore } from "../../../src/store/notifications.store";
 import { queryClient, LIST_STALE_MS } from "../../../src/services/cache/queryClient";
 import { s, st } from "../../../src/styles/feedScreen.styles";
 import { showToast } from "../../../src/shared/ui/Toast";
 import { appAlert } from "../../../src/shared/ui/Dialogs";
 import { ListState } from "../../../src/shared/ui/ListState";
-import { type FeedTab, type CommunityStory, HERO_MOOD_OPTIONS, type StoryCategory, FEED_TABS, STORY_CATEGORIES, STORY_CATEGORY_META } from "../../../src/features/explore/constants";
-import { type ExploreEventRow, type HeroTickerRow, apiEventToExploreRow, buildHeroTickerRows, normalizeApiStoryForFeed, mapApiStoryToCommunityStory, apiStoryIsSaved, getFeedPostShareUrl, pollToWyrCardModel, myVoteToSide, formatStoryTimeLeft } from "../../../src/features/explore/models";
+import { type FeedTab, type CommunityStory, HERO_MOOD_OPTIONS, type StoryCategory, FEED_TABS, STORY_CATEGORIES } from "../../../src/features/explore/constants";
+import { type ExploreEventRow, type HeroTickerRow, apiEventToExploreRow, buildHeroTickerRows, normalizeApiStoryForFeed, mapApiStoryToCommunityStory, apiStoryIsSaved, getFeedPostShareUrl, pollToWyrCardModel, myVoteToSide } from "../../../src/features/explore/models";
 import { type NewsArticle, LIVE_NEWS_SESSION_CACHE, type NewsCategory, COUNTRY_NEWS_MAP, BASE_NEWS_CATEGORIES, LIVE_NEWS_PAGE_SIZE, FALLBACK_NEWS, fetchArticleMeta, newsTimeAgo, isSameContent } from "../../../src/features/explore/news";
 import { WYRCard } from "../../../src/features/explore/components/WYRCard";
 import { nw } from "../../../src/features/explore/styles/news.styles";
 import { EventTile } from "../../../src/features/explore/components/EventCards";
-import { StoryVideoThumb, NewsLeadImage } from "../../../src/features/explore/components/NewsImages";
+import { NewsLeadImage } from "../../../src/features/explore/components/NewsImages";
 import { PostCard } from "../../../src/features/explore/components/PostCard";
-import { EventDetailModal } from "../../../src/features/explore/components/EventDetailModal";
 import { StoryCard, AddStoryTile } from "../../../src/features/explore/components/StoryCard";
 import { QuestCard } from "../../../src/features/explore/components/QuestCard";
 import { LiveNewsCard } from "../../../src/features/explore/components/LiveNewsCard";
@@ -124,11 +119,10 @@ export default function FeedScreen() {
   const [wyrPolls, setWyrPolls] = useState<Poll[]>([]);
   const [wyrPollsLoading, setWyrPollsLoading] = useState(false);
   const [feedTab, setFeedTab] = useState<FeedTab>("News");
-  const [selectedEvent, setSelectedEvent] = useState<ExploreEventRow | null>(null);
+  // The event detail is its own route (plan 03).
+  const openEvent = (eid: string) => router.push(`/events/${encodeURIComponent(eid)}` as never);
   const [heroMood, setHeroMood] = useState<string | null>(null);
   const [heroMoodSummary, setHeroMoodSummary] = useState<NeighborhoodMoodSummary | null>(null);
-  const [regModalOpen, setRegModalOpen] = useState(false);
-  const [regEvent, setRegEvent] = useState<ExploreEventRow | null>(null);
   const addNotification = useNotificationStore((s) => s.addNotification);
 
   const handleBlock = (authorName: string, authorAvatar?: string, authorId?: string) => {
@@ -1083,17 +1077,6 @@ export default function FeedScreen() {
               : e,
           ),
         );
-        setSelectedEvent((cur) =>
-          cur?.id === row.id
-            ? {
-                ...cur,
-                registeredByMe: true,
-                interested: attendees ?? cur.interested,
-                conversationId: cid ?? cur.conversationId,
-                canAccessChat: cid != null ? true : cur.canAccessChat,
-              }
-            : cur,
-        );
       } else {
         const res = await unregisterFromEvent(row.id);
         const attendees = typeof res.attendees === "number" ? res.attendees : undefined;
@@ -1111,18 +1094,6 @@ export default function FeedScreen() {
               : e,
           ),
         );
-        setSelectedEvent((cur) =>
-          cur?.id === row.id
-            ? {
-                ...cur,
-                registeredByMe: false,
-                interested: attendees ?? cur.interested,
-                conversationId: resCid ?? cur.conversationId,
-                canAccessChat:
-                  cur.isOwner && (attendees ?? 0) > 0 && (resCid ?? cur.conversationId) != null,
-              }
-            : cur,
-        );
       }
     } catch (e) {
       setExploreEvents((p) =>
@@ -1138,17 +1109,6 @@ export default function FeedScreen() {
             : ev,
         ),
       );
-      setSelectedEvent((cur) =>
-        cur?.id === row.id
-          ? {
-              ...cur,
-              registeredByMe: prevReg,
-              interested: prevInterested,
-              canAccessChat: prevCanChat,
-              conversationId: prevConv,
-            }
-          : cur,
-      );
       showToast(e instanceof ApiError ? e.message : (next ? "Could not RSVP. Please try again." : "Could not cancel RSVP. Please try again."), "error");
     }
   };
@@ -1159,7 +1119,6 @@ export default function FeedScreen() {
       const res = await toggleSaveEvent(row.id);
       const saved = res.saved === true;
       setExploreEvents((p) => p.map((e) => (e.id === row.id ? { ...e, isSaved: saved } : e)));
-      setSelectedEvent((cur) => (cur?.id === row.id ? { ...cur, isSaved: saved } : cur));
       useSidebarStore.getState().incrementSaved(saved ? 1 : -1);
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : "Could not update save. Please try again.", "error");
@@ -1462,20 +1421,8 @@ export default function FeedScreen() {
     const id = typeof raw === "string" ? raw.trim() : Array.isArray(raw) ? String(raw[0] ?? "").trim() : "";
     if (!id || deepLinkEventRef.current === id) return;
     deepLinkEventRef.current = id;
-    let cancelled = false;
-    (async () => {
-      try {
-        const e = await getEvent(id);
-        if (cancelled || !e) return;
-        setFeedTab("Events");
-        setSelectedEvent(apiEventToExploreRow(e as ApiEvent));
-      } catch {
-        /* ignore invalid id */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    setFeedTab("Events");
+    openEvent(id);
   }, [params.openEvent]);
 
   useEffect(() => {
@@ -1718,7 +1665,7 @@ export default function FeedScreen() {
         return (
           <View style={{ flexDirection: "row", gap: 12, paddingHorizontal: 16, marginBottom: 14 }}>
             {item.events.map((e) => (
-              <EventTile key={e.id} event={e} isSaved={e.isSaved} onToggleSave={() => { void toggleEventSave(e); }} onPress={() => setSelectedEvent(e)} />
+              <EventTile key={e.id} event={e} isSaved={e.isSaved} onToggleSave={() => { void toggleEventSave(e); }} onPress={() => openEvent(e.id)} />
             ))}
             {item.events.length === 1 ? <View style={{ flex: 1 }} /> : null}
           </View>
@@ -1871,7 +1818,7 @@ export default function FeedScreen() {
                   else router.push("/edit-profile" as any);
                 }}
                 nextEvent={exploreEvents[0]}
-                onEvent={(e) => setSelectedEvent(e)}
+                onEvent={(e) => openEvent(e.id)}
                 homesCount={heroListingsTotal}
                 onHomes={() => router.push("/(tabs)/housing" as any)}
                 stories={storyAuthorGroups}
@@ -2204,9 +2151,8 @@ export default function FeedScreen() {
           statusBarTranslucent
         >
           {selectedArticle && (
-            <DismissibleSheet onDismiss={() => setSelectedArticle(null)} style={[nw.modalRoot, { backgroundColor: tc.pageBg }]}>
+            <View style={[nw.modalRoot, { backgroundColor: tc.pageBg }]}>
               {/* Sticky header */}
-              <SheetDragArea>
               <View style={[nw.modalHeader, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }]}>
                 <Pressable onPress={() => setSelectedArticle(null)} style={[nw.modalBackBtn, { backgroundColor: tc.inputBg }]}>
                   <Ionicons name="chevron-back" size={22} color={tc.textPrimary} />
@@ -2216,7 +2162,6 @@ export default function FeedScreen() {
                   <Ionicons name="share-social-outline" size={20} color={tc.textPrimary} />
                 </Pressable>
               </View>
-              </SheetDragArea>
 
               <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={nw.modalScroll} showsVerticalScrollIndicator={false}>
                 {/* Hero Image — placeholder + optional RSS overlay */}
@@ -2315,7 +2260,7 @@ export default function FeedScreen() {
                   </View>
                 </View>
               </ScrollView>
-            </DismissibleSheet>
+            </View>
           )}
         </Modal>
       )}
@@ -2419,98 +2364,7 @@ export default function FeedScreen() {
       </Modal>
 
 
-      <EventDetailModal
-        event={selectedEvent}
-        visible={!!selectedEvent}
-        onClose={() => setSelectedEvent(null)}
-        isSaved={!!selectedEvent?.isSaved}
-        onToggleSave={() => {
-          if (selectedEvent) void toggleEventSave(selectedEvent);
-        }}
-        isRegistered={!!selectedEvent?.registeredByMe}
-        onToggleGoing={() => {
-          if (selectedEvent) void toggleEventGoing(selectedEvent);
-        }}
-        onRegister={() => {
-          if (!requireAuth(undefined, "Sign in to register for this event.")) return;
-          if (selectedEvent) {
-            const ev = selectedEvent;
-            setSelectedEvent(null);   // close EventDetailModal first
-            setRegEvent(ev);
-            setRegModalOpen(true);
-          }
-        }}
-        onMessageHost={() => {
-          if (!selectedEvent?.authorId) return;
-          if (!requireAuth(undefined, "Sign in to message the host.")) return;
-          const host = selectedEvent.host;
-          const authorId = selectedEvent.authorId;
-          router.push({
-            pathname: "/chat",
-            params: {
-              recipientId: authorId,
-              recipientName: host,
-              recipientType: "dm",
-            },
-          } as any);
-        }}
-      />
 
-      <EventRegistrationModal
-        visible={regModalOpen}
-        event={regEvent}
-        onClose={() => setRegModalOpen(false)}
-        onRegistered={async ({ name, email, phone, tickets }: { name: string; email: string; phone: string; tickets: string }) => {
-          const ev = regEvent;
-          if (!ev) return;
-          // Optimistic update — card flips to "Going" immediately
-          setExploreEvents((p) =>
-            p.map((e) =>
-              e.id === ev.id ? { ...e, registeredByMe: true, interested: e.interested + 1 } : e,
-            ),
-          );
-          addNotification({
-            type: "registration",
-            emoji: "🎟️",
-            title: `Registered for ${ev.title}`,
-            desc: `${name} (${email}) reserved ${tickets} ticket${tickets === "1" ? "" : "s"}`,
-          });
-          // SPRINT-42: await registration before ticket GET; do not swallow errors
-          try {
-            const res = await registerForEvent(ev.id, {
-              attendeeName: name,
-              attendeeEmail: email,
-              attendeePhone: phone || undefined,
-              ticketCount: parseInt(tickets, 10) || 1,
-            });
-            const attendeeTotal = typeof res.attendees === "number" ? res.attendees : undefined;
-            const cid = res.conversationId ?? undefined;
-            setExploreEvents((p) =>
-              p.map((e) =>
-                e.id === ev.id
-                  ? {
-                      ...e,
-                      registeredByMe: true,
-                      interested: attendeeTotal ?? e.interested,
-                      conversationId: cid ?? e.conversationId,
-                      canAccessChat: cid != null ? true : e.canAccessChat,
-                    }
-                  : e,
-              ),
-            );
-          } catch (err) {
-            // SPRINT-42: revert optimistic state and surface the failure
-            setExploreEvents((p) =>
-              p.map((e) =>
-                e.id === ev.id
-                  ? { ...e, registeredByMe: false, interested: Math.max(0, e.interested - 1) }
-                  : e,
-              ),
-            );
-            throw err;
-          }
-        }}
-      />
 
       <Modal
         visible={!!feedCommentPostId}

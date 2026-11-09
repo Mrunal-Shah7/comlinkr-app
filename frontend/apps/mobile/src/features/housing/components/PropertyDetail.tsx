@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, Modal, Share, useWindowDimensions, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, Share, useWindowDimensions, StyleSheet } from "react-native";
 import { TYPE, body, display } from "../../../theme/d";
 import { GradientButton, Reveal, SoftButton } from "../../../shared/d";
 import { has } from "./DListingCards";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
@@ -13,7 +12,6 @@ import { useTheme } from "../../../theme/useTheme";
 import { VerifiedBadgePill } from "../../../../components/BadgeIndicator";
 import { useAuthStore } from "../../../store/auth.store";
 import { useRequireAuth } from "../../../shared/hooks/useRequireAuth";
-import { DismissibleSheet, SheetDragArea } from "../../../shared/ui/DismissibleSheet";
 import { getShareLink } from "../../../utils/shareLinks";
 import { LinkifiedText } from "../../../../components/LinkifiedText";
 import { appAlert } from "../../../shared/ui/Dialogs";
@@ -47,10 +45,9 @@ export function DetailRow({
   );
 }
 
-// ── Property detail modal ────────────────────────────────────────────────────
-export function PropertyDetailModal({
+// ── Property detail (the body of the /listing/[id] route, plan 03) ───────────
+export function PropertyDetail({
   listing,
-  visible,
   onClose,
   onDelete,
   onEdit, // SPRINT-42: expose owner listing edit from detail.
@@ -60,7 +57,6 @@ export function PropertyDetailModal({
   onToggleBookmark,
 }: {
   listing: Listing | null;
-  visible: boolean;
   onClose: () => void;
   /** Delete own listing (confirmation handled by parent). */
   onDelete?: () => void;
@@ -104,17 +100,12 @@ export function PropertyDetailModal({
     { icon: "pencil-outline",       label: "Signed" },
   ];
 
-  // This detail view is a native <Modal>; a route pushed while it is still presented renders
-  // underneath it (screen looks stuck). Dismiss it first, then navigate once the dismissal finishes.
-  const navigateAfterClose = (go: () => void, delayMs = 0) => {
-    // Each extra tap during the delay used to queue another push, stacking the screen several times.
-    if (navLockRef.current) return;
+  // The detail is a route (plan 03): the next screen is pushed on top of it, and Back returns here.
+  const navigateAfterClose = (go: () => void, _delayMs = 0) => {
+    if (navLockRef.current) return; // a double tap would push the screen twice
     navLockRef.current = true;
-    onClose();
-    // No artificial delay: closing unmounts the Modal and the route is pushed in the same tick,
-    // so the new screen starts sliding in while the Modal is already on its way out.
-    if (delayMs > 0) setTimeout(go, delayMs); else go(); // delay only for alerts, which iOS drops while a Modal is dismissing
-    setTimeout(() => { navLockRef.current = false; }, 600); // only guards against double taps
+    go();
+    setTimeout(() => { navLockRef.current = false; }, 600);
   };
 
   const messageLandlord = () => {
@@ -200,10 +191,10 @@ export function PropertyDetailModal({
   const unavailable = !!listing.listingStatus && listing.listingStatus !== "AVAILABLE" && !listing.isOwner;
 
   return (
-    <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
-      <DismissibleSheet onDismiss={onClose} style={{ backgroundColor: tc.pageBg }}>
+    <>
+      <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
         {/* ── Photos, with glass buttons (design D, plan 01) ── */}
-        <SheetDragArea style={{ height: CAROUSEL_H }}>
+        <View style={{ height: CAROUSEL_H }}>
           <ImageCarousel images={listing.images} width={windowWidth} height={CAROUSEL_H} showCounter onImagePress={(idx) => { setFsStartIdx(idx); setFsVisible(true); }} />
           <View style={{ position: "absolute", top: insets.top + 10, left: 14, right: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
             {glassBtn("chevron-back", "Back", onClose)}
@@ -213,7 +204,7 @@ export function PropertyDetailModal({
             {glassBtn(isBookmarked ? "bookmark" : "bookmark-outline", isBookmarked ? "Remove from saved" : "Save listing", () => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onToggleBookmark(); }, isBookmarked ? tc.accentText : tc.textPrimary)}
             {glassBtn("ellipsis-horizontal", "More options", more)}
           </View>
-        </SheetDragArea>
+        </View>
 
         {/* ── The page rises over the photo with rounded corners ── */}
         <ScrollView
@@ -341,10 +332,10 @@ export function PropertyDetailModal({
         </View>
 
         <ReportListingModal visible={showReportModal} listingId={listing.id} listingTitle={listing.title} onClose={() => setShowReportModal(false)} />
-      </DismissibleSheet>
+      </View>
 
       {fsVisible && <FullscreenImageViewer images={listing.images} startIndex={fsStartIdx} onClose={() => setFsVisible(false)} />}
-    </Modal>
+    </>
   );
 }
 
