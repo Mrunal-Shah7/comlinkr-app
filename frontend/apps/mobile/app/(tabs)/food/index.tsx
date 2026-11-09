@@ -31,6 +31,7 @@ import { useTheme } from "../../../src/theme/useTheme";
 import AppHeader from "../../../components/AppHeader";
 import { FadeImage } from "../../../components/FadeImage"; // SPRINT-31: shared expo-image FadeImage (local helper removed)
 import { router, useLocalSearchParams, useScrollToTop } from "expo-router";
+import { openGallery } from "../../../src/features/housing/galleryStore";
 import { useAuthStore } from "../../../src/store/auth.store";
 import { useGuestLocationStore } from "../../../src/store/guestLocation.store";
 import { useRequireAuth } from "../../../src/shared/hooks/useRequireAuth";
@@ -60,7 +61,7 @@ import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuer
 import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
-import { safeList, distanceMiles, restaurantIsOpen, getDisplayPrice, SortOption, FoodFullscreenViewer, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
+import { safeList, distanceMiles, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
 
 export default function FoodScreen() {
   const { width: windowWidth } = useWindowDimensions();
@@ -90,9 +91,6 @@ export default function FoodScreen() {
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
   // The detail is its own route (plan 03).
   const openRestaurant = (rid: string) => router.push(`/restaurant/${encodeURIComponent(rid)}` as never);
-  const [fsImages, setFsImages] = useState<string[]>([]);
-  const [fsStartIdx, setFsStartIdx] = useState(0);
-  const [fsVisible, setFsVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("Rating");
 
@@ -216,9 +214,7 @@ export default function FoodScreen() {
     lastPhotoTapRef.current = { id: r.id, at: now };
     photoTapTimerRef.current = setTimeout(() => {
       const imgs = r.images && r.images.length > 0 ? r.images : [r.image];
-      setFsImages(imgs);
-      setFsStartIdx(idx);
-      setFsVisible(true);
+      openGallery(imgs, idx);
     }, 280);
   };
   const openCardActions = async (r: Restaurant) => {
@@ -517,9 +513,6 @@ export default function FoodScreen() {
 
 
 
-      {fsVisible && fsImages.length > 0 && (
-        <FoodFullscreenViewer images={fsImages} startIndex={fsStartIdx} onClose={() => setFsVisible(false)} />
-      )}
       <GuestCityPickerModal visible={cityPickerVisible} onClose={() => setCityPickerVisible(false)} />
     </SafeAreaView>
   );

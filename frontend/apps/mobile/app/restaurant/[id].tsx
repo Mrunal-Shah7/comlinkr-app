@@ -35,6 +35,7 @@ import { Colors } from "../../src/theme/colors";
 import { useTheme } from "../../src/theme/useTheme";
 import AppHeader from "../../components/AppHeader";
 import { useFocusEffect } from "expo-router";
+import { openGallery } from "../../src/features/housing/galleryStore";
 import { useAuthStore } from "../../src/store/auth.store";
 import { useGuestLocationStore } from "../../src/store/guestLocation.store";
 import { useRequireAuth } from "../../src/shared/hooks/useRequireAuth";
@@ -63,7 +64,7 @@ import { appAlert } from '../../src/shared/ui/Dialogs';
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { closeDetail, findCachedRow, useIdParam } from "../../src/hooks/useDetailRoute";
-import { restaurantIsMine, safeList, itemLabel, getAvailability, getDisplayPrice, hasDistance, hasReservations, toApiTime, toApiDate, SortOption, REPORT_REASONS, FoodFullscreenViewer, ImageCarousel, restaurantId, s, rdm } from "../../src/features/food/foodShared";
+import { restaurantIsMine, safeList, itemLabel, getAvailability, getDisplayPrice, hasDistance, hasReservations, toApiTime, toApiDate, SortOption, REPORT_REASONS, ImageCarousel, restaurantId, s, rdm } from "../../src/features/food/foodShared";
 
 export default function RestaurantDetailScreen() {
   const id = useIdParam();
@@ -110,9 +111,6 @@ export default function RestaurantDetailScreen() {
   const { city: appCity, hasCity, chooseCity } = useAppCity(() => setCityPickerVisible(true));
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
-  const [fsImages, setFsImages] = useState<string[]>([]);
-  const [fsStartIdx, setFsStartIdx] = useState(0);
-  const [fsVisible, setFsVisible] = useState(false);
   const [userRatings, setUserRatings] = useState<Record<string, number>>({});
   const [reviewText, setReviewText] = useState("");
   const [reviewsList, setReviewsList] = useState<Record<string, RestaurantReview[]>>({});
@@ -461,7 +459,7 @@ export default function RestaurantDetailScreen() {
                 images={selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]}
                 height={350}
                 itemWidth={windowWidth}
-                onImagePress={(idx) => { const imgs = selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]; setFsImages(imgs); setFsStartIdx(idx); setFsVisible(true); }}
+                onImagePress={(idx) => { const imgs = selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]; openGallery(imgs, idx); }}
               />
               {(() => {
                 const r = selectedRestaurant;
@@ -915,9 +913,6 @@ export default function RestaurantDetailScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {fsVisible && fsImages.length > 0 && (
-        <FoodFullscreenViewer images={fsImages} startIndex={fsStartIdx} onClose={() => setFsVisible(false)} />
-      )}
     </>
   );
 }

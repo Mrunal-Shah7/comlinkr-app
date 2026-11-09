@@ -1,12 +1,12 @@
 import { palette } from "../../../theme/palette";
 import { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import Reanimated, { Extrapolation, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { SPRING } from "../../../shared/motion/presets";
 import { createDTypeStyles } from "../../../theme/themedStyles";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
-import { Gesture, GestureDetector, GestureHandlerRootView, ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeImage, resolveImageUri } from "../../../../components/FadeImage";
 import { rs } from "../../../utils/responsive";
@@ -191,9 +191,9 @@ export function FullscreenImageViewer({
   }));
 
   return (
-    <Modal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
-      {/* A React Native Modal is its own window: gestures inside it need their own root. */}
-      <GestureHandlerRootView style={{ flex: 1 }}>
+    // Rendered by the gallery route (app/gallery.tsx), a transparent modal: dragging down fades the black background
+    // and shows the screen underneath.
+    <View style={{ flex: 1 }}>
         <Reanimated.View style={[StyleSheet.absoluteFill, { backgroundColor: palette.black }, bgStyle]} />
         <GestureDetector gesture={dismiss}>
           <View style={{ flex: 1 }}>
@@ -224,8 +224,7 @@ export function FullscreenImageViewer({
         <Reanimated.Text style={[gs.hint, { bottom: insets.bottom + 34 }, bgStyle]}>
           {images.length > 1 ? "Swipe for more · pinch to zoom" : "Pinch to zoom"}
         </Reanimated.Text>
-      </GestureHandlerRootView>
-    </Modal>
+    </View>
   );
 }
 

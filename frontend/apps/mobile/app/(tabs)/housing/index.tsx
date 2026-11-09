@@ -43,7 +43,7 @@ import { s } from "../../../src/features/housing/styles/housingScreen.styles";
 import { SafeRentingGuide } from "../../../src/features/housing/components/SafeRentingGuide";
 import { MemoRoommateCard } from "../../../src/features/housing/components/MemoRows";
 import { ListYourSpaceModal } from "../../../src/features/housing/components/ListYourSpaceModal";
-import { FullscreenImageViewer } from "../../../src/features/housing/components/ImageViewer";
+import { openGallery } from "../../../src/features/housing/galleryStore";
 
 // ── Tab type ─────────────────────────────────────────────────────────────────
 type HousingTab = "listings" | "roommates";
@@ -102,9 +102,6 @@ export default function HousingScreen() {
   const [petsFilter, setPetsFilter] = useState<boolean | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [fullscreenImages, setFullscreenImages] = useState<string[]>([]);
-  const [fullscreenStartIdx, setFullscreenStartIdx] = useState(0);
-  const [fullscreenVisible, setFullscreenVisible] = useState(false);
 
   // ── Roommates state ──
   const [rmFilter, setRmFilter] = useState("Best Match");
@@ -527,11 +524,7 @@ export default function HousingScreen() {
 
   // ── Stable row handlers (keep MemoRoommateCard from re-rendering) ──
   const onToggleListingSave = useStableCallback((id: string) => void toggleSave(id));
-  const openListingImages = useStableCallback((images: string[], idx: number) => {
-    setFullscreenImages(images);
-    setFullscreenStartIdx(idx);
-    setFullscreenVisible(true);
-  });
+  const openListingImages = useStableCallback((images: string[], idx: number) => openGallery(images, idx));
   const onToggleRoommateSave = useStableCallback((id: string) => void toggleRoommateBookmark(id));
   const openRoom = useStableCallback((r: AvailableRoom) => router.push(`/room/${encodeURIComponent(r.id)}` as never));
   const openListing = useStableCallback((l: Listing) => router.push(`/listing/${encodeURIComponent(l.id)}` as never));
@@ -916,14 +909,6 @@ export default function HousingScreen() {
         onSubmit={() => setShowListModal(false)}
       />
 
-      {/* Fullscreen image viewer */}
-      {fullscreenVisible && fullscreenImages.length > 0 && (
-        <FullscreenImageViewer
-          images={fullscreenImages}
-          startIndex={fullscreenStartIdx}
-          onClose={() => setFullscreenVisible(false)}
-        />
-      )}
 
       {/* ── Listings filter sheet (price / beds / pets) ── */}
       <DSheet visible={showFilterSheet} onClose={() => setShowFilterSheet(false)} title="Filters">

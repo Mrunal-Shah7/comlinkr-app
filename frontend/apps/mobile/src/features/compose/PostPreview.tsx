@@ -1,6 +1,6 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
 import { palette } from "../../theme/palette";
-import { View, Text, ScrollView, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../theme/useTheme";
@@ -11,9 +11,43 @@ import { PostType } from "./postTypes";
 import { s } from "./styles";
 import { AttachedMedia } from "./types";
 
-// ── Preview modal ──────────────────────────────────────────────────────────────
-export function PreviewModal({
-  visible,
+export type PostPreviewProps = {
+  type: PostType;
+  title: string;
+  body: string;
+  attachedFiles: AttachedMedia[];
+  extraFields: { label: string; value: string; icon: string }[];
+  location?: string;
+  userName: string;
+  userInitials: string;
+  storyMediaType?: string;
+  storyCategory?: string;
+  storyHashtags?: string;
+  storyDuration?: string;
+  eventDate?: string;
+  eventTime?: string;
+  eventCategory?: string;
+  challengeType?: string;
+  challengeDuration?: string;
+  challengeGoal?: string;
+  challengeReward?: string;
+  challengeMaxParticipants?: string;
+  challengeHashtags?: string;
+  listingPrice?: string;
+  listingCurrency?: string;
+  listingDeposit?: string;
+  listingAvailable?: string;
+  listingAmenities?: string[];
+  listingWalkScore?: string;
+  listingTransitInfo?: string;
+  listingIsVerified?: boolean;
+  restCuisine?: string;
+  restPriceRange?: string;
+  restFeatures?: string[];
+};
+
+// ── Post preview (rendered by the app/compose-preview.tsx route, TR-017) ──────────────────────────────────────────────────────────────
+export function PostPreview({
   onClose,
   type,
   title,
@@ -52,42 +86,7 @@ export function PreviewModal({
   restCuisine,
   restPriceRange,
   restFeatures,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  type: PostType;
-  title: string;
-  body: string;
-  attachedFiles: AttachedMedia[];
-  extraFields: { label: string; value: string; icon: string }[];
-  location?: string;
-  userName: string;
-  userInitials: string;
-  storyMediaType?: string;
-  storyCategory?: string;
-  storyHashtags?: string;
-  storyDuration?: string;
-  eventDate?: string;
-  eventTime?: string;
-  eventCategory?: string;
-  challengeType?: string;
-  challengeDuration?: string;
-  challengeGoal?: string;
-  challengeReward?: string;
-  challengeMaxParticipants?: string;
-  challengeHashtags?: string;
-  listingPrice?: string;
-  listingCurrency?: string;
-  listingDeposit?: string;
-  listingAvailable?: string;
-  listingAmenities?: string[];
-  listingWalkScore?: string;
-  listingTransitInfo?: string;
-  listingIsVerified?: boolean;
-  restCuisine?: string;
-  restPriceRange?: string;
-  restFeatures?: string[];
-}) {
+}: PostPreviewProps & { onClose: () => void }) {
   const { width: SW } = useWindowDimensions();
   const { isDark, tc } = useTheme();
   const renderStoryPreview = () => (
@@ -743,10 +742,8 @@ export function PreviewModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={onClose}>
-      <View style={pv.overlay}>
+    // A form-sheet route (app/_layout.tsx): the native sheet gives the grabber, the rounded top and drag to close.
         <View style={[pv.sheet, { backgroundColor: tc.pageBg }]}>
-          <View style={pv.sheetHandle} />
           <View style={[pv.header, { borderBottomColor: tc.borderLight }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.headerBadge}>
@@ -780,21 +777,11 @@ export function PreviewModal({
             {type.id === "news" && renderNewsPreview()}
           </ScrollView>
         </View>
-      </View>
-    </Modal>
   );
 }
 
 export const pv = createThemedStyles({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
-  sheet: {
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    maxHeight: "92%", paddingTop: 10,
-  },
-  sheetHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: palette.gray300,
-    alignSelf: "center", marginBottom: 14,
-  },
+  sheet: { flex: 1, paddingTop: 22 },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 20, paddingBottom: 14,

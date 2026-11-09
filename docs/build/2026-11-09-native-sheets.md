@@ -52,9 +52,17 @@ this file, and the content width is now a number instead of `'100%'`. Not walked
   shrinks with the sheet and scrolls to the details field when that field is focused.
 - Unused `Modal` imports removed from `GuestCityBanner.tsx` and `foodShared.tsx`.
 
-**Kept as React Native `Modal` on purpose:**
-- `PreviewModal`: a full-screen draft preview, not a sheet.
-- `ImageViewer`: full screen, and it pinch-zooms with gesture-handler, which does not run inside the native sheet.
+**The preview and the gallery became modal routes.** Neither is a sheet that fits `DSheet`. The expo-router skill
+asks for a modal route (`presentation`) rather than a custom modal component, so both left React Native `Modal`:
+- **Post preview:** `app/compose-preview.tsx` opens as the native form sheet (`presentation: "formSheet"`, 92% detent).
+  `PreviewModal.tsx` became `PostPreview.tsx`, the route's content. `PostForm` hands the draft over with
+  `openPreview(draft)` (`src/features/compose/previewStore.ts`), since it lives in the form's state.
+- **Photo gallery:** `app/gallery.tsx` opens as a transparent modal with a fade (`presentation: "transparentModal"`),
+  so dragging the photo down still shows the screen underneath. `FullscreenImageViewer` lost its `Modal` and its own
+  `GestureHandlerRootView`; the app's root one now covers it. Its four openers (Listings cards, listing detail, Food
+  cards, restaurant detail) call `openGallery(images, index)` (`src/features/housing/galleryStore.ts`). The wrapper
+  `FoodFullscreenViewer` is gone.
+- Both are registered in `app/_layout.tsx`. Opened by a link with nothing handed over, they close at once.
 
 **Missed by the audit (TR-019):** ten more files render `Modal`, with imports split over several lines, so the
 first count missed them:
@@ -64,6 +72,9 @@ first count missed them:
 - `components/OAuthUsernamePickerModal.tsx`.
 
 They are not in this pull request.
+
+Metro, left over from the previous session, could not start a child process (`0xC0000142`). Its manifest answered
+500, and Expo Go showed "Failed to download remote update". A fresh Metro fixed it.
 
 ## Checked
 
@@ -80,6 +91,14 @@ They are not in this pull request.
     visible. Cancel closed it, and no `ListingReport` row was written.
   - **Media picker:** sized to its rows. "Photo Library" opened the system photo picker after the sheet closed; Back
     returned to the form with nothing attached.
+  - **Gallery route:**
+    - From a listing's photo it opened at "1 of 3", and swiping went to "2 of 3".
+    - A slow drag down faded the black and showed the listing underneath; letting go closed it.
+    - Back and the ← both returned to the listing.
+    - From a restaurant's photo it opened at "1 of 2", and Back closed it.
+    - Pinch-zoom was not tried (adb cannot pinch).
+  - **Preview route:** with a typed title, Preview opened the form sheet showing that title. ✕, Back and a drag down
+    each returned to the form with the draft intact. Leaving the form posted nothing.
   - **Admin sheets**, with `ui_tester` raised to ADMIN and set back to USER afterwards: the Feed, Community and
     Roommates detail sheets open and close (✕, Back). The content stays in place while the sheet slides away.
 - **Not walked:**
@@ -87,6 +106,9 @@ They are not in this pull request.
   - Roommate preferences: opens only from the "no matches" empty state.
   - The post report sheet and the feed's post comments: the Explore feed showed only news cards on this walk.
   - List your space: nothing opens it.
+  - The gallery opened from a Listings card or a Food card (only listing detail and restaurant detail were walked).
+  - Opening `/gallery` or `/compose-preview` from a cold link.
+  - The preview's grabber: `sheetGrabberVisible` showed none on Android.
   - iOS.
 
 ## Found on the way
