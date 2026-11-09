@@ -4,8 +4,8 @@
 // route; moved out of the Listings tab with plan 03.
 import { palette } from "../../../theme/palette";
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator, KeyboardAvoidingView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, ScrollView, Pressable, TextInput, ActivityIndicator } from "react-native";
+import { DSheet } from "../../../shared/d/Sheet";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
@@ -79,14 +79,8 @@ export function EditSharedSpaceModal({
   };
 
   return (
-    <Modal
-      visible={!!room}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={() => !editRoomSaving && onClose()}
-    >
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }} edges={["top", "bottom"]}>
+    <DSheet visible={!!room} onClose={() => !editRoomSaving && onClose()} full>
+        <View style={{ flex: 1, backgroundColor: tc.sheetBg ?? tc.cardBg }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: rs(20), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight }}>
             <Pressable onPress={() => !editRoomSaving && onClose()} hitSlop={12}>
               <Ionicons name="close" size={24} color={tc.textPrimary} />
@@ -170,8 +164,7 @@ export function EditSharedSpaceModal({
               />
             </View>
           </ScrollView>
-        </SafeAreaView>
-      </KeyboardAvoidingView>
-    </Modal>
+        </View>
+    </DSheet>
   );
 }

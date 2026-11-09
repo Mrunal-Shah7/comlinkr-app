@@ -2,7 +2,9 @@
 
 import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert } from 'react-native';
+import { DSheet } from '../../../shared/d/Sheet';
+import { useLastNonNull } from '../../../hooks/useLastNonNull';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,15 +45,16 @@ function FeedPostDetailModal({
   onFeature: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
-  if (!post) return null;
+  // The native sheet stays mounted and keeps the last item while it slides away (TR-017).
+  post = useLastNonNull(post);
+  if (!post) return <DSheet visible={false} onClose={onClose}><View /></DSheet>;
   const sm = STATUS_META[post.status] ?? STATUS_META.removed;
   const tm = TYPE_META[post.type] ?? { color: Colors.text.tertiary, icon: 'document' };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={dm.overlay}>
-        <ScrollView style={dm.sheet} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          <View style={dm.handle} />
+    <DSheet visible={visible} onClose={onClose}>
+      <View style={{ flexShrink: 1 }}>
+        <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
 
           <View style={dm.headerRow}>
             <View style={{ flex: 1 }}>
@@ -161,7 +164,7 @@ function FeedPostDetailModal({
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </DSheet>
   );
 }
 

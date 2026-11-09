@@ -1,7 +1,8 @@
 import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import { DSheet } from "../../../shared/d/Sheet";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
@@ -151,9 +152,9 @@ export function ReportPostModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={handleClose}>
-      <Pressable style={rpm.overlay} onPress={handleClose}>
-        <Pressable style={[rpm.sheet, isDark && { backgroundColor: tc.sheetBg }]} onPress={(e) => e.stopPropagation()}>
+    <DSheet visible={visible} onClose={handleClose}>
+      <View>
+        <View style={[rpm.sheet, { backgroundColor: tc.sheetBg }]}>
           <View style={rpm.header}>
             <Text style={[rpm.title, { color: tc.textPrimary }]}>Report Post</Text>
             <Pressable onPress={handleClose} hitSlop={10} style={[rpm.closeBtn, { backgroundColor: tc.inputBg }]}>
@@ -186,9 +187,9 @@ export function ReportPostModal({
           >
             {submitting ? <ActivityIndicator color={palette.white} size="small" /> : <Text style={rpm.submitText}>Submit Report</Text>}
           </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
+        </View>
+      </View>
+    </DSheet>
   );
 }
 

@@ -35,7 +35,7 @@ import { ChipMulti, ChipSelect } from "./ChipSelect";
 import { DraggableListingImage } from "./DraggableListingImage";
 import { ImageThumbnailStrip } from "./ImageThumbnailStrip";
 import { MediaPickerSheet, SectionLabel } from "./MediaPickerSheet";
-import { PreviewModal } from "./PreviewModal";
+import { openPreview } from "./previewStore";
 import { buildDirtyListingPayload, mimeForListingImage, normalizeAvailableDateValue, propertyTypeToLabel, sprint42ImageError } from "./listingEdit";
 import { mapChallengeDurationLabel, mapChallengeTypeLabel, mapEventCategoryLabel, mapEventFormatLabel, mapPropertyTypeLabel, mapRestaurantPriceChip, mapStoryCategoryLabel, mapStoryMediaUi, parseFlexibleDateToIsoDate, splitHashtagInput } from "./mappers";
 import { ALL_CATEGORIES, NEWS_LABEL_TO_FEED, PostType, QUEST_TEMPLATES, STORY_CATEGORY_OPTIONS } from "./postTypes";
@@ -61,7 +61,6 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
   const [body, setBody] = useState("");
   const [location, setLocation] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedMedia[]>([]);
-  const [previewVisible, setPreviewVisible] = useState(false);
   const [newsMoreOpen, setNewsMoreOpen] = useState(false);
   const [sourceLabel, setSourceLabel] = useState(""); // SPRINT-42: support the sixth editable feed field in create and edit.
   const [editLoading, setEditLoading] = useState(initialMode === "edit"); // SPRINT-42: block editing until authoritative detail data is loaded.
@@ -1107,6 +1106,43 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     );
   }
 
+
+  // The preview is a route (app/compose-preview.tsx, TR-017); it gets the draft as it is now.
+  const showPreview = () =>
+    openPreview({
+      type,
+      title: type.id === "restaurant" ? restName : title,
+      body,
+      attachedFiles: type.id === "listing" ? listingImages : attachedFiles,
+      extraFields,
+      location,
+      userName: previewUserName,
+      userInitials: previewUserInitials,
+      storyMediaType: storyPreviewMediaType,
+      storyCategory: storyCatPick,
+      storyHashtags: storyTagsInput,
+      storyDuration: storyPreviewDuration,
+      eventDate,
+      eventTime,
+      eventCategory,
+      challengeType,
+      challengeDuration,
+      challengeGoal,
+      challengeReward,
+      challengeMaxParticipants,
+      challengeHashtags,
+      listingPrice: price,
+      listingCurrency,
+      listingDeposit: deposit,
+      listingAvailable: available,
+      listingAmenities: amenities,
+      listingWalkScore: walkScoreStr,
+      listingTransitInfo: transitInfoStr,
+      listingIsVerified: isVerifiedLandlord || isVerifiedAgency,
+      restCuisine: cuisine,
+      restPriceRange: priceRange,
+      restFeatures: features,
+    });
   return (
     <>
       {/* ── Bar (design D) ── */}
@@ -2712,7 +2748,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
       {/* ── Bottom action bar: Preview + Publish (listing publishes from its own Step 4 button instead) ── */}
       <View style={[s.bottomBar, { backgroundColor: tc.cardBg, borderTopColor: tc.borderLight }]}>
         <Pressable
-          onPress={() => setPreviewVisible(true)}
+          onPress={showPreview}
           style={[s.bottomBarPreviewBtn, { borderColor: tc.borderLight }, type.id === "listing" && { flex: 1 }]}
         >
           <Ionicons name="eye-outline" size={15} color={tc.textSecondary} />
@@ -2758,43 +2794,6 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
         )}
       </View>
 
-      {/* Preview modal */}
-      <PreviewModal
-        visible={previewVisible}
-        onClose={() => setPreviewVisible(false)}
-        type={type}
-        title={type.id === "restaurant" ? restName : title}
-        body={body}
-        attachedFiles={type.id === "listing" ? listingImages : attachedFiles}
-        extraFields={extraFields}
-        location={location}
-        userName={previewUserName}
-        userInitials={previewUserInitials}
-        storyMediaType={storyPreviewMediaType}
-        storyCategory={storyCatPick}
-        storyHashtags={storyTagsInput}
-        storyDuration={storyPreviewDuration}
-        eventDate={eventDate}
-        eventTime={eventTime}
-        eventCategory={eventCategory}
-        challengeType={challengeType}
-        challengeDuration={challengeDuration}
-        challengeGoal={challengeGoal}
-        challengeReward={challengeReward}
-        challengeMaxParticipants={challengeMaxParticipants}
-        challengeHashtags={challengeHashtags}
-        listingPrice={price}
-        listingCurrency={listingCurrency}
-        listingDeposit={deposit}
-        listingAvailable={available}
-        listingAmenities={amenities}
-        listingWalkScore={walkScoreStr}
-        listingTransitInfo={transitInfoStr}
-        listingIsVerified={isVerifiedLandlord || isVerifiedAgency}
-        restCuisine={cuisine}
-        restPriceRange={priceRange}
-        restFeatures={features}
-      />
 
       {/* ── Native media picker sheet (Android) ── */}
       {process.env.EXPO_OS === "android" && (

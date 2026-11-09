@@ -1,9 +1,8 @@
 import { palette } from "../src/theme/palette";
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, TextInput, FlatList, KeyboardAvoidingView } from "react-native";
+import { View, Text, Pressable, StyleSheet, TextInput, FlatList, KeyboardAvoidingView } from "react-native";
 import { DSheet } from "../src/shared/d/Sheet";
 import { TYPE } from "../src/theme/d";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { rs } from "../src/utils/responsive";

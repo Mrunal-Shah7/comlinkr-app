@@ -2,7 +2,9 @@
 
 import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Alert } from 'react-native';
+import { DSheet } from '../../../shared/d/Sheet';
+import { useLastNonNull } from '../../../hooks/useLastNonNull';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,15 +45,16 @@ function CommunityPostDetailModal({
   // GET /community/questions/:id (populates `answers`) rather than a new admin endpoint.
   const { data: detail, isLoading: isLoadingDetail } = useAdminCommunityQuestionDetail(post?.id ?? null);
 
-  if (!post) return null;
+  // The native sheet stays mounted and keeps the last item while it slides away (TR-017).
+  post = useLastNonNull(post);
+  if (!post) return <DSheet visible={false} onClose={onClose}><View /></DSheet>;
   const cm = CATEGORY_META[post.category] ?? { color: Colors.text.tertiary, icon: 'document' };
   const answers = detail?.answers ?? [];
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={dm.overlay}>
-        <ScrollView style={dm.sheet} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-          <View style={dm.handle} />
+    <DSheet visible={visible} onClose={onClose}>
+      <View style={{ flexShrink: 1 }}>
+        <ScrollView style={{ flexGrow: 0 }} contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
 
           <View style={dm.headerRow}>
             <View style={{ flex: 1 }}>
@@ -182,7 +185,7 @@ function CommunityPostDetailModal({
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </DSheet>
   );
 }
 

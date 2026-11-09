@@ -118,7 +118,15 @@ export default function RootLayout() {
                 animation: reduceMotion ? 'fade' : 'default',
                 gestureEnabled: !NO_EDGE_SWIPE.has(route.name),
               })}
-            />
+            >
+              {/* TR-017: the photo gallery fades in over the screen that opened it (its own drag down closes it);
+                  the post preview is the native form sheet over the compose form. */}
+              <Stack.Screen name="gallery" options={{ presentation: 'transparentModal', animation: 'fade', gestureEnabled: false, contentStyle: { backgroundColor: 'transparent' } }} />
+              <Stack.Screen
+                name="compose-preview"
+                options={{ presentation: 'formSheet', sheetGrabberVisible: true, sheetAllowedDetents: [0.92], sheetCornerRadius: 28 }}
+              />
+            </Stack>
             <ToastHost />
             <DialogHost />
           </ErrorBoundary>

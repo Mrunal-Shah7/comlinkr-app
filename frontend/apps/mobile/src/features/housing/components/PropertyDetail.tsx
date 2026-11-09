@@ -18,7 +18,8 @@ import { LinkifiedText } from "../../../../components/LinkifiedText";
 import { appAlert } from "../../../shared/ui/Dialogs";
 import { md } from "../styles/propertyDetail.styles";
 import { type Listing, navigateToLandlordChat } from "../listingModel";
-import { ImageCarousel, FullscreenImageViewer } from "./ImageViewer";
+import { ImageCarousel } from "./ImageViewer";
+import { openGallery } from "../galleryStore";
 import { LandlordAvatar } from "./LandlordAvatar";
 import { ReportListingModal } from "./ReportListingModal";
 
@@ -71,8 +72,6 @@ export function PropertyDetail({
   const { width: windowWidth } = useWindowDimensions();
   const [journeyStep,         setJourneyStep]         = useState(initialJourneyStep); // 0=none,1=interested,2=enquired,3=viewing,4=applied
   const [showReportModal,     setShowReportModal]     = useState(false);
-  const [fsVisible,           setFsVisible]           = useState(false);
-  const [fsStartIdx,          setFsStartIdx]          = useState(0);
   const { isDark, tc } = useTheme();
   const { requireAuth } = useRequireAuth();
   const navLockRef = useRef(false); // blocks repeat taps while a close-then-navigate is pending
@@ -196,7 +195,7 @@ export function PropertyDetail({
       <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
         {/* ── Photos, with glass buttons (design D, plan 01) ── */}
         <View style={{ height: CAROUSEL_H }}>
-          <ImageCarousel images={listing.images} width={windowWidth} height={CAROUSEL_H} showCounter onImagePress={(idx) => { setFsStartIdx(idx); setFsVisible(true); }} />
+          <ImageCarousel images={listing.images} width={windowWidth} height={CAROUSEL_H} showCounter onImagePress={(idx) => openGallery(listing.images, idx)} />
           <View style={{ position: "absolute", top: insets.top + 10, left: 14, right: 14, flexDirection: "row", alignItems: "center", gap: 8 }}>
             {glassBtn("chevron-back", "Back", onClose)}
             <View style={{ flex: 1 }} />
@@ -335,7 +334,6 @@ export function PropertyDetail({
         <ReportListingModal visible={showReportModal} listingId={listing.id} listingTitle={listing.title} onClose={() => setShowReportModal(false)} />
       </View>
 
-      {fsVisible && <FullscreenImageViewer images={listing.images} startIndex={fsStartIdx} onClose={() => setFsVisible(false)} />}
     </>
   );
 }

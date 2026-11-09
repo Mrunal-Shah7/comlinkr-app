@@ -4,11 +4,10 @@
 // moved out of app/(tabs)/food/index.tsx.
 import { palette } from "../../theme/palette";
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import { FullscreenImageViewer } from "../housing/components/ImageViewer";
 import { Colors } from "../../theme/colors";
 import { FadeImage } from "../../../components/FadeImage";
 import type { Restaurant } from "../../api/food.api";
@@ -160,10 +159,7 @@ export const REPORT_REASONS = [
 
 
 
-/** The shared design D gallery (black, 1 of n, swipe down to close). */
-export function FoodFullscreenViewer({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) {
-  return <FullscreenImageViewer images={images} startIndex={startIndex} onClose={onClose} />;
-}
+
 
 export function ImageCarousel({ images, height = rs(165), itemWidth, onImagePress }: { images: string[]; height?: number; itemWidth?: number; onImagePress?: (idx: number) => void }) {
   const [activeIndex, setActiveIndex] = useState(0);

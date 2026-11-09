@@ -1,7 +1,8 @@
 import { palette } from "../../../src/theme/palette";
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, ActivityIndicator, Share, FlatList, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, TextInput, ActivityIndicator, Share, FlatList } from "react-native";
+import { DSheet } from "../../../src/shared/d/Sheet";
 import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
@@ -2115,23 +2116,16 @@ export default function FeedScreen() {
 
 
 
-      <Modal
+      <DSheet
         visible={!!feedCommentPostId}
-        animationType="slide"
-        onRequestClose={() => {
+        onClose={() => {
           setFeedCommentPostId(null);
           setFeedCommentDraft("");
           setFeedCommentPostDetail(null);
         }}
-        presentationStyle="pageSheet"
-        statusBarTranslucent
+        full
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
-        <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: tc.pageBg }}
-          behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={process.env.EXPO_OS === "ios" ? 56 : 0}
-        >
+        <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
           {/* Top nav bar */}
           <View
             style={{
@@ -2386,9 +2380,8 @@ export default function FeedScreen() {
               </Pressable>
             </View>
           </SafeAreaView>
-        </KeyboardAvoidingView>
-        </SafeAreaView>
-      </Modal>
+        </View>
+      </DSheet>
     </SafeAreaView>
   );
 }
