@@ -1,5 +1,7 @@
 # 2026-11-09: the rest of React Query, and the last keyboard taps (TR-014)
 
+Merged as pull request 13.
+
 Branch `chore/react-query-rest`, from `main` after pull request 12. Run log:
 [device-runs/2026-11-09-react-query-rest.md](../device-runs/2026-11-09-react-query-rest.md).
 

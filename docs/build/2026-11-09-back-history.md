@@ -1,6 +1,6 @@
 # 2026-11-09: Back returns to the previous state (TR-023, plan 05)
 
-Branch `feature/back-history`, from `main` after pull request 19.
+Branch `feature/back-history`, from `main` after pull request 19. Merged as pull request 20 (commit `a7cbbde`, merge `0ec3a44`).
 
 ## Problem
 
