@@ -4,6 +4,7 @@
 // the page's large title scrolls away (interpolate(scrollY, [0, 64], [0, 1])); the bar's glass background
 // fades in with it. Right: notifications and messages, each with a dot while something is unread.
 // The prototype's search button is left out: there is no city-wide search behind it yet (plan 01).
+import { palette } from "../src/theme/palette";
 import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
@@ -62,7 +63,7 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
           <GradientFill style={s.ring}>
             <View style={[s.avInner, { borderColor: tc.pageBg }]}>
               {avatarUri ? <FadeImage uri={avatarUri} style={s.avImg} /> : (
-                <GradientFill style={s.avImg}><Text style={[body(800), { color: "#fff", fontSize: 11 }]}>{initials}</Text></GradientFill>
+                <GradientFill style={s.avImg}><Text style={[body(800), { color: palette.white, fontSize: 11 }]}>{initials}</Text></GradientFill>
               )}
             </View>
           </GradientFill>
@@ -100,5 +101,5 @@ const s = StyleSheet.create({
   titleWrap: { position: "absolute", left: 64, right: 104, alignItems: "center" },
   right: { marginLeft: "auto", flexDirection: "row", gap: 2 },
   ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  dot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: "#EF4444", borderWidth: 2 },
+  dot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: palette.red500, borderWidth: 2 },
 });

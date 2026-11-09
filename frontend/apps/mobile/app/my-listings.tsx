@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useCallback, useEffect, useState } from "react"; // SPRINT-42: focus refetch + listing update subscription.
 import {
@@ -34,22 +35,22 @@ import { DPage, goBackOr } from '../src/shared/d/Page';
 type VerificationLevel = "basic" | "verified" | "fully_verified";
 
 const VERIFICATION_PILL: Record<VerificationLevel, { label: string; color: string; bg: string }> = {
-  basic:          { label: "Basic Verified",  color: "#3B82F6", bg: "#EFF6FF" },
-  verified:       { label: "Verified",         color: "#30855B", bg: "#E3F1EA" },
-  fully_verified: { label: "Fully Verified",   color: "#D97706", bg: "#FFFBEB" },
+  basic:          { label: "Basic Verified",  color: palette.blue500, bg: palette.blue50 },
+  verified:       { label: "Verified",         color: palette.brandGreen, bg: palette.brandGreenLight },
+  fully_verified: { label: "Fully Verified",   color: palette.amber600, bg: palette.amber50 },
 };
 
 const LISTING_STATUS_PILL: Record<"AVAILABLE" | "RENTED" | "UNLISTED", { label: string; color: string; bg: string }> = {
-  AVAILABLE: { label: "Active",   color: "#30855B", bg: "#E3F1EA" },
-  RENTED:    { label: "Rented",   color: "#DC2626", bg: "#FEE2E2" },
-  UNLISTED:  { label: "Unlisted", color: "#6B7280", bg: "#F3F4F6" },
+  AVAILABLE: { label: "Active",   color: palette.brandGreen, bg: palette.brandGreenLight },
+  RENTED:    { label: "Rented",   color: palette.red600, bg: palette.red100 },
+  UNLISTED:  { label: "Unlisted", color: palette.gray500, bg: palette.gray100 },
 };
 
 function StatChip({ icon, value, label }: { icon: string; value: number | string; label: string }) {
   const { tc } = useTheme();
   return (
     <View style={[styles.statChip, { backgroundColor: tc.sectionBg }]}>
-      <Ionicons name={icon as any} size={11} color="#6B7280" />
+      <Ionicons name={icon as any} size={11} color={palette.gray500} />
       <Text style={[styles.statValue, { color: tc.textPrimary }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: tc.textSecondary }]}>{label}</Text>
     </View>
@@ -161,7 +162,7 @@ export default function MyListingsScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const badgeGradient: [string, string] = isVerifiedAgency ? ["#257A86", "#E56800"] : ["#1A6BAE", "#0054CC"];
+  const badgeGradient: [string, string] = isVerifiedAgency ? [palette.brandTeal, palette.orangeL45] : [palette.brandBlue, palette.blueL40_2];
   const badgeLabel = isVerifiedAgency ? "Verified Agency" : "Verified Landlord";
   const maxListings = isVerifiedAgency ? "Unlimited" : "5";
 
@@ -299,7 +300,7 @@ export default function MyListingsScreen() {
                     <View key={app.id} style={{ borderRadius: 16, backgroundColor: tc.surface3 ?? tc.inputBg, overflow: "hidden" }}>
                       <Pressable onPress={() => setExpandedApplicant(isOpen ? null : app.id)} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 12 }} accessibilityRole="button" accessibilityState={{ expanded: isOpen }}>
                         <GradientFill style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
-                          <Text style={[TYPE.label, { color: "#fff", fontSize: 14 }]}>{app.applicant.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}</Text>
+                          <Text style={[TYPE.label, { color: palette.white, fontSize: 14 }]}>{app.applicant.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}</Text>
                         </GradientFill>
                         <View style={{ flex: 1, minWidth: 0 }}>
                           <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{app.applicant.name}</Text>
@@ -360,7 +361,7 @@ export default function MyListingsScreen() {
 }
 
 const styles = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F5F6FA" },
+  safe: { flex: 1, backgroundColor: palette.neutralL97_9 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -368,10 +369,10 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(14),
     paddingTop: rs(12),
     paddingBottom: rs(14),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-    shadowColor: "#000",
+    borderBottomColor: palette.neutralL91_2,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(4),
     elevation: 2,
@@ -380,11 +381,11 @@ const styles = createThemedStyles({
     width: rs(36),
     height: rs(36),
     borderRadius: rs(12),
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { fontSize: rs(17), fontWeight: "800", color: "#0A2540" },
+  headerTitle: { fontSize: rs(17), fontWeight: "800", color: palette.navy },
   addBtn: {
     width: rs(36),
     height: rs(36),
@@ -411,7 +412,7 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  badgeBannerTitle: { fontSize: rs(14), fontWeight: "800", color: "#FFF", marginBottom: rs(2) },
+  badgeBannerTitle: { fontSize: rs(14), fontWeight: "800", color: palette.white, marginBottom: rs(2) },
   badgeBannerDesc: { fontSize: rs(11), color: "rgba(255,255,255,0.85)" },
   badgeBannerCheck: { marginLeft: rs(4) },
 
@@ -419,57 +420,57 @@ const styles = createThemedStyles({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(8),
-    backgroundColor: "#FEF2F2",
+    backgroundColor: palette.red50,
     padding: rs(12),
     borderRadius: rs(12),
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: palette.red200,
     marginBottom: rs(16),
   },
-  fraudReminderText: { flex: 1, fontSize: rs(12), color: "#991B1B", lineHeight: rs(17) },
+  fraudReminderText: { flex: 1, fontSize: rs(12), color: palette.red800, lineHeight: rs(17) },
 
   overviewRow: { flexDirection: "row", gap: rs(10), marginBottom: rs(20) },
   overviewCard: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(14),
     padding: rs(12),
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   overviewIcon: { width: rs(28), height: rs(28), borderRadius: rs(9), alignItems: "center", justifyContent: "center", marginBottom: rs(6) },
-  overviewValue: { fontSize: rs(18), fontWeight: "900", color: "#0A2540", marginBottom: rs(2) },
-  overviewLabel: { fontSize: rs(10), color: "#6B7280", fontWeight: "600" },
+  overviewValue: { fontSize: rs(18), fontWeight: "900", color: palette.navy, marginBottom: rs(2) },
+  overviewLabel: { fontSize: rs(10), color: palette.gray500, fontWeight: "600" },
 
   sectionLabel: {
     fontSize: rs(11),
     fontWeight: "800",
-    color: "#9CA3AF",
+    color: palette.gray400,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: rs(10),
   },
 
   listingCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(14),
     marginBottom: rs(12),
   },
   listingCardHeader: { flexDirection: "row", alignItems: "flex-start", gap: rs(10), marginBottom: rs(8) },
-  listingTitle: { fontSize: rs(14), fontWeight: "800", color: "#0A2540", marginBottom: rs(3) },
+  listingTitle: { fontSize: rs(14), fontWeight: "800", color: palette.navy, marginBottom: rs(3) },
   listingAddressRow: { flexDirection: "row", alignItems: "center", gap: rs(4) },
-  listingAddress: { fontSize: rs(11), color: "#9CA3AF", flex: 1 },
+  listingAddress: { fontSize: rs(11), color: palette.gray400, flex: 1 },
   statusBadge: { paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(8) },
   statusBadgeText: { fontSize: rs(10), fontWeight: "800" },
   listingMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(8) },
   listingPrice: { fontSize: rs(16), fontWeight: "900", color: Colors.brand.blue },
   listingSpecs: { flexDirection: "row", alignItems: "center", gap: rs(6) },
-  listingSpec: { fontSize: rs(11), color: "#6B7280", fontWeight: "600" },
-  specDot: { width: rs(3), height: rs(3), borderRadius: rs(2), backgroundColor: "#D1D5DB" },
+  listingSpec: { fontSize: rs(11), color: palette.gray500, fontWeight: "600" },
+  specDot: { width: rs(3), height: rs(3), borderRadius: rs(2), backgroundColor: palette.gray300 },
   verifPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -482,9 +483,9 @@ const styles = createThemedStyles({
   },
   verifPillText: { fontSize: rs(10), fontWeight: "800" },
   statsRow: { flexDirection: "row", gap: rs(8), marginBottom: rs(12) },
-  statChip: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "#F9FAFB", paddingHorizontal: rs(8), paddingVertical: rs(5), borderRadius: rs(8) },
-  statValue: { fontSize: rs(12), fontWeight: "800", color: "#0A2540" },
-  statLabel: { fontSize: rs(11), color: "#6B7280" },
+  statChip: { flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: palette.gray50, paddingHorizontal: rs(8), paddingVertical: rs(5), borderRadius: rs(8) },
+  statValue: { fontSize: rs(12), fontWeight: "800", color: palette.navy },
+  statLabel: { fontSize: rs(11), color: palette.gray500 },
   cardActions: { flexDirection: "row", gap: rs(8), alignItems: "center" },
   editBtn: {
     flexDirection: "row",
@@ -495,7 +496,7 @@ const styles = createThemedStyles({
     borderRadius: rs(10),
     borderWidth: 1.5,
     borderColor: Colors.brand.blue,
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
   },
   editBtnText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
   deactivateBtn: {
@@ -506,10 +507,10 @@ const styles = createThemedStyles({
     paddingVertical: rs(8),
     borderRadius: rs(10),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderColor: palette.gray200,
+    backgroundColor: palette.gray50,
   },
-  deactivateBtnText: { fontSize: rs(12), fontWeight: "700", color: "#6B7280" },
+  deactivateBtnText: { fontSize: rs(12), fontWeight: "700", color: palette.gray500 },
   chatBtn: { flex: 1, borderRadius: rs(10), overflow: "hidden" },
   chatBtnGrad: {
     flexDirection: "row",
@@ -518,16 +519,16 @@ const styles = createThemedStyles({
     gap: rs(6),
     paddingVertical: rs(8),
   },
-  chatBtnText: { fontSize: rs(12), fontWeight: "800", color: "#FFF" },
+  chatBtnText: { fontSize: rs(12), fontWeight: "800", color: palette.white },
 
   complianceCard: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(12),
-    backgroundColor: "#EFF6FF",
+    backgroundColor: palette.blue50,
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
     padding: rs(12),
   },
   complianceIcon: {
@@ -537,23 +538,23 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  complianceTitle: { fontSize: rs(13), fontWeight: "800", color: "#1E3A8A", marginBottom: rs(4) },
-  complianceText: { fontSize: rs(12), color: "#1E40AF", lineHeight: rs(17) },
+  complianceTitle: { fontSize: rs(13), fontWeight: "800", color: palette.blueL33, marginBottom: rs(4) },
+  complianceText: { fontSize: rs(12), color: palette.blue800, lineHeight: rs(17) },
 
   emptyAccess: { flex: 1, alignItems: "center", justifyContent: "center", padding: rs(32), gap: rs(12) },
   emptyListings: { alignItems: "center", padding: rs(32), gap: rs(8) },
-  emptyTitle: { fontSize: rs(17), fontWeight: "800", color: "#374151" },
-  emptyDesc: { fontSize: rs(13), color: "#6B7280", textAlign: "center", lineHeight: rs(18) },
+  emptyTitle: { fontSize: rs(17), fontWeight: "800", color: palette.gray700 },
+  emptyDesc: { fontSize: rs(13), color: palette.gray500, textAlign: "center", lineHeight: rs(18) },
   applyBtn: { borderRadius: rs(14), overflow: "hidden", marginTop: rs(8) },
   applyBtnGrad: { paddingHorizontal: rs(24), paddingVertical: rs(14) },
-  applyBtnText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  applyBtnText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
 
   // Remote Tenant Safety card
   remoteSafetyCard: {
-    backgroundColor: "#FAF5FF",
+    backgroundColor: palette.purple50,
     borderRadius: rs(16),
     borderWidth: 1,
-    borderColor: "#E9D5FF",
+    borderColor: palette.violetL92,
     padding: rs(14),
     marginTop: rs(16),
     gap: rs(12),
@@ -573,19 +574,19 @@ const styles = createThemedStyles({
   remoteSafetyTitle: {
     fontSize: rs(14),
     fontWeight: "800",
-    color: "#4B5563",
+    color: palette.gray600,
     marginBottom: rs(2),
   },
   remoteSafetySub: {
     fontSize: rs(11),
-    color: "#7C3AED",
+    color: palette.violet600,
     fontWeight: "600",
   },
   videoRequestRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F3E8FF",
+    backgroundColor: palette.purple100,
     borderRadius: rs(10),
     paddingHorizontal: rs(12),
     paddingVertical: rs(8),
@@ -598,13 +599,13 @@ const styles = createThemedStyles({
   videoRequestCount: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#7C3AED",
+    color: palette.violet600,
   },
   videoRequestCta: {},
   videoRequestCtaText: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#1A6BAE",
+    color: palette.brandBlue,
   },
   remoteTip: {
     flexDirection: "row",
@@ -612,7 +613,7 @@ const styles = createThemedStyles({
     gap: rs(10),
     paddingTop: rs(10),
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E9D5FF",
+    borderTopColor: palette.violetL92,
   },
   remoteTipIcon: {
     width: rs(30),
@@ -625,12 +626,12 @@ const styles = createThemedStyles({
   remoteTipTitle: {
     fontSize: rs(12),
     fontWeight: "800",
-    color: "#374151",
+    color: palette.gray700,
     marginBottom: rs(3),
   },
   remoteTipDesc: {
     fontSize: rs(11),
-    color: "#6B7280",
+    color: palette.gray500,
     lineHeight: rs(16),
   },
 });

@@ -3,7 +3,23 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-09 (latest) - native navigation and controls (TR-012)
+## 2026-11-09 (latest) - the nine Expo conventions (TR-013)
+
+- All nine points done, one stacked pull request per group, each on the one before:
+  `chore/expo-conventions` (keyboard taps, window size, `EXPO_OS`, onboarding dots, axios dropped) →
+  `chore/react-query` → `chore/split-compose` → `chore/detail-routes` ([plan 03](plan/03-detail-routes.md)) →
+  `chore/ios-conventions` → `chore/color-tokens`. Build notes dated 2026-11-09 in `build/`, run logs in `device-runs/`.
+- Merge them in order; each later PR shows only its own commits once the one below is merged.
+- **Not checked on iOS** (no iPhone here): the link previews and context menus (`DetailLink`), continuous corners,
+  the iOS edge swipe on the detail routes. Walk them on an iPhone before a release.
+- Not checked on Android: shared space detail (none in the seed), roommate connect / accept, review and reservation
+  end to end, every admin screen after the colour codemod.
+- Follow-ups: move screens from `palette` onto the dark-mode-aware theme (`tc`) one screen at a time; the news
+  article stays a modal until there is an article by-id endpoint.
+- Servers: Metro and the backend stopped at the end. Test saves made in the walks removed; dark mode switched back
+  off for `ui_tester`.
+
+## 2026-11-09 (earlier) - native navigation and controls (TR-012)
 
 - Owner: replace design D's tab pager, floating tab bar, zoom transitions and custom controls with the native ones.
   [Plan 02](plan/02-native-navigation.md), [build note](build/2026-11-09-native-navigation.md), walked on the

@@ -1,3 +1,4 @@
+import { palette } from "../../src/theme/palette";
 import { Switch } from "../../src/shared/ui/Switch";
 import { useState, useRef, useEffect } from "react";
 import { Linking } from "react-native";
@@ -518,7 +519,7 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
+                  colors={[palette.brandBlue, palette.brandGreen]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
@@ -555,7 +556,7 @@ export default function OnboardingScreen() {
                 ComLinkr is currently available in the United States and United Kingdom only.
               </Text>
               {regionError ? (
-                <Text style={[styles.stepSub, { color: "#DC2626", marginBottom: 8 }]}>{regionError}</Text>
+                <Text style={[styles.stepSub, { color: palette.red600, marginBottom: 8 }]}>{regionError}</Text>
               ) : null}
 
               {/* State / Province picker (visible once country is selected) */}
@@ -617,12 +618,12 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
+                  colors={[palette.brandBlue, palette.brandGreen]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
                 >
-                  <Ionicons name="heart-outline" size={rs(34)} color="#FFFFFF" />
+                  <Ionicons name="heart-outline" size={rs(34)} color={palette.white} />
                 </LinearGradient>
               </View>
               <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>What's your vibe?</Text>
@@ -683,12 +684,12 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
+                  colors={[palette.brandBlue, palette.brandGreen]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
                 >
-                  <Ionicons name="search-outline" size={rs(34)} color="#FFFFFF" />
+                  <Ionicons name="search-outline" size={rs(34)} color={palette.white} />
                 </LinearGradient>
               </View>
               <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>What are you looking for?</Text>
@@ -733,7 +734,7 @@ export default function OnboardingScreen() {
                           <Ionicons
                             name="checkmark"
                             size={14}
-                            color="#FFFFFF"
+                            color={palette.white}
                           />
                         )}
                       </View>
@@ -757,12 +758,12 @@ export default function OnboardingScreen() {
             <View style={styles.stepWrap}>
               <View style={styles.iconCircle}>
                 <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
+                  colors={[palette.brandBlue, palette.brandGreen]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.iconGradient}
                 >
-                  <Ionicons name="people-outline" size={rs(34)} color="#FFFFFF" />
+                  <Ionicons name="people-outline" size={rs(34)} color={palette.white} />
                 </LinearGradient>
               </View>
               <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Find your community</Text>
@@ -819,7 +820,7 @@ export default function OnboardingScreen() {
           {step === 4 && (
             <View style={[styles.stepWrap, { alignItems: "center", paddingTop: 40 }]}>
               <Reanimated.View entering={reduceMotion ? undefined : ZoomIn.springify().damping(13).stiffness(220).mass(1)} style={{ width: 90, height: 90, borderRadius: 30, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, marginBottom: 18 }}>
-                <Ionicons name="checkmark" size={44} color="#06130D" />
+                <Ionicons name="checkmark" size={44} color={palette.neutralL05} />
               </Reanimated.View>
               <Text style={[TYPE.question, { color: tc.textPrimary, textAlign: "center" }]}>You're in{firstName ? `, ${firstName}` : ""} ✦</Text>
               <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>
@@ -859,12 +860,12 @@ export default function OnboardingScreen() {
               style={styles.ctaGradient}
             >
               {submitting && step === 4 ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={palette.white} />
               ) : (
                 <Text
                   style={[
                     styles.ctaText,
-                    (!canProceed() || submitting) && { color: "#9CA3AF" },
+                    (!canProceed() || submitting) && { color: palette.gray400 },
                   ]}
                 >
                   {step === 4 ? "Let's explore" : step === 3 && communities.length === 0 ? "Skip" : "Continue"}
@@ -898,15 +899,15 @@ const styles = createThemedStyles({
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#F3F4F6",
+    borderColor: palette.gray100,
   },
   backPlaceholder: { width: rs(40) },
   headerRight: {
@@ -924,7 +925,7 @@ const styles = createThemedStyles({
     width: rs(8),
     height: rs(8),
     borderRadius: rs(4),
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
   progressActive: {
     width: rs(28),
@@ -997,7 +998,7 @@ const styles = createThemedStyles({
     gap: rs(8),
     backgroundColor: Colors.brand.blueLight,
     borderWidth: 1.5,
-    borderColor: "#B3D9FF",
+    borderColor: palette.skyL85,
     borderRadius: rs(12),
     paddingHorizontal: rs(14),
     paddingVertical: rs(10),
@@ -1024,9 +1025,9 @@ const styles = createThemedStyles({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderWidth: 2,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     borderRadius: rs(14),
     paddingHorizontal: rs(12),
     paddingVertical: rs(11),
@@ -1041,12 +1042,12 @@ const styles = createThemedStyles({
   },
   listBox: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1059,7 +1060,7 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(14),
     paddingVertical: rs(11),
     borderBottomWidth: 1,
-    borderBottomColor: "#F9FAFB",
+    borderBottomColor: palette.gray50,
   },
   listItemActive: { backgroundColor: Colors.brand.blueLight },
   listItemText: {
@@ -1118,7 +1119,7 @@ const styles = createThemedStyles({
     backgroundColor: Colors.brand.blueLight,
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#B3D9FF",
+    borderColor: palette.skyL85,
     padding: rs(12),
   },
   tipText: {
@@ -1139,8 +1140,8 @@ const styles = createThemedStyles({
     padding: rs(14),
     borderRadius: rs(16),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
     position: "relative",
   },
   cultureChipActive: {
@@ -1155,7 +1156,7 @@ const styles = createThemedStyles({
     width: rs(40),
     height: rs(40),
     borderRadius: rs(12),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: rs(8),
@@ -1184,7 +1185,7 @@ const styles = createThemedStyles({
     alignItems: "center",
   },
   countBadge: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     borderRadius: rs(20),
     paddingHorizontal: rs(14),
     paddingVertical: rs(6),
@@ -1204,8 +1205,8 @@ const styles = createThemedStyles({
     padding: rs(14),
     borderRadius: rs(16),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
   },
   interestCardActive: {
     borderColor: Colors.brand.green,
@@ -1219,7 +1220,7 @@ const styles = createThemedStyles({
     width: rs(44),
     height: rs(44),
     borderRadius: rs(14),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -1245,8 +1246,8 @@ const styles = createThemedStyles({
     height: rs(24),
     borderRadius: rs(12),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1258,13 +1259,13 @@ const styles = createThemedStyles({
   // Summary card (Step 3)
   summaryCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(18),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     overflow: "hidden",
     padding: rs(16),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1303,7 +1304,7 @@ const styles = createThemedStyles({
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     marginVertical: rs(14),
   },
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: rs(6) },
@@ -1319,7 +1320,7 @@ const styles = createThemedStyles({
   tagOrangeText: {
     fontSize: rs(12),
     fontWeight: "600",
-    color: "#C05600",
+    color: palette.orangeL38,
   },
   tagGreen: {
     flexDirection: "row",
@@ -1340,10 +1341,10 @@ const styles = createThemedStyles({
   whatsNextCard: {
     width: "100%",
     marginTop: rs(14),
-    backgroundColor: "#F8FAFF",
+    backgroundColor: palette.neutralL99,
     borderRadius: rs(18),
     borderWidth: 1,
-    borderColor: "#E0EEFF",
+    borderColor: palette.skyL94_2,
     padding: rs(16),
   },
   whatsNextTitle: {
@@ -1387,9 +1388,9 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(20),
     paddingTop: rs(12),
     paddingBottom: rs(8),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: palette.gray100,
   },
   ctaWrap: { borderRadius: rs(16), overflow: "hidden" },
   ctaDisabled: { opacity: 0.4 },
@@ -1402,7 +1403,7 @@ const styles = createThemedStyles({
   ctaText: {
     fontSize: rs(17),
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: palette.white,
     letterSpacing: 0.2,
   },
 
@@ -1436,8 +1437,8 @@ const styles = createThemedStyles({
     paddingVertical: rs(8),
     borderRadius: 999,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
     position: "relative",
   },
   commChipActive: {
@@ -1472,12 +1473,12 @@ const styles = createThemedStyles({
   // ── Agreement step ──
   agreementCard: {
     width: "100%",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(18),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1525,8 +1526,8 @@ const styles = createThemedStyles({
     padding: rs(16),
     borderRadius: rs(16),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
     marginBottom: rs(12),
   },
   agreementToggleActive: {
@@ -1538,8 +1539,8 @@ const styles = createThemedStyles({
     height: rs(24),
     borderRadius: rs(6),
     borderWidth: 2,
-    borderColor: "#D1D5DB",
-    backgroundColor: "#FFFFFF",
+    borderColor: palette.gray300,
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
   },

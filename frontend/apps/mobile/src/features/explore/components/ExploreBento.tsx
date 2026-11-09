@@ -4,6 +4,7 @@
 // greeting (gradient) · next event (photo, tall) · homes in the city (green) · the top question · stories ·
 // a quest · a poll. The greeting tile carries a slow floating glow (6 s loop), off with reduce motion.
 // Left out on purpose (plan 01): the temperature (no weather source).
+import { palette } from "../../../theme/palette";
 import { useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
@@ -79,11 +80,11 @@ export function ExploreBento(p: Props) {
         <BentoTile tone="gradient" style={{ minHeight: 150 }}>
           <Glow />
           <TileLabel light>{p.dateLine}</TileLabel>
-          <Text style={[display(800), { color: "#fff", fontSize: 26, lineHeight: 29, marginTop: 6, marginBottom: 10 }]}>{p.greeting},{"\n"}{p.firstName}</Text>
+          <Text style={[display(800), { color: palette.white, fontSize: 26, lineHeight: 29, marginTop: 6, marginBottom: 10 }]}>{p.greeting},{"\n"}{p.firstName}</Text>
           <Pressable onPress={p.onCity} hitSlop={8} style={s.city} accessibilityRole="button" accessibilityLabel={`Change city, currently ${p.city}`}>
-            <Ionicons name="location-outline" size={15} color="#fff" />
-            <Text style={[body(700), { color: "#fff", fontSize: 14 }]}>{p.city}</Text>
-            <Ionicons name="chevron-down" size={14} color="#fff" />
+            <Ionicons name="location-outline" size={15} color={palette.white} />
+            <Text style={[body(700), { color: palette.white, fontSize: 14 }]}>{p.city}</Text>
+            <Ionicons name="chevron-down" size={14} color={palette.white} />
           </Pressable>
         </BentoTile>
       </TileIn>
@@ -95,7 +96,7 @@ export function ExploreBento(p: Props) {
               {e.image ? <FadeImage uri={e.image} style={StyleSheet.absoluteFill} /> : <GradientFill style={StyleSheet.absoluteFill} />}
               <GradientFill colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"] as const} style={[StyleSheet.absoluteFill, { top: "30%" }]} />
               <TileLabel light>NEXT UP · {e.date.toUpperCase()}</TileLabel>
-              <Text style={[TYPE.cardTitle, { color: "#fff", marginTop: 4 }]} numberOfLines={3}>{e.title}</Text>
+              <Text style={[TYPE.cardTitle, { color: palette.white, marginTop: 4 }]} numberOfLines={3}>{e.title}</Text>
               {e.interested > 0 ? <TileLabel light style={{ marginTop: 2 }}>{e.interested} going</TileLabel> : null}
             </BentoTile>
           </TileIn>
@@ -105,7 +106,7 @@ export function ExploreBento(p: Props) {
             <TileIn i={i++}>
               <BentoTile tone="mint" onPress={p.onHomes} accessibilityLabel={`${p.homesCount} homes in ${p.city}`}>
                 <TileLabel style={{ color: "rgba(255,255,255,0.85)" }}>HOMES IN {p.city.toUpperCase()}</TileLabel>
-                <Text style={[TYPE.tileBig, { color: "#fff", marginTop: "auto" }]}>{p.homesCount}</Text>
+                <Text style={[TYPE.tileBig, { color: palette.white, marginTop: "auto" }]}>{p.homesCount}</Text>
               </BentoTile>
             </TileIn>
           ) : null}
@@ -134,9 +135,9 @@ export function ExploreBento(p: Props) {
               const ini = (g.author.name || g.author.username || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
               return (
                 <PressableScale key={g.author.id} onPress={() => p.onStory(ai)} style={s.story} accessibilityLabel={`Stories by ${g.author.name}`}>
-                  <GradientFill colors={[tc.mint, tc.accent, "#30855B"] as const} style={s.ring}>
+                  <GradientFill colors={[tc.mint, tc.accent, palette.brandGreen] as const} style={s.ring}>
                     <View style={[s.ringInner, { borderColor: tc.cardBg }]}>
-                      {uri ? <FadeImage uri={uri} style={s.ringImg} /> : <GradientFill style={s.ringImg}><Text style={[body(800), { color: "#fff", fontSize: 17 }]}>{ini}</Text></GradientFill>}
+                      {uri ? <FadeImage uri={uri} style={s.ringImg} /> : <GradientFill style={s.ringImg}><Text style={[body(800), { color: palette.white, fontSize: 17 }]}>{ini}</Text></GradientFill>}
                     </View>
                   </GradientFill>
                   <Text style={[body(600), s.storyName, { color: tc.textSecondary }]} numberOfLines={1}>{(g.author.name || g.author.username).split(" ")[0]}</Text>

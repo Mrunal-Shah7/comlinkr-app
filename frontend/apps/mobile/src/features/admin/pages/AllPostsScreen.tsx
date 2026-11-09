@@ -1,5 +1,6 @@
 // src/features/admin/pages/AllPostsScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
@@ -19,20 +20,20 @@ import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
 
 const TYPE_META: Record<string, { icon: string; color: string; bg: string; gradient: [string, string] }> = {
-  listing:    { icon: 'home',       color: Colors.brand.blue,  bg: Colors.brand.blueLight,  gradient: [Colors.brand.blue, '#0054CC']   },
-  restaurant: { icon: 'restaurant', color: Colors.brand.green, bg: Colors.brand.greenLight, gradient: [Colors.brand.green, '#1a8a18']  },
-  event:      { icon: 'calendar',   color: '#FF7B00',          bg: '#FFF3E6',               gradient: ['#FF7B00', '#E05000']           },
-  news:       { icon: 'newspaper',  color: '#8B5CF6',          bg: '#F3E8FF',               gradient: ['#8B5CF6', '#6D3FD1']           },
-  story:      { icon: 'videocam',   color: Colors.brand.blue,  bg: Colors.brand.blueLight,  gradient: [Colors.brand.blue, '#0054CC']   },
-  challenge:  { icon: 'trophy',     color: '#FF7B00',          bg: '#FFF3E6',               gradient: ['#FF7B00', '#E05000']           },
-  community:  { icon: 'people',     color: Colors.brand.green, bg: Colors.brand.greenLight, gradient: [Colors.brand.green, '#1a8a18']  },
+  listing:    { icon: 'home',       color: Colors.brand.blue,  bg: Colors.brand.blueLight,  gradient: [Colors.brand.blue, palette.blueL40_2]   },
+  restaurant: { icon: 'restaurant', color: Colors.brand.green, bg: Colors.brand.greenLight, gradient: [Colors.brand.green, palette.greenL32]  },
+  event:      { icon: 'calendar',   color: palette.legacyOrange,          bg: palette.legacyOrangeLight,               gradient: [palette.legacyOrange, palette.orangeL44]           },
+  news:       { icon: 'newspaper',  color: palette.violet500,          bg: palette.purple100,               gradient: [palette.violet500, palette.legacyPurple]           },
+  story:      { icon: 'videocam',   color: Colors.brand.blue,  bg: Colors.brand.blueLight,  gradient: [Colors.brand.blue, palette.blueL40_2]   },
+  challenge:  { icon: 'trophy',     color: palette.legacyOrange,          bg: palette.legacyOrangeLight,               gradient: [palette.legacyOrange, palette.orangeL44]           },
+  community:  { icon: 'people',     color: Colors.brand.green, bg: Colors.brand.greenLight, gradient: [Colors.brand.green, palette.greenL32]  },
 };
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string }> = {
   active:  { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle'  },
-  pending: { color: '#F59E0B',            bg: '#FFF3E6',               icon: 'time'              },
-  flagged: { color: '#EF4444',            bg: '#FEF2F2',               icon: 'flag'              },
-  removed: { color: Colors.text.tertiary, bg: '#F3F4F6',               icon: 'close-circle'      },
+  pending: { color: palette.amber500,            bg: palette.legacyOrangeLight,               icon: 'time'              },
+  flagged: { color: palette.red500,            bg: palette.red50,               icon: 'flag'              },
+  removed: { color: Colors.text.tertiary, bg: palette.gray100,               icon: 'close-circle'      },
 };
 
 const TYPE_FILTERS = [
@@ -64,15 +65,15 @@ function PostDetailModal({
           <LinearGradient colors={typeMeta.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dm.heroBg}>
             <View style={dm.heroCircle} />
             <Pressable style={dm.closeBtn} onPress={onClose}>
-              <Ionicons name="close" size={18} color="#FFF" />
+              <Ionicons name="close" size={18} color={palette.white} />
             </Pressable>
             <View style={[dm.typeChip, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Ionicons name={typeMeta.icon as any} size={12} color="#FFF" />
+              <Ionicons name={typeMeta.icon as any} size={12} color={palette.white} />
               <Text style={dm.typeChipText}>{post.type.toUpperCase()}</Text>
             </View>
             <Text style={dm.heroTitle} numberOfLines={3}>{post.title}</Text>
             <View style={[dm.statusChip, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Ionicons name={statusMeta.icon as any} size={11} color="#FFF" />
+              <Ionicons name={statusMeta.icon as any} size={11} color={palette.white} />
               <Text style={dm.statusChipText}>{post.status.toUpperCase()}</Text>
             </View>
           </LinearGradient>
@@ -98,9 +99,9 @@ function PostDetailModal({
             <View style={dm.statsRow}>
               {[
                 { icon: 'eye',         value: post.views.toLocaleString(),  label: 'Views',   color: Colors.brand.blue  },
-                { icon: 'heart',       value: post.likes.toLocaleString(),  label: 'Likes',   color: '#EF4444'          },
+                { icon: 'heart',       value: post.likes.toLocaleString(),  label: 'Likes',   color: palette.red500          },
                 { icon: 'chatbubble',  value: (post as any).comments ?? 0,  label: 'Comments',color: Colors.brand.green },
-                { icon: 'flag',        value: post.reportCount ?? 0,        label: 'Reports', color: '#FF7B00'          },
+                { icon: 'flag',        value: post.reportCount ?? 0,        label: 'Reports', color: palette.legacyOrange          },
               ].map((s) => (
                 <View key={s.label} style={dm.statCard}>
                   <Ionicons name={s.icon as any} size={16} color={s.color} />
@@ -119,7 +120,7 @@ function PostDetailModal({
             {/* Report warning */}
             {post.reportCount > 0 && (
               <View style={dm.reportWarning}>
-                <Ionicons name="warning" size={16} color="#EF4444" />
+                <Ionicons name="warning" size={16} color={palette.red500} />
                 <View style={{ flex: 1 }}>
                   <Text style={dm.reportWarningTitle}>{post.reportCount} report{post.reportCount > 1 ? 's' : ''} filed</Text>
                   <Text style={dm.reportWarningText}>This post has been reported by users. Review carefully before taking action.</Text>
@@ -139,7 +140,7 @@ function PostDetailModal({
                     ]);
                   }}
                 >
-                  <Ionicons name="star" size={15} color="#FF7B00" />
+                  <Ionicons name="star" size={15} color={palette.legacyOrange} />
                   <Text style={dm.featureBtnText}>Feature Post</Text>
                 </Pressable>
                 <Pressable
@@ -151,7 +152,7 @@ function PostDetailModal({
                     }) },
                   ])}
                 >
-                  <Ionicons name="trash" size={15} color="#EF4444" />
+                  <Ionicons name="trash" size={15} color={palette.red500} />
                   <Text style={dm.removeBtnText}>Remove Post</Text>
                 </Pressable>
               </View>
@@ -176,7 +177,7 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
       <View style={c.inner}>
         <View style={c.topRow}>
           <LinearGradient colors={typeMeta.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={c.typeIcon}>
-            <Ionicons name={typeMeta.icon as any} size={13} color="#FFF" />
+            <Ionicons name={typeMeta.icon as any} size={13} color={palette.white} />
           </LinearGradient>
           <View style={[c.typeChip, { backgroundColor: typeMeta.bg }]}>
             <Text style={[c.typeText, { color: typeMeta.color }]}>{post.type}</Text>
@@ -187,7 +188,7 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
           </View>
           {post.reportCount > 0 && (
             <View style={c.reportChip}>
-              <Ionicons name="flag" size={9} color="#EF4444" />
+              <Ionicons name="flag" size={9} color={palette.red500} />
               <Text style={c.reportText}>{post.reportCount}</Text>
             </View>
           )}
@@ -213,8 +214,8 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
             <Text style={[c.statText, { color: Colors.brand.blue }]}>{post.views.toLocaleString()}</Text>
           </View>
           <View style={c.stat}>
-            <Ionicons name="heart-outline" size={13} color="#EF4444" />
-            <Text style={[c.statText, { color: '#EF4444' }]}>{post.likes.toLocaleString()}</Text>
+            <Ionicons name="heart-outline" size={13} color={palette.red500} />
+            <Text style={[c.statText, { color: palette.red500 }]}>{post.likes.toLocaleString()}</Text>
           </View>
           {(post as any).comments !== undefined && (
             <View style={c.stat}>
@@ -236,7 +237,7 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
               }}
               style={c.featureBtn}
             >
-              <Ionicons name="star" size={12} color="#FF7B00" />
+              <Ionicons name="star" size={12} color={palette.legacyOrange} />
               <Text style={c.featureBtnText}>Feature</Text>
             </Pressable>
             <Pressable
@@ -249,7 +250,7 @@ function PostCard({ post, onChanged, onView }: { post: AdminPost; onChanged?: ()
               }}
               style={c.removeBtn}
             >
-              <Ionicons name="trash" size={12} color="#EF4444" />
+              <Ionicons name="trash" size={12} color={palette.red500} />
               <Text style={c.removeBtnText}>Remove</Text>
             </Pressable>
             <Pressable
@@ -313,7 +314,7 @@ export default function AllPostsScreen() {
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
             <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="documents" size={22} color="#FFF" />
+              <Ionicons name="documents" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -329,9 +330,9 @@ export default function AllPostsScreen() {
           <View style={s.summaryRow}>
             {[
               { label: 'Total',    value: posts.length,  color: Colors.brand.blue,  icon: 'documents'  },
-              { label: 'Flagged',  value: flaggedCount,  color: '#EF4444',           icon: 'flag'       },
-              { label: 'Pending',  value: pendingCount,  color: '#F59E0B',           icon: 'time'       },
-              { label: 'Featured', value: featuredCount, color: '#FF7B00',           icon: 'star'       },
+              { label: 'Flagged',  value: flaggedCount,  color: palette.red500,           icon: 'flag'       },
+              { label: 'Pending',  value: pendingCount,  color: palette.amber500,           icon: 'time'       },
+              { label: 'Featured', value: featuredCount, color: palette.legacyOrange,           icon: 'star'       },
             ].map((item) => (
               <View key={item.label} style={s.summaryCard}>
                 <Ionicons name={item.icon as any} size={14} color={item.color} />
@@ -346,13 +347,13 @@ export default function AllPostsScreen() {
             <View style={s.alertRow}>
               {flaggedCount > 0 && (
                 <Pressable style={s.alertChip} onPress={() => setFilter('flagged')}>
-                  <Ionicons name="flag" size={12} color="#EF4444" />
+                  <Ionicons name="flag" size={12} color={palette.red500} />
                   <Text style={s.alertText}>{flaggedCount} flagged — tap to review</Text>
                 </Pressable>
               )}
               {pendingCount > 0 && (
                 <Pressable style={[s.alertChip, s.alertChipOrange]} onPress={() => setFilter('pending')}>
-                  <Ionicons name="time" size={12} color="#FF7B00" />
+                  <Ionicons name="time" size={12} color={palette.legacyOrange} />
                   <Text style={[s.alertText, s.alertTextOrange]}>{pendingCount} pending review</Text>
                 </Pressable>
               )}
@@ -391,7 +392,7 @@ export default function AllPostsScreen() {
           {isLoading ? (
             <View style={s.loadingCard}>
               <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} style={s.loadingIcon}>
-                <Ionicons name="hourglass" size={20} color="#FFF" />
+                <Ionicons name="hourglass" size={20} color={palette.white} />
               </LinearGradient>
               <Text style={s.loadingText}>Loading posts...</Text>
               <Text style={s.loadingSubText}>Fetching content from server</Text>
@@ -428,14 +429,14 @@ export default function AllPostsScreen() {
 }
 
 const s = createThemedStyles({
-  root:           { flex: 1, backgroundColor: '#EBF5FF' },
+  root:           { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:           { flex: 1 },
   scroll:         { flex: 1 },
   content:        { padding: 18, paddingBottom: 48 },
   decorCircle:    { position: 'absolute', width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(0,118,235,0.06)', top: -60, right: -60 },
 
   header:         { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  backBtn:        { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn:        { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon:     { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub:      { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:          { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
@@ -444,36 +445,36 @@ const s = createThemedStyles({
   countLabel:     { fontSize: 10, fontWeight: '600', color: Colors.brand.blue },
 
   summaryRow:     { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  summaryCard:    { flex: 1, backgroundColor: '#FFF', borderRadius: 13, padding: 10, alignItems: 'center', gap: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  summaryCard:    { flex: 1, backgroundColor: palette.white, borderRadius: 13, padding: 10, alignItems: 'center', gap: 3, shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   summaryVal:     { fontSize: 18, fontWeight: '900' },
   summaryLbl:     { fontSize: 9, fontWeight: '600', color: Colors.text.tertiary },
 
   alertRow:       { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
-  alertChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEF2F2', paddingHorizontal: 11, paddingVertical: 7, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
-  alertText:      { fontSize: 12, fontWeight: '700', color: '#EF4444' },
-  alertChipOrange:{ backgroundColor: '#FFF3E6', borderColor: 'rgba(255,123,0,0.2)' },
-  alertTextOrange:{ color: '#FF7B00' },
+  alertChip:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.red50, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 11, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
+  alertText:      { fontSize: 12, fontWeight: '700', color: palette.red500 },
+  alertChipOrange:{ backgroundColor: palette.legacyOrangeLight, borderColor: 'rgba(255,123,0,0.2)' },
+  alertTextOrange:{ color: palette.legacyOrange },
 
   typeScroll:     { marginBottom: 14 },
   typeContent:    { gap: 7, paddingRight: 4 },
-  typeChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFF', borderWidth: 1.5, borderColor: Colors.border.light },
+  typeChip:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.white, borderWidth: 1.5, borderColor: Colors.border.light },
   typeChipActive: { backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   typeChipText:   { fontSize: 11, fontWeight: '700', color: Colors.text.secondary },
   typeChipTextActive: { color: Colors.brand.blue },
 
-  loadingCard:    { backgroundColor: '#FFF', borderRadius: 20, padding: 36, alignItems: 'center', gap: 10, elevation: 3 },
+  loadingCard:    { backgroundColor: palette.white, borderRadius: 20, padding: 36, alignItems: 'center', gap: 10, elevation: 3 },
   loadingIcon:    { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   loadingText:    { color: Colors.text.primary, fontSize: 15, fontWeight: '700' },
   loadingSubText: { color: Colors.text.tertiary, fontSize: 12 },
-  emptyCard:      { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6, elevation: 2 },
+  emptyCard:      { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6, elevation: 2 },
   emptyTitle:     { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub:       { fontSize: 13, color: Colors.text.tertiary },
-  loadMoreBtn:    { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn:    { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText:   { fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
 });
 
 const c = createThemedStyles({
-  card:         { backgroundColor: '#FFF', borderRadius: 18, marginBottom: 10, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)', overflow: 'hidden', flexDirection: 'row' },
+  card:         { backgroundColor: palette.white, borderRadius: 18, marginBottom: 10, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)', overflow: 'hidden', flexDirection: 'row' },
   accentLine:   { width: 4, flexShrink: 0 },
   inner:        { flex: 1, padding: 13 },
 
@@ -483,8 +484,8 @@ const c = createThemedStyles({
   typeText:     { fontSize: 10, fontWeight: '700', textTransform: 'capitalize' },
   statusChip:   { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8 },
   statusText:   { fontSize: 10, fontWeight: '700', textTransform: 'capitalize' },
-  reportChip:   { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, backgroundColor: '#FEF2F2' },
-  reportText:   { fontSize: 10, fontWeight: '800', color: '#EF4444' },
+  reportChip:   { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, backgroundColor: palette.red50 },
+  reportText:   { fontSize: 10, fontWeight: '800', color: palette.red500 },
 
   title:        { fontSize: 14, fontWeight: '800', color: Colors.text.primary, marginBottom: 3, lineHeight: 19 },
   content:      { fontSize: 12, color: Colors.text.secondary, lineHeight: 17, marginBottom: 7 },
@@ -500,51 +501,51 @@ const c = createThemedStyles({
   statText:     { fontSize: 12, fontWeight: '700' },
 
   actions:      { flexDirection: 'row', gap: 7 },
-  featureBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFF3E6', borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.25)' },
-  featureBtnText:{ fontSize: 11, fontWeight: '700', color: '#FF7B00' },
-  removeBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
-  removeBtnText:{ fontSize: 11, fontWeight: '700', color: '#EF4444' },
+  featureBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.legacyOrangeLight, borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.25)' },
+  featureBtnText:{ fontSize: 11, fontWeight: '700', color: palette.legacyOrange },
+  removeBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
+  removeBtnText:{ fontSize: 11, fontWeight: '700', color: palette.red500 },
   viewBtn:      { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, backgroundColor: Colors.brand.blueLight, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   viewBtnText:  { fontSize: 11, fontWeight: '700', color: Colors.brand.blue },
 });
 
 const dm = createThemedStyles({
   overlay:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
-  sheet:     { backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
-  handle:    { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginTop: 12, marginBottom: 0 },
+  sheet:     { backgroundColor: palette.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
+  handle:    { width: 36, height: 4, borderRadius: 2, backgroundColor: palette.gray200, alignSelf: 'center', marginTop: 12, marginBottom: 0 },
 
   heroBg:    { padding: 24, paddingTop: 14, borderTopLeftRadius: 28, borderTopRightRadius: 28, position: 'relative', overflow: 'hidden', paddingBottom: 22 },
   heroCircle:{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.1)', top: -50, right: -40 },
   closeBtn:  { position: 'absolute', top: 14, right: 16, width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.2)', alignItems: 'center', justifyContent: 'center' },
   typeChip:  { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 9, marginBottom: 10 },
-  typeChipText: { fontSize: 10, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
-  heroTitle: { fontSize: 20, fontWeight: '900', color: '#FFF', lineHeight: 26, marginBottom: 10 },
+  typeChipText: { fontSize: 10, fontWeight: '800', color: palette.white, letterSpacing: 0.5 },
+  heroTitle: { fontSize: 20, fontWeight: '900', color: palette.white, lineHeight: 26, marginBottom: 10 },
   statusChip:{ flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 9 },
-  statusChipText: { fontSize: 10, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
+  statusChipText: { fontSize: 10, fontWeight: '800', color: palette.white, letterSpacing: 0.5 },
 
   content:   { padding: 20 },
-  metaRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F0F2F5' },
+  metaRow:   { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL95_5 },
   avatar:    { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   avatarText:{ fontSize: 16, fontWeight: '900' },
   metaAuthor:{ fontSize: 14, fontWeight: '800', color: Colors.text.primary },
   metaDate:  { fontSize: 12, color: Colors.text.tertiary, marginTop: 2 },
 
   statsRow:  { flexDirection: 'row', gap: 8, marginBottom: 18 },
-  statCard:  { flex: 1, backgroundColor: '#F8FAFC', borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#E8ECF0' },
+  statCard:  { flex: 1, backgroundColor: palette.slate50, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: palette.neutralL93_3 },
   statVal:   { fontSize: 16, fontWeight: '900' },
   statLabel: { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary },
 
   sectionLabel: { fontSize: 10, fontWeight: '800', color: Colors.text.tertiary, letterSpacing: 1, marginBottom: 8 },
-  textBox:   { backgroundColor: '#F8FAFC', borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: '#E8ECF0' },
+  textBox:   { backgroundColor: palette.slate50, borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: palette.neutralL93_3 },
   bodyText:  { fontSize: 14, color: Colors.text.primary, lineHeight: 21 },
 
-  reportWarning: { flexDirection: 'row', gap: 10, backgroundColor: '#FEF2F2', borderRadius: 13, padding: 14, marginBottom: 16, alignItems: 'flex-start', borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
-  reportWarningTitle: { fontSize: 13, fontWeight: '800', color: '#B91C1C', marginBottom: 2 },
-  reportWarningText: { fontSize: 12, color: '#B91C1C', lineHeight: 17 },
+  reportWarning: { flexDirection: 'row', gap: 10, backgroundColor: palette.red50, borderRadius: 13, padding: 14, marginBottom: 16, alignItems: 'flex-start', borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
+  reportWarningTitle: { fontSize: 13, fontWeight: '800', color: palette.red700, marginBottom: 2 },
+  reportWarningText: { fontSize: 12, color: palette.red700, lineHeight: 17 },
 
   actions:      { flexDirection: 'row', gap: 10 },
-  featureBtn:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: '#FFF3E6', borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.3)' },
-  featureBtnText:{ fontSize: 14, fontWeight: '800', color: '#FF7B00' },
-  removeBtn:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)' },
-  removeBtnText:{ fontSize: 14, fontWeight: '800', color: '#EF4444' },
+  featureBtn:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.legacyOrangeLight, borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.3)' },
+  featureBtnText:{ fontSize: 14, fontWeight: '800', color: palette.legacyOrange },
+  removeBtn:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)' },
+  removeBtnText:{ fontSize: 14, fontWeight: '800', color: palette.red500 },
 });

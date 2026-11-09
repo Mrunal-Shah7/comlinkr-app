@@ -8,6 +8,7 @@
  * Parts slide in from the side they come from. Route params: propertyTitle, propertyAddress, price, deposit,
  * landlordName, listingId, country ("UK" | "US"), dealType ("rent" | "buy").
  */
+import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Pressable, ScrollView } from "react-native";
@@ -672,7 +673,7 @@ export default function PropertyAgreementScreen() {
           ) : (
             <View>
               <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14).stiffness(220).mass(1)} style={[st.doneMark, { backgroundColor: tc.mint }]}>
-                <Ionicons name="checkmark" size={42} color="#fff" />
+                <Ionicons name="checkmark" size={42} color={palette.white} />
               </Animated.View>
               <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>You signed</Text>
               <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", paddingHorizontal: 30, marginTop: 6 }]}>

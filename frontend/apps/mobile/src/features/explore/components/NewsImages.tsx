@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
@@ -16,7 +17,7 @@ export function ComlinkrNewsImage({ height, featured = false }: { height?: numbe
     <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, minHeight: h, overflow: "hidden" }}>
       {/* Base gradient: white → light blue */}
       <LinearGradient
-        colors={["#FFFFFF", "#EBF5FF"]}
+        colors={[palette.white, palette.legacyBlueLight]}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
       />
@@ -29,11 +30,11 @@ export function ComlinkrNewsImage({ height, featured = false }: { height?: numbe
 
       {/* ── Decorative node-graph (Comlinkr identity) ── */}
       {/* Top-left cluster */}
-      <View style={{ position: "absolute", top: rs(14), left: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#30855B" }} />
+      <View style={{ position: "absolute", top: rs(14), left: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: palette.brandGreen }} />
       <View style={{ position: "absolute", top: rs(28), left: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(48,133,91,0.45)" }} />
       <View style={{ position: "absolute", top: rs(16), left: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(48,133,91,0.35)", transform: [{ rotate: "38deg" }] }} />
       {/* Top-right cluster */}
-      <View style={{ position: "absolute", top: rs(14), right: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#1A6BAE" }} />
+      <View style={{ position: "absolute", top: rs(14), right: rs(16), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: palette.brandBlue }} />
       <View style={{ position: "absolute", top: rs(28), right: rs(36), width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "rgba(26,107,174,0.45)" }} />
       <View style={{ position: "absolute", top: rs(16), right: rs(26), width: rs(14), height: rs(1.5), backgroundColor: "rgba(26,107,174,0.35)", transform: [{ rotate: "-38deg" }] }} />
       {/* Bottom-left */}
@@ -52,25 +53,25 @@ export function ComlinkrNewsImage({ height, featured = false }: { height?: numbe
         {/* Logo mark: search circle + magnifying handle */}
         <View style={{ alignItems: "center", justifyContent: "center", marginBottom: rs(1) }}>
           <View style={{ width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "rgba(26,107,174,0.25)", backgroundColor: "rgba(26,107,174,0.12)", alignItems: "center", justifyContent: "center" }}>
-            <Ionicons name="search" size={15} color="#1A6BAE" />
+            <Ionicons name="search" size={15} color={palette.brandBlue} />
           </View>
-          <View style={{ position: "absolute", bottom: 0, right: rs(-2), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: "#30855B", borderWidth: 1.5, borderColor: "#E3EDF6" }} />
+          <View style={{ position: "absolute", bottom: 0, right: rs(-2), width: rs(8), height: rs(8), borderRadius: rs(4), backgroundColor: palette.brandGreen, borderWidth: 1.5, borderColor: palette.brandBlueLight }} />
         </View>
 
         {/* LIVE badge */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4), backgroundColor: "rgba(220,38,38,0.88)", paddingHorizontal: rs(8), paddingVertical: rs(3), borderRadius: rs(4) }}>
-          <View style={{ width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: "#FFF" }} />
-          <Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900", letterSpacing: 1 }}>LIVE</Text>
+          <View style={{ width: rs(5), height: rs(5), borderRadius: rs(2.5), backgroundColor: palette.white }} />
+          <Text style={{ color: palette.white, fontSize: 9, fontWeight: "900", letterSpacing: 1 }}>LIVE</Text>
         </View>
 
         {/* NEWS word */}
-        <Text style={{ color: "#1A6BAE", fontSize: 15, fontWeight: "900", letterSpacing: 5, marginTop: rs(-1) }}>NEWS</Text>
+        <Text style={{ color: palette.brandBlue, fontSize: 15, fontWeight: "900", letterSpacing: 5, marginTop: rs(-1) }}>NEWS</Text>
 
         {/* COMLINKR brand */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: rs(4) }}>
-          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#30855B", borderRadius: rs(1) }} />
-          <Text style={{ color: "#1A6BAE", fontSize: rs(7), fontWeight: "800", letterSpacing: 3 }}>COMLINKR</Text>
-          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: "#1A6BAE", borderRadius: rs(1) }} />
+          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: palette.brandGreen, borderRadius: rs(1) }} />
+          <Text style={{ color: palette.brandBlue, fontSize: rs(7), fontWeight: "800", letterSpacing: 3 }}>COMLINKR</Text>
+          <View style={{ width: rs(1.5), height: rs(8), backgroundColor: palette.brandBlue, borderRadius: rs(1) }} />
         </View>
 
       </View>
@@ -124,7 +125,7 @@ export function NewsLeadImage({
   const comlinkrFeatured = variant === "modal" || featured;
 
   return (
-    <View style={[style, { backgroundColor: "#E8EDF5", overflow: "hidden" }]}>
+    <View style={[style, { backgroundColor: palette.neutralL94, overflow: "hidden" }]}>
       {hasFeedImage ? (
         <FadeImage // SPRINT-42: use the shared renderer for the feed-image placeholder layer.
           uri={normalizeImageUri(placeholderUri)} // SPRINT-42: normalize the placeholder asset.

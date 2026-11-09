@@ -1,5 +1,6 @@
 // src/features/admin/components/StatsWidget.tsx
 
+import { palette } from "../../../theme/palette";
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,12 +19,12 @@ interface StatsWidgetProps {
 }
 
 const DEFAULT_GRADIENTS: Record<string, [string, string]> = {
-  [Colors.brand.blue]:  [Colors.brand.blue,  '#0054CC'],
-  [Colors.brand.green]: [Colors.brand.green,  '#1A8A18'],
-  '#F59E0B':            ['#F59E0B',            '#D97706'],
-  '#FF7B00':            ['#FF7B00',            '#E05000'],
-  '#EF4444':            ['#EF4444',            '#C72626'],
-  '#8B5CF6':            ['#8B5CF6',            '#6D3FD1'],
+  [Colors.brand.blue]:  [Colors.brand.blue,  palette.blueL40_2],
+  [Colors.brand.green]: [Colors.brand.green,  palette.greenL32],
+  [palette.amber500]:            [palette.amber500,            palette.amber600],
+  [palette.legacyOrange]:            [palette.legacyOrange,            palette.orangeL44],
+  [palette.red500]:            [palette.red500,            palette.redL46],
+  [palette.violet500]:            [palette.violet500,            palette.legacyPurple],
 };
 
 export const StatsWidget: React.FC<StatsWidgetProps> = ({
@@ -44,16 +45,16 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
           end={{ x: 1, y: 1 }}
           style={s.iconBox}
         >
-          {icon && <Ionicons name={icon as any} size={17} color="#FFF" />}
+          {icon && <Ionicons name={icon as any} size={17} color={palette.white} />}
         </LinearGradient>
         {trend !== undefined && (
-          <View style={[s.trendPill, { backgroundColor: trendPositive ? '#EAFBE9' : '#FEF2F2' }]}>
+          <View style={[s.trendPill, { backgroundColor: trendPositive ? palette.greenL95 : palette.red50 }]}>
             <Ionicons
               name={trendPositive ? 'trending-up' : 'trending-down'}
               size={10}
-              color={trendPositive ? Colors.brand.green : '#EF4444'}
+              color={trendPositive ? Colors.brand.green : palette.red500}
             />
-            <Text style={[s.trendText, { color: trendPositive ? Colors.brand.green : '#EF4444' }]}>
+            <Text style={[s.trendText, { color: trendPositive ? Colors.brand.green : palette.red500 }]}>
               {Math.abs(trend)}%
             </Text>
           </View>
@@ -69,11 +70,11 @@ export const StatsWidget: React.FC<StatsWidgetProps> = ({
 
 const s = createThemedStyles({
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: palette.white,
     borderRadius: 18,
     padding: 16,
     width: '47%',
-    shadowColor: '#0A2540',
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.09,
     shadowRadius: 16,

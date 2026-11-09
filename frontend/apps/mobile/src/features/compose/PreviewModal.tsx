@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { View, Text, ScrollView, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -92,14 +93,14 @@ export function PreviewModal({
   const renderStoryPreview = () => (
     <View style={[pv.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
       {/* Story image */}
-      <View style={[pv.storyImgWrap, { backgroundColor: "#0A2540" }]}>
+      <View style={[pv.storyImgWrap, { backgroundColor: palette.navy }]}>
         {attachedFiles.length > 0 ? (
           <View style={pv.storyImgPlaceholder}>
             <FadeImage uri={attachedFiles[0].uri} style={{ width: "100%" as any, height: "100%" as any }} cachePolicy="memory" />
             {/* SPRINT-42: use shared FadeImage for story preview media. */}
             {attachedFiles.length > 1 && (
               <View style={pv.imgCountBadge}>
-                <Ionicons name="images" size={11} color="#FFF" />
+                <Ionicons name="images" size={11} color={palette.white} />
                 <Text style={pv.imgCountText}>+{attachedFiles.length - 1}</Text>
               </View>
             )}
@@ -123,7 +124,7 @@ export function PreviewModal({
         )}
         {/* Duration badge — photos omit seconds */}
         <View style={pv.storyDurBadge}>
-          <Ionicons name={storyMediaType === "video" ? "videocam" : "image"} size={10} color="#FFF" />
+          <Ionicons name={storyMediaType === "video" ? "videocam" : "image"} size={10} color={palette.white} />
           <Text style={pv.storyDurText}>
             {storyMediaType === "video" ? `${storyDuration || "30"}s` : "Photo"}
           </Text>
@@ -137,12 +138,12 @@ export function PreviewModal({
       <View style={pv.storyBody}>
         <View style={pv.storyAuthorRow}>
           <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={pv.storyAv}>
-            <Text style={{ fontSize: 11, fontWeight: "900", color: "#FFF" }}>{userInitials}</Text>
+            <Text style={{ fontSize: 11, fontWeight: "900", color: palette.white }}>{userInitials}</Text>
           </LinearGradient>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Text style={[pv.storyAuthorName, { color: tc.textPrimary }]}>{userName}</Text>
-              <Ionicons name="checkmark-circle" size={13} color="#60A5FA" />
+              <Ionicons name="checkmark-circle" size={13} color={palette.blue400} />
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Text style={pv.storyTime}>Just now</Text>
@@ -154,7 +155,7 @@ export function PreviewModal({
               ) : null}
             </View>
           </View>
-          <Ionicons name="bookmark-outline" size={20} color="#9CA3AF" />
+          <Ionicons name="bookmark-outline" size={20} color={palette.gray400} />
         </View>
         <Text style={[pv.storyTitle, { color: tc.textPrimary }]} numberOfLines={2}>
           {title.trim() ? title : "Story"}
@@ -175,19 +176,19 @@ export function PreviewModal({
         {/* Engagement */}
         <View style={pv.storyEngBar}>
           <View style={pv.storyEngItem}>
-            <Ionicons name="heart-outline" size={16} color="#9CA3AF" />
+            <Ionicons name="heart-outline" size={16} color={palette.gray400} />
             <Text style={pv.storyEngText}>0</Text>
           </View>
           <View style={pv.storyEngItem}>
-            <Ionicons name="chatbubble-outline" size={15} color="#9CA3AF" />
+            <Ionicons name="chatbubble-outline" size={15} color={palette.gray400} />
             <Text style={pv.storyEngText}>0</Text>
           </View>
           <View style={pv.storyEngItem}>
-            <Ionicons name="share-social-outline" size={15} color="#9CA3AF" />
+            <Ionicons name="share-social-outline" size={15} color={palette.gray400} />
             <Text style={pv.storyEngText}>0</Text>
           </View>
           <View style={pv.storyEngItem}>
-            <Ionicons name="eye-outline" size={15} color="#9CA3AF" />
+            <Ionicons name="eye-outline" size={15} color={palette.gray400} />
             <Text style={pv.storyEngText}>0</Text>
           </View>
         </View>
@@ -205,7 +206,7 @@ export function PreviewModal({
           {/* SPRINT-42: use shared FadeImage for event preview media. */}
           {attachedFiles.length > 1 && (
             <View style={pv.imgCountBadge}>
-              <Ionicons name="images" size={11} color="#FFF" />
+              <Ionicons name="images" size={11} color={palette.white} />
               <Text style={pv.imgCountText}>+{attachedFiles.length - 1}</Text>
             </View>
           )}
@@ -228,7 +229,7 @@ export function PreviewModal({
           </View>
           {eventDate ? (
             <View style={pv.eventDateBadge}>
-              <Ionicons name="calendar-outline" size={11} color="#FFF" />
+              <Ionicons name="calendar-outline" size={11} color={palette.white} />
               <Text style={pv.eventDateText}>{eventDate}</Text>
             </View>
           ) : null}
@@ -256,12 +257,12 @@ export function PreviewModal({
             <Text style={{ fontSize: 11, fontWeight: "600", color: "rgba(255,255,255,0.85)" }}>0 going</Text>
           </View>
           <View style={pv.eventIntBtn}>
-            <Ionicons name="star-outline" size={14} color="#FFF" />
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#FFF" }}>Interested</Text>
+            <Ionicons name="star-outline" size={14} color={palette.white} />
+            <Text style={{ fontSize: 11, fontWeight: "700", color: palette.white }}>Interested</Text>
           </View>
           <View style={{ borderRadius: 18, overflow: "hidden" }}>
-            <LinearGradient colors={["#257A86", "#E56800"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.eventRsvp}>
-              <Text style={{ fontSize: 11, fontWeight: "900", color: "#FFF", letterSpacing: 0.5 }}>RSVP</Text>
+            <LinearGradient colors={[palette.brandTeal, palette.orangeL45]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.eventRsvp}>
+              <Text style={{ fontSize: 11, fontWeight: "900", color: palette.white, letterSpacing: 0.5 }}>RSVP</Text>
             </LinearGradient>
           </View>
         </View>
@@ -278,13 +279,13 @@ export function PreviewModal({
         <View style={pv.challengeHeaderDecor2} />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <View style={pv.challengeTypePill}>
-            <Ionicons name="trophy" size={11} color="#257A86" />
+            <Ionicons name="trophy" size={11} color={palette.brandTeal} />
             <Text style={pv.challengeTypeText}>{challengeType || "CHALLENGE"}</Text>
           </View>
           {challengeDuration ? (
             <View style={pv.challengeDurPill}>
-              <Ionicons name="time-outline" size={11} color="#FFF" />
-              <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFF" }}>{challengeDuration}</Text>
+              <Ionicons name="time-outline" size={11} color={palette.white} />
+              <Text style={{ fontSize: 10, fontWeight: "700", color: palette.white }}>{challengeDuration}</Text>
             </View>
           ) : null}
         </View>
@@ -301,15 +302,15 @@ export function PreviewModal({
         {/* Author */}
         <View style={pv.challengeAuthorRow}>
           <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={pv.challengeAv}>
-            <Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>{userInitials}</Text>
+            <Text style={{ fontSize: 10, fontWeight: "900", color: palette.white }}>{userInitials}</Text>
           </LinearGradient>
           <View style={{ flex: 1 }}>
             <Text style={[pv.challengeAuthorName, { color: tc.textPrimary }]}>{userName}</Text>
             <Text style={[pv.challengeAuthorTime, { color: tc.textTertiary }]}>Just now · Preview</Text>
           </View>
-          <View style={[pv.challengeStatusPill, { backgroundColor: "#DCFCE7" }]}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "#22C55E" }} />
-            <Text style={{ fontSize: 10, fontWeight: "700", color: "#15803D" }}>Active</Text>
+          <View style={[pv.challengeStatusPill, { backgroundColor: palette.green100 }]}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: palette.green500 }} />
+            <Text style={{ fontSize: 10, fontWeight: "700", color: palette.green700 }}>Active</Text>
           </View>
         </View>
         <Text style={[pv.challengeDesc, { color: tc.textSecondary }]} numberOfLines={3}>{body || "Challenge details will appear here..."}</Text>
@@ -317,21 +318,21 @@ export function PreviewModal({
         {/* Info chips */}
         <View style={pv.challengeInfoGrid}>
           {challengeGoal ? (
-            <View style={[pv.challengeInfoChip, { backgroundColor: "#FFF7ED" }]}>
-              <Ionicons name="flag" size={12} color="#257A86" />
-              <Text style={[pv.challengeInfoText, { color: "#C2410C" }]}>{challengeGoal}</Text>
+            <View style={[pv.challengeInfoChip, { backgroundColor: palette.orange50 }]}>
+              <Ionicons name="flag" size={12} color={palette.brandTeal} />
+              <Text style={[pv.challengeInfoText, { color: palette.orange700 }]}>{challengeGoal}</Text>
             </View>
           ) : null}
           {challengeReward ? (
-            <View style={[pv.challengeInfoChip, { backgroundColor: "#FEF9C3" }]}>
-              <Ionicons name="gift" size={12} color="#CA8A04" />
-              <Text style={[pv.challengeInfoText, { color: "#A16207" }]}>{challengeReward}</Text>
+            <View style={[pv.challengeInfoChip, { backgroundColor: palette.yellow100 }]}>
+              <Ionicons name="gift" size={12} color={palette.yellow600} />
+              <Text style={[pv.challengeInfoText, { color: palette.orangeL33 }]}>{challengeReward}</Text>
             </View>
           ) : null}
           {challengeMaxParticipants ? (
-            <View style={[pv.challengeInfoChip, { backgroundColor: "#E3EDF6" }]}>
-              <Ionicons name="people" size={12} color="#1A6BAE" />
-              <Text style={[pv.challengeInfoText, { color: "#0054CC" }]}>Max {challengeMaxParticipants}</Text>
+            <View style={[pv.challengeInfoChip, { backgroundColor: palette.brandBlueLight }]}>
+              <Ionicons name="people" size={12} color={palette.brandBlue} />
+              <Text style={[pv.challengeInfoText, { color: palette.blueL40_2 }]}>Max {challengeMaxParticipants}</Text>
             </View>
           ) : null}
         </View>
@@ -350,7 +351,7 @@ export function PreviewModal({
         {/* Progress bar */}
         <View style={pv.challengeProgress}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: "700", color: "#6B7280" }}>Participants</Text>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: palette.gray500 }}>Participants</Text>
             <Text style={{ fontSize: 11, fontWeight: "800", color: type.color }}>0 / {challengeMaxParticipants || "∞"}</Text>
           </View>
           <View style={pv.challengeBarBg}>
@@ -362,14 +363,14 @@ export function PreviewModal({
         <View style={pv.challengeActions}>
           <View style={{ flex: 1, borderRadius: 14, overflow: "hidden" }}>
             <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.challengeJoinBtn}>
-              <Ionicons name="flash" size={15} color="#FFF" />
+              <Ionicons name="flash" size={15} color={palette.white} />
               <Text style={pv.challengeJoinText}>Join Challenge</Text>
             </LinearGradient>
           </View>
-          <Pressable style={[pv.challengeShareBtn, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6", borderColor: tc.borderLight }]}>
+          <Pressable style={[pv.challengeShareBtn, { backgroundColor: isDark ? tc.inputBg : palette.gray100, borderColor: tc.borderLight }]}>
             <Ionicons name="share-social-outline" size={17} color={tc.textSecondary} />
           </Pressable>
-          <Pressable style={[pv.challengeShareBtn, { backgroundColor: isDark ? tc.inputBg : "#F3F4F6", borderColor: tc.borderLight }]}>
+          <Pressable style={[pv.challengeShareBtn, { backgroundColor: isDark ? tc.inputBg : palette.gray100, borderColor: tc.borderLight }]}>
             <Ionicons name="bookmark-outline" size={17} color={tc.textSecondary} />
           </Pressable>
         </View>
@@ -389,8 +390,8 @@ export function PreviewModal({
     const depositStr = listingDeposit?.trim() ? `Deposit ${currSymbol}${listingDeposit}` : null;
     const availStr = listingAvailable?.trim() || null;
     const walkNum = parseInt(listingWalkScore ?? "", 10);
-    const walkColor = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#16A34A" : walkNum >= 70 ? "#B45309" : "#DC2626") : "#1A6BAE";
-    const walkBg = !Number.isNaN(walkNum) ? (walkNum >= 90 ? "#DCFCE7" : walkNum >= 70 ? "#FEF9C3" : "#FEE2E2") : "#E3EDF6";
+    const walkColor = !Number.isNaN(walkNum) ? (walkNum >= 90 ? palette.green600 : walkNum >= 70 ? palette.amber700 : palette.red600) : palette.brandBlue;
+    const walkBg = !Number.isNaN(walkNum) ? (walkNum >= 90 ? palette.green100 : walkNum >= 70 ? palette.yellow100 : palette.red100) : palette.brandBlueLight;
 
     return (
       <View style={[pv.listCard, { borderColor: tc.borderLight }]}>
@@ -435,7 +436,7 @@ export function PreviewModal({
           <View style={pv.listNewBadge}><Text style={pv.listNewBadgeText}>NEW</Text></View>
           {attachedFiles.length > 1 && (
             <View style={pv.imgCountBadge}>
-              <Ionicons name="images" size={11} color="#FFF" />
+              <Ionicons name="images" size={11} color={palette.white} />
               <Text style={pv.imgCountText}>+{attachedFiles.length - 1}</Text>
             </View>
           )}
@@ -453,14 +454,14 @@ export function PreviewModal({
                 <Text style={[pv.listLandlordName, { color: tc.textPrimary }]} numberOfLines={1}>{userName}</Text>
                 {listingIsVerified ? (
                   <View style={pv.listVerifiedBadge}>
-                    <Ionicons name="shield-checkmark" size={10} color="#30855B" />
+                    <Ionicons name="shield-checkmark" size={10} color={palette.brandGreen} />
                     <Text style={pv.listVerifiedText}>Verified</Text>
                   </View>
                 ) : null}
               </View>
             </View>
             <View style={pv.listChatBtn}>
-              <Ionicons name="chatbubble-ellipses" size={13} color="#FFF" />
+              <Ionicons name="chatbubble-ellipses" size={13} color={palette.white} />
               <Text style={pv.listChatBtnText}>Chat</Text>
             </View>
           </View>
@@ -473,7 +474,7 @@ export function PreviewModal({
             <View style={pv.listSubRow}>
               {depositStr ? (
                 <View style={[pv.listDepositPill, { borderColor: tc.borderLight }]}>
-                  <Ionicons name="card-outline" size={11} color="#6B7280" />
+                  <Ionicons name="card-outline" size={11} color={palette.gray500} />
                   <Text style={pv.listDepositText}>{depositStr}</Text>
                 </View>
               ) : null}
@@ -490,10 +491,10 @@ export function PreviewModal({
           {(bedsVal || bathsVal || sqftVal) ? (
             <View style={[pv.listStatsGrid, { borderColor: tc.borderLight }]}>
               {[
-                { icon: "bed-outline" as const, val: bedsVal || "–", lbl: "Beds", bg: "#EEF5FF", color: "#1A6BAE" },
-                { icon: "water-outline" as const, val: bathsVal || "–", lbl: "Baths", bg: "#E3F1EA", color: "#30855B" },
-                { icon: "resize-outline" as const, val: sqftVal || "–", lbl: "Sqft", bg: "#E2F0F1", color: "#257A86" },
-                { icon: "business-outline" as const, val: propTypeVal || "–", lbl: "Type", bg: "#E3EDF6", color: "#1A6BAE" },
+                { icon: "bed-outline" as const, val: bedsVal || "–", lbl: "Beds", bg: palette.blueL97_2, color: palette.brandBlue },
+                { icon: "water-outline" as const, val: bathsVal || "–", lbl: "Baths", bg: palette.brandGreenLight, color: palette.brandGreen },
+                { icon: "resize-outline" as const, val: sqftVal || "–", lbl: "Sqft", bg: palette.brandTealLight, color: palette.brandTeal },
+                { icon: "business-outline" as const, val: propTypeVal || "–", lbl: "Type", bg: palette.brandBlueLight, color: palette.brandBlue },
               ].map((st, idx) => (
                 <View key={st.lbl} style={[pv.listStatCell, idx < 3 && pv.listStatCellBorder, idx < 3 && { borderRightColor: tc.borderLight }]}>
                   <View style={[pv.listStatIconBox, { backgroundColor: st.bg }]}>
@@ -515,8 +516,8 @@ export function PreviewModal({
                 </View>
               ) : null}
               {listingTransitInfo ? (
-                <View style={[pv.listTransportPill, { backgroundColor: "#E3EDF6" }]}>
-                  <Text style={[pv.listTransportText, { color: "#1A6BAE" }]}>🚇 {listingTransitInfo}</Text>
+                <View style={[pv.listTransportPill, { backgroundColor: palette.brandBlueLight }]}>
+                  <Text style={[pv.listTransportText, { color: palette.brandBlue }]}>🚇 {listingTransitInfo}</Text>
                 </View>
               ) : null}
             </View>
@@ -532,7 +533,7 @@ export function PreviewModal({
             <View style={pv.listTagsRow}>
               {listingAmenities.slice(0, 4).map((tag, i) => (
                 <View key={i} style={pv.listTagChip}>
-                  <Ionicons name="checkmark-circle" size={11} color="#30855B" />
+                  <Ionicons name="checkmark-circle" size={11} color={palette.brandGreen} />
                   <Text style={pv.listTagChipText}>{tag}</Text>
                 </View>
               ))}
@@ -579,7 +580,7 @@ export function PreviewModal({
           </View>
           {/* Fav button */}
           <View style={pv.restFavBtn}>
-            <Ionicons name="heart-outline" size={18} color="#FFF" />
+            <Ionicons name="heart-outline" size={18} color={palette.white} />
           </View>
           {/* Price overlay */}
           {priceSymbol ? (
@@ -590,8 +591,8 @@ export function PreviewModal({
           {/* Image count pill */}
           {attachedFiles.length > 1 && (
             <View style={{ position: "absolute", top: 10, right: 48, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Ionicons name="images-outline" size={11} color="#FFF" />
-              <Text style={{ color: "#FFF", fontSize: 11, fontWeight: "700" }}>{attachedFiles.length} photos</Text>
+              <Ionicons name="images-outline" size={11} color={palette.white} />
+              <Text style={{ color: palette.white, fontSize: 11, fontWeight: "700" }}>{attachedFiles.length} photos</Text>
             </View>
           )}
         </View>
@@ -609,12 +610,12 @@ export function PreviewModal({
           {/* Rating + location chips */}
           <View style={pv.restInfoRow}>
             <View style={pv.restRatingChip}>
-              <Ionicons name="star" size={12} color="#F59E0B" />
+              <Ionicons name="star" size={12} color={palette.amber500} />
               <Text style={pv.restRatingNum}>New</Text>
             </View>
             {location ? (
               <View style={pv.restDistChip}>
-                <Ionicons name="location-outline" size={11} color="#6B7280" />
+                <Ionicons name="location-outline" size={11} color={palette.gray500} />
                 <Text style={pv.restMetaText}>{location}</Text>
               </View>
             ) : null}
@@ -634,7 +635,7 @@ export function PreviewModal({
           {/* Description (popular dishes / review body) */}
           {body ? (
             <View style={pv.restDishesRow}>
-              <Ionicons name="flame-outline" size={12} color="#257A86" />
+              <Ionicons name="flame-outline" size={12} color={palette.brandTeal} />
               <Text style={[pv.restDishesText, { color: tc.textSecondary }]} numberOfLines={1}>{body}</Text>
             </View>
           ) : null}
@@ -650,15 +651,15 @@ export function PreviewModal({
             </View>
             <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
               <View style={pv.restNavBtn}>
-                <Ionicons name="navigate-outline" size={14} color="#1A6BAE" />
+                <Ionicons name="navigate-outline" size={14} color={palette.brandBlue} />
               </View>
               <View style={{ borderRadius: 10, overflow: "hidden" }}>
                 <LinearGradient
-                  colors={["#1A6BAE", "#30855B"]}
+                  colors={[palette.brandBlue, palette.brandGreen]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={pv.restReserveBtn}
                 >
-                  <Ionicons name="calendar-outline" size={12} color="#FFF" />
+                  <Ionicons name="calendar-outline" size={12} color={palette.white} />
                   <Text style={pv.restReserveBtnText}>Reserve</Text>
                 </LinearGradient>
               </View>
@@ -688,7 +689,7 @@ export function PreviewModal({
             {/* SPRINT-42: use shared FadeImage for feed preview media. */}
             {attachedFiles.length > 1 && (
               <View style={pv.imgCountBadge}>
-                <Ionicons name="images" size={11} color="#FFF" />
+                <Ionicons name="images" size={11} color={palette.white} />
                 <Text style={pv.imgCountText}>+{attachedFiles.length - 1}</Text>
               </View>
             )}
@@ -732,10 +733,10 @@ export function PreviewModal({
         ) : null}
         {/* Action bar */}
         <View style={pv.actionsRow}>
-          <View style={pv.actionItem}><Ionicons name="heart-outline" size={17} color="#9CA3AF" /><Text style={pv.actionText}>0</Text></View>
-          <View style={pv.actionItem}><Ionicons name="chatbubble-outline" size={16} color="#9CA3AF" /><Text style={pv.actionText}>0</Text></View>
-          <View style={pv.actionItem}><Ionicons name="share-social-outline" size={16} color="#9CA3AF" /><Text style={pv.actionText}>Share</Text></View>
-          <View style={[pv.actionItem, { marginLeft: "auto" as any }]}><Ionicons name="bookmark-outline" size={16} color="#9CA3AF" /></View>
+          <View style={pv.actionItem}><Ionicons name="heart-outline" size={17} color={palette.gray400} /><Text style={pv.actionText}>0</Text></View>
+          <View style={pv.actionItem}><Ionicons name="chatbubble-outline" size={16} color={palette.gray400} /><Text style={pv.actionText}>0</Text></View>
+          <View style={pv.actionItem}><Ionicons name="share-social-outline" size={16} color={palette.gray400} /><Text style={pv.actionText}>Share</Text></View>
+          <View style={[pv.actionItem, { marginLeft: "auto" as any }]}><Ionicons name="bookmark-outline" size={16} color={palette.gray400} /></View>
         </View>
       </View>
     );
@@ -749,7 +750,7 @@ export function PreviewModal({
           <View style={[pv.header, { borderBottomColor: tc.borderLight }]}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.headerBadge}>
-                <Ionicons name={type.icon} size={11} color="#FFF" />
+                <Ionicons name={type.icon} size={11} color={palette.white} />
               </LinearGradient>
               <Text style={[pv.headerTitle, { color: tc.textPrimary }]}>Preview</Text>
             </View>
@@ -791,7 +792,7 @@ export const pv = createThemedStyles({
     maxHeight: "92%", paddingTop: 10,
   },
   sheetHandle: {
-    width: 40, height: 4, borderRadius: 2, backgroundColor: "#D1D5DB",
+    width: 40, height: 4, borderRadius: 2, backgroundColor: palette.gray300,
     alignSelf: "center", marginBottom: 14,
   },
   header: {
@@ -812,7 +813,7 @@ export const pv = createThemedStyles({
   // ── Generic card (news / shared fallback) ──
   card: {
     margin: 16, borderRadius: 20, overflow: "hidden",
-    borderWidth: 1, shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
+    borderWidth: 1, shadowColor: palette.black, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
   },
   newsAccentLine: { height: 3, width: "100%" },
   newsImg: {
@@ -824,10 +825,10 @@ export const pv = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
   },
-  imgCountText: { fontSize: 11, fontWeight: "800", color: "#FFF" },
+  imgCountText: { fontSize: 11, fontWeight: "800", color: palette.white },
   authorRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12, paddingHorizontal: 16, paddingTop: 14 },
   avatar: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  avatarText: { fontSize: 12, fontWeight: "800", color: "#FFF" },
+  avatarText: { fontSize: 12, fontWeight: "800", color: palette.white },
   authorName: { fontSize: 14, fontWeight: "700" },
   postTime: { fontSize: 11, marginTop: 1 },
   newsCatBadge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
@@ -840,7 +841,7 @@ export const pv = createThemedStyles({
     alignItems: "center", paddingHorizontal: 16, paddingBottom: 14,
   },
   actionItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionText: { fontSize: 13, color: "#9CA3AF", fontWeight: "600" },
+  actionText: { fontSize: 13, color: palette.gray400, fontWeight: "600" },
 
   // ── Story preview ──
   storyImgWrap: { width: "100%", height: 185, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: "hidden", position: "relative" },
@@ -851,34 +852,34 @@ export const pv = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: 3,
     backgroundColor: "rgba(0,0,0,0.55)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
   },
-  storyDurText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
+  storyDurText: { fontSize: 10, fontWeight: "700", color: palette.white },
   storyNewBadge: {
     position: "absolute", top: 10, left: 10,
-    backgroundColor: "#1A6BAE", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: palette.brandBlue, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
-  storyNewText: { fontSize: 8, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
+  storyNewText: { fontSize: 8, fontWeight: "800", color: palette.white, letterSpacing: 0.5 },
   storyBody: { padding: 14 },
   storyAuthorRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   storyAv: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   storyAuthorName: { fontSize: 14, fontWeight: "800" },
-  storyTime: { fontSize: 11, fontWeight: "500", color: "#9CA3AF" },
+  storyTime: { fontSize: 11, fontWeight: "500", color: palette.gray400 },
   storyCatDot: { width: 4, height: 4, borderRadius: 2 },
   storyCatLabel: { fontSize: 11, fontWeight: "700" },
   storyTitle: { fontSize: 15, fontWeight: "700", lineHeight: 21, marginBottom: 4 },
-  storyDesc: { fontSize: 13, fontWeight: "500", color: "#6B7280", lineHeight: 18, marginBottom: 8 },
+  storyDesc: { fontSize: 13, fontWeight: "500", color: palette.gray500, lineHeight: 18, marginBottom: 8 },
   storyHashRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 10 },
-  storyHash: { fontSize: 12, fontWeight: "700", color: "#1A6BAE" },
+  storyHash: { fontSize: 12, fontWeight: "700", color: palette.brandBlue },
   storyEngBar: {
     flexDirection: "row", alignItems: "center", gap: 16,
-    paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E8EDF5",
+    paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.neutralL94,
   },
   storyEngItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  storyEngText: { fontSize: 12, fontWeight: "600", color: "#9CA3AF" },
+  storyEngText: { fontSize: 12, fontWeight: "600", color: palette.gray400 },
 
   // ── Event preview ──
   eventCard: {
     margin: 16, borderRadius: 22, overflow: "hidden", height: 260,
-    shadowColor: "#000", shadowOpacity: 0.18, shadowRadius: 16, elevation: 8,
+    shadowColor: palette.black, shadowOpacity: 0.18, shadowRadius: 16, elevation: 8,
   },
   eventImg: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
   eventOverlay: { ...StyleSheet.absoluteFill, padding: 16, justifyContent: "flex-end" },
@@ -888,8 +889,8 @@ export const pv = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
   },
-  eventDateText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
-  eventTitle: { fontSize: 20, fontWeight: "800", color: "#FFF", lineHeight: 26, marginBottom: 8, letterSpacing: -0.3 },
+  eventDateText: { fontSize: 10, fontWeight: "700", color: palette.white },
+  eventTitle: { fontSize: 20, fontWeight: "800", color: palette.white, lineHeight: 26, marginBottom: 8, letterSpacing: -0.3 },
   eventMeta: { fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: "500" },
   eventDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.4)" },
   eventIntBtn: {
@@ -902,7 +903,7 @@ export const pv = createThemedStyles({
   // ── Challenge preview ──
   challengeCard: {
     margin: 16, borderRadius: 22, overflow: "hidden", borderWidth: 1,
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
+    shadowColor: palette.black, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
   },
   challengeHeader: { padding: 18, paddingBottom: 20, overflow: "hidden", position: "relative" },
   challengeHeaderDecor1: {
@@ -917,29 +918,29 @@ export const pv = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(255,255,255,0.92)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
   },
-  challengeTypeText: { fontSize: 10, fontWeight: "900", color: "#257A86", letterSpacing: 0.8, textTransform: "uppercase" },
+  challengeTypeText: { fontSize: 10, fontWeight: "900", color: palette.brandTeal, letterSpacing: 0.8, textTransform: "uppercase" },
   challengeDurPill: {
     flexDirection: "row", alignItems: "center", gap: 4,
     backgroundColor: "rgba(255,255,255,0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10,
     borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
   },
-  challengeTitle: { fontSize: 19, fontWeight: "900", color: "#FFF", lineHeight: 25, letterSpacing: -0.3 },
+  challengeTitle: { fontSize: 19, fontWeight: "900", color: palette.white, lineHeight: 25, letterSpacing: -0.3 },
   challengeBody: { padding: 16 },
   challengeAuthorRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 },
   challengeAv: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   challengeAuthorName: { fontSize: 13, fontWeight: "700" },
-  challengeAuthorTime: { fontSize: 10, fontWeight: "500", color: "#9CA3AF" },
+  challengeAuthorTime: { fontSize: 10, fontWeight: "500", color: palette.gray400 },
   challengeStatusPill: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   challengeDesc: { fontSize: 13, lineHeight: 20, marginBottom: 12 },
   challengeInfoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 14 },
   challengeInfoChip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
   challengeInfoText: { fontSize: 11, fontWeight: "700" },
   challengeProgress: { marginBottom: 14 },
-  challengeBarBg: { height: 6, borderRadius: 3, backgroundColor: "#F3F4F6" },
+  challengeBarBg: { height: 6, borderRadius: 3, backgroundColor: palette.gray100 },
   challengeBarFill: { height: 6, borderRadius: 3, minWidth: 2 },
   challengeActions: { flexDirection: "row", alignItems: "center", gap: 8 },
   challengeJoinBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 13, borderRadius: 14 },
-  challengeJoinText: { fontSize: 14, fontWeight: "800", color: "#FFF" },
+  challengeJoinText: { fontSize: 14, fontWeight: "800", color: palette.white },
   challengeShareBtn: {
     width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center",
     borderWidth: 1,
@@ -948,7 +949,7 @@ export const pv = createThemedStyles({
   // ── Listing preview (matches Housing tab card) ──
   listCard: {
     marginHorizontal: 16, marginBottom: 14, borderRadius: 18, overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
+    shadowColor: palette.black, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
     borderWidth: 1,
   },
   listCardImgWrap: { height: 220, position: "relative" as any, overflow: "hidden" },
@@ -959,48 +960,48 @@ export const pv = createThemedStyles({
   listTypePill: {
     backgroundColor: "rgba(26,107,174,0.88)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 7,
   },
-  listTypePillText: { fontSize: 10, fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
+  listTypePillText: { fontSize: 10, fontWeight: "800", color: palette.white, letterSpacing: 0.5 },
   listAvailNowPill: {
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "rgba(22,163,74,0.88)", paddingHorizontal: 9, paddingVertical: 3, borderRadius: 7,
   },
-  listAvailDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#FFF" },
-  listAvailNowText: { fontSize: 10, fontWeight: "700", color: "#FFF" },
-  listImagePrice: { fontSize: 20, fontWeight: "900", color: "#FFF", letterSpacing: -0.3 },
+  listAvailDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: palette.white },
+  listAvailNowText: { fontSize: 10, fontWeight: "700", color: palette.white },
+  listImagePrice: { fontSize: 20, fontWeight: "900", color: palette.white, letterSpacing: -0.3 },
   listImageLocation: { fontSize: 11, color: "rgba(255,255,255,0.85)", fontWeight: "500" },
   listNewBadge: {
     position: "absolute", top: 12, left: 12,
-    backgroundColor: "#1A6BAE", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: palette.brandBlue, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3,
   },
-  listNewBadgeText: { fontSize: 9, fontWeight: "900", color: "#FFF", letterSpacing: 0.6 },
+  listNewBadgeText: { fontSize: 9, fontWeight: "900", color: palette.white, letterSpacing: 0.6 },
   listCardBody: { paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14 },
   listLandlordBar: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
   listAv: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  listAvText: { fontSize: 13, fontWeight: "900", color: "#FFF" },
+  listAvText: { fontSize: 13, fontWeight: "900", color: palette.white },
   listLandlordName: { fontSize: 13, fontWeight: "700", flex: 1 },
   listVerifiedBadge: {
     flexDirection: "row", alignItems: "center", gap: 3,
-    backgroundColor: "#DCFCE7", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
+    backgroundColor: palette.green100, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8,
   },
-  listVerifiedText: { fontSize: 10, fontWeight: "700", color: "#30855B" },
+  listVerifiedText: { fontSize: 10, fontWeight: "700", color: palette.brandGreen },
   listChatBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "#1A6BAE", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
+    backgroundColor: palette.brandBlue, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10,
   },
-  listChatBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  listChatBtnText: { fontSize: 12, fontWeight: "700", color: palette.white },
   listTitle: { fontSize: 16, fontWeight: "800", lineHeight: 22, marginBottom: 8 },
   listSubRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" },
   listDepositPill: {
     flexDirection: "row", alignItems: "center", gap: 5,
     borderWidth: 1, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4,
   },
-  listDepositText: { fontSize: 11, fontWeight: "600", color: "#6B7280" },
+  listDepositText: { fontSize: 11, fontWeight: "600", color: palette.gray500 },
   listAvailImmPill: {
     flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "#DCFCE7", paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: palette.green100, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
   },
-  listAvailDotSmall: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#22C55E" },
-  listAvailImmText: { fontSize: 11, fontWeight: "700", color: "#15803D" },
+  listAvailDotSmall: { width: 5, height: 5, borderRadius: 3, backgroundColor: palette.green500 },
+  listAvailImmText: { fontSize: 11, fontWeight: "700", color: palette.green700 },
   listStatsGrid: {
     flexDirection: "row", borderRadius: 12, borderWidth: 1,
     overflow: "hidden", marginBottom: 10,
@@ -1017,14 +1018,14 @@ export const pv = createThemedStyles({
   listTagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   listTagChip: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#E3F1EA", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: palette.brandGreenLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
   },
-  listTagChipText: { fontSize: 11, fontWeight: "600", color: "#166534" },
+  listTagChipText: { fontSize: 11, fontWeight: "600", color: palette.green800 },
 
   // ── Restaurant preview (matches Food tab card) ──
   restCard: {
     marginHorizontal: 16, marginBottom: 14, borderRadius: 18, overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 12, elevation: 4,
+    shadowColor: palette.black, shadowOpacity: 0.07, shadowRadius: 12, elevation: 4,
     borderWidth: 1,
   },
   restCardImgWrap: { height: 165, position: "relative" as any, overflow: "hidden" },
@@ -1033,8 +1034,8 @@ export const pv = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: 5,
     backgroundColor: "rgba(22,163,74,0.9)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
   },
-  restStatusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#FFF", opacity: 0.85 },
-  restStatusText: { fontSize: 11, fontWeight: "700", color: "#FFF" },
+  restStatusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.white, opacity: 0.85 },
+  restStatusText: { fontSize: 11, fontWeight: "700", color: palette.white },
   restFavBtn: {
     position: "absolute", top: 10, right: 10,
     width: 34, height: 34, borderRadius: 17,
@@ -1046,44 +1047,44 @@ export const pv = createThemedStyles({
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8,
   },
-  restPriceOverlayText: { fontSize: 12, fontWeight: "800", color: "#FFF" },
+  restPriceOverlayText: { fontSize: 12, fontWeight: "800", color: palette.white },
   restCardBody: { padding: 14 },
   restName: { fontSize: 16, fontWeight: "800", flex: 1 },
   restCuisine: { fontSize: 12, marginBottom: 8 },
   restInfoRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" },
   restRatingChip: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#FFF8E6", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: palette.yellowL95, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
   restRatingNum: { fontSize: 13, fontWeight: "700" },
   restDistChip: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#F3F4F6", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
+    backgroundColor: palette.gray100, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
   restMetaText: { fontSize: 11, fontWeight: "600" },
   restServicesRow: { flexDirection: "row", gap: 6, marginBottom: 8, flexWrap: "wrap" },
   restServiceChip: {
-    borderWidth: 1, borderColor: "#BBF7D0",
+    borderWidth: 1, borderColor: palette.green200,
     borderRadius: 7, paddingHorizontal: 9, paddingVertical: 3,
-    backgroundColor: "#FAFFFC",
+    backgroundColor: palette.neutralL99_3,
   },
-  restServiceText: { fontSize: 10, fontWeight: "700", color: "#166534" },
+  restServiceText: { fontSize: 10, fontWeight: "700", color: palette.green800 },
   restDishesRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 },
   restDishesText: { fontSize: 11, flex: 1 },
   restCardMeta: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingTop: 10, borderTopWidth: 1,
   },
-  restCardTag: { backgroundColor: "#BBF7D0", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
-  restCardTagText: { fontSize: 10, fontWeight: "600", color: "#166534" },
+  restCardTag: { backgroundColor: palette.green200, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  restCardTagText: { fontSize: 10, fontWeight: "600", color: palette.green800 },
   restNavBtn: {
     width: 34, height: 34, borderRadius: 10,
-    backgroundColor: "#E3EDF6",
+    backgroundColor: palette.brandBlueLight,
     alignItems: "center", justifyContent: "center",
   },
   restReserveBtn: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
   },
-  restReserveBtnText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  restReserveBtnText: { fontSize: 12, fontWeight: "700", color: palette.white },
 });

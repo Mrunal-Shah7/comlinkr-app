@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { FadeImage } from "../../../../components/FadeImage";
@@ -42,10 +43,10 @@ export function LandlordAvatar({
         <FadeImage // SPRINT-42: render owner avatars through the shared image component.
           uri={uri} // SPRINT-42: pass the resolved avatar URL.
           style={StyleSheet.absoluteFill}
-          fallbackComponent={<Text style={[{ fontSize, fontWeight: "800", color: "#FFF" }, textStyle]}>{initials}</Text>} // SPRINT-42: preserve initials fallback on failed avatar load.
+          fallbackComponent={<Text style={[{ fontSize, fontWeight: "800", color: palette.white }, textStyle]}>{initials}</Text>} // SPRINT-42: preserve initials fallback on failed avatar load.
         />
       ) : (
-        <Text style={[{ fontSize, fontWeight: "800", color: "#FFF" }, textStyle]}>{initials}</Text>
+        <Text style={[{ fontSize, fontWeight: "800", color: palette.white }, textStyle]}>{initials}</Text>
       )}
     </View>
   );

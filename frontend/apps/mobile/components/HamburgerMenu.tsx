@@ -1,6 +1,7 @@
 // components/HamburgerMenu.tsx — the "You" sheet (design D, plan 01).
 // A bottom sheet (DSheet): your profile row, then grouped rows that share one icon style (problem 6), the theme
 // switch, and Log out in its own group. Guests see a sign-in card and the account-neutral rows only.
+import { palette } from "../src/theme/palette";
 import React, { useEffect, useMemo } from "react";
 import { View, Text, Pressable, ScrollView, Switch, StyleSheet } from "react-native";
 import { Image } from "expo-image";
@@ -105,7 +106,7 @@ export default function HamburgerMenu({ visible, onClose }: Props) {
       <View style={[m.icon, { backgroundColor: tc.accentSoft }]}><Ionicons name={item.icon} size={17} color={tc.accentText} /></View>
       <Text style={[TYPE.body, { flex: 1, color: tc.textPrimary }]}>{item.label}</Text>
       {item.id === "notifications" && unreadNotifCount > 0 ? (
-        <View style={[m.badge, { backgroundColor: tc.accent }]}><Text style={[body(800), { color: "#fff", fontSize: 11.5 }]}>{unreadNotifCount > 99 ? "99+" : unreadNotifCount}</Text></View>
+        <View style={[m.badge, { backgroundColor: tc.accent }]}><Text style={[body(800), { color: palette.white, fontSize: 11.5 }]}>{unreadNotifCount > 99 ? "99+" : unreadNotifCount}</Text></View>
       ) : value(item.id) ? <Text style={[TYPE.small, { color: tc.textTertiary }]}>{value(item.id)}</Text> : null}
       <Ionicons name="chevron-forward" size={16} color={tc.textTertiary} />
     </Pressable>
@@ -119,7 +120,7 @@ export default function HamburgerMenu({ visible, onClose }: Props) {
             <PressableScale onPress={() => go("/profile")} style={m.me} accessibilityRole="button" accessibilityLabel="My profile">
               <GradientFill style={m.ring}>
                 <View style={[m.ringIn, { borderColor: tc.sheetBg }]}>
-                  {avatarUri ? <Image source={{ uri: avatarUri }} style={m.av} contentFit="cover" /> : <GradientFill style={m.av}><Text style={[body(800), { color: "#fff", fontSize: 17 }]}>{initials}</Text></GradientFill>}
+                  {avatarUri ? <Image source={{ uri: avatarUri }} style={m.av} contentFit="cover" /> : <GradientFill style={m.av}><Text style={[body(800), { color: palette.white, fontSize: 17 }]}>{initials}</Text></GradientFill>}
                 </View>
               </GradientFill>
               <View style={{ flex: 1 }}>
@@ -147,7 +148,7 @@ export default function HamburgerMenu({ visible, onClose }: Props) {
           <View style={m.row}>
             <View style={[m.icon, { backgroundColor: tc.accentSoft }]}><Ionicons name={isDark ? "moon-outline" : "sunny-outline"} size={17} color={tc.accentText} /></View>
             <Text style={[TYPE.body, { flex: 1, color: tc.textPrimary }]}>Dark mode</Text>
-            <Switch value={isDark} onValueChange={() => toggleTheme()} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor="#fff" />
+            <Switch value={isDark} onValueChange={() => toggleTheme()} trackColor={{ false: tc.surface3, true: tc.mint }} thumbColor={palette.white} />
           </View>
         </Reveal>
 

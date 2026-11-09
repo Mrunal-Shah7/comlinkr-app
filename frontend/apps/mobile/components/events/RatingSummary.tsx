@@ -1,4 +1,5 @@
 // SPRINT-42: compact aggregate rating display for event cards/detail (unrated when count=0).
+import { palette } from "../../src/theme/palette";
 import React from "react";
 import { View, Text, StyleSheet, type StyleProp, type ViewStyle, type TextStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,8 +10,8 @@ export function RatingSummary({
   averageRating,
   totalReviews,
   size = "md",
-  tint = "#F59E0B",
-  mutedColor = "#9CA3AF",
+  tint = palette.amber500,
+  mutedColor = palette.gray400,
   textColor,
   style,
   labelStyle,
@@ -45,7 +46,7 @@ export function RatingSummary({
   return (
     <View style={[styles.row, style]}>
       <Ionicons name="star" size={iconSize} color={tint} />
-      <Text style={[{ fontSize, fontWeight: "800", color: textColor ?? "#111827" }, labelStyle]}>
+      <Text style={[{ fontSize, fontWeight: "800", color: textColor ?? palette.gray900 }, labelStyle]}>
         {averageRating.toFixed(1)}
       </Text>
       <Text style={[{ fontSize: fontSize - 1, fontWeight: "600", color: mutedColor }, labelStyle]}>

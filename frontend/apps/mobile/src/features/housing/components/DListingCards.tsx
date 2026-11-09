@@ -1,6 +1,7 @@
 // src/features/housing/components/DListingCards.tsx — Listings cards, design D (plan 01; layout from design C).
 // The first home is a feature card; the rest are two-column tiles with the price in a glass chip on the photo.
 // Missing values are hidden, never shown as "N/A" (TR-001, rule B6).
+import { palette } from "../../../theme/palette";
 import { memo } from "react";
 import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
@@ -122,7 +123,7 @@ export const RoomTile = memo(function RoomTile({ room, onOpen }: { room: Availab
 });
 
 const s = StyleSheet.create({
-  feat: { marginHorizontal: 16, marginBottom: 14, borderRadius: 24, borderCurve: "continuous", overflow: "hidden", shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  feat: { marginHorizontal: 16, marginBottom: 14, borderRadius: 24, borderCurve: "continuous", overflow: "hidden", shadowColor: palette.shadowNavy, shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
   // Width set outright: margin plus aspectRatio alone left the photo about 22 dp short of the card on the right.
   featImg: { width: "100%", borderRadius: 22, borderCurve: "continuous", aspectRatio: 16 / 11 },
   featTop: { position: "absolute", top: 18, left: 18, right: 18, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

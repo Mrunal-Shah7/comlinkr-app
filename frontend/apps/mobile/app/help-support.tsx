@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useEffect, useState } from "react";
 import {
@@ -23,8 +24,8 @@ import { SPRING, layoutEase } from '../src/shared/motion/presets';
 import { Chip, EmptyState, Reveal } from '../src/shared/d';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
 
-const BRAND_BLUE = "#1A6BAE";
-const BRAND_GREEN = "#30855B";
+const BRAND_BLUE = palette.brandBlue;
+const BRAND_GREEN = palette.brandGreen;
 
 // ── FAQ Data ──
 const FAQ_SECTIONS = [
@@ -68,8 +69,8 @@ const FAQ_SECTIONS = [
 
 const CONTACT_OPTIONS = [
   { id: "email", icon: "mail-outline" as const, label: "Email us", desc: "support@comlinkr.com", color: BRAND_BLUE, action: () => Linking.openURL("mailto:support@comlinkr.com") },
-  { id: "instagram", icon: "logo-instagram" as const, label: "Instagram", desc: "@comlinkr", color: "#E1306C", action: () => Linking.openURL("https://www.instagram.com/comlinkr?igsh=czM3bmtsMmdtM3dr") },
-  { id: "linkedin", icon: "logo-linkedin" as const, label: "LinkedIn", desc: "ComLinkr", color: "#0A66C2", action: () => Linking.openURL("https://www.linkedin.com/company/comlinkr/") },
+  { id: "instagram", icon: "logo-instagram" as const, label: "Instagram", desc: "@comlinkr", color: palette.pinkL54, action: () => Linking.openURL("https://www.instagram.com/comlinkr?igsh=czM3bmtsMmdtM3dr") },
+  { id: "linkedin", icon: "logo-linkedin" as const, label: "LinkedIn", desc: "ComLinkr", color: palette.skyL40, action: () => Linking.openURL("https://www.linkedin.com/company/comlinkr/") },
 ];
 
 /** One question: tap to open; the chevron turns and the answer slides in (design D, plan 01). */
@@ -92,7 +93,7 @@ function FaqItem({ q, a, first, open, onToggle, helpful, onHelpful }: {
           <Text style={[TYPE.body, { color: tc.textSecondary }]}>{a}</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginTop: 10 }}>
             <Text style={[TYPE.small, { color: tc.textTertiary }]}>Was this helpful?</Text>
-            <Chip label="Yes" on={helpful} onPress={onHelpful} icon={<Ionicons name={helpful ? "thumbs-up" : "thumbs-up-outline"} size={14} color={helpful ? "#fff" : tc.textSecondary} />} />
+            <Chip label="Yes" on={helpful} onPress={onHelpful} icon={<Ionicons name={helpful ? "thumbs-up" : "thumbs-up-outline"} size={14} color={helpful ? palette.white : tc.textSecondary} />} />
           </View>
         </Animated.View>
       ) : null}
@@ -196,26 +197,26 @@ export default function HelpSupportScreen() {
 }
 
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: palette.white },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: rs(16),
     paddingVertical: rs(12),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#EEF0F4",
+    borderBottomColor: palette.neutralL95_2,
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
     backgroundColor: "rgba(255,255,255,0.95)", borderWidth: 1, borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center", justifyContent: "center",
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
+    shadowColor: palette.black, shadowOpacity: 0.08, shadowRadius: rs(6), shadowOffset: { width: 0, height: rs(2) }, elevation: 4,
   },
-  headerTitle: { fontSize: rs(18), fontWeight: "800", color: "#0A1628", letterSpacing: -0.3 },
+  headerTitle: { fontSize: rs(18), fontWeight: "800", color: palette.blueL10, letterSpacing: -0.3 },
   scroll: { flex: 1 },
-  content: { paddingBottom: rs(40), backgroundColor: "#FFFFFF" },
+  content: { paddingBottom: rs(40), backgroundColor: palette.white },
 
   // Hero
   hero: {
@@ -231,7 +232,7 @@ const s = createThemedStyles({
     alignItems: "center", justifyContent: "center",
     borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
   },
-  heroTitle: { fontSize: rs(24), fontWeight: "900", color: "#FFF", marginTop: rs(12), letterSpacing: -0.3 },
+  heroTitle: { fontSize: rs(24), fontWeight: "900", color: palette.white, marginTop: rs(12), letterSpacing: -0.3 },
   heroSub: { fontSize: rs(14), color: "rgba(255,255,255,0.85)", textAlign: "center", marginTop: rs(8), lineHeight: rs(20), fontWeight: "500", paddingHorizontal: rs(10) },
   heroSearch: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
@@ -240,10 +241,10 @@ const s = createThemedStyles({
     borderRadius: rs(14), paddingHorizontal: rs(14), paddingVertical: rs(10),
     borderWidth: 1, borderColor: "rgba(255,255,255,0.2)",
   },
-  heroSearchInput: { flex: 1, fontSize: rs(14), color: "#FFF", padding: 0 },
+  heroSearchInput: { flex: 1, fontSize: rs(14), color: palette.white, padding: 0 },
 
   // Section
-  sectionHeader: { fontSize: rs(18), fontWeight: "800", color: "#0A1628", letterSpacing: -0.3 },
+  sectionHeader: { fontSize: rs(18), fontWeight: "800", color: palette.blueL10, letterSpacing: -0.3 },
 
   // FAQ
   faqContainer: { paddingHorizontal: rs(14), marginTop: rs(8) },
@@ -254,8 +255,8 @@ const s = createThemedStyles({
   },
   faqCountPillText: { fontSize: rs(11), fontWeight: "700", color: BRAND_BLUE },
   faqSection: {
-    marginTop: rs(12), backgroundColor: "#FFF", borderRadius: rs(16),
-    borderWidth: 1, borderColor: "#ECEEF1", overflow: "hidden",
+    marginTop: rs(12), backgroundColor: palette.white, borderRadius: rs(16),
+    borderWidth: 1, borderColor: palette.neutralL94_2, overflow: "hidden",
   },
   faqSectionActive: {
     borderColor: BRAND_BLUE + "40",
@@ -266,29 +267,29 @@ const s = createThemedStyles({
   },
   faqSectionLeft: { flexDirection: "row", alignItems: "center", gap: rs(12), flex: 1 },
   faqIconBox: { width: rs(38), height: rs(38), borderRadius: rs(12), alignItems: "center", justifyContent: "center" },
-  faqSectionTitle: { fontSize: rs(15), fontWeight: "700", color: "#0A1628" },
-  faqSectionSub: { fontSize: rs(11), color: "#9CA3AF", marginTop: rs(1) },
+  faqSectionTitle: { fontSize: rs(15), fontWeight: "700", color: palette.blueL10 },
+  faqSectionSub: { fontSize: rs(11), color: palette.gray400, marginTop: rs(1) },
   chevronCircle: {
     width: rs(28), height: rs(28), borderRadius: rs(14),
-    backgroundColor: "#F3F5F7",
+    backgroundColor: palette.neutralL96_4,
     alignItems: "center", justifyContent: "center",
     flexShrink: 0, marginLeft: rs(8),
   },
   chevronCircleActive: {
     backgroundColor: BRAND_BLUE + "12",
   },
-  faqItems: { borderTopWidth: 1, borderTopColor: "#F0F2F5" },
+  faqItems: { borderTopWidth: 1, borderTopColor: palette.neutralL95_5 },
   faqItem: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: rs(16), paddingVertical: rs(14), gap: rs(10),
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#F0F2F5",
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL95_5,
   },
   faqItemActive: { backgroundColor: BRAND_BLUE + "06" },
-  faqDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "#D1D5DB", flexShrink: 0 },
-  faqQuestion: { fontSize: rs(14), fontWeight: "600", color: "#374151", flex: 1, lineHeight: rs(20) },
+  faqDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: palette.gray300, flexShrink: 0 },
+  faqQuestion: { fontSize: rs(14), fontWeight: "600", color: palette.gray700, flex: 1, lineHeight: rs(20) },
   chevronSmall: {
     width: rs(24), height: rs(24), borderRadius: rs(12),
-    backgroundColor: "#F3F5F7",
+    backgroundColor: palette.neutralL96_4,
     alignItems: "center", justifyContent: "center",
     flexShrink: 0, marginLeft: rs(4),
   },
@@ -298,51 +299,51 @@ const s = createThemedStyles({
   faqAnswer: {
     paddingHorizontal: rs(16), paddingBottom: rs(14), paddingTop: rs(4), paddingLeft: rs(32),
     backgroundColor: BRAND_BLUE + "04",
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#F0F2F5",
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL95_5,
   },
-  faqAnswerText: { fontSize: rs(13), color: "#6B7280", lineHeight: rs(21) },
+  faqAnswerText: { fontSize: rs(13), color: palette.gray500, lineHeight: rs(21) },
   helpfulRow: {
     flexDirection: "row", alignItems: "center", gap: rs(10), marginTop: rs(12),
-    paddingTop: rs(10), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E5E7EB",
+    paddingTop: rs(10), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.gray200,
   },
-  helpfulLabel: { fontSize: rs(12), color: "#9CA3AF", fontWeight: "500" },
+  helpfulLabel: { fontSize: rs(12), color: palette.gray400, fontWeight: "500" },
   helpfulBtn: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    borderWidth: 1, borderColor: "#E5E7EB", borderRadius: rs(8),
+    borderWidth: 1, borderColor: palette.gray200, borderRadius: rs(8),
     paddingHorizontal: rs(10), paddingVertical: rs(4),
   },
   helpfulBtnActive: { borderColor: BRAND_GREEN, backgroundColor: BRAND_GREEN + "10" },
-  helpfulBtnText: { fontSize: rs(11), fontWeight: "600", color: "#9CA3AF" },
+  helpfulBtnText: { fontSize: rs(11), fontWeight: "600", color: palette.gray400 },
 
   // Empty state
   emptyState: { alignItems: "center", paddingVertical: rs(40), gap: rs(8) },
   emptyIconWrap: {
     width: rs(64), height: rs(64), borderRadius: rs(20),
-    backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center", marginBottom: rs(8),
+    backgroundColor: palette.gray100, alignItems: "center", justifyContent: "center", marginBottom: rs(8),
   },
-  emptyText: { fontSize: rs(15), fontWeight: "700", color: "#9CA3AF" },
-  emptySubtext: { fontSize: rs(13), color: "#D1D5DB" },
+  emptyText: { fontSize: rs(15), fontWeight: "700", color: palette.gray400 },
+  emptySubtext: { fontSize: rs(13), color: palette.gray300 },
   emptyBtn: {
     marginTop: rs(12), backgroundColor: BRAND_BLUE, borderRadius: rs(10),
     paddingHorizontal: rs(16), paddingVertical: rs(8),
   },
-  emptyBtnText: { fontSize: rs(12), fontWeight: "700", color: "#FFF" },
+  emptyBtnText: { fontSize: rs(12), fontWeight: "700", color: palette.white },
 
   // Contact
-  contactContainer: { paddingHorizontal: rs(14), marginTop: rs(28), backgroundColor: "#FFFFFF" },
-  contactSubtext: { fontSize: rs(13), color: "#6B7280", marginBottom: rs(14), fontWeight: "500" },
+  contactContainer: { paddingHorizontal: rs(14), marginTop: rs(28), backgroundColor: palette.white },
+  contactSubtext: { fontSize: rs(13), color: palette.gray500, marginBottom: rs(14), fontWeight: "500" },
   contactCard: {
-    backgroundColor: "#FFFFFF", borderRadius: rs(16), marginBottom: rs(10),
-    borderWidth: 1, borderColor: "#ECEEF1",
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: rs(6),
+    backgroundColor: palette.white, borderRadius: rs(16), marginBottom: rs(10),
+    borderWidth: 1, borderColor: palette.neutralL94_2,
+    shadowColor: palette.black, shadowOpacity: 0.05, shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(2) }, elevation: 2,
   },
   contactCardInner: {
     flexDirection: "row", alignItems: "center", gap: rs(14), padding: rs(16),
   },
   contactIconBox: { width: rs(48), height: rs(48), borderRadius: rs(16), alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  contactLabel: { fontSize: rs(15), fontWeight: "700", color: "#0A1628" },
-  contactDesc: { fontSize: rs(12), color: "#6B7280", fontWeight: "500", marginTop: rs(2) },
+  contactLabel: { fontSize: rs(15), fontWeight: "700", color: palette.blueL10 },
+  contactDesc: { fontSize: rs(12), color: palette.gray500, fontWeight: "500", marginTop: rs(2) },
   contactArrow: {
     width: rs(30), height: rs(30), borderRadius: rs(15),
     backgroundColor: BRAND_BLUE + "10",
@@ -352,19 +353,19 @@ const s = createThemedStyles({
   // Tip card
   tipCard: {
     marginHorizontal: rs(14), marginTop: rs(20), borderRadius: rs(18), overflow: "hidden",
-    borderWidth: 1, borderColor: "#ECEEF1",
-    backgroundColor: "#FFFFFF",
+    borderWidth: 1, borderColor: palette.neutralL94_2,
+    backgroundColor: palette.white,
   },
   tipGrad: { flexDirection: "row", alignItems: "center", gap: rs(14), padding: rs(16) },
   tipIconWrap: {
     width: rs(44), height: rs(44), borderRadius: rs(14),
-    backgroundColor: "#E2F0F1", alignItems: "center", justifyContent: "center",
+    backgroundColor: palette.brandTealLight, alignItems: "center", justifyContent: "center",
   },
-  tipTitle: { fontSize: rs(14), fontWeight: "700", color: "#0A1628", marginBottom: rs(2) },
-  tipText: { fontSize: rs(12), color: "#6B7280", lineHeight: rs(18), fontWeight: "500" },
+  tipTitle: { fontSize: rs(14), fontWeight: "700", color: palette.blueL10, marginBottom: rs(2) },
+  tipText: { fontSize: rs(12), color: palette.gray500, lineHeight: rs(18), fontWeight: "500" },
 
   // Footer
   footer: { alignItems: "center", marginTop: rs(32), paddingBottom: rs(20) },
-  footerText: { fontSize: rs(13), fontWeight: "600", color: "#9CA3AF" },
-  footerSub: { fontSize: rs(12), color: "#D1D5DB", marginTop: rs(4) },
+  footerText: { fontSize: rs(13), fontWeight: "600", color: palette.gray400 },
+  footerSub: { fontSize: rs(12), color: palette.gray300, marginTop: rs(4) },
 });

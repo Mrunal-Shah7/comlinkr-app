@@ -1,5 +1,6 @@
 // src/shared/d/index.tsx — design D building blocks (plan 01). Screens compose these instead of styling
 // buttons, chips, tiles and segmented controls themselves, so every screen moves and looks the same.
+import { palette } from "../../theme/palette";
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View, type LayoutChangeEvent, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import Animated, {
@@ -62,7 +63,7 @@ export function GradientButton({ label, onPress, icon, disabled, block, small, s
     <PressableScale disabled={disabled || loading} onPress={onPress} accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? label} outerStyle={outerStyle}
       style={[{ borderRadius: small ? 12 : RADIUS.button, opacity: disabled ? 0.4 : 1, alignSelf: block ? 'stretch' : 'flex-start' }, s.glow, style]}>
       <GradientFill style={[s.btn, { height: h, borderRadius: small ? 12 : RADIUS.button, paddingHorizontal: small ? 14 : 20 }]}>
-        {loading ? <ActivityIndicator color="#fff" /> : <>{icon}<Text style={[TYPE.button, { color: '#fff', fontSize: small ? 14 : 15.5 }]}>{label}</Text></>}
+        {loading ? <ActivityIndicator color={palette.white} /> : <>{icon}<Text style={[TYPE.button, { color: palette.white, fontSize: small ? 14 : 15.5 }]}>{label}</Text></>}
       </GradientFill>
     </PressableScale>
   );
@@ -91,7 +92,7 @@ export function Chip({ label, on, onPress, icon, style }: { label: string; on?: 
       onPress={() => { sc.set(withSequence(withTiming(0.92, { duration: 90 }), withSpring(1, SPRING.press))); onPress?.(); }}>
       <Animated.View style={[s.chip, { backgroundColor: on ? tc.mint : tc.chipBg, borderColor: on ? tc.mint : tc.borderMedium }, a, style]}>
         {icon}
-        <Text style={[body(600), { fontSize: 13.5, color: on ? '#fff' : tc.textSecondary }]}>{label}</Text>
+        <Text style={[body(600), { fontSize: 13.5, color: on ? palette.white : tc.textSecondary }]}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -149,17 +150,17 @@ export const dStyles = StyleSheet.create({
 
 const s = StyleSheet.create({
   btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  glow: { shadowColor: '#1A6BAE', shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  glow: { shadowColor: palette.brandBlue, shadowOpacity: 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 13, paddingVertical: 7, borderRadius: RADIUS.chip, borderCurve: "continuous", borderWidth: 1 },
   tile: { borderRadius: RADIUS.tile, borderCurve: "continuous", padding: 14, overflow: 'hidden', minHeight: 118 },
   stepper: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 , borderCurve: "continuous"},
   stepCtl: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', shadowColor: '#0F283C', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  stepBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   prefill: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14 , borderCurve: "continuous"},
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 10, alignSelf: 'flex-start' },
   chipInput: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, minHeight: 50, paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.input , borderCurve: "continuous"},
   tagChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, paddingLeft: 11, paddingRight: 8, borderRadius: 99 },
-  tileShadow: { shadowColor: '#0F283C', shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  tileShadow: { shadowColor: palette.shadowNavy, shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
 });
 
 /* ---------- empty state ---------- */
@@ -258,7 +259,7 @@ export function PersonAvatar({ name, size = 40, hue }: { name: string; size?: nu
   return (
     <LinearGradient colors={[`hsl(${h}, 70%, 58%)`, `hsl(${(h + 30) % 360}, 65%, 44%)`]} start={{ x: 0, y: 0 }} end={{ x: 0.8, y: 1 }}
       style={{ width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={[body(700), { color: '#fff', fontSize: Math.round(size * 0.38) }]}>{ini}</Text>
+      <Text style={[body(700), { color: palette.white, fontSize: Math.round(size * 0.38) }]}>{ini}</Text>
     </LinearGradient>
   );
 }
@@ -295,7 +296,7 @@ export function VoteButton({ on, count, onPress, small }: { on: boolean; count: 
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
-  const fg = on ? '#fff' : tc.textPrimary;
+  const fg = on ? palette.white : tc.textPrimary;
   return (
     <Pressable onPress={press} hitSlop={6} accessibilityRole="button" accessibilityLabel={on ? 'Remove upvote' : 'Upvote'} accessibilityState={{ selected: on }}>
       <Animated.View style={[{ flexDirection: 'row', alignItems: 'center', gap: small ? 3 : 4, height: small ? 28 : 32, paddingHorizontal: small ? 8 : 10, borderRadius: small ? 9 : 10, backgroundColor: on ? tc.accent : small ? tc.cardBg : tc.inputBg }, a]}>

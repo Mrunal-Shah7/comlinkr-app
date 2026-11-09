@@ -5,6 +5,7 @@
 // this screen has no mutations of its own, matching audit-log best practice
 // of an immutable record.
 
+import { palette } from "../../../theme/palette";
 import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,16 +19,16 @@ import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 
 const ACTION_META: Record<string, { color: string; icon: string }> = {
-  USER_WARN: { color: '#F59E0B', icon: 'warning' },
-  USER_BAN: { color: '#EF4444', icon: 'ban' },
-  USER_SUSPEND: { color: '#EF4444', icon: 'ban' },
+  USER_WARN: { color: palette.amber500, icon: 'warning' },
+  USER_BAN: { color: palette.red500, icon: 'ban' },
+  USER_SUSPEND: { color: palette.red500, icon: 'ban' },
   USER_RESTORE: { color: Colors.brand.green, icon: 'refresh-circle' },
   LISTING_APPROVE: { color: Colors.brand.green, icon: 'checkmark-circle' },
-  LISTING_REJECT: { color: '#EF4444', icon: 'close-circle' },
+  LISTING_REJECT: { color: palette.red500, icon: 'close-circle' },
   REPORT_DISMISS: { color: Colors.text.tertiary, icon: 'close-circle' },
   REPORT_RESOLVE: { color: Colors.brand.green, icon: 'checkmark-circle' },
   BADGE_APPROVE: { color: Colors.brand.green, icon: 'shield-checkmark' },
-  BADGE_REJECT: { color: '#EF4444', icon: 'shield' },
+  BADGE_REJECT: { color: palette.red500, icon: 'shield' },
 };
 
 const CATEGORY_FILTERS = [
@@ -85,8 +86,8 @@ export default function AuditLogScreen() {
             <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#64748B', '#334155']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="time" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.slate500, palette.slate700]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="time" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -116,7 +117,7 @@ export default function AuditLogScreen() {
 
           {isError && errorMessage ? (
             <View style={s.emptyCard}>
-              <Text style={{ color: '#EF4444', textAlign: 'center' }}>{errorMessage}</Text>
+              <Text style={{ color: palette.red500, textAlign: 'center' }}>{errorMessage}</Text>
               <Pressable onPress={refresh} style={{ marginTop: 12 }}>
                 <Text style={{ color: Colors.brand.blue, fontWeight: '700' }}>Retry</Text>
               </Pressable>
@@ -164,34 +165,34 @@ export default function AuditLogScreen() {
 }
 
 const s = createThemedStyles({
-  root: { flex: 1, backgroundColor: '#EBF5FF' },
+  root: { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 18, paddingBottom: 48 },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub: { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title: { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
 
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
-  statCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 13, padding: 12, alignItems: 'center' },
+  statCard: { flex: 1, backgroundColor: palette.white, borderRadius: 13, padding: 12, alignItems: 'center' },
   statVal: { fontSize: 18, fontWeight: '900' },
   statLbl: { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText: { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard: { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle: { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub: { fontSize: 13, color: Colors.text.tertiary },
 
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#FFF', borderRadius: 13, padding: 12, marginBottom: 8 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: palette.white, borderRadius: 13, padding: 12, marginBottom: 8 },
   iconWrap: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   rowTitle: { fontSize: 13, color: Colors.text.primary },
   rowSub: { fontSize: 11, color: Colors.text.tertiary, marginTop: 2 },
   rowTime: { fontSize: 10, color: Colors.text.tertiary, flexShrink: 0 },
 
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText: { fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
 });

@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { Component, type ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStore } from "../src/store/theme.store";
@@ -56,29 +57,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0B1220",
+    backgroundColor: palette.blueL08,
     padding: 24,
   },
   title: {
-    color: "#FFFFFF",
+    color: palette.white,
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 8,
   },
   message: {
-    color: "#A9B2C3",
+    color: palette.blueL71,
     fontSize: 13,
     textAlign: "center",
     marginBottom: 20,
   },
   button: {
-    backgroundColor: "#1A6BAE",
+    backgroundColor: palette.brandBlue,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: palette.white,
     fontWeight: "600",
   },
 });

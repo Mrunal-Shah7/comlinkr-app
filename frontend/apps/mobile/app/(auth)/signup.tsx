@@ -1,3 +1,4 @@
+import { palette } from "../../src/theme/palette";
 import { useState, useRef } from "react";
 import {
   View,
@@ -40,7 +41,7 @@ import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#1A6BAE", "#30855B"],
+  colors = [palette.brandBlue, palette.brandGreen],
   style,
 }: {
   text: string;
@@ -278,7 +279,7 @@ export default function SignupScreen() {
     : password.length < 10 ? 2
     : 3;
 
-  const strengthColors = ["#E5E7EB", "#EF4444", "#257A86", "#30855B"];
+  const strengthColors = [palette.gray200, palette.red500, palette.brandTeal, palette.brandGreen];
   const strengthLabels = ["", "Weak", "Good", "Strong"];
 
   return (
@@ -428,7 +429,7 @@ export default function SignupScreen() {
               {/* Username hint */}
               {step === "form" && username.length > 0 && username.length < 3 && (
                 <View style={styles.hintBox}>
-                  <Ionicons name="information-circle-outline" size={rs(14)} color="#1A6BAE" />
+                  <Ionicons name="information-circle-outline" size={rs(14)} color={palette.brandBlue} />
                   <Text style={styles.hintText}>Username needs at least 3 characters</Text>
                 </View>
               )}
@@ -457,7 +458,7 @@ export default function SignupScreen() {
                       agreedToTerms && { backgroundColor: tc.accent },
                     ]}
                   >
-                    {agreedToTerms ? <Ionicons name="checkmark" size={14} color="#FFF" /> : null}
+                    {agreedToTerms ? <Ionicons name="checkmark" size={14} color={palette.white} /> : null}
                   </View>
                   <Text style={[styles.terms, { color: tc.textSecondary, textAlign: "left", flex: 1 }]}>
                     I agree to the{" "}
@@ -501,7 +502,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#EBF5FF",
+    backgroundColor: palette.legacyBlueLight,
   },
   safe: { flex: 1 },
   flex: { flex: 1 },
@@ -543,10 +544,10 @@ const styles = StyleSheet.create({
     width: rs(96),
     height: rs(96),
     borderRadius: rs(24),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
@@ -574,12 +575,12 @@ const styles = StyleSheet.create({
 
   /* Card */
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(24),
     padding: rs(22),
     width: "100%",
     maxWidth: 420,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07,
     shadowRadius: 20,
@@ -608,8 +609,8 @@ const styles = StyleSheet.create({
     height: rs(44),
     borderRadius: rs(12),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FAFAFA",
+    borderColor: palette.gray200,
+    backgroundColor: palette.neutralL98_6,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -621,7 +622,7 @@ const styles = StyleSheet.create({
     gap: rs(10),
   },
   socialBtnPressed: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     transform: [{ scale: 0.98 }],
   },
   socialLabel: {
@@ -640,11 +641,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
   dividerText: {
     fontSize: rs(12),
-    color: "#9CA3AF",
+    color: palette.gray400,
     fontWeight: "500",
   },
 
@@ -658,7 +659,7 @@ const styles = StyleSheet.create({
     left: rs(20),
     right: rs(20),
     zIndex: 999,
-    backgroundColor: "#12303A",
+    backgroundColor: palette.skyL15,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.10)",
     borderRadius: 18,
@@ -667,7 +668,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: rs(10),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 14,
@@ -677,7 +678,7 @@ const styles = StyleSheet.create({
   toastTitle: {
     ...TYPE.bodyStrong,
     fontSize: 14,
-    color: "#FFFFFF",
+    color: palette.white,
     marginBottom: rs(3),
   },
   toastLine: {
@@ -723,7 +724,7 @@ const styles = StyleSheet.create({
   /* Error */
   errorBox: {
     marginTop: rs(12),
-    backgroundColor: "#FEF2F2",
+    backgroundColor: palette.red50,
     borderRadius: rs(12),
     paddingHorizontal: rs(14),
     paddingVertical: rs(11),
@@ -733,7 +734,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: rs(13),
-    color: "#EF4444",
+    color: palette.red500,
     fontWeight: "500",
     flex: 1,
   },
@@ -743,7 +744,7 @@ const styles = StyleSheet.create({
     borderRadius: rs(14),
     overflow: "hidden",
     marginTop: rs(10),
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -758,7 +759,7 @@ const styles = StyleSheet.create({
   signupBtnText: {
     fontSize: rs(17),
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: palette.white,
     letterSpacing: 0.4,
   },
 

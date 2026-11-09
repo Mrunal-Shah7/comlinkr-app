@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { View, Text, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../theme/useTheme";
@@ -42,7 +43,7 @@ export function ChipSelect({
             accessibilityState={{ selected: active }}
           >
             
-            <Text style={[ch.chipText, { color: active ? "#fff" : tc.textPrimary }]}>
+            <Text style={[ch.chipText, { color: active ? palette.white : tc.textPrimary }]}>
               {opt}
             </Text>
           </PressableScale>
@@ -90,8 +91,8 @@ export function ChipMulti({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
           >
-            {active && <Ionicons name="checkmark" size={13} color="#fff" style={{ marginRight: 3 }} />}
-            <Text style={[ch.chipText, { color: active ? "#fff" : tc.textPrimary }]}>
+            {active && <Ionicons name="checkmark" size={13} color={palette.white} style={{ marginRight: 3 }} />}
+            <Text style={[ch.chipText, { color: active ? palette.white : tc.textPrimary }]}>
               {opt}
             </Text>
           </PressableScale>
@@ -111,12 +112,12 @@ export const ch = createThemedStyles({
     paddingVertical: 8,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E0E5EF",
-    backgroundColor: "#F5F7FB",
+    borderColor: palette.neutralL91,
+    backgroundColor: palette.neutralL97_11,
   },
   chipText: {
     fontSize: 13.5,
     fontWeight: "700",
-    color: "#5A6A7E",
+    color: palette.skyL42,
   },
 });

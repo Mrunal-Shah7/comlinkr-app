@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
 
@@ -11,7 +12,7 @@ export const md = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.08)",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
@@ -29,20 +30,20 @@ export const md = StyleSheet.create({
   },
   journeyDot: {
     width: 28, height: 28, borderRadius: 14,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
     alignItems: "center", justifyContent: "center",
     marginBottom: 4,
   },
   journeyDotDone:   { backgroundColor: Colors.brand.blue },
   journeyDotActive: { backgroundColor: Colors.brand.blue },
   journeyLabel: {
-    fontSize: 9, fontWeight: "700", color: "#9CA3AF", textAlign: "center",
+    fontSize: 9, fontWeight: "700", color: palette.gray400, textAlign: "center",
   },
   journeyLine: {
     position: "absolute",
     top: 14, left: "50%",
     width: "100%", height: 2,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
     zIndex: -1,
   },
 
@@ -96,11 +97,11 @@ export const md = StyleSheet.create({
   },
   statsBar: {
     flexDirection: "row",
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderRadius: 16,
     paddingVertical: 18,
     borderWidth: 1,
-    borderColor: "#E0EAF8",
+    borderColor: palette.blueL93,
   },
   statBox: {
     flex: 1,
@@ -121,7 +122,7 @@ export const md = StyleSheet.create({
   },
   statDivider: {
     width: 1,
-    backgroundColor: "#D8E4F2",
+    backgroundColor: palette.skyL90,
     marginVertical: 6,
   },
   section: {
@@ -177,7 +178,7 @@ export const md = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#E3F1EA",
+    backgroundColor: palette.brandGreenLight,
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 9,
@@ -191,11 +192,11 @@ export const md = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#F5F8FF",
+    backgroundColor: palette.neutralL98_2,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E0EAF8",
+    borderColor: palette.blueL93,
   },
   landlordAvatar: {
     width: 50,
@@ -207,7 +208,7 @@ export const md = StyleSheet.create({
   landlordInitials: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
   },
   landlordName: {
     fontSize: 14,
@@ -237,8 +238,8 @@ export const md = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "#EEF2F8",
-    backgroundColor: "#FFF",
+    borderTopColor: palette.neutralL95_4,
+    backgroundColor: palette.white,
   },
   ctaSecondary: {
     flexDirection: "row",
@@ -265,7 +266,7 @@ export const md = StyleSheet.create({
   ctaPrimaryText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   skipViewingBtn: {
     flexDirection: "row",
@@ -276,7 +277,7 @@ export const md = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: Colors.brand.blueLight,
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
   },
   skipViewingText: {
     fontSize: 12,
@@ -295,6 +296,6 @@ export const md = StyleSheet.create({
   reportLinkText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#DC2626",
+    color: palette.red600,
   },
 });

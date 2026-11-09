@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { memo } from "react";
 import { View, Text, Pressable, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -12,7 +13,7 @@ import type { ApiStory } from "../../../api/stories.api";
 import { mapApiStoryToCommunityStory, formatStoryTimeLeft } from "../models";
 import { StoryVideoThumb } from "./NewsImages";
 
-const LIKE = "#F0457E";
+const LIKE = palette.pinkL61;
 
 /** A story tile in Explore → Stories (design D, plan 01): a tall photo with the author's ring, the title, and
  *  small glass buttons (like, save or delete). Long-press shares. Handlers must be stable (the row is memoized). */
@@ -67,25 +68,25 @@ export const StoryCard = memo(function StoryCard({
 
       <GradientFill colors={[tc.mint, tc.accent] as const} style={s.ring}>
         <View style={[s.ringIn, { borderColor: tc.cardBg }]}>
-          {avatar ? <FadeImage uri={avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: "#fff", fontSize: 11 }]}>{ini}</Text></GradientFill>}
+          {avatar ? <FadeImage uri={avatar} style={s.av} /> : <GradientFill style={s.av}><Text style={[body(800), { color: palette.white, fontSize: 11 }]}>{ini}</Text></GradientFill>}
         </View>
       </GradientFill>
 
       <View style={s.topRight}>
-        {isVideo ? <View style={s.glassBtn}><Ionicons name="videocam" size={15} color="#fff" /></View> : null}
+        {isVideo ? <View style={s.glassBtn}><Ionicons name="videocam" size={15} color={palette.white} /></View> : null}
         {isOwnStory
-          ? glassBtn("trash-outline", "#fff", "Delete story", () => onDelete(apiSt.id))
-          : glassBtn(apiSt.isSaved ? "bookmark" : "bookmark-outline", "#fff", apiSt.isSaved ? "Remove from saved" : "Save story", () => void onToggleSave(apiSt.id))}
+          ? glassBtn("trash-outline", palette.white, "Delete story", () => onDelete(apiSt.id))
+          : glassBtn(apiSt.isSaved ? "bookmark" : "bookmark-outline", palette.white, apiSt.isSaved ? "Remove from saved" : "Save story", () => void onToggleSave(apiSt.id))}
       </View>
 
       <View style={s.bottom}>
         <View style={{ flex: 1 }}>
-          <Text style={[display(700), { color: "#fff", fontSize: 14, lineHeight: 17 }]} numberOfLines={2}>{apiSt.title}</Text>
+          <Text style={[display(700), { color: palette.white, fontSize: 14, lineHeight: 17 }]} numberOfLines={2}>{apiSt.title}</Text>
           <Text style={[body(600), { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 2 }]} numberOfLines={1}>
             {[name, formatStoryTimeLeft(apiSt.expiresAt)].filter(Boolean).join(" · ")}
           </Text>
         </View>
-        {glassBtn(apiSt.likedByMe ? "heart" : "heart-outline", apiSt.likedByMe ? LIKE : "#fff", apiSt.likedByMe ? "Unlike" : "Like", () => void onToggleLike(apiSt.id))}
+        {glassBtn(apiSt.likedByMe ? "heart" : "heart-outline", apiSt.likedByMe ? LIKE : palette.white, apiSt.likedByMe ? "Unlike" : "Like", () => void onToggleLike(apiSt.id))}
       </View>
     </PressableScale>
   );

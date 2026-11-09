@@ -1,5 +1,6 @@
 // src/features/admin/pages/TrendingPostsScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
@@ -20,17 +21,17 @@ import { showToast } from '../../../shared/ui/Toast';
 const TYPE_META: Record<string, { icon: string; color: string; bg: string }> = {
   listing:    { icon: 'home',         color: Colors.brand.blue,   bg: Colors.brand.blueLight  },
   restaurant: { icon: 'restaurant',   color: Colors.brand.green,  bg: Colors.brand.greenLight },
-  event:      { icon: 'calendar',     color: '#FF7B00',            bg: '#FFF3E6'               },
-  news:       { icon: 'newspaper',    color: '#8B5CF6',            bg: '#F3E8FF'               },
+  event:      { icon: 'calendar',     color: palette.legacyOrange,            bg: palette.legacyOrangeLight               },
+  news:       { icon: 'newspaper',    color: palette.violet500,            bg: palette.purple100               },
   story:      { icon: 'videocam',     color: Colors.brand.blue,   bg: Colors.brand.blueLight  },
-  challenge:  { icon: 'trophy',       color: '#FF7B00',            bg: '#FFF3E6'               },
+  challenge:  { icon: 'trophy',       color: palette.legacyOrange,            bg: palette.legacyOrangeLight               },
   community:  { icon: 'people',       color: Colors.brand.green,  bg: Colors.brand.greenLight },
 };
 
 const STATUS_META: Record<string, { color: string; bg: string }> = {
   active:  { color: Colors.brand.green, bg: Colors.brand.greenLight },
-  flagged: { color: '#F59E0B',           bg: '#FFF3E6'               },
-  removed: { color: '#EF4444',           bg: '#FEF2F2'               },
+  flagged: { color: palette.amber500,           bg: palette.legacyOrangeLight               },
+  removed: { color: palette.red500,           bg: palette.red50               },
 };
 
 function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
@@ -39,7 +40,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
   const typeMeta   = TYPE_META[post.type]   ?? TYPE_META.news;
   const statusMeta = STATUS_META[post.status] ?? STATUS_META.active;
 
-  const rankColors = ['#FF7B00', Colors.brand.blue, Colors.brand.green];
+  const rankColors = [palette.legacyOrange, Colors.brand.blue, Colors.brand.green];
   const rankColor  = rankColors[(rank - 1) % rankColors.length];
 
   return (
@@ -58,7 +59,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
         </View>
         {post.reportCount > 0 && (
           <View style={c.reportChip}>
-            <Ionicons name="flag" size={11} color="#EF4444" />
+            <Ionicons name="flag" size={11} color={palette.red500} />
             <Text style={c.reportText}>{post.reportCount}</Text>
           </View>
         )}
@@ -75,7 +76,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
           <Text style={c.statText}>{post.views.toLocaleString()}</Text>
         </View>
         <View style={c.stat}>
-          <Ionicons name="heart" size={13} color="#EF4444" />
+          <Ionicons name="heart" size={13} color={palette.red500} />
           <Text style={c.statText}>{post.likes.toLocaleString()}</Text>
         </View>
         <View style={c.stat}>
@@ -83,13 +84,13 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
           <Text style={c.statText}>{post.comments.toLocaleString()}</Text>
         </View>
         <View style={c.stat}>
-          <Ionicons name="share-social" size={13} color="#FF7B00" />
+          <Ionicons name="share-social" size={13} color={palette.legacyOrange} />
           <Text style={c.statText}>{post.shares.toLocaleString()}</Text>
         </View>
         {/* Engagement score bar */}
         <View style={c.scoreBg}>
           <LinearGradient
-            colors={['#FF7B00', Colors.brand.blue, Colors.brand.green]}
+            colors={[palette.legacyOrange, Colors.brand.blue, Colors.brand.green]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
             style={[c.scoreBar, { width: `${post.engagementScore}%` }]}
           />
@@ -106,7 +107,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
             })}
             style={c.featureBtn}
           >
-            <Ionicons name="star" size={13} color="#FF7B00" />
+            <Ionicons name="star" size={13} color={palette.legacyOrange} />
             <Text style={c.featureBtnText}>Feature</Text>
           </Pressable>
           {post.status === 'flagged' && (
@@ -117,7 +118,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
               ])}
               style={c.removeBtn}
             >
-              <Ionicons name="trash" size={13} color="#EF4444" />
+              <Ionicons name="trash" size={13} color={palette.red500} />
               <Text style={c.removeBtnText}>Remove</Text>
             </Pressable>
           )}
@@ -155,11 +156,11 @@ export default function TrendingPostsScreen() {
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#FF7B00', Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.headerIcon}>
-              <Ionicons name="trending-up" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.legacyOrange, Colors.brand.blue]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.headerIcon}>
+              <Ionicons name="trending-up" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -167,7 +168,7 @@ export default function TrendingPostsScreen() {
             </View>
             {flaggedCount > 0 && (
               <View style={s.flagBadge}>
-                <Ionicons name="flag" size={12} color="#EF4444" />
+                <Ionicons name="flag" size={12} color={palette.red500} />
                 <Text style={s.flagText}>{flaggedCount} flagged</Text>
               </View>
             )}
@@ -181,12 +182,12 @@ export default function TrendingPostsScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.statCard}>
-              <Text style={[s.statNum, { color: '#EF4444' }]}>{flaggedCount}</Text>
+              <Text style={[s.statNum, { color: palette.red500 }]}>{flaggedCount}</Text>
               <Text style={s.statLabel}>Flagged</Text>
             </View>
             <View style={s.statDivider} />
             <View style={s.statCard}>
-              <Text style={[s.statNum, { color: '#FF7B00' }]}>{posts.reduce((s, p) => s + p.views, 0).toLocaleString()}</Text>
+              <Text style={[s.statNum, { color: palette.legacyOrange }]}>{posts.reduce((s, p) => s + p.views, 0).toLocaleString()}</Text>
               <Text style={s.statLabel}>Total Views</Text>
             </View>
           </View>
@@ -228,7 +229,7 @@ export default function TrendingPostsScreen() {
 }
 
 const s = createThemedStyles({
-  root:            { flex: 1, backgroundColor: '#EBF5FF' },
+  root:            { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:            { flex: 1 },
   scroll:          { flex: 1 },
   content:         { padding: 20, paddingBottom: 48 },
@@ -238,30 +239,30 @@ const s = createThemedStyles({
   headerIcon:      { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub:       { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:           { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
-  flagBadge:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#FEF2F2', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
-  flagText:        { fontSize: 11, fontWeight: '700', color: '#EF4444' },
+  flagBadge:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.red50, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 16, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.2)' },
+  flagText:        { fontSize: 11, fontWeight: '700', color: palette.red500 },
 
-  statsRow:        { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
+  statsRow:        { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
   statCard:        { flex: 1, alignItems: 'center' },
   statNum:         { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   statLabel:       { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', marginTop: 2 },
-  statDivider:     { width: 1, backgroundColor: '#F0F2F5' },
+  statDivider:     { width: 1, backgroundColor: palette.neutralL95_5 },
 
   filterScroll:    { marginBottom: 14 },
   filterContent:   { gap: 8, paddingRight: 4 },
-  filterChip:      { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1.5, borderColor: Colors.border.light },
+  filterChip:      { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 12, backgroundColor: palette.white, borderWidth: 1.5, borderColor: Colors.border.light },
   filterChipActive:{ backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   filterText:      { fontSize: 12, fontWeight: '700', color: Colors.text.secondary },
   filterTextActive:{ color: Colors.brand.blue },
 
-  loadingCard:     { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard:     { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText:     { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard:       { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard:       { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle:      { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
 });
 
 const c = createThemedStyles({
-  card:         { backgroundColor: '#FFF', borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
+  card:         { backgroundColor: palette.white, borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: palette.navy, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
   topRow:       { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 8, flexWrap: 'wrap' },
   rankBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, borderWidth: 1.5 },
   rankText:     { fontSize: 12, fontWeight: '900' },
@@ -269,19 +270,19 @@ const c = createThemedStyles({
   typeText:     { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
   statusChip:   { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   statusText:   { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  reportChip:   { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, backgroundColor: '#FEF2F2' },
-  reportText:   { fontSize: 11, fontWeight: '800', color: '#EF4444' },
+  reportChip:   { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, backgroundColor: palette.red50 },
+  reportText:   { fontSize: 11, fontWeight: '800', color: palette.red500 },
   title:        { fontSize: 14, fontWeight: '800', color: Colors.text.primary, marginBottom: 3, lineHeight: 20 },
   author:       { fontSize: 12, color: Colors.text.tertiary, marginBottom: 10 },
   statsRow:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' },
   stat:         { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText:     { fontSize: 12, fontWeight: '700', color: Colors.text.primary },
-  scoreBg:      { flex: 1, height: 5, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden', minWidth: 40 },
+  scoreBg:      { flex: 1, height: 5, backgroundColor: palette.gray100, borderRadius: 3, overflow: 'hidden', minWidth: 40 },
   scoreBar:     { height: '100%', borderRadius: 3, minWidth: 4 },
-  scoreText:    { fontSize: 12, fontWeight: '800', color: '#FF7B00', width: 28, textAlign: 'right' },
+  scoreText:    { fontSize: 12, fontWeight: '800', color: palette.legacyOrange, width: 28, textAlign: 'right' },
   actions:      { flexDirection: 'row', gap: 8 },
-  featureBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFF3E6', borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.25)' },
-  featureBtnText:{ fontSize: 12, fontWeight: '700', color: '#FF7B00' },
-  removeBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
-  removeBtnText:{ fontSize: 12, fontWeight: '700', color: '#EF4444' },
+  featureBtn:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.legacyOrangeLight, borderWidth: 1.5, borderColor: 'rgba(255,123,0,0.25)' },
+  featureBtnText:{ fontSize: 12, fontWeight: '700', color: palette.legacyOrange },
+  removeBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
+  removeBtnText:{ fontSize: 12, fontWeight: '700', color: palette.red500 },
 });

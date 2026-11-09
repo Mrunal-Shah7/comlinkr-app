@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeImage } from "../../../components/FadeImage";
@@ -37,7 +38,7 @@ export function AttachedFile({
         {/* SPRINT-42: use shared FadeImage for attached file thumbnails. */}
         {mediaType === "video" && (
           <View style={af.videoOverlay}>
-            <Ionicons name="play-circle" size={18} color="#FFF" />
+            <Ionicons name="play-circle" size={18} color={palette.white} />
             <Text style={af.videoLabel}>{duration ? `${Math.round(duration)}s` : "Video"}</Text>
           </View>
         )}
@@ -67,7 +68,7 @@ export const af = createThemedStyles({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
     overflow: "hidden",
     position: "relative",
   },
@@ -89,9 +90,9 @@ export const af = createThemedStyles({
   },
   videoLabel: {
     fontSize: 9,
-    color: "#FFF",
+    color: palette.white,
     fontWeight: "700",
   },
   fileName: { flex: 1, fontSize: 13, fontWeight: "700" },
-  fileSize: { fontSize: 11, fontWeight: "600", color: "#9CA3AF" },
+  fileSize: { fontSize: 11, fontWeight: "600", color: palette.gray400 },
 });

@@ -1,5 +1,6 @@
 // src/shared/navigation/ComposeSheet.tsx — the "Post something" sheet behind the tab bar's + (design D, plan 01).
 // Each row opens today's composer for that type (app/create-post.tsx), or the Community ask sheet.
+import { palette } from "../../theme/palette";
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +43,7 @@ export function ComposeSheet({ visible, onClose }: { visible: boolean; onClose: 
         {ITEMS.map((it, i) => (
           <Reveal key={it.title} i={i}>
             <PressableScale onPress={() => open(it)} style={[s.row, { backgroundColor: tc.inputBg }]} accessibilityRole="button" accessibilityLabel={it.title}>
-              <GradientFill style={s.icon}><Ionicons name={it.icon} size={21} color="#fff" /></GradientFill>
+              <GradientFill style={s.icon}><Ionicons name={it.icon} size={21} color={palette.white} /></GradientFill>
               <View style={{ flex: 1 }}>
                 <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{it.title}</Text>
                 <Text style={[TYPE.small, { color: tc.textSecondary }]}>{it.sub}</Text>

@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { Switch } from "../../shared/ui/Switch";
 import { useEffect, useState, useRef } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, ActivityIndicator, ActionSheetIOS } from "react-native";
@@ -1136,14 +1137,14 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               !isAdmin &&
               !isVerifiedLandlord &&
               !isVerifiedAgency && (
-              <View style={[s.modeLockedNotice, { borderColor: "#30855B", backgroundColor: isDark ? tc.successBg : "#F0FDF4" }]}>
-                <Ionicons name="shield-checkmark-outline" size={15} color="#15803D" />
-                <Text style={[s.modeLockedText, { color: isDark ? tc.successText : "#14532D" }]}>
+              <View style={[s.modeLockedNotice, { borderColor: palette.brandGreen, backgroundColor: isDark ? tc.successBg : palette.green50 }]}>
+                <Ionicons name="shield-checkmark-outline" size={15} color={palette.green700} />
+                <Text style={[s.modeLockedText, { color: isDark ? tc.successText : palette.greenL20 }]}>
                   {"Anyone can list a property — "}
                   <Text style={{ fontWeight: "800" }}>Verified Property Host</Text>
                   {" badge holders get a trust indicator and higher visibility. "}
                   <Text
-                    style={{ fontWeight: "800", color: "#15803D", textDecorationLine: "underline" }}
+                    style={{ fontWeight: "800", color: palette.green700, textDecorationLine: "underline" }}
                     onPress={() => router.push({ pathname: "/apply-badge" as any, params: { badgeType: "landlord" } })}
                   >Get verified</Text>
                 </Text>
@@ -1153,7 +1154,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               Step {listingStep} of 4
             </Text>
             {listingStepError ? (
-              <Text style={{ color: "#DC2626", marginBottom: 10, fontWeight: "600", textAlign: "center" }}>
+              <Text style={{ color: palette.red600, marginBottom: 10, fontWeight: "600", textAlign: "center" }}>
                 {listingStepError}
               </Text>
             ) : null}
@@ -1540,7 +1541,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                 end={{ x: 1, y: 1 }}
                 style={s.mediaIconCircle}
               >
-                <Ionicons name="images-outline" size={22} color="#FFF" />
+                <Ionicons name="images-outline" size={22} color={palette.white} />
               </LinearGradient>
               <View style={{ flex: 1 }}>
                 <Text style={[s.mediaBtnTitle, { color: tc.textPrimary }]}>
@@ -1572,12 +1573,12 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                           position: "absolute",
                           top: -6,
                           right: -6,
-                          backgroundColor: "#111827",
+                          backgroundColor: palette.gray900,
                           borderRadius: 12,
                           padding: 4,
                         }}
                       >
-                        <Ionicons name="close" size={14} color="#FFF" />
+                        <Ionicons name="close" size={14} color={palette.white} />
                       </Pressable>
                     </View>
                   ))}
@@ -1624,7 +1625,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                       backgroundColor: type.color,
                     }}
                   >
-                    <Text style={{ color: "#FFF", fontWeight: "800" }}>Next</Text>
+                    <Text style={{ color: palette.white, fontWeight: "800" }}>Next</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -1635,10 +1636,10 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                 >
                   <LinearGradient colors={type.gradient} style={s.gradientBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                     {submitting ? (
-                      <ActivityIndicator color="#FFF" />
+                      <ActivityIndicator color={palette.white} />
                     ) : (
                       <>
-                        <Ionicons name="home" size={18} color="#FFF" />
+                        <Ionicons name="home" size={18} color={palette.white} />
                         <Text style={s.gradientBtnText}>{isEditing ? "Save Changes" : "Publish Listing"}</Text>
                         {/* SPRINT-42: make explicit detail-save behavior clear in edit mode. */}
                       </>
@@ -2335,7 +2336,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                     }}
                     style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 20, backgroundColor: tc.cardBg, borderWidth: on ? 2 : 1, borderColor: on ? tc.accent : tc.glassLine }}>
                     <View style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: on ? tc.accent : tc.accentSoft }}>
-                      <Ionicons name={t.icon} size={20} color={on ? "#fff" : tc.accentText} />
+                      <Ionicons name={t.icon} size={20} color={on ? palette.white : tc.accentText} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{t.name}</Text>
@@ -2627,7 +2628,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                 end={{ x: 1, y: 1 }}
                 style={s.mediaIconCircle}
               >
-                <Ionicons name="cloud-upload-outline" size={22} color="#FFF" />
+                <Ionicons name="cloud-upload-outline" size={22} color={palette.white} />
               </LinearGradient>
               <View style={{ flex: 1 }}>
                 <Text style={[s.mediaBtnTitle, { color: tc.textPrimary }]}>{mediaBtnTitle}</Text>
@@ -2673,7 +2674,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                   onPress={() => handleAttachSpecificMedia("Images")}
                 >
                   <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.mediaIconCircle}>
-                    <Ionicons name="image-outline" size={22} color="#FFF" />
+                    <Ionicons name="image-outline" size={22} color={palette.white} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
                     <Text style={[s.mediaBtnTitle, { color: tc.textPrimary }]}>Add Photo to Story</Text>
@@ -2688,8 +2689,8 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                   style={[s.mediaBtn, { backgroundColor: tc.cardBg, borderColor: type.color + "55" }]}
                   onPress={() => handleAttachSpecificMedia("Videos")}
                 >
-                  <LinearGradient colors={["#30855B", "#256B49"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.mediaIconCircle}>
-                    <Ionicons name="videocam-outline" size={22} color="#FFF" />
+                  <LinearGradient colors={[palette.brandGreen, palette.brandGreenDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.mediaIconCircle}>
+                    <Ionicons name="videocam-outline" size={22} color={palette.white} />
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
                     <Text style={[s.mediaBtnTitle, { color: tc.textPrimary }]}>Add Video to Story</Text>
@@ -2723,7 +2724,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
           >
             <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bottomBarPublishGrad}>
               {submitting ? (
-                <ActivityIndicator color="#FFF" size="small" />
+                <ActivityIndicator color={palette.white} size="small" />
               ) : (
                 <>
                   <Ionicons
@@ -2736,7 +2737,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                       : "send"
                     }
                     size={16}
-                    color="#FFF"
+                    color={palette.white}
                   />
                   <Text style={s.bottomBarPublishText}>
                     {type.id === "restaurant"

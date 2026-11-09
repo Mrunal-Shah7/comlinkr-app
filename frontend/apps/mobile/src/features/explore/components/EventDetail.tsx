@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { rs } from "../../../utils/responsive";
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions, Linking, ActivityIndicator, Share } from "react-native";
@@ -130,7 +131,7 @@ export function EventDetail({
         // SPRINT-42:
         isOwner: detailApiEvent != null ? !!detailApiEvent.isOwner : !!event.isOwner,
       };
-  const catColor = CATEGORY_COLOR[displayEvent.category] ?? { bg: "#EBF4FF", text: "#1A6BAE" };
+  const catColor = CATEGORY_COLOR[displayEvent.category] ?? { bg: palette.skyL96, text: palette.brandBlue };
   const isFree = displayEvent.price === "Free";
   const heroImages = displayEvent.images?.length ? displayEvent.images : [displayEvent.image];
 
@@ -170,7 +171,7 @@ export function EventDetail({
     onClose();
   };
 
-  const glassBtn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color = "#fff") => (
+  const glassBtn = (icon: keyof typeof Ionicons.glyphMap, label: string, onPress: () => void, color = palette.white) => (
     <Pressable key={label} onPress={onPress} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
       style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(10,20,28,0.42)", borderWidth: 1, borderColor: "rgba(255,255,255,0.14)" }}>
       <Ionicons name={icon} size={19} color={color} />
@@ -210,7 +211,7 @@ export function EventDetail({
           </View>
           {heroImages.length > 1 ? (
             <View style={{ position: "absolute", bottom: 40, alignSelf: "center", backgroundColor: "rgba(0,0,0,0.45)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-              <Text style={[TYPE.label, { color: "#fff" }]}>{heroIdx + 1} / {heroImages.length}</Text>
+              <Text style={[TYPE.label, { color: palette.white }]}>{heroIdx + 1} / {heroImages.length}</Text>
             </View>
           ) : null}
         </View>
@@ -254,7 +255,7 @@ export function EventDetail({
           {h2("Host")}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, borderRadius: 20, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
             <GradientFill style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" }}>
-              <Text style={[TYPE.label, { color: "#fff", fontSize: 15 }]}>{displayEvent.host.split(" ").map((w) => w[0]).join("").slice(0, 2)}</Text>
+              <Text style={[TYPE.label, { color: palette.white, fontSize: 15 }]}>{displayEvent.host.split(" ").map((w) => w[0]).join("").slice(0, 2)}</Text>
             </GradientFill>
             <View style={{ flex: 1 }}>
               <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>{displayEvent.host}</Text>
@@ -313,7 +314,7 @@ export function EventDetail({
             // The host cannot RSVP to their own event (the server refuses it), so say so instead of offering a button that fails.
             <Text style={[TYPE.bodyStrong, { color: tc.textSecondary }]}>You're hosting</Text>
           ) : (
-            <GradientButton label="RSVP" onPress={onRegister} style={{ paddingHorizontal: 12 }} icon={<Ionicons name="ticket-outline" size={17} color="#fff" />} />
+            <GradientButton label="RSVP" onPress={onRegister} style={{ paddingHorizontal: 12 }} icon={<Ionicons name="ticket-outline" size={17} color={palette.white} />} />
           )}
         </View>
       </View>
@@ -322,7 +323,7 @@ export function EventDetail({
 }
 
 export const edm = createThemedStyles({
-  root: { flex: 1, backgroundColor: "#FFF" },
+  root: { flex: 1, backgroundColor: palette.white },
   heroWrap: { height: rs(320), position: "relative" },
   heroImg: { ...StyleSheet.absoluteFill as any },
   backBtn: {
@@ -343,9 +344,9 @@ export const edm = createThemedStyles({
   catBadge: { paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(8) },
   catBadgeText: { fontSize: rs(11), fontWeight: "800", letterSpacing: 0.3 },
   priceBadge: { paddingHorizontal: rs(10), paddingVertical: rs(5), borderRadius: rs(8) },
-  priceBadgeText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  priceBadgeText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
   heroBottom: { position: "absolute", bottom: 0, left: 0, right: 0, padding: rs(20) },
-  heroTitle: { fontSize: rs(24), fontWeight: "900", color: "#FFF", lineHeight: rs(30), marginBottom: rs(8), letterSpacing: -0.3 },
+  heroTitle: { fontSize: rs(24), fontWeight: "900", color: palette.white, lineHeight: rs(30), marginBottom: rs(8), letterSpacing: -0.3 },
   heroMeta: { flexDirection: "row", alignItems: "center", gap: rs(5) },
   heroMetaText: { fontSize: rs(13), color: "rgba(255,255,255,0.9)", fontWeight: "600" },
   heroDot: { width: rs(3), height: rs(3), borderRadius: rs(2), backgroundColor: "rgba(255,255,255,0.5)" },
@@ -353,22 +354,22 @@ export const edm = createThemedStyles({
   scrollContent: { paddingHorizontal: rs(20), paddingTop: rs(8), paddingBottom: rs(24) },
   statsRow: {
     flexDirection: "row", alignItems: "center",
-    backgroundColor: "#F7F9FC",
+    backgroundColor: palette.neutralL98_4,
     borderRadius: rs(18), padding: rs(18), marginVertical: rs(14),
-    borderWidth: 1, borderColor: "#ECEEF1",
+    borderWidth: 1, borderColor: palette.neutralL94_2,
   },
   statItem: { flex: 1, alignItems: "center", gap: rs(5) },
   statNum: { fontSize: rs(16), fontWeight: "900", color: Colors.text.primary },
   statLbl: { fontSize: rs(10), fontWeight: "700", color: Colors.text.tertiary, letterSpacing: 0.4 },
-  statDiv: { width: rs(1), height: rs(40), backgroundColor: "#ECEEF1" },
+  statDiv: { width: rs(1), height: rs(40), backgroundColor: palette.neutralL94_2 },
   section: { marginBottom: rs(22) },
   sectionTitle: { fontSize: rs(16), fontWeight: "900", color: Colors.text.primary, marginBottom: rs(12), letterSpacing: -0.2 },
   description: { fontSize: rs(14), color: Colors.text.secondary, lineHeight: rs(23), fontWeight: "500" },
   detailGrid: { gap: rs(8) },
   detailRow: {
     flexDirection: "row", alignItems: "center", gap: rs(12),
-    backgroundColor: "#F7F9FC", borderRadius: rs(14), padding: rs(14),
-    borderWidth: 1, borderColor: "#ECEEF1",
+    backgroundColor: palette.neutralL98_4, borderRadius: rs(14), padding: rs(14),
+    borderWidth: 1, borderColor: palette.neutralL94_2,
   },
   detailIconBox: {
     width: rs(40), height: rs(40), borderRadius: rs(12),
@@ -383,7 +384,7 @@ export const edm = createThemedStyles({
   quickActionIcon: {
     width: rs(52), height: rs(52), borderRadius: rs(16),
     alignItems: "center", justifyContent: "center",
-    borderWidth: 1, borderColor: "#E7EFFA",
+    borderWidth: 1, borderColor: palette.skyL94_6,
   },
   quickActionLabel: { fontSize: rs(11), fontWeight: "700", color: Colors.text.secondary, textAlign: "center" },
   // Registration form
@@ -391,39 +392,39 @@ export const edm = createThemedStyles({
     flexDirection: "row", alignItems: "center", gap: rs(14),
     paddingHorizontal: rs(18), paddingVertical: rs(18), borderRadius: rs(16),
   },
-  regOpenBtnTitle: { fontSize: rs(15), fontWeight: "900", color: "#FFF" },
+  regOpenBtnTitle: { fontSize: rs(15), fontWeight: "900", color: palette.white },
   regOpenBtnSub: { fontSize: rs(11), fontWeight: "600", color: "rgba(255,255,255,0.8)", marginTop: rs(2) },
   regForm: {
-    backgroundColor: "#F8FAFC", borderRadius: rs(18), padding: rs(18),
-    borderWidth: 1, borderColor: "#E7EFFA",
+    backgroundColor: palette.slate50, borderRadius: rs(18), padding: rs(18),
+    borderWidth: 1, borderColor: palette.skyL94_6,
   },
   regFieldGroup: { marginBottom: rs(16) },
   regLabel: { fontSize: rs(12), fontWeight: "800", color: Colors.text.primary, marginBottom: rs(6), letterSpacing: 0.2 },
   regInputWrap: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
-    backgroundColor: "#FFF", borderRadius: rs(12), borderWidth: 1.5, borderColor: "#E7EFFA",
+    backgroundColor: palette.white, borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.skyL94_6,
     paddingHorizontal: rs(14), paddingVertical: rs(12),
   },
   regInput: { flex: 1, fontSize: rs(14), fontWeight: "600", color: Colors.text.primary, padding: 0 },
   regTicketRow: { flexDirection: "row", gap: rs(8) },
   regTicketChip: {
     flex: 1, alignItems: "center", paddingVertical: rs(10),
-    borderRadius: rs(10), backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#E7EFFA",
+    borderRadius: rs(10), backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.skyL94_6,
   },
-  regTicketChipActive: { borderColor: "#257A86", backgroundColor: "#E2F0F1" },
+  regTicketChipActive: { borderColor: palette.brandTeal, backgroundColor: palette.brandTealLight },
   regTicketText: { fontSize: rs(14), fontWeight: "700", color: Colors.text.secondary },
-  regTicketTextActive: { color: "#257A86", fontWeight: "900" },
+  regTicketTextActive: { color: palette.brandTeal, fontWeight: "900" },
   regPriceSummary: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    backgroundColor: "#E2F0F1", borderRadius: rs(12), padding: rs(14), marginBottom: rs(16),
-    borderWidth: 1, borderColor: "#FECBA1",
+    backgroundColor: palette.brandTealLight, borderRadius: rs(12), padding: rs(14), marginBottom: rs(16),
+    borderWidth: 1, borderColor: palette.orangeL81,
   },
   regPriceLabel: { fontSize: rs(13), fontWeight: "700", color: Colors.text.secondary },
-  regPriceValue: { fontSize: rs(16), fontWeight: "900", color: "#257A86" },
+  regPriceValue: { fontSize: rs(16), fontWeight: "900", color: palette.brandTeal },
   regBtnRow: { flexDirection: "row", gap: rs(10) },
   regCancelBtn: {
     paddingHorizontal: rs(20), paddingVertical: rs(14),
-    borderRadius: rs(12), borderWidth: 1.5, borderColor: "#E5E7EB",
+    borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.gray200,
   },
   regCancelText: { fontSize: rs(14), fontWeight: "700", color: Colors.text.secondary },
   regSubmitBtn: { flex: 1, borderRadius: rs(12), overflow: "hidden" },
@@ -431,41 +432,41 @@ export const edm = createThemedStyles({
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(8), paddingVertical: rs(14), borderRadius: rs(12),
   },
-  regSubmitText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  regSubmitText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
   regSuccess: {
-    alignItems: "center", backgroundColor: "#F0FDF4", borderRadius: rs(18),
-    padding: rs(28), borderWidth: 1, borderColor: "#BBF7D0",
+    alignItems: "center", backgroundColor: palette.green50, borderRadius: rs(18),
+    padding: rs(28), borderWidth: 1, borderColor: palette.green200,
   },
   regSuccessIcon: { marginBottom: rs(12) },
-  regSuccessTitle: { fontSize: rs(18), fontWeight: "900", color: "#16A34A", marginBottom: rs(8) },
+  regSuccessTitle: { fontSize: rs(18), fontWeight: "900", color: palette.green600, marginBottom: rs(8) },
   regSuccessDesc: { fontSize: rs(13), fontWeight: "600", color: Colors.text.secondary, textAlign: "center", lineHeight: rs(20) },
   regSuccessBtn: {
-    marginTop: rs(16), backgroundColor: "#16A34A",
+    marginTop: rs(16), backgroundColor: palette.green600,
     paddingHorizontal: rs(28), paddingVertical: rs(12), borderRadius: rs(12),
   },
-  regSuccessBtnText: { fontSize: rs(14), fontWeight: "800", color: "#FFF" },
+  regSuccessBtnText: { fontSize: rs(14), fontWeight: "800", color: palette.white },
   // Host card
   hostCard: {
     flexDirection: "row", alignItems: "center", gap: rs(14),
-    backgroundColor: "#F7F9FC", borderRadius: rs(16), padding: rs(16),
-    borderWidth: 1, borderColor: "#ECEEF1",
+    backgroundColor: palette.neutralL98_4, borderRadius: rs(16), padding: rs(16),
+    borderWidth: 1, borderColor: palette.neutralL94_2,
   },
   hostAvatar: { width: rs(48), height: rs(48), borderRadius: rs(14), alignItems: "center", justifyContent: "center" },
-  hostInitials: { fontSize: rs(16), fontWeight: "900", color: "#FFF" },
+  hostInitials: { fontSize: rs(16), fontWeight: "900", color: palette.white },
   hostName: { fontSize: rs(15), fontWeight: "800", color: Colors.text.primary },
   hostSub: { fontSize: rs(11), fontWeight: "600", color: Colors.text.tertiary, marginTop: rs(2) },
   hostChatBtn: {
     flexDirection: "row", alignItems: "center", gap: rs(6),
     backgroundColor: Colors.brand.blueLight, paddingHorizontal: rs(14), paddingVertical: rs(8),
-    borderRadius: rs(10), borderWidth: 1, borderColor: "#D6E8FF",
+    borderRadius: rs(10), borderWidth: 1, borderColor: palette.skyL92_2,
   },
   hostChatText: { fontSize: rs(12), fontWeight: "700", color: Colors.brand.blue },
   cta: {
     flexDirection: "row", flexWrap: "wrap", gap: rs(10), alignItems: "center",
     paddingHorizontal: rs(16), paddingVertical: rs(12), paddingBottom: rs(44),
-    borderTopWidth: 1, borderTopColor: "#EEF2F8",
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
+    borderTopWidth: 1, borderTopColor: palette.neutralL95_4,
+    backgroundColor: palette.white,
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: rs(-3) },
     shadowOpacity: 0.05,
     shadowRadius: rs(10),
@@ -474,28 +475,28 @@ export const edm = createThemedStyles({
   ctaEventChat: {
     flexDirection: "row", alignItems: "center", gap: rs(8),
     paddingHorizontal: rs(14), paddingVertical: rs(12),
-    borderRadius: rs(14), borderWidth: 1.5, borderColor: "#BFDBFE",
-    backgroundColor: "#EFF6FF",
+    borderRadius: rs(14), borderWidth: 1.5, borderColor: palette.blue200,
+    backgroundColor: palette.blue50,
   },
   ctaEventChatText: { fontSize: rs(13), fontWeight: "800" },
   ctaCancelRsvp: {
     paddingHorizontal: rs(14), paddingVertical: rs(12), borderRadius: rs(14),
-    borderWidth: 1.5, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB",
+    borderWidth: 1.5, borderColor: palette.gray200, backgroundColor: palette.gray50,
   },
   ctaCancelRsvpText: { fontSize: rs(13), fontWeight: "700" },
   ctaRSVP: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
     gap: rs(7), height: rs(50), borderRadius: rs(16),
   },
-  ctaRSVPText: { fontSize: rs(15), fontWeight: "900", color: "#FFF", letterSpacing: 0.3 },
+  ctaRSVPText: { fontSize: rs(15), fontWeight: "900", color: palette.white, letterSpacing: 0.3 },
   attendeesSection: {
     marginHorizontal: rs(4),
     marginBottom: rs(18),
     padding: rs(14),
     borderRadius: rs(16),
-    backgroundColor: "#F1F5F9",
+    backgroundColor: palette.slate100,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: palette.slate200,
   },
   attendeesHeader: {
     flexDirection: "row",
@@ -506,17 +507,17 @@ export const edm = createThemedStyles({
   attendeesBody: { marginTop: rs(12) },
   attendeesEmpty: { fontSize: rs(13), fontWeight: "600", paddingVertical: rs(8) },
   attendeeRow: { flexDirection: "row", alignItems: "flex-start", gap: rs(12), paddingVertical: rs(12) },
-  attendeeRowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#E2E8F0" },
+  attendeeRowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.slate200 },
   attendeeAvatar: {
     width: rs(40),
     height: rs(40),
     borderRadius: rs(20),
-    backgroundColor: "#E0E7FF",
+    backgroundColor: palette.indigo100,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  attendeeAvatarText: { fontSize: rs(14), fontWeight: "900", color: "#4338CA" },
+  attendeeAvatarText: { fontSize: rs(14), fontWeight: "900", color: palette.blueL51 },
   attendeeName: { fontSize: rs(14), fontWeight: "800" },
   attendeeMeta: { fontSize: rs(12), fontWeight: "600", marginTop: rs(2) },
 });

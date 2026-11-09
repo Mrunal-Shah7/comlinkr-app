@@ -1,6 +1,7 @@
 // src/shared/ui/Toast.tsx — design D toast (`.toast`): a glass pill that drops in from the top on the sheet
 // spring (translateY −140 % → 0, 420 ms) and leaves upwards after 2 s. Toasts carry feedback only; the one
 // exception is an optional action (Undo) for things the user can take back, which keeps it up for 4.5 s.
+import { palette } from "../../theme/palette";
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
@@ -108,7 +109,7 @@ const s = StyleSheet.create({
   pill: {
     flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%',
     paddingHorizontal: 16, paddingVertical: 11, borderRadius: 18, borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 30, elevation: 8,
+    shadowColor: palette.black, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 30, elevation: 8,
   },
   text: { flexShrink: 1, fontSize: 14 },
 });

@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,17 +15,17 @@ interface BadgeIndicatorProps {
 }
 
 const BADGE_META: Record<UserBadge, { icon: string; label: string; gradient: [string, string] }> = {
-  landlord:         { icon: "home",        label: "Verified Landlord",    gradient: ["#1A6BAE", "#0054CC"] },
-  restaurant_owner: { icon: "restaurant",  label: "Verified Business",    gradient: ["#30855B", "#256B49"] },
-  agency:           { icon: "business",    label: "Verified Agency",      gradient: ["#257A86", "#E56800"] },
-  local_reviewer:   { icon: "star",        label: "Local Reviewer",       gradient: ["#8B5CF6", "#6D28D9"] },
+  landlord:         { icon: "home",        label: "Verified Landlord",    gradient: [palette.brandBlue, palette.blueL40_2] },
+  restaurant_owner: { icon: "restaurant",  label: "Verified Business",    gradient: [palette.brandGreen, palette.brandGreenDark] },
+  agency:           { icon: "business",    label: "Verified Agency",      gradient: [palette.brandTeal, palette.orangeL45] },
+  local_reviewer:   { icon: "star",        label: "Local Reviewer",       gradient: [palette.violet500, palette.violet700] },
 };
 
 const STATUS_META: Record<VerificationStatus, { icon: string; color: string; bg: string; label: string }> = {
-  none:     { icon: "ellipse-outline",  color: "#9CA3AF", bg: "#F3F4F6", label: "Not Applied" },
-  pending:  { icon: "time",             color: "#F59E0B", bg: "#FFFBEB", label: "Pending Review" },
-  verified: { icon: "checkmark-circle", color: "#30855B", bg: "#E3F1EA", label: "Verified" },
-  rejected: { icon: "close-circle",     color: "#EF4444", bg: "#FEF2F2", label: "Not Approved" },
+  none:     { icon: "ellipse-outline",  color: palette.gray400, bg: palette.gray100, label: "Not Applied" },
+  pending:  { icon: "time",             color: palette.amber500, bg: palette.amber50, label: "Pending Review" },
+  verified: { icon: "checkmark-circle", color: palette.brandGreen, bg: palette.brandGreenLight, label: "Verified" },
+  rejected: { icon: "close-circle",     color: palette.red500, bg: palette.red50, label: "Not Approved" },
 };
 
 const SIZE_MAP = {
@@ -42,19 +43,19 @@ export function BadgeIndicator({ badge, status, size = "md", showLabel = false }
     <View style={styles.wrapper}>
       <View style={{ position: "relative" }}>
         <LinearGradient
-          colors={status === "verified" ? meta.gradient : ["#D1D5DB", "#9CA3AF"]}
+          colors={status === "verified" ? meta.gradient : [palette.gray300, palette.gray400]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.iconBox, { width: sz.iconBox, height: sz.iconBox, borderRadius: sz.iconBox / 2 }]}
         >
-          <Ionicons name={meta.icon as any} size={sz.iconSize} color="#FFF" />
+          <Ionicons name={meta.icon as any} size={sz.iconSize} color={palette.white} />
         </LinearGradient>
         {/* Status dot overlay */}
         <View style={[
           styles.statusDot,
           { backgroundColor: statusMeta.color, width: sz.statusIcon + 2, height: sz.statusIcon + 2, borderRadius: (sz.statusIcon + 2) / 2 },
         ]}>
-          <Ionicons name={statusMeta.icon as any} size={sz.statusIcon} color="#FFF" />
+          <Ionicons name={statusMeta.icon as any} size={sz.statusIcon} color={palette.white} />
         </View>
       </View>
       {showLabel && (
@@ -78,7 +79,7 @@ export function VerifiedBadgePill({ badge }: { badge: UserBadge }) {
       end={{ x: 1, y: 0 }}
       style={styles.pill}
     >
-      <Ionicons name={meta.icon as any} size={10} color="#FFF" />
+      <Ionicons name={meta.icon as any} size={10} color={palette.white} />
       <Text style={styles.pillText}>{meta.label}</Text>
     </LinearGradient>
   );
@@ -101,7 +102,7 @@ const styles = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
   labelPill: {
     paddingHorizontal: rs(8),
@@ -122,7 +123,7 @@ const styles = createThemedStyles({
   pillText: {
     fontSize: rs(10),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.3,
   },
 });

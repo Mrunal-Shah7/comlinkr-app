@@ -3,6 +3,7 @@
 //   if (await confirmDialog({ title, message, confirmLabel, destructive })) { ... }
 //   const reason = await actionSheet({ title, options: [{ label, value }] });
 // <DialogHost /> must be mounted once at the root.
+import { palette } from "../../theme/palette";
 import { useEffect } from 'react';
 import {
   BackHandler,
@@ -180,14 +181,14 @@ export function DialogHost() {
                       style={({ pressed }) => [
                         s.btn,
                         {
-                          backgroundColor: isDestructive ? '#E5484D' : primary ? 'transparent' : tc.inputBg,
+                          backgroundColor: isDestructive ? palette.redL59 : primary ? 'transparent' : tc.inputBg,
                         },
                         pressed && s.pressed,
                       ]}
                       onPress={() => run(b)}
                     >
                       {primary && !isDestructive ? <GradientFill style={[StyleSheet.absoluteFill, { borderRadius: 16 }]} /> : null}
-                      <Text style={[s.btnText, { color: primary || isDestructive ? '#FFFFFF' : tc.textPrimary }]}>
+                      <Text style={[s.btnText, { color: primary || isDestructive ? palette.white : tc.textPrimary }]}>
                         {b.text ?? 'OK'}
                       </Text>
                     </Pressable>
@@ -273,7 +274,7 @@ export function DialogHost() {
                 accessibilityLabel={confirmLabel}
                 style={({ pressed }) => [
                   s.btn,
-                  { backgroundColor: destructive ? '#E5484D' : 'transparent' },
+                  { backgroundColor: destructive ? palette.redL59 : 'transparent' },
                   pressed && s.pressed,
                 ]}
                 onPress={() => {
@@ -282,7 +283,7 @@ export function DialogHost() {
                 }}
               >
                 {!destructive ? <GradientFill style={[StyleSheet.absoluteFill, { borderRadius: 16 }]} /> : null}
-                <Text style={[s.btnText, { color: '#FFFFFF' }]}>{confirmLabel}</Text>
+                <Text style={[s.btnText, { color: palette.white }]}>{confirmLabel}</Text>
               </Pressable>
             </View>
           </AnimatedPressable>

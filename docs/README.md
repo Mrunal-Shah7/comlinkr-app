@@ -122,6 +122,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [Colour palette](build/2026-11-09-color-tokens.md) (TR-013, point 6): about 3,000 hex literals in
+  123 files read from a named `src/theme/palette.ts`; values unchanged. Walked on Android, light and dark.
 - 2026-11-09: [iOS conventions](build/2026-11-09-ios-conventions.md) (TR-013, point 8): `Link.Preview` and
   `Link.Menu` on listing, room, event and restaurant cards (iOS only), continuous corners. Not walked on iOS.
 - 2026-11-09: [Detail routes](build/2026-11-09-detail-routes.md) (TR-013, point 7, plan 03): listing, roommate,

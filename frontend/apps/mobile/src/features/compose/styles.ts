@@ -1,11 +1,12 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../theme/colors";
 import { createThemedStyles } from "../../theme/themedStyles";
 import { GRID_GAP } from "./constants";
 
 export const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F5F6FA" },
+  safe: { flex: 1, backgroundColor: palette.neutralL97_9 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 20 },
 
@@ -17,10 +18,10 @@ export const s = createThemedStyles({
     paddingTop: 12,
     paddingBottom: 14,
     gap: 10,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E4E6EA",
-    shadowColor: "#000",
+    borderBottomColor: palette.neutralL91_2,
+    shadowColor: palette.black,
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
@@ -30,7 +31,7 @@ export const s = createThemedStyles({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#EEF5FF",
+    backgroundColor: palette.blueL97_2,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -42,7 +43,7 @@ export const s = createThemedStyles({
   },
   chooserSubGrey: {
     fontSize: 12,
-    color: "#7A8B9E",
+    color: palette.skyL55,
     marginTop: 2,
     fontWeight: "400",
   },
@@ -57,14 +58,14 @@ export const s = createThemedStyles({
     gap: GRID_GAP,
   },
   typeGridCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#E8EDF4",
+    borderColor: palette.neutralL93_4,
     padding: 14,
     paddingTop: 18,
     paddingBottom: 12,
-    shadowColor: "#0A1628",
+    shadowColor: palette.blueL10,
     shadowOpacity: 0.06,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -87,7 +88,7 @@ export const s = createThemedStyles({
     height: 48,
     borderRadius: 15,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
@@ -106,7 +107,7 @@ export const s = createThemedStyles({
   },
   typeGridDesc: {
     fontSize: 11,
-    color: "#7A8B9E",
+    color: palette.skyL55,
     lineHeight: 15,
   },
   typeGridTopBar: {
@@ -129,7 +130,7 @@ export const s = createThemedStyles({
     justifyContent: "center",
   },
   suggestionsCard: {
-    backgroundColor: "#F0F7FF",
+    backgroundColor: palette.neutralL97_4,
     borderRadius: 16,
     padding: 16,
     marginTop: 12,
@@ -156,7 +157,7 @@ export const s = createThemedStyles({
   },
   sugText: {
     fontSize: 12,
-    color: "#3B5068",
+    color: palette.skyL32,
     lineHeight: 17,
     flex: 1,
   },
@@ -185,7 +186,7 @@ export const s = createThemedStyles({
   headerTypePillText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.2,
     flexShrink: 1,
   },
@@ -220,7 +221,7 @@ export const s = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  postBtnText: { fontSize: 13, fontWeight: "700", color: "#FFF" },
+  postBtnText: { fontSize: 13, fontWeight: "700", color: palette.white },
 
   bottomBar: {
     flexDirection: "row",
@@ -253,7 +254,7 @@ export const s = createThemedStyles({
     justifyContent: "center",
     gap: 6,
   },
-  bottomBarPublishText: { fontSize: 14, fontWeight: "800", color: "#FFF" },
+  bottomBarPublishText: { fontSize: 14, fontWeight: "800", color: palette.white },
 
   // Owner notice
   ownerNotice: {
@@ -267,7 +268,7 @@ export const s = createThemedStyles({
     marginBottom: 4,
   },
   ownerNoticeTitle: { fontSize: 13, fontWeight: "800", marginBottom: 3 },
-  ownerNoticeText: { fontSize: 12, color: "#5A6A7E", lineHeight: 17 },
+  ownerNoticeText: { fontSize: 12, color: palette.skyL42, lineHeight: 17 },
 
   // Mode selector (owner vs community post)
   modeSelectorRow: {
@@ -285,10 +286,10 @@ export const s = createThemedStyles({
     paddingVertical: 13,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#E0E5EF",
-    backgroundColor: "#F5F7FB",
+    borderColor: palette.neutralL91,
+    backgroundColor: palette.neutralL97_11,
   },
-  modeTabText: { fontSize: 13, fontWeight: "700", color: "#5A6A7E" },
+  modeTabText: { fontSize: 13, fontWeight: "700", color: palette.skyL42 },
   modeLockedNotice: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -317,19 +318,19 @@ export const s = createThemedStyles({
   sectionLabel: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#5A6A7E",
+    color: palette.skyL42,
     letterSpacing: 1.3,
     textTransform: "uppercase",
   },
 
   // Inputs
   inputWrap: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     overflow: "hidden",
-    shadowColor: "#0A2540",
+    shadowColor: palette.navy,
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
@@ -340,7 +341,7 @@ export const s = createThemedStyles({
     minHeight: 52,
     fontSize: 16,
     fontWeight: "600",
-    color: "#0A2540",
+    color: palette.navy,
     textAlignVertical: "center",
     includeFontPadding: false,
   },
@@ -348,7 +349,7 @@ export const s = createThemedStyles({
     textAlignVertical: "top",
     padding: 14,
     fontSize: 14,
-    color: "#0A2540",
+    color: palette.navy,
     minHeight: 150,
     lineHeight: 22,
   },
@@ -357,7 +358,7 @@ export const s = createThemedStyles({
     paddingRight: 14,
     paddingBottom: 10,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: palette.gray400,
   },
   rowFields: {
     flexDirection: "row",
@@ -384,7 +385,7 @@ export const s = createThemedStyles({
     flex: 1,
     fontSize: 14,
     fontWeight: "500",
-    color: "#0A2540",
+    color: palette.navy,
     paddingVertical: 12,
     paddingHorizontal: 12,
   },
@@ -395,12 +396,12 @@ export const s = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    shadowColor: "#0A2540",
+    borderColor: palette.gray200,
+    shadowColor: palette.navy,
     shadowOpacity: 0.03,
     shadowRadius: 4,
     elevation: 1,
@@ -408,13 +409,13 @@ export const s = createThemedStyles({
   locationInput: {
     flex: 1,
     fontSize: 14,
-    color: "#0A2540",
+    color: palette.navy,
     fontWeight: "500",
   },
 
   // Media upload
   mediaBtn: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 14,
     borderWidth: 1.5,
     borderStyle: "dashed",
@@ -430,8 +431,8 @@ export const s = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  mediaBtnTitle: { fontSize: 14, fontWeight: "700", color: "#0A2540" },
-  mediaBtnDesc: { fontSize: 12, color: "#8A9DB5", marginTop: 2 },
+  mediaBtnTitle: { fontSize: 14, fontWeight: "700", color: palette.navy },
+  mediaBtnDesc: { fontSize: 12, color: palette.skyL63, marginTop: 2 },
   mediaBtnPlus: {
     width: 30,
     height: 30,
@@ -460,12 +461,12 @@ export const s = createThemedStyles({
     gap: 10,
     paddingVertical: 17,
     borderRadius: 18,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 5,
   },
-  gradientBtnText: { fontSize: 16, fontWeight: "800", color: "#FFF", letterSpacing: -0.2 },
+  gradientBtnText: { fontSize: 16, fontWeight: "800", color: palette.white, letterSpacing: -0.2 },
 
   // Type cards (chooser) — kept for backward compatibility
   typeCard: { display: "none" } as any,
@@ -476,11 +477,11 @@ export const s = createThemedStyles({
 
   // Tips
   tipsCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     marginTop: 6,
   },
   tipsHeader: {
@@ -499,7 +500,7 @@ export const s = createThemedStyles({
   tipsTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0A2540",
+    color: palette.navy,
   },
   tipRow: {
     flexDirection: "row",
@@ -518,7 +519,7 @@ export const s = createThemedStyles({
   tipText: {
     flex: 1,
     fontSize: 13,
-    color: "#8A9DB5",
+    color: palette.skyL63,
     lineHeight: 20,
   },
 });

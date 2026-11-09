@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { palette } from "../../theme/palette";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FadeImage } from "../../../components/FadeImage";
@@ -25,7 +26,7 @@ export function ImageThumbnailStrip({
           {/* SPRINT-42: use shared FadeImage for selected media thumbnails. */}
           {file.mediaType === "video" && (
             <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.35)" }}>
-              <Ionicons name="play-circle" size={26} color="#FFF" />
+              <Ionicons name="play-circle" size={26} color={palette.white} />
             </View>
           )}
           <Pressable
@@ -33,10 +34,10 @@ export function ImageThumbnailStrip({
             hitSlop={6}
             style={{ position: "absolute", top: 4, right: 4, backgroundColor: "rgba(0,0,0,0.55)", borderRadius: 10 }}
           >
-            <Ionicons name="close-circle" size={20} color="#FFF" />
+            <Ionicons name="close-circle" size={20} color={palette.white} />
           </Pressable>
           <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 }}>
-            <Text style={{ fontSize: 10, color: "#FFF", fontWeight: "700" }}>{i + 1}</Text>
+            <Text style={{ fontSize: 10, color: palette.white, fontWeight: "700" }}>{i + 1}</Text>
           </View>
         </View>
       ))}

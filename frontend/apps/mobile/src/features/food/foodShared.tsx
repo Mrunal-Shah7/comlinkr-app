@@ -2,6 +2,7 @@
 //
 // Helpers, small components and styles shared by the Food tab and the restaurant detail route (plan 03),
 // moved out of app/(tabs)/food/index.tsx.
+import { palette } from "../../theme/palette";
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
@@ -201,7 +202,7 @@ export function ImageCarousel({ images, height = rs(165), itemWidth, onImagePres
       </View>
       {/* Image counter badge */}
       <View style={carouselSt.counter}>
-        <Ionicons name="images-outline" size={10} color="#FFF" />
+        <Ionicons name="images-outline" size={10} color={palette.white} />
         <Text style={carouselSt.counterText}>{activeIndex + 1}/{images.length}</Text>
       </View>
     </View>
@@ -218,7 +219,7 @@ export const carouselSt = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.45)",
   },
   dotActive: {
-    backgroundColor: "#FFF", width: rs(18), borderRadius: rs(3),
+    backgroundColor: palette.white, width: rs(18), borderRadius: rs(3),
   },
   counter: {
     position: "absolute", bottom: rs(28), right: rs(8),
@@ -226,14 +227,14 @@ export const carouselSt = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)", borderRadius: rs(12),
     paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
-  counterText: { fontSize: rs(10), fontWeight: "700", color: "#FFF" },
+  counterText: { fontSize: rs(10), fontWeight: "700", color: palette.white },
 });
 
 export const EMPTY_RESTAURANTS: Restaurant[] = [];
 export const restaurantId = (r: Restaurant) => r.id;
 
 export const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
 
@@ -241,24 +242,24 @@ export const s = StyleSheet.create({
   heroDecor1: { display: "none" },
   heroDecor2: { display: "none" },
   heroRow: { flexDirection: "row", alignItems: "center", gap: rs(6), marginBottom: rs(4) },
-  heroLabel: { fontSize: rs(10), fontWeight: "800", color: "#86EFAC", letterSpacing: 2 },
-  heroTitle: { fontSize: rs(20), fontWeight: "900", color: "#FFF", letterSpacing: -0.4 },
+  heroLabel: { fontSize: rs(10), fontWeight: "800", color: palette.green300, letterSpacing: 2 },
+  heroTitle: { fontSize: rs(20), fontWeight: "900", color: palette.white, letterSpacing: -0.4 },
   heroSub: { fontSize: rs(12.5), color: "rgba(255,255,255,0.85)", marginTop: rs(3), fontWeight: "500" },
 
-  searchWrap: { flexDirection: "row", alignItems: "center", gap: rs(10), marginHorizontal: rs(16), marginTop: rs(10), marginBottom: rs(10), backgroundColor: "#FFF", borderRadius: rs(14), borderWidth: 1, borderColor: "#E5E7EB", paddingHorizontal: rs(14), height: rs(44) },
+  searchWrap: { flexDirection: "row", alignItems: "center", gap: rs(10), marginHorizontal: rs(16), marginTop: rs(10), marginBottom: rs(10), backgroundColor: palette.white, borderRadius: rs(14), borderWidth: 1, borderColor: palette.gray200, paddingHorizontal: rs(14), height: rs(44) },
   searchInput: { flex: 1, fontSize: rs(14), color: Colors.text.primary, fontWeight: "400" },
 
   tabScroll: { marginTop: rs(12) },
-  tab: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "#F3F4F6", borderRadius: rs(10), paddingHorizontal: rs(12), paddingVertical: rs(7), marginRight: rs(8) },
+  tab: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: palette.gray100, borderRadius: rs(10), paddingHorizontal: rs(12), paddingVertical: rs(7), marginRight: rs(8) },
   tabActive: { backgroundColor: Colors.brand.greenDark },
   tabText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
-  tabTextActive: { color: "#FFF", fontWeight: "700" },
+  tabTextActive: { color: palette.white, fontWeight: "700" },
   tabBadge: { backgroundColor: "rgba(0,0,0,0.06)", borderRadius: rs(6), paddingHorizontal: rs(5), paddingVertical: rs(1) },
   tabBadgeActive: { backgroundColor: "rgba(255,255,255,0.2)" },
   tabBadgeText: { fontSize: rs(10), fontWeight: "700", color: Colors.text.tertiary },
 
   cuisineScroll: { marginTop: rs(10) },
-  cuisineChip: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(7), marginRight: rs(8), backgroundColor: "#FFF" },
+  cuisineChip: { borderWidth: 1, borderColor: palette.gray200, borderRadius: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(7), marginRight: rs(8), backgroundColor: palette.white },
   cuisineChipActive: { borderColor: Colors.brand.green, backgroundColor: Colors.brand.greenLight },
   cuisineText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
   cuisineTextActive: { color: Colors.brand.greenDark, fontWeight: "700" },
@@ -285,9 +286,9 @@ export const s = StyleSheet.create({
     paddingHorizontal: rs(8),
     paddingVertical: rs(5),
     borderRadius: rs(10),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   sortChipActive: {
     backgroundColor: Colors.brand.green + "18",
@@ -319,10 +320,10 @@ export const s = StyleSheet.create({
   },
 
   card: {
-    marginHorizontal: rs(16), marginBottom: rs(14), backgroundColor: "#FFF",
+    marginHorizontal: rs(16), marginBottom: rs(14), backgroundColor: palette.white,
     borderRadius: rs(18), overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.07, shadowRadius: 12, elevation: 4,
-    borderWidth: 1, borderColor: "#F0F2F5",
+    shadowColor: palette.black, shadowOpacity: 0.07, shadowRadius: 12, elevation: 4,
+    borderWidth: 1, borderColor: palette.neutralL95_5,
   },
 
   // Image area
@@ -335,8 +336,8 @@ export const s = StyleSheet.create({
   statusOpen: { backgroundColor: "rgba(22,163,74,0.9)" },
   statusNeutral: { backgroundColor: "rgba(55,65,81,0.9)" },
   statusClosed: { backgroundColor: "rgba(220,38,38,0.9)" },
-  statusDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "#FFF", opacity: 0.85 },
-  statusText: { fontSize: rs(11), fontWeight: "700", color: "#FFF" },
+  statusDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: palette.white, opacity: 0.85 },
+  statusText: { fontSize: rs(11), fontWeight: "700", color: palette.white },
   bookmarkIconBtn: {
     position: "absolute", top: rs(10), right: rs(48),
     width: rs(34), height: rs(34), borderRadius: rs(17),
@@ -354,7 +355,7 @@ export const s = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.55)",
     paddingHorizontal: rs(9), paddingVertical: rs(4), borderRadius: rs(8),
   },
-  priceOverlayText: { fontSize: rs(12), fontWeight: "800", color: "#FFF" },
+  priceOverlayText: { fontSize: rs(12), fontWeight: "800", color: palette.white },
 
   // Card body
   cardBody: { padding: rs(14) },
@@ -362,7 +363,7 @@ export const s = StyleSheet.create({
   cardName: { fontSize: rs(16), fontWeight: "800", color: Colors.text.primary, flex: 1 },
   vBadge: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
-    backgroundColor: "#DCFCE7", paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(8),
+    backgroundColor: palette.green100, paddingHorizontal: rs(7), paddingVertical: rs(3), borderRadius: rs(8),
   },
   vText: { fontSize: rs(10), fontWeight: "700", color: Colors.brand.green },
   cardCuisine: { fontSize: rs(12), color: Colors.text.secondary, marginBottom: rs(8) },
@@ -371,23 +372,23 @@ export const s = StyleSheet.create({
   infoRow: { flexDirection: "row", alignItems: "center", gap: rs(8), marginBottom: rs(10), flexWrap: "wrap" },
   ratingChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    backgroundColor: "#FFF8E6", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
+    backgroundColor: palette.yellowL95, borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
   ratingNum: { fontSize: rs(13), fontWeight: "700", color: Colors.text.primary },
   reviewCount: { fontSize: rs(11), color: Colors.text.tertiary },
   distChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    backgroundColor: "#F3F4F6", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
+    backgroundColor: palette.gray100, borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
   metaText: { fontSize: rs(11), fontWeight: "600", color: Colors.text.secondary },
   waitChip: {
     flexDirection: "row", alignItems: "center", gap: rs(4),
-    backgroundColor: "#E2F0F1", borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
+    backgroundColor: palette.brandTealLight, borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
-  waitText: { fontSize: rs(11), fontWeight: "600", color: "#257A86" },
+  waitText: { fontSize: rs(11), fontWeight: "600", color: palette.brandTeal },
   priceChip: {
     borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(4),
-    backgroundColor: "#F0FDF4",
+    backgroundColor: palette.green50,
   },
   priceText: { fontSize: rs(12), fontWeight: "800", color: Colors.brand.greenDark },
 
@@ -396,26 +397,26 @@ export const s = StyleSheet.create({
   serviceChip: {
     borderWidth: 1, borderColor: Colors.brand.greenLight,
     borderRadius: rs(7), paddingHorizontal: rs(9), paddingVertical: rs(3),
-    backgroundColor: "#FAFFFC",
+    backgroundColor: palette.neutralL99_3,
   },
   serviceText: { fontSize: rs(10), fontWeight: "700", color: Colors.brand.greenDark },
 
   // Popular dishes
   dishesRow: { flexDirection: "row", alignItems: "center", gap: rs(4), marginBottom: rs(10) },
-  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: "#257A86" },
+  dishesLabel: { fontSize: rs(11), fontWeight: "700", color: palette.brandTeal },
   dishesText: { fontSize: rs(11), color: Colors.text.secondary, flex: 1 },
 
   // Bottom row: tags + actions
   cardMeta: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingTop: rs(10), borderTopWidth: 1, borderTopColor: "#F3F4F6",
+    paddingTop: rs(10), borderTopWidth: 1, borderTopColor: palette.gray100,
   },
   cardTags: { flexDirection: "row", gap: rs(6), flexWrap: "wrap" },
   cardTag: { backgroundColor: Colors.brand.greenLight, borderRadius: rs(6), paddingHorizontal: rs(7), paddingVertical: rs(3) },
   cardTagText: { fontSize: rs(10), fontWeight: "600", color: Colors.brand.greenDark },
   reportBtn: {
     width: rs(30), height: rs(30), borderRadius: rs(8),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center", justifyContent: "center",
   },
   chatBtn: {
@@ -428,7 +429,7 @@ export const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: rs(5),
     paddingHorizontal: rs(12), paddingVertical: rs(8), borderRadius: rs(10),
   },
-  orderBtnText: { fontSize: rs(12), fontWeight: "700", color: "#FFF" },
+  orderBtnText: { fontSize: rs(12), fontWeight: "700", color: palette.white },
 
   empty: { alignItems: "center", paddingVertical: rs(40), marginHorizontal: rs(16) },
   emptyTitle: { fontSize: rs(15), fontWeight: "600", marginTop: rs(12) },
@@ -453,19 +454,19 @@ export const rdm = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: 4,
     borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4,
   },
-  badgeText: { fontSize: 11, fontWeight: "700", color: "#FFF" },
-  heroTitle: { fontSize: 24, fontWeight: "800", color: "#FFF" },
+  badgeText: { fontSize: 11, fontWeight: "700", color: palette.white },
+  heroTitle: { fontSize: 24, fontWeight: "800", color: palette.white },
   heroCuisine: { fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 2 },
 
   // Stats
   statsRow: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-around",
-    backgroundColor: "#F9FAFB", borderRadius: 16, paddingVertical: 16, marginVertical: 16,
+    backgroundColor: palette.gray50, borderRadius: 16, paddingVertical: 16, marginVertical: 16,
   },
   statItem: { alignItems: "center", gap: 4 },
   statNum: { fontSize: 18, fontWeight: "800", color: Colors.text.primary },
   statLbl: { fontSize: 11, color: Colors.text.tertiary },
-  statDiv: { width: 1, height: 32, backgroundColor: "#E5E7EB" },
+  statDiv: { width: 1, height: 32, backgroundColor: palette.gray200 },
 
   // Section
   section: { marginBottom: 22 },
@@ -489,21 +490,21 @@ export const rdm = StyleSheet.create({
   // Services
   serviceChip: {
     flexDirection: "row", alignItems: "center", gap: 6,
-    backgroundColor: "#F0FDF4", borderWidth: 1, borderColor: "#BBF7D0",
+    backgroundColor: palette.green50, borderWidth: 1, borderColor: palette.green200,
     borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
   },
-  serviceChipText: { fontSize: 13, fontWeight: "600", color: "#16A34A" },
+  serviceChipText: { fontSize: 13, fontWeight: "600", color: palette.green600 },
 
   // Popular dishes
   dishRow: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: "#FFFBF5", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    backgroundColor: palette.neutralL98_8, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
   },
   dishNum: {
-    width: 24, height: 24, borderRadius: 8, backgroundColor: "#257A86",
+    width: 24, height: 24, borderRadius: 8, backgroundColor: palette.brandTeal,
     alignItems: "center", justifyContent: "center",
   },
-  dishNumText: { fontSize: 12, fontWeight: "700", color: "#FFF" },
+  dishNumText: { fontSize: 12, fontWeight: "700", color: palette.white },
   dishName: { fontSize: 14, fontWeight: "600", color: Colors.text.primary, flex: 1 },
 
   // Tags
@@ -513,7 +514,7 @@ export const rdm = StyleSheet.create({
   // Rate & Review
   rateRow: { flexDirection: "row", justifyContent: "center", gap: 8, marginBottom: 16 },
   reviewInputWrap: {
-    borderWidth: 1.5, borderColor: "#E5E7EB", borderRadius: 12,
+    borderWidth: 1.5, borderColor: palette.gray200, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12,
   },
   reviewInput: { fontSize: 14, minHeight: 72, textAlignVertical: "top", lineHeight: 20 },
@@ -522,9 +523,9 @@ export const rdm = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     paddingVertical: 12, borderRadius: 12,
   },
-  reviewSubmitText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+  reviewSubmitText: { fontSize: 14, fontWeight: "700", color: palette.white },
   userReview: {
-    backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, marginBottom: 8,
+    backgroundColor: palette.gray50, borderRadius: 12, padding: 12, marginBottom: 8,
   },
   reviewTime: { fontSize: 11, color: Colors.text.tertiary },
   reviewText: { fontSize: 13, color: Colors.text.secondary },
@@ -533,7 +534,7 @@ export const rdm = StyleSheet.create({
   ctaBar: {
     flexDirection: "row", alignItems: "center", gap: 12,
     paddingHorizontal: 20, paddingTop: 12,
-    borderTopWidth: 1, borderTopColor: "#F3F4F6", backgroundColor: "#FFF",
+    borderTopWidth: 1, borderTopColor: palette.gray100, backgroundColor: palette.white,
   },
   ctaReserve: {
     flexDirection: "row", alignItems: "center", gap: 6,
@@ -546,5 +547,5 @@ export const rdm = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     paddingVertical: 14, borderRadius: 14,
   },
-  ctaOrderText: { fontSize: 14, fontWeight: "700", color: "#FFF" },
+  ctaOrderText: { fontSize: 14, fontWeight: "700", color: palette.white },
 });

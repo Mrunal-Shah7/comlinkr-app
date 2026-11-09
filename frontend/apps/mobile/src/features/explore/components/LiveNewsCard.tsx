@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { memo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
@@ -9,7 +10,7 @@ import { SPRING } from "../../../shared/motion/presets";
 import { FadeImage } from "../../../../components/FadeImage";
 import { type NewsArticle, BASE_NEWS_CATEGORIES, newsTimeAgo, isSameContent } from "../news";
 
-const LIKE = "#F0457E";
+const LIKE = palette.pinkL61;
 
 /** Heart / bookmark that pops when toggled (scale 1 → 1.32 → 1, spring). */
 function PopIcon({ on, name, onName, color, onColor, size, onPress, label, count }: {
@@ -120,7 +121,7 @@ export const LiveNewsCard = memo(function LiveNewsCard({
 });
 
 const s = StyleSheet.create({
-  card: { borderRadius: RADIUS.card, overflow: "hidden", marginBottom: 12, shadowColor: "#0F283C", shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+  card: { borderRadius: RADIUS.card, overflow: "hidden", marginBottom: 12, shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   featImg: { margin: 6, borderRadius: 22, aspectRatio: 16 / 11 },
   featBody: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 8 },

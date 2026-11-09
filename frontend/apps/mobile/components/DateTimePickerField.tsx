@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import React, { useState } from "react";
 import {
   Pressable,
@@ -95,9 +96,9 @@ function InlinePickerSheet({
   isDark: boolean;
 }) {
   if (!visible) return null;
-  const bg     = isDark ? "#1E2D47" : "#FFFFFF";
-  const border = isDark ? "#2D3F5C" : "#E2E8F0";
-  const gray   = isDark ? "#9CA3AF" : "#9CA3AF";
+  const bg     = isDark ? palette.blueL20_2 : palette.white;
+  const border = isDark ? palette.blueL27 : palette.slate200;
+  const gray   = isDark ? palette.gray400 : palette.gray400;
   return (
     <View style={[styles.inlineSheet, { backgroundColor: bg, borderColor: border }]}>
       <View style={[styles.toolbar, { borderBottomColor: border }]}>
@@ -119,7 +120,7 @@ export function DatePickerField({
   value,
   onChange,
   placeholder = "Select date",
-  accentColor = "#1A6BAE",
+  accentColor = palette.brandBlue,
   style,
   textStyle,
   dateFormat = "display",
@@ -131,11 +132,11 @@ export function DatePickerField({
   const [show, setShow]       = useState(false);
   const [pending, setPending] = useState<Date>(parseDate(value, dateFormat));
 
-  const bg        = isDark ? "#1A2740" : "#FFFFFF";
-  const border    = isDark ? "#2D3F5C" : "#E2E8F0";
-  const textColor = isDark ? "#F1F5F9" : "#0F172A";
-  const phColor   = isDark ? "#64748B" : "#9CA3AF";
-  const chevColor = isDark ? "#64748B" : "#9CA3AF";
+  const bg        = isDark ? palette.blueL18_2 : palette.white;
+  const border    = isDark ? palette.blueL27 : palette.slate200;
+  const textColor = isDark ? palette.slate100 : palette.slate900;
+  const phColor   = isDark ? palette.slate500 : palette.gray400;
+  const chevColor = isDark ? palette.slate500 : palette.gray400;
 
 //   const onAndroid = (_: DateTimePickerEvent, selected?: Date) => {
 //       setShow(false);
@@ -293,7 +294,7 @@ export function TimePickerField({
   value,
   onChange,
   placeholder = "Select time",
-  accentColor = "#1A6BAE",
+  accentColor = palette.brandBlue,
   style,
   textStyle,
   forceDark,
@@ -303,11 +304,11 @@ export function TimePickerField({
   const [show, setShow]       = useState(false);
   const [pending, setPending] = useState<Date>(new Date());
 
-  const bg        = isDark ? "#1A2740" : "#FFFFFF";
-  const border    = isDark ? "#2D3F5C" : "#E2E8F0";
-  const textColor = isDark ? "#F1F5F9" : "#0F172A";
-  const phColor   = isDark ? "#64748B" : "#9CA3AF";
-  const chevColor = isDark ? "#64748B" : "#9CA3AF";
+  const bg        = isDark ? palette.blueL18_2 : palette.white;
+  const border    = isDark ? palette.blueL27 : palette.slate200;
+  const textColor = isDark ? palette.slate100 : palette.slate900;
+  const phColor   = isDark ? palette.slate500 : palette.gray400;
+  const chevColor = isDark ? palette.slate500 : palette.gray400;
 
 //   const onAndroid = (_: DateTimePickerEvent, selected?: Date) => {
 //       setShow(false);
@@ -462,7 +463,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,

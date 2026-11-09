@@ -1,6 +1,7 @@
 // src/features/admin/pages/PollsScreen.tsx
 // SPRINT-41: Real AdminPoll shape — isActive→status, votesCount→votes; no audience/endsAt
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
@@ -24,7 +25,7 @@ import { showToast } from '../../../shared/ui/Toast';
 
 const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
   active:  { color: Colors.brand.green,  bg: Colors.brand.greenLight, label: 'Live'   },
-  closed:  { color: Colors.text.tertiary, bg: '#F3F4F6',              label: 'Closed' },
+  closed:  { color: Colors.text.tertiary, bg: palette.gray100,              label: 'Closed' },
 };
 
 // SPRINT-41: Map contract AdminPoll → screen display fields
@@ -83,7 +84,7 @@ function CreatePollForm({ onCreated }: { onCreated: () => void }) {
     <View style={f.card}>
       <View style={f.cardHeader}>
         <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={f.iconWrap}>
-          <Ionicons name="bar-chart" size={16} color="#FFF" />
+          <Ionicons name="bar-chart" size={16} color={palette.white} />
         </LinearGradient>
         <Text style={f.cardTitle}>Create Poll</Text>
       </View>
@@ -119,7 +120,7 @@ function CreatePollForm({ onCreated }: { onCreated: () => void }) {
           </View>
           {options.length > 2 && (
             <Pressable onPress={() => removeOption(i)} style={f.removeBtn} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color="#EF4444" />
+              <Ionicons name="close-circle" size={18} color={palette.red500} />
             </Pressable>
           )}
         </View>
@@ -138,8 +139,8 @@ function CreatePollForm({ onCreated }: { onCreated: () => void }) {
       >
         <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={f.createBtnGrad}>
           {isPending
-            ? <ActivityIndicator color="#FFF" size="small" />
-            : <><Ionicons name="send" size={15} color="#FFF" /><Text style={f.createBtnText}>Publish Poll</Text></>
+            ? <ActivityIndicator color={palette.white} size="small" />
+            : <><Ionicons name="send" size={15} color={palette.white} /><Text style={f.createBtnText}>Publish Poll</Text></>
           }
         </LinearGradient>
       </Pressable>
@@ -196,7 +197,7 @@ function PollCard({ poll, onChanged }: { poll: AdminPoll; onChanged: () => void 
             ])}
             style={p.closeBtn}
           >
-            <Ionicons name="stop-circle" size={13} color="#F59E0B" />
+            <Ionicons name="stop-circle" size={13} color={palette.amber500} />
             <Text style={p.closeBtnText}>Close</Text>
           </Pressable>
         )}
@@ -219,7 +220,7 @@ function PollCard({ poll, onChanged }: { poll: AdminPoll; onChanged: () => void 
           ])}
           style={p.deleteBtn}
         >
-          <Ionicons name="trash" size={13} color="#EF4444" />
+          <Ionicons name="trash" size={13} color={palette.red500} />
           <Text style={p.deleteBtnText}>Delete</Text>
         </Pressable>
       </View>
@@ -253,11 +254,11 @@ export default function PollsScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.brand.blue} />}
         >
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
             <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.headerIcon}>
-              <Ionicons name="bar-chart" size={22} color="#FFF" />
+              <Ionicons name="bar-chart" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -277,7 +278,7 @@ export default function PollsScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.statCard}>
-              <Text style={[s.statNum, { color: '#FF7B00' }]}>{totalVotes.toLocaleString()}</Text>
+              <Text style={[s.statNum, { color: palette.legacyOrange }]}>{totalVotes.toLocaleString()}</Text>
               <Text style={s.statLabel}>Total Votes</Text>
             </View>
           </View>
@@ -338,7 +339,7 @@ export default function PollsScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 20, paddingBottom: 48 },
@@ -349,32 +350,32 @@ const s = createThemedStyles({
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title:       { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
 
-  statsRow:    { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
+  statsRow:    { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 16, padding: 16, marginBottom: 16, shadowColor: palette.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' },
   statCard:    { flex: 1, alignItems: 'center' },
   statNum:     { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
   statLabel:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', marginTop: 2 },
-  statDivider: { width: 1, backgroundColor: '#F0F2F5' },
+  statDivider: { width: 1, backgroundColor: palette.neutralL95_5 },
 
-  tabToggle:   { flexDirection: 'row', backgroundColor: '#FFF', borderRadius: 14, padding: 4, marginBottom: 16, gap: 4, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  tabToggle:   { flexDirection: 'row', backgroundColor: palette.white, borderRadius: 14, padding: 4, marginBottom: 16, gap: 4, shadowColor: palette.navy, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   tabBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 10, borderRadius: 11 },
   tabBtnActive:{ backgroundColor: Colors.brand.blueLight },
   tabText:     { fontSize: 13, fontWeight: '700', color: Colors.text.tertiary },
   tabTextActive:{ color: Colors.brand.blue },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center', gap: 10 },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center', gap: 10 },
   loadingText: { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle:  { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub:    { fontSize: 13, color: Colors.text.tertiary },
 
   pager:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingVertical: 8 }, // SPRINT-41:
-  pagerBtn:    { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#FFF', borderWidth: 1, borderColor: Colors.border.light }, // SPRINT-41:
+  pagerBtn:    { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: palette.white, borderWidth: 1, borderColor: Colors.border.light }, // SPRINT-41:
   pagerText:   { fontSize: 13, fontWeight: '700', color: Colors.brand.blue }, // SPRINT-41:
   pagerLabel:  { fontSize: 12, fontWeight: '600', color: Colors.text.secondary }, // SPRINT-41:
 });
 
 const f = createThemedStyles({
-  card:            { backgroundColor: '#FFF', borderRadius: 20, padding: 20, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 4, borderWidth: 1, borderColor: 'rgba(0,118,235,0.07)' },
+  card:            { backgroundColor: palette.white, borderRadius: 20, padding: 20, shadowColor: palette.navy, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 4, borderWidth: 1, borderColor: 'rgba(0,118,235,0.07)' },
   cardHeader:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
   iconWrap:        { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   cardTitle:       { fontSize: 16, fontWeight: '800', color: Colors.text.primary },
@@ -394,11 +395,11 @@ const f = createThemedStyles({
 
   createBtn:       { borderRadius: 16, overflow: 'hidden', marginTop: 18, shadowColor: Colors.brand.blue, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 6 },
   createBtnGrad:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 16 },
-  createBtnText:   { fontSize: 15, fontWeight: '800', color: '#FFF' },
+  createBtnText:   { fontSize: 15, fontWeight: '800', color: palette.white },
 });
 
 const p = createThemedStyles({
-  card:         { backgroundColor: '#FFF', borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
+  card:         { backgroundColor: palette.white, borderRadius: 18, padding: 16, marginBottom: 12, shadowColor: palette.navy, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,118,235,0.05)' },
   topRow:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
   statusChip:   { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
   statusDot:    { width: 6, height: 6, borderRadius: 3 },
@@ -407,12 +408,12 @@ const p = createThemedStyles({
   question:     { fontSize: 15, fontWeight: '800', color: Colors.text.primary, marginBottom: 12, lineHeight: 21 },
   optRow:       { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   optText:      { fontSize: 12, fontWeight: '600', color: Colors.text.primary, width: 100 },
-  barBg:        { flex: 1, height: 7, backgroundColor: '#F3F4F6', borderRadius: 4, overflow: 'hidden' },
+  barBg:        { flex: 1, height: 7, backgroundColor: palette.gray100, borderRadius: 4, overflow: 'hidden' },
   barFill:      { height: '100%', borderRadius: 4, minWidth: 4 },
   optPct:       { fontSize: 12, fontWeight: '800', color: Colors.brand.blue, width: 32, textAlign: 'right' },
   actions:      { flexDirection: 'row', gap: 8, marginTop: 10 },
-  closeBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FFF3E6', borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
-  closeBtnText: { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
-  deleteBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
-  deleteBtnText:{ fontSize: 12, fontWeight: '700', color: '#EF4444' },
+  closeBtn:     { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.legacyOrangeLight, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
+  closeBtnText: { fontSize: 12, fontWeight: '700', color: palette.amber500 },
+  deleteBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' },
+  deleteBtnText:{ fontSize: 12, fontWeight: '700', color: palette.red500 },
 });

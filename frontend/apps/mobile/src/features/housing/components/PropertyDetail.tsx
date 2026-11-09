@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useState, useRef, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, Share, useWindowDimensions, StyleSheet } from "react-native";
 import { TYPE, body, display } from "../../../theme/d";
@@ -285,7 +286,7 @@ export function PropertyDetail({
                   return (
                     <View key={i} style={{ flex: 1, alignItems: "center" }}>
                       <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: done ? tc.mint : tc.inputBg }}>
-                        <Ionicons name={st.icon as any} size={14} color={done ? "#fff" : tc.textTertiary} />
+                        <Ionicons name={st.icon as any} size={14} color={done ? palette.white : tc.textTertiary} />
                       </View>
                       <Text style={[TYPE.small, { fontSize: 11, marginTop: 4, color: done ? tc.textPrimary : tc.textTertiary }]}>{st.label}</Text>
                     </View>

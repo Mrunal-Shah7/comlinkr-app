@@ -1,4 +1,5 @@
 // src/shared/ui/ListState.tsx - one contract for loading / error / empty / filtered-empty / needs-city (UI-05).
+import { palette } from "../../theme/palette";
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
@@ -86,7 +87,7 @@ const s = StyleSheet.create({
   title: { fontSize: 15, fontWeight: '700', marginTop: 8, textAlign: 'center' },
   message: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
   action: { marginTop: 12, minHeight: 44, paddingHorizontal: 22, borderRadius: 12, backgroundColor: Colors.brand.blue, alignItems: 'center', justifyContent: 'center' },
-  actionText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  actionText: { color: palette.white, fontSize: 14, fontWeight: '700' },
   secondary: { minHeight: 40, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
   secondaryText: { fontSize: 13, fontWeight: '600' },
 });

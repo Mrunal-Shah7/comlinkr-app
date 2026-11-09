@@ -1,5 +1,6 @@
 // Door check-in (design D `check-in`): the scanner in a rounded box with a sweeping line, live counts that roll
 // up on each admission, and the list of who is in. SPRINT-42 rules kept: owner gate before the camera, one scan at a time.
+import { palette } from "../../../src/theme/palette";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Linking } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -181,7 +182,7 @@ export default function EventCheckInScreen() {
         kind: "INVALID_TICKET",
         title: "INVALID TICKET",
         subtitle: "Unrecognised QR payload.",
-        color: "#DC2626",
+        color: palette.red600,
       });
       setBusy(false); // SPRINT-42:
       return; // SPRINT-42: lock cleared on dismissOutcome only
@@ -193,7 +194,7 @@ export default function EventCheckInScreen() {
         kind: "WRONG_EVENT",
         title: "WRONG EVENT",
         subtitle: "Valid ticket for another event.",
-        color: "#EA580C",
+        color: palette.orange600,
       });
       setBusy(false); // SPRINT-42:
       return; // SPRINT-42:
@@ -211,7 +212,7 @@ export default function EventCheckInScreen() {
             kind: "ADMITTED",
             title: "ADMITTED",
             subtitle: "Ticket accepted. Attendee checked in.",
-            color: "#16A34A",
+            color: palette.green600,
             name,
             quantity,
           });
@@ -222,7 +223,7 @@ export default function EventCheckInScreen() {
             kind: "INVALID_TICKET",
             title: "INVALID TICKET",
             subtitle: result.message || "Ticket not recognised.",
-            color: "#DC2626",
+            color: palette.red600,
           });
           break;
         case "WRONG_EVENT":
@@ -230,7 +231,7 @@ export default function EventCheckInScreen() {
             kind: "WRONG_EVENT",
             title: "WRONG EVENT",
             subtitle: "Valid ticket for another event.",
-            color: "#EA580C",
+            color: palette.orange600,
             name,
           });
           break;
@@ -239,7 +240,7 @@ export default function EventCheckInScreen() {
             kind: "ALREADY_CHECKED_IN",
             title: "ALREADY CHECKED IN",
             subtitle: "Ticket was already checked in.",
-            color: "#D97706",
+            color: palette.amber600,
             name,
             quantity,
             checkedInAt: formatCheckedInAt(result.checkedInAt),
@@ -250,7 +251,7 @@ export default function EventCheckInScreen() {
             kind: "REGISTRATION_CANCELLED",
             title: "REGISTRATION CANCELLED",
             subtitle: result.message || "This registration was cancelled.",
-            color: "#DC2626",
+            color: palette.red600,
             name,
           });
           break;
@@ -259,7 +260,7 @@ export default function EventCheckInScreen() {
             kind: "INVALID_TICKET",
             title: "INVALID TICKET",
             subtitle: result.message || "Unrecognised result.",
-            color: "#DC2626",
+            color: palette.red600,
           });
       }
     } catch (err) {
@@ -269,14 +270,14 @@ export default function EventCheckInScreen() {
           kind: "NETWORK_ERROR",
           title: "NOT AUTHORIZED",
           subtitle: err.message,
-          color: "#6B7280",
+          color: palette.gray500,
         });
       } else {
         showOutcome({
           kind: "NETWORK_ERROR",
           title: "COULD NOT VERIFY",
           subtitle: "Could not verify—no admission decision was recorded",
-          color: "#6B7280",
+          color: palette.gray500,
         });
       }
     } finally {
@@ -287,9 +288,9 @@ export default function EventCheckInScreen() {
   const sentence = (t: string) => t.charAt(0) + t.slice(1).toLowerCase();
   const outcomeTone = (k: OutcomeKind) =>
     k === "ADMITTED" ? { bg: tc.mint, icon: "checkmark-circle" as const }
-    : k === "ALREADY_CHECKED_IN" || k === "WRONG_EVENT" ? { bg: "#B7791F", icon: "alert-circle" as const }
-    : k === "NETWORK_ERROR" ? { bg: "#4F6470", icon: "cloud-offline" as const }
-    : { bg: "#C53030", icon: "close-circle" as const };
+    : k === "ALREADY_CHECKED_IN" || k === "WRONG_EVENT" ? { bg: palette.orangeL42, icon: "alert-circle" as const }
+    : k === "NETWORK_ERROR" ? { bg: palette.inkSecondary, icon: "cloud-offline" as const }
+    : { bg: palette.redL48, icon: "close-circle" as const };
 
   if (!eventId || ownerGate === "error") {
     return (
@@ -355,22 +356,22 @@ export default function EventCheckInScreen() {
           ) : null}
           <ScanCorners />
           {scanning && !outcome && !busy ? <ScanLine color={tc.mint} /> : null}
-          {busy ? <ActivityIndicator color="#FFF" size="large" style={StyleSheet.absoluteFill} /> : null}
+          {busy ? <ActivityIndicator color={palette.white} size="large" style={StyleSheet.absoluteFill} /> : null}
           {!scanning && !outcome && !busy ? (
             <Pressable style={st.center} onPress={() => setScanning(true)}>
-              <Text style={[body(700), { color: "#fff" }]}>Tap to scan again</Text>
+              <Text style={[body(700), { color: palette.white }]}>Tap to scan again</Text>
             </Pressable>
           ) : null}
           {outcome && tone ? (
             <Animated.View entering={ZoomIn.springify().damping(16).stiffness(220).mass(1)} style={[StyleSheet.absoluteFill, { backgroundColor: tone.bg }]}>
               <Pressable style={[st.center, { padding: 18 }]} onPress={dismissOutcome} accessibilityRole="button" accessibilityLabel={`${sentence(outcome.title)}. Tap to scan the next ticket`}>
-                <Ionicons name={tone.icon} size={44} color="#fff" />
-                <Text style={[display(800), { color: "#fff", fontSize: 24, marginTop: 6, textAlign: "center" }]}>{sentence(outcome.title)}</Text>
-                {outcome.name ? <Text style={[body(700), { color: "#fff", fontSize: 16, marginTop: 4 }]} numberOfLines={1}>{outcome.name}</Text> : null}
+                <Ionicons name={tone.icon} size={44} color={palette.white} />
+                <Text style={[display(800), { color: palette.white, fontSize: 24, marginTop: 6, textAlign: "center" }]}>{sentence(outcome.title)}</Text>
+                {outcome.name ? <Text style={[body(700), { color: palette.white, fontSize: 16, marginTop: 4 }]} numberOfLines={1}>{outcome.name}</Text> : null}
                 {outcome.quantity != null ? <Text style={[body(500), st.outMeta]}>{outcome.quantity} ticket{outcome.quantity === 1 ? "" : "s"}</Text> : null}
                 {outcome.checkedInAt ? <Text style={[body(500), st.outMeta]}>Checked in {outcome.checkedInAt}</Text> : null}
                 <Text style={[body(500), st.outMeta, { textAlign: "center" }]}>{outcome.subtitle}</Text>
-                <Text style={[body(700), { color: "#fff", marginTop: 10 }]}>{outcome.kind === "NETWORK_ERROR" ? "Tap to try again" : "Tap for the next ticket"}</Text>
+                <Text style={[body(700), { color: palette.white, marginTop: 10 }]}>{outcome.kind === "NETWORK_ERROR" ? "Tap to try again" : "Tap for the next ticket"}</Text>
               </Pressable>
             </Animated.View>
           ) : null}
@@ -475,11 +476,11 @@ function AttendeeRow({ item, i, known }: { item: EventCheckInAttendee; i: number
 
 const st = StyleSheet.create({
   iconBtn: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  scanbox: { width: 240, height: 240, alignSelf: "center", marginVertical: 20, borderRadius: 28, overflow: "hidden", backgroundColor: "#0B0F16" },
+  scanbox: { width: 240, height: 240, alignSelf: "center", marginVertical: 20, borderRadius: 28, overflow: "hidden", backgroundColor: palette.neutralL06 },
   center: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
   line: { position: "absolute", left: 24, right: 24, height: 2, shadowOpacity: 1, shadowRadius: 8, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
   outMeta: { color: "rgba(255,255,255,0.9)", fontSize: 13, marginTop: 2 },
-  stats: { flexDirection: "row", marginHorizontal: 16, marginBottom: 18, borderRadius: 24, shadowColor: "#0F283C", shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
+  stats: { flexDirection: "row", marginHorizontal: 16, marginBottom: 18, borderRadius: 24, shadowColor: palette.shadowNavy, shadowOpacity: 0.12, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
   stat: { flex: 1, alignItems: "center", paddingVertical: 12 },
   chips: { flexDirection: "row", gap: 8, paddingHorizontal: 16, marginBottom: 6 },
   row: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10, paddingHorizontal: 16 },

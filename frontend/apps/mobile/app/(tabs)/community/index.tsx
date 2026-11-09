@@ -1,3 +1,4 @@
+import { palette } from "../../../src/theme/palette";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag, VoteButton } from '../../../src/shared/d';
@@ -1183,7 +1184,7 @@ export default function CommunityScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: rs(20) },
 
@@ -1203,7 +1204,7 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.75)",
     letterSpacing: 1.5,
   },
-  heroTitle: { fontSize: rs(24), fontWeight: "800", color: "#FFF", marginTop: rs(6) },
+  heroTitle: { fontSize: rs(24), fontWeight: "800", color: palette.white, marginTop: rs(6) },
   heroSub: { fontSize: rs(13), color: "rgba(255,255,255,0.9)", marginTop: rs(4) },
 
   statsRow: {
@@ -1220,18 +1221,18 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: rs(2),
   },
-  statValue: { fontSize: rs(16), fontWeight: "800", color: "#FFF" },
+  statValue: { fontSize: rs(16), fontWeight: "800", color: palette.white },
   statLabel: { fontSize: rs(10), color: "rgba(255,255,255,0.75)", fontWeight: "500" },
 
   askBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     paddingHorizontal: rs(14),
     paddingVertical: rs(11),
     marginTop: rs(18),
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.12,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 3 },
@@ -1255,7 +1256,7 @@ const s = StyleSheet.create({
     paddingHorizontal: rs(14),
     paddingVertical: rs(7),
   },
-  askCtaText: { fontSize: rs(12.5), fontWeight: "700", color: "#FFF" },
+  askCtaText: { fontSize: rs(12.5), fontWeight: "700", color: palette.white },
 
   chipScroll: { marginTop: rs(12) },
   loadMoreBtn: { marginHorizontal: rs(16), marginTop: rs(8), minHeight: 46, borderRadius: rs(12), borderWidth: 1, alignItems: "center", justifyContent: "center" },
@@ -1263,7 +1264,7 @@ const s = StyleSheet.create({
   staleBanner: { flexDirection: "row", alignItems: "center", gap: rs(8), marginHorizontal: rs(16), marginBottom: rs(8), padding: rs(10), borderRadius: rs(12), borderWidth: 1 },
   staleText: { flex: 1, fontSize: rs(12), fontWeight: "600" },
   chip: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     borderRadius: rs(10),
     paddingHorizontal: rs(14),
     paddingVertical: rs(8),
@@ -1271,7 +1272,7 @@ const s = StyleSheet.create({
   },
   chipActive: { backgroundColor: Colors.brand.blue },
   chipText: { fontSize: rs(13), fontWeight: "600", color: Colors.text.secondary },
-  chipTextActive: { color: "#FFF" },
+  chipTextActive: { color: palette.white },
 
   secHeader: {
     flexDirection: "row",
@@ -1294,10 +1295,10 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingVertical: rs(40),
     marginHorizontal: rs(16),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     borderStyle: "dashed",
   },
   emptyTitle: {
@@ -1313,17 +1314,17 @@ const s = StyleSheet.create({
     paddingHorizontal: rs(20),
     paddingVertical: rs(10),
   },
-  emptyBtnText: { fontSize: rs(13), fontWeight: "700", color: "#FFF" },
+  emptyBtnText: { fontSize: rs(13), fontWeight: "700", color: palette.white },
 
   qaCard: {
     marginHorizontal: rs(16),
     marginBottom: rs(12),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     padding: rs(16),
     borderWidth: 1,
-    borderColor: "#F3F4F6",
-    shadowColor: "#000",
+    borderColor: palette.gray100,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1358,14 +1359,14 @@ const s = StyleSheet.create({
     marginTop: rs(14),
     paddingTop: rs(12),
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: palette.gray100,
   },
   voteBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: rs(5),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     borderRadius: rs(10),
     paddingHorizontal: rs(10),
     paddingVertical: rs(6),
@@ -1387,12 +1388,12 @@ const s = StyleSheet.create({
   // Icon buttons for share/bookmark/more
   iconBtn: {
     width: rs(30), height: rs(30), borderRadius: rs(8),
-    backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center",
+    backgroundColor: palette.gray100, alignItems: "center", justifyContent: "center",
   },
 
   // Answer input
   answerInputWrap: {
-    marginTop: rs(12), backgroundColor: "#F0F8FF", borderRadius: rs(14),
+    marginTop: rs(12), backgroundColor: palette.neutralL97_5, borderRadius: rs(14),
     padding: rs(14), borderWidth: 1.5, borderColor: Colors.brand.blue + "55",
     shadowColor: Colors.brand.blue, shadowOpacity: 0.08, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
@@ -1403,11 +1404,11 @@ const s = StyleSheet.create({
   },
   answerInputActions: {
     flexDirection: "row", justifyContent: "flex-end", gap: rs(8), marginTop: rs(12),
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E5E7EB", paddingTop: rs(10),
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.gray200, paddingTop: rs(10),
   },
   answerCancelBtn: {
     paddingHorizontal: rs(14), paddingVertical: rs(8), borderRadius: rs(10),
-    borderWidth: 1, borderColor: "#E5E7EB",
+    borderWidth: 1, borderColor: palette.gray200,
   },
   answerCancelText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
   answerSubmitBtn: { borderRadius: rs(10), overflow: "hidden" },
@@ -1415,18 +1416,18 @@ const s = StyleSheet.create({
     flexDirection: "row", alignItems: "center", gap: rs(6),
     paddingHorizontal: rs(16), paddingVertical: rs(8), borderRadius: rs(10),
   },
-  answerSubmitText: { fontSize: rs(12), fontWeight: "700", color: "#FFF" },
+  answerSubmitText: { fontSize: rs(12), fontWeight: "700", color: palette.white },
 
   // Answers container
   answersContainer: {
-    marginTop: rs(12), borderTopWidth: 1, borderTopColor: "#F3F4F6", paddingTop: rs(12),
+    marginTop: rs(12), borderTopWidth: 1, borderTopColor: palette.gray100, paddingTop: rs(12),
   },
   answersHeader: {
     flexDirection: "row", alignItems: "center", gap: rs(6), marginBottom: rs(10),
   },
   answersHeaderText: { fontSize: rs(13), fontWeight: "700", color: Colors.brand.blue },
   answerCard: {
-    backgroundColor: "#F9FAFB", borderRadius: rs(12), padding: rs(12), marginBottom: rs(8),
+    backgroundColor: palette.gray50, borderRadius: rs(12), padding: rs(12), marginBottom: rs(8),
   },
   answerAvatar: { width: rs(28), height: rs(28), borderRadius: rs(14), backgroundColor: Colors.brand.blueLight },
   answerAuthor: { fontSize: rs(12), fontWeight: "700", color: Colors.text.primary },
@@ -1434,7 +1435,7 @@ const s = StyleSheet.create({
   answerText: { fontSize: rs(13), color: Colors.text.secondary, lineHeight: rs(20), marginTop: rs(8) },
   answerVoteBtn: {
     flexDirection: "row", alignItems: "center", gap: rs(3),
-    borderWidth: 1, borderColor: "#E5E7EB", borderRadius: rs(8),
+    borderWidth: 1, borderColor: palette.gray200, borderRadius: rs(8),
     paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
   answerVoteBtnActive: { borderColor: Colors.brand.blue, backgroundColor: Colors.brand.blueLight },
@@ -1443,13 +1444,13 @@ const s = StyleSheet.create({
   // Expand prompt
   expandPrompt: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: rs(4),
-    marginTop: rs(10), paddingTop: rs(8), borderTopWidth: 1, borderTopColor: "#F3F4F6",
+    marginTop: rs(10), paddingTop: rs(8), borderTopWidth: 1, borderTopColor: palette.gray100,
   },
   expandPromptText: { fontSize: rs(12), fontWeight: "600", color: Colors.brand.blue },
 
   modalOverlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" },
   modalSheet: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderTopLeftRadius: rs(24),
     borderTopRightRadius: rs(24),
     paddingHorizontal: rs(20),
@@ -1460,7 +1461,7 @@ const s = StyleSheet.create({
     width: rs(40),
     height: rs(4),
     borderRadius: rs(2),
-    backgroundColor: "#D1D5DB",
+    backgroundColor: palette.gray300,
     alignSelf: "center",
     marginBottom: rs(16),
   },
@@ -1476,10 +1477,10 @@ const s = StyleSheet.create({
     marginBottom: rs(16),
   },
   modalInput: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: rs(14),
     fontSize: rs(15),
     color: Colors.text.primary,
@@ -1493,7 +1494,7 @@ const s = StyleSheet.create({
     justifyContent: "center",
     borderRadius: rs(14),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     paddingVertical: rs(14),
   },
   modalCancelText: { fontSize: rs(15), fontWeight: "600", color: Colors.text.secondary },
@@ -1503,5 +1504,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     borderRadius: rs(14),
   },
-  modalSubmitText: { fontSize: rs(15), fontWeight: "700", color: "#FFF" },
+  modalSubmitText: { fontSize: rs(15), fontWeight: "700", color: palette.white },
 });

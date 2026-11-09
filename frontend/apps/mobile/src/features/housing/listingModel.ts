@@ -1,3 +1,4 @@
+import { palette } from "../../theme/palette";
 import { router } from "expo-router";
 import { useAuthStore } from "../../store/auth.store";
 import { resolveApiAssetUrl } from "../../api/feed.api";
@@ -210,7 +211,7 @@ export function toUiListing(l: HousingListing, _currentUserId?: string | null): 
       since: l.landlord?.since || "2024",
       rating: l.landlord?.rating ?? 4.5,
       responseTime: l.landlord?.responseTime || "N/A",
-      color: l.landlord?.color || "#1A6BAE",
+      color: l.landlord?.color || palette.brandBlue,
     },
     isOwner: ext.isOwner === true, // SPRINT-42: remove client identity-comparison ownership inference.
     listingStatus: ext.status,

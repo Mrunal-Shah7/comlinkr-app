@@ -1,3 +1,4 @@
+import { palette } from "../../../src/theme/palette";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import Reanimated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
@@ -390,7 +391,7 @@ export default function FoodScreen() {
                     <FadeImage uri={(pick.images && pick.images[0]) || pick.image} style={StyleSheet.absoluteFill} />
                     <GradientFill colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.72)"] as const} style={[StyleSheet.absoluteFill, { top: "30%" }]} />
                     <TileLabel light>PICK OF THE WEEK{pick.city ? ` · ${String(pick.city).toUpperCase()}` : ""}</TileLabel>
-                    <Text style={[TYPE.cardTitle, { color: "#fff", fontSize: 22, lineHeight: 25, marginTop: 4 }]} numberOfLines={2}>{pick.name}</Text>
+                    <Text style={[TYPE.cardTitle, { color: palette.white, fontSize: 22, lineHeight: 25, marginTop: 4 }]} numberOfLines={2}>{pick.name}</Text>
                     <TileLabel light style={{ marginTop: 2 }}>{[(pick.reviews ?? 0) > 0 ? `★ ${pick.rating}` : "", pick.cuisine, pick.price ? getDisplayPrice(pick, countryCode) : ""].filter(Boolean).join(" · ")}</TileLabel>
                   </BentoTile>
                 </TileIn>
@@ -401,7 +402,7 @@ export default function FoodScreen() {
                     <TileIn i={1} style={{ flex: 1 }}>
                       <BentoTile tone="mint" onPress={() => setActiveTab("open")} accessibilityLabel={`${openCount} open now`}>
                         <TileLabel style={{ color: "rgba(255,255,255,0.85)" }}>OPEN NOW</TileLabel>
-                        <Text style={[TYPE.tileBig, { color: "#fff", marginTop: "auto" }]}>{openCount}</Text>
+                        <Text style={[TYPE.tileBig, { color: palette.white, marginTop: "auto" }]}>{openCount}</Text>
                       </BentoTile>
                     </TileIn>
                   ) : null}
@@ -486,7 +487,7 @@ export default function FoodScreen() {
             <Ionicons
               name={activeTab === "open" ? "time-outline" : activeTab === "favorites" ? "heart-outline" : "restaurant-outline"}
               size={48}
-              color="#CBD5E1"
+              color={palette.slate300}
             />
             <Text style={[s.emptyTitle, { color: tc.textSecondary }]}>
               {activeTab === "open" ? "No restaurants open now"

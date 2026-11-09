@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -365,7 +366,7 @@ export default function SavedScreen() {
                   </View>
                   <Pressable onPress={() => void item.remove().catch((err) => appAlert("Could not remove", err instanceof ApiError ? err.message : "Try again."))} hitSlop={10} accessibilityRole="button"
                     accessibilityLabel={seg === "int" ? "Not interested any more" : "Remove from favourites"} style={{ width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
-                    <Ionicons name={seg === "int" ? "star" : "heart"} size={21} color={seg === "int" ? tc.accentText : "#E0245E"} />
+                    <Ionicons name={seg === "int" ? "star" : "heart"} size={21} color={seg === "int" ? tc.accentText : palette.pinkL51} />
                   </Pressable>
                 </PressableScale>
               </Animated.View>
@@ -410,11 +411,11 @@ export default function SavedScreen() {
                     <LinearGradient colors={["transparent", "rgba(0,0,0,0.72)"]} style={[StyleSheet.absoluteFill, { top: "45%" }]} />
                     <Pressable onPress={() => void unsave(item, active)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Remove from saved"
                       style={{ position: "absolute", top: 10, right: 10, width: 34, height: 34, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.38)" }}>
-                      <Ionicons name="bookmark" size={17} color="#fff" />
+                      <Ionicons name="bookmark" size={17} color={palette.white} />
                     </Pressable>
-                    {expired ? <View style={{ position: "absolute", top: 12, left: 12, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.5)" }}><Text style={[TYPE.label, { color: "#fff" }]}>Expired</Text></View> : null}
+                    {expired ? <View style={{ position: "absolute", top: 12, left: 12, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: "rgba(0,0,0,0.5)" }}><Text style={[TYPE.label, { color: palette.white }]}>Expired</Text></View> : null}
                     <View style={{ position: "absolute", left: 12, right: 12, bottom: 12 }}>
-                      <Text numberOfLines={2} style={[TYPE.cardTitle, { color: "#fff" }]}>{titleLine(item, active)}</Text>
+                      <Text numberOfLines={2} style={[TYPE.cardTitle, { color: palette.white }]}>{titleLine(item, active)}</Text>
                       {item.category ? <Text numberOfLines={1} style={[TYPE.small, { color: "rgba(255,255,255,0.8)" }]}>{String(item.category)}</Text> : null}
                     </View>
                   </PressableScale>
@@ -524,7 +525,7 @@ const styles = createThemedStyles({
     paddingVertical: rs(3),
     borderRadius: rs(6),
   },
-  expiredText: { color: "#FFF", fontSize: rs(10), fontWeight: "800" },
+  expiredText: { color: palette.white, fontSize: rs(10), fontWeight: "800" },
   storyMeta: { padding: rs(8), gap: rs(2) },
   storyTitle: { fontSize: rs(13), fontWeight: "800" },
   storyCat: { fontSize: rs(11), fontWeight: "600" },

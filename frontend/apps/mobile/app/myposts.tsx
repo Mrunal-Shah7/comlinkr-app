@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback, useEffect, useRef } from "react"; // SPRINT-42: subscribe to successful in-memory post edits.
 import {
@@ -82,19 +83,19 @@ type FilterTab = (typeof FILTER_TABS)[number];
 const TYPE_META: Record<string, { label: string; bg: string; color: string; icon: React.ComponentProps<typeof Ionicons>["name"] }> = {
   NEWS:         { label: "News",         bg: Colors.brand.blueLight,   color: Colors.brand.blue,   icon: "newspaper-outline"     },
   COMMUNITY:    { label: "Discussion",   bg: Colors.brand.blueLight,   color: Colors.brand.blue,   icon: "people-outline"        },
-  ANNOUNCEMENT: { label: "Announcement", bg: "#FFF7ED",                color: Colors.brand.orange, icon: "megaphone-outline"     },
+  ANNOUNCEMENT: { label: "Announcement", bg: palette.orange50,                color: Colors.brand.orange, icon: "megaphone-outline"     },
   JOBS:         { label: "Job Post",     bg: Colors.brand.greenLight,  color: Colors.brand.green,  icon: "briefcase-outline"     },
   QUESTION:     { label: "Q&A",          bg: Colors.brand.blueLight,   color: Colors.brand.blue,   icon: "help-circle-outline"   },
   POLL:         { label: "Poll",         bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "bar-chart-outline"     },
   EVENT:        { label: "Event",        bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "calendar-outline"      },
   STORY:        { label: "Story",        bg: Colors.brand.greenLight,  color: Colors.brand.green,  icon: "images-outline"        },
   CHALLENGE:    { label: "Challenge",    bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "trophy-outline"        },
-  LISTING:      { label: "Listing",      bg: "#FFF1F2",                color: "#E11D48",           icon: "home-outline"          },
-  HOUSING:      { label: "Listing",      bg: "#FFF1F2",                color: "#E11D48",           icon: "home-outline"          },
+  LISTING:      { label: "Listing",      bg: palette.rose50,                color: palette.rose600,           icon: "home-outline"          },
+  HOUSING:      { label: "Listing",      bg: palette.rose50,                color: palette.rose600,           icon: "home-outline"          },
   FOOD:         { label: "Restaurant",   bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "restaurant-outline"    },
 };
 
-const FALLBACK_META = { label: "Post", bg: "#F3F5F8", color: "#6B7280", icon: "document-text-outline" as React.ComponentProps<typeof Ionicons>["name"] };
+const FALLBACK_META = { label: "Post", bg: palette.neutralL96_5, color: palette.gray500, icon: "document-text-outline" as React.ComponentProps<typeof Ionicons>["name"] };
 
 function getTypeMeta(t: string) {
   return TYPE_META[t] ?? FALLBACK_META;
@@ -497,7 +498,7 @@ export default function MyPostsScreen() {
 
                   {/* ── All metadata rows ── */}
                   <View style={{ borderRadius: 20, overflow: "hidden", backgroundColor: tc.inputBg, marginTop: 12 }}>
-                    {likes > 0 && <DetailRow icon="heart-outline" color="#EF4444" label="Likes" value={String(likes)} tc={tc} />}
+                    {likes > 0 && <DetailRow icon="heart-outline" color={palette.red500} label="Likes" value={String(likes)} tc={tc} />}
                     {comments > 0 && <DetailRow icon="chatbubble-outline" color={Colors.brand.blue} label="Comments" value={String(comments)} tc={tc} />}
                     {views > 0 && <DetailRow icon="eye-outline" color={Colors.brand.green} label="Views" value={String(views)} tc={tc} />}
                     {answers > 0 && <DetailRow icon="chatbubble-ellipses-outline" color={Colors.brand.blue} label="Answers" value={String(answers)} tc={tc} />}
@@ -506,7 +507,7 @@ export default function MyPostsScreen() {
                     {detailPost.type === "EVENT" && (Number(detailPost.metadata?.totalReviews ?? 0) || 0) > 0 ? ( // SPRINT-42: detail metadata rating
                       <DetailRow
                         icon="star-outline"
-                        color="#F59E0B"
+                        color={palette.amber500}
                         label="Rating"
                         value={`${Number(detailPost.metadata.averageRating ?? 0).toFixed(1)} (${detailPost.metadata.totalReviews})`}
                         tc={tc}
@@ -515,12 +516,12 @@ export default function MyPostsScreen() {
                     {detailPost.metadata?.date ? <DetailRow icon="calendar-outline" color={Colors.brand.orange} label="Event Date" value={formatEventDate(detailPost.metadata.date)} tc={tc} /> : null}
                     {detailPost.metadata?.venue ? <DetailRow icon="location-outline" color={Colors.brand.blue} label="Venue" value={String(detailPost.metadata.venue)} tc={tc} /> : null}
                     {detailPost.metadata?.mediaType ? <DetailRow icon="images-outline" color={Colors.brand.green} label="Media Type" value={String(detailPost.metadata.mediaType)} tc={tc} /> : null}
-                    {detailPost.metadata?.price ? <DetailRow icon="pricetag-outline" color="#E11D48" label="Price" value={String(detailPost.metadata.price)} tc={tc} /> : null}
+                    {detailPost.metadata?.price ? <DetailRow icon="pricetag-outline" color={palette.rose600} label="Price" value={String(detailPost.metadata.price)} tc={tc} /> : null}
                     {detailPost.metadata?.beds != null ? <DetailRow icon="bed-outline" color={Colors.brand.blue} label="Bedrooms" value={String(detailPost.metadata.beds)} tc={tc} /> : null}
                     {detailPost.metadata?.baths != null ? <DetailRow icon="water-outline" color={Colors.brand.blue} label="Bathrooms" value={String(detailPost.metadata.baths)} tc={tc} /> : null}
                     {detailPost.metadata?.city ? <DetailRow icon="location-outline" color={Colors.brand.green} label="City" value={String(detailPost.metadata.city)} tc={tc} /> : null}
                     {detailPost.metadata?.cuisine ? <DetailRow icon="restaurant-outline" color={Colors.brand.orange} label="Cuisine" value={String(detailPost.metadata.cuisine)} tc={tc} /> : null}
-                    {detailPost.metadata?.rating != null ? <DetailRow icon="star-outline" color="#F59E0B" label="Rating" value={`★ ${String(detailPost.metadata.rating)}`} tc={tc} /> : null}
+                    {detailPost.metadata?.rating != null ? <DetailRow icon="star-outline" color={palette.amber500} label="Rating" value={`★ ${String(detailPost.metadata.rating)}`} tc={tc} /> : null}
                     {Array.isArray(detailPost.metadata?.tags) && detailPost.metadata.tags.length > 0 ? (
                       <DetailRow icon="pricetags-outline" color={Colors.brand.blue} label="Tags" value={(detailPost.metadata.tags as string[]).join(", ")} tc={tc} />
                     ) : null}
@@ -584,7 +585,7 @@ function DetailRow({ label, value, tc }: { icon: string; color: string; label: s
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F9FAFB" },
+  safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { padding: rs(16), gap: rs(14) },
 
@@ -606,7 +607,7 @@ const s = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  editSaveBtnText: { color: "#FFF", fontSize: rs(14), fontWeight: "800" },
+  editSaveBtnText: { color: palette.white, fontSize: rs(14), fontWeight: "800" },
   editFieldLabel: { fontSize: rs(12), fontWeight: "700", marginBottom: rs(6), textTransform: "uppercase", letterSpacing: 0.4 },
   editTitleInput: {
     borderWidth: 1,
@@ -645,9 +646,9 @@ const s = createThemedStyles({
     justifyContent: "space-between",
     paddingHorizontal: rs(16),
     paddingVertical: rs(12),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F2F5",
+    borderBottomColor: palette.neutralL95_5,
   },
   backBtn: {
     width: rs(40),
@@ -658,7 +659,7 @@ const s = createThemedStyles({
     borderColor: "rgba(26,107,174,0.15)",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.08,
     shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(2) },
@@ -681,13 +682,13 @@ const s = createThemedStyles({
   },
   statCell: { flex: 1, alignItems: "center", gap: rs(3) },
   statCellBorder: { borderRightWidth: 1, borderRightColor: "rgba(255,255,255,0.2)" },
-  statNum: { fontSize: rs(22), fontWeight: "900", color: "#FFF", letterSpacing: -0.5 },
+  statNum: { fontSize: rs(22), fontWeight: "900", color: palette.white, letterSpacing: -0.5 },
   statLbl: { fontSize: rs(10), fontWeight: "700", color: "rgba(255,255,255,0.8)", letterSpacing: 0.8, textTransform: "uppercase" },
 
   tabScroll: {
     maxHeight: 56,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F2F5",
+    borderBottomColor: palette.neutralL95_5,
   },
   tabScrollContent: {
     flexDirection: "row",
@@ -704,11 +705,11 @@ const s = createThemedStyles({
     paddingVertical: rs(8),
     paddingHorizontal: rs(12),
     borderRadius: rs(12),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
   },
   tabActive: { backgroundColor: Colors.brand.blue },
   tabText: { fontSize: rs(12), fontWeight: "700", color: Colors.text.secondary },
-  tabTextActive: { color: "#FFF" },
+  tabTextActive: { color: palette.white },
   tabBadge: {
     minWidth: 18,
     height: rs(18),
@@ -720,12 +721,12 @@ const s = createThemedStyles({
   tabBadgeText: { fontSize: rs(10), fontWeight: "900", color: Colors.text.secondary },
 
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(18),
     padding: rs(14),
     borderWidth: 1,
-    borderColor: "#F0F2F5",
-    shadowColor: "#0A2540",
+    borderColor: palette.neutralL95_5,
+    shadowColor: palette.navy,
     shadowOffset: { width: 0, height: rs(2) },
     shadowOpacity: 0.05,
     shadowRadius: rs(10),
@@ -742,7 +743,7 @@ const s = createThemedStyles({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { fontSize: rs(16), fontWeight: "900", color: "#FFF" },
+  avatarText: { fontSize: rs(16), fontWeight: "900", color: palette.white },
 
   authorName: { fontSize: rs(14), fontWeight: "800", color: Colors.text.primary },
   cardMetaRow: { flexDirection: "row", alignItems: "center", gap: rs(4), marginTop: rs(3), flexWrap: "wrap" },
@@ -797,7 +798,7 @@ const s = createThemedStyles({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(4),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     paddingHorizontal: rs(9),
     paddingVertical: rs(5),
     borderRadius: rs(9),
@@ -860,7 +861,7 @@ const s = createThemedStyles({
     padding: rs(20), maxHeight: "90%",
   },
   detailHandle: {
-    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: "#D1D5DB",
+    width: rs(40), height: rs(4), borderRadius: rs(2), backgroundColor: palette.gray300,
     alignSelf: "center", marginBottom: rs(16),
   },
   detailTitle: { fontSize: rs(20), fontWeight: "800", marginBottom: rs(8), lineHeight: rs(26) },

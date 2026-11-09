@@ -1,5 +1,6 @@
 // src/features/admin/pages/CommunityManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,16 +19,16 @@ import { createThemedStyles } from '../../../theme/themedStyles';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   published: { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Published' },
-  pending:   { color: '#F59E0B',            bg: '#FFF3E6',               icon: 'time',             label: 'Pending'   },
-  flagged:   { color: '#EF4444',            bg: '#FEF2F2',               icon: 'alert-circle',     label: 'Flagged'   },
-  removed:   { color: Colors.text.tertiary, bg: '#F3F4F6',               icon: 'close-circle',     label: 'Removed'   },
+  pending:   { color: palette.amber500,            bg: palette.legacyOrangeLight,               icon: 'time',             label: 'Pending'   },
+  flagged:   { color: palette.red500,            bg: palette.red50,               icon: 'alert-circle',     label: 'Flagged'   },
+  removed:   { color: Colors.text.tertiary, bg: palette.gray100,               icon: 'close-circle',     label: 'Removed'   },
 };
 
 const CATEGORY_META: Record<string, { color: string; icon: string }> = {
   question:     { color: Colors.brand.blue,  icon: 'help-circle' },
-  discussion:   { color: '#8B5CF6',          icon: 'chatbubbles' },
+  discussion:   { color: palette.violet500,          icon: 'chatbubbles' },
   tip:          { color: Colors.brand.green, icon: 'bulb'        },
-  announcement: { color: '#FF7B00',          icon: 'megaphone'   },
+  announcement: { color: palette.legacyOrange,          icon: 'megaphone'   },
 };
 
 function CommunityPostDetailModal({
@@ -68,15 +69,15 @@ function CommunityPostDetailModal({
           <View style={dm.content}>
             <View style={dm.metaRow}>
               {post.pinned && (
-                <View style={[dm.badge, { backgroundColor: '#FFF3E6' }]}>
-                  <Ionicons name="pin" size={11} color="#FF7B00" />
-                  <Text style={[dm.badgeText, { color: '#FF7B00' }]}>Pinned</Text>
+                <View style={[dm.badge, { backgroundColor: palette.legacyOrangeLight }]}>
+                  <Ionicons name="pin" size={11} color={palette.legacyOrange} />
+                  <Text style={[dm.badgeText, { color: palette.legacyOrange }]}>Pinned</Text>
                 </View>
               )}
               {post.reports > 0 && (
-                <View style={[dm.badge, { backgroundColor: '#FEF2F2' }]}>
-                  <Ionicons name="flag" size={11} color="#EF4444" />
-                  <Text style={[dm.badgeText, { color: '#EF4444' }]}>{post.reports} report{post.reports !== 1 ? 's' : ''}</Text>
+                <View style={[dm.badge, { backgroundColor: palette.red50 }]}>
+                  <Ionicons name="flag" size={11} color={palette.red500} />
+                  <Text style={[dm.badgeText, { color: palette.red500 }]}>{post.reports} report{post.reports !== 1 ? 's' : ''}</Text>
                 </View>
               )}
             </View>
@@ -119,8 +120,8 @@ function CommunityPostDetailModal({
                 <Text style={dm.statLabel}>Answers</Text>
               </View>
               <View style={dm.statCard}>
-                <Ionicons name="eye" size={15} color="#8B5CF6" />
-                <Text style={[dm.statVal, { color: '#8B5CF6' }]}>{post.views}</Text>
+                <Ionicons name="eye" size={15} color={palette.violet500} />
+                <Text style={[dm.statVal, { color: palette.violet500 }]}>{post.views}</Text>
                 <Text style={dm.statLabel}>Views</Text>
               </View>
             </View>
@@ -175,7 +176,7 @@ function CommunityPostDetailModal({
                 { text: 'Delete', style: 'destructive', onPress: () => onDelete(post.id) },
               ])}
             >
-              <Ionicons name="trash" size={15} color="#EF4444" />
+              <Ionicons name="trash" size={15} color={palette.red500} />
               <Text style={dm.deleteBtnText}>Delete Post</Text>
             </Pressable>
           </View>
@@ -225,11 +226,11 @@ export default function CommunityManagementScreen() {
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#8B5CF6', '#6D3FD1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="chatbubbles" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.violet500, palette.legacyPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="chatbubbles" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -246,10 +247,10 @@ export default function CommunityManagementScreen() {
           {/* Summary */}
           <View style={s.summaryRow}>
             {[
-              { label: 'Total',     value: posts.length,                                       color: '#8B5CF6'           },
+              { label: 'Total',     value: posts.length,                                       color: palette.violet500           },
               { label: 'Published', value: posts.filter(p => p.status === 'published').length, color: Colors.brand.green  },
-              { label: 'Pending',   value: pendingCount,                                       color: '#F59E0B'           },
-              { label: 'Flagged',   value: flaggedCount,                                       color: '#EF4444'           },
+              { label: 'Pending',   value: pendingCount,                                       color: palette.amber500           },
+              { label: 'Flagged',   value: flaggedCount,                                       color: palette.red500           },
             ].map((item) => (
               <View key={item.label} style={s.summaryCard}>
                 <Text style={[s.summaryVal, { color: item.color }]}>{item.value}</Text>
@@ -305,15 +306,15 @@ export default function CommunityManagementScreen() {
                         <Text style={[s.chipText, { color: cm.color }]}>{post.category.charAt(0).toUpperCase() + post.category.slice(1)}</Text>
                       </View>
                       {post.pinned && (
-                        <View style={[s.chip, { backgroundColor: '#FFF3E6' }]}>
-                          <Ionicons name="pin" size={11} color="#FF7B00" />
-                          <Text style={[s.chipText, { color: '#FF7B00' }]}>Pinned</Text>
+                        <View style={[s.chip, { backgroundColor: palette.legacyOrangeLight }]}>
+                          <Ionicons name="pin" size={11} color={palette.legacyOrange} />
+                          <Text style={[s.chipText, { color: palette.legacyOrange }]}>Pinned</Text>
                         </View>
                       )}
                       {post.reports > 0 && (
-                        <View style={[s.chip, { backgroundColor: '#FEF2F2' }]}>
-                          <Ionicons name="flag" size={11} color="#EF4444" />
-                          <Text style={[s.chipText, { color: '#EF4444' }]}>{post.reports} report{post.reports !== 1 ? 's' : ''}</Text>
+                        <View style={[s.chip, { backgroundColor: palette.red50 }]}>
+                          <Ionicons name="flag" size={11} color={palette.red500} />
+                          <Text style={[s.chipText, { color: palette.red500 }]}>{post.reports} report{post.reports !== 1 ? 's' : ''}</Text>
                         </View>
                       )}
                     </View>
@@ -358,7 +359,7 @@ export default function CommunityManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 18, paddingBottom: 48 },
@@ -367,18 +368,18 @@ const s = createThemedStyles({
   headerIcon:  { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5, marginBottom: 2 },
   title:       { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5 },
-  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFF3E6', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
-  alertDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F59E0B' },
-  alertText:   { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
+  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: palette.legacyOrangeLight, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
+  alertDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.amber500 },
+  alertText:   { fontSize: 12, fontWeight: '700', color: palette.amber500 },
 
   summaryRow:  { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  summaryCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  summaryCard: { flex: 1, backgroundColor: palette.white, borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   summaryVal:  { fontSize: 20, fontWeight: '900' },
   summaryLbl:  { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   loadingText: { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
-  emptyCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  emptyCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   emptyTitle:  { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   emptySub:    { fontSize: 13, color: Colors.text.tertiary },
 
@@ -388,7 +389,7 @@ const s = createThemedStyles({
   statsRow:    { flexDirection: 'row', gap: 12, flexWrap: 'wrap', marginBottom: 8 },
   statItem:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText:    { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600' },
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText:{ fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
   viewBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 8, paddingVertical: 7, borderRadius: 10, backgroundColor: Colors.brand.blueLight, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', alignSelf: 'flex-start', paddingHorizontal: 10 },
   viewBtnText: { fontSize: 11, fontWeight: '700', color: Colors.brand.blue },
@@ -396,14 +397,14 @@ const s = createThemedStyles({
 
 const dm = createThemedStyles({
   overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
-  sheet:      { backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
-  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginTop: 12 },
+  sheet:      { backgroundColor: palette.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
+  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: palette.gray200, alignSelf: 'center', marginTop: 12 },
 
   headerRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 },
   typeChip:   { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 9, marginBottom: 8 },
   typeChipText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   title:      { fontSize: 19, fontWeight: '900', color: Colors.text.primary, lineHeight: 25 },
-  closeBtn:   { width: 32, height: 32, borderRadius: 10, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
+  closeBtn:   { width: 32, height: 32, borderRadius: 10, backgroundColor: palette.gray100, alignItems: 'center', justifyContent: 'center' },
 
   content:    { padding: 20, paddingTop: 8 },
   metaRow:    { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 16 },
@@ -412,28 +413,28 @@ const dm = createThemedStyles({
 
   sectionLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 1.2, color: Colors.text.tertiary, marginBottom: 8 },
   authorRow:  { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar:     { width: 38, height: 38, borderRadius: 12, backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 14, fontWeight: '900', color: '#8B5CF6' },
+  avatar:     { width: 38, height: 38, borderRadius: 12, backgroundColor: palette.purple100, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 14, fontWeight: '900', color: palette.violet500 },
   authorName: { fontSize: 13, fontWeight: '800', color: Colors.text.primary },
   authorDate: { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
 
-  textBox:    { backgroundColor: '#F8FAFC', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E8ECF0' },
+  textBox:    { backgroundColor: palette.slate50, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: palette.neutralL93_3 },
   bodyText:   { fontSize: 14, color: Colors.text.primary, lineHeight: 21 },
 
   statsRow:   { flexDirection: 'row', gap: 8 },
-  statCard:   { flex: 1, backgroundColor: '#F8FAFC', borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#E8ECF0' },
+  statCard:   { flex: 1, backgroundColor: palette.slate50, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: palette.neutralL93_3 },
   statVal:    { fontSize: 15, fontWeight: '900' },
   statLabel:  { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary },
 
   threadLoading: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14 },
   threadLoadingText: { fontSize: 12, color: Colors.text.tertiary, fontWeight: '600' },
-  threadEmpty: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8FAFC', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E8ECF0' },
+  threadEmpty: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: palette.slate50, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: palette.neutralL93_3 },
   threadEmptyText: { fontSize: 12, color: Colors.text.tertiary, fontWeight: '600' },
   threadList: { gap: 10 },
-  answerCard: { backgroundColor: '#F8FAFC', borderRadius: 13, padding: 12, borderWidth: 1, borderColor: '#E8ECF0' },
+  answerCard: { backgroundColor: palette.slate50, borderRadius: 13, padding: 12, borderWidth: 1, borderColor: palette.neutralL93_3 },
   answerHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 6 },
-  answerAvatar: { width: 22, height: 22, borderRadius: 8, backgroundColor: '#F3E8FF', alignItems: 'center', justifyContent: 'center' },
-  answerAvatarText: { fontSize: 9, fontWeight: '900', color: '#8B5CF6' },
+  answerAvatar: { width: 22, height: 22, borderRadius: 8, backgroundColor: palette.purple100, alignItems: 'center', justifyContent: 'center' },
+  answerAvatarText: { fontSize: 9, fontWeight: '900', color: palette.violet500 },
   answerAuthor: { fontSize: 12, fontWeight: '800', color: Colors.text.primary, flex: 1 },
   answerDate: { fontSize: 10, color: Colors.text.tertiary },
   answerVotes: { flexDirection: 'row', alignItems: 'center', gap: 2, marginLeft: 6 },
@@ -441,9 +442,9 @@ const dm = createThemedStyles({
   answerText: { fontSize: 13, color: Colors.text.secondary, lineHeight: 19 },
 
   tagRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tagChip:    { backgroundColor: '#F3F4F6', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
+  tagChip:    { backgroundColor: palette.gray100, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
   tagChipText:{ fontSize: 11, fontWeight: '700', color: Colors.text.secondary },
 
-  deleteBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, borderRadius: 13, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)', marginTop: 18 },
-  deleteBtnText: { fontSize: 14, fontWeight: '800', color: '#EF4444' },
+  deleteBtn:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 14, borderRadius: 13, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)', marginTop: 18 },
+  deleteBtnText: { fontSize: 14, fontWeight: '800', color: palette.red500 },
 });

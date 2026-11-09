@@ -1,5 +1,6 @@
 // A restaurant's detail (plan 03): photos, hours, reviews, reservation, report. Opened from the Food tab, Saved,
 // notifications and share links (/app/food?openRestaurant=<id>).
+import { palette } from "../../src/theme/palette";
 import { useState, useEffect, useCallback } from "react";
 import Reanimated from "react-native-reanimated";
 import { GradientButton, PressableScale, Reveal } from "../../src/shared/d";
@@ -474,7 +475,7 @@ export default function RestaurantDetailScreen() {
                     <View style={{ flex: 1 }} />
                     {mine ? btn("trash-outline", "Delete restaurant", () => confirmDeleteRestaurant(r.id), tc.dangerText) : null}
                     {btn(saved ? "bookmark" : "bookmark-outline", saved ? "Remove from saved" : "Save restaurant", () => void toggleBookmark(r.id), saved ? tc.accentText : tc.textPrimary)}
-                    {btn(favorites.has(r.id) ? "heart" : "heart-outline", favorites.has(r.id) ? "Remove from favourites" : "Add to favourites", () => void toggleFav(r.id), favorites.has(r.id) ? "#F0457E" : tc.textPrimary)}
+                    {btn(favorites.has(r.id) ? "heart" : "heart-outline", favorites.has(r.id) ? "Remove from favourites" : "Add to favourites", () => void toggleFav(r.id), favorites.has(r.id) ? palette.pinkL61 : tc.textPrimary)}
                     {btn("ellipsis-horizontal", "More options", () => appAlert(r.name, undefined, [
                       { text: "Share", onPress: () => handleShare(r) },
                       ...(!mine ? [{ text: "Report", style: "destructive" as const, onPress: () => setReportSheetId(r.id) }] : []),
@@ -582,7 +583,7 @@ export default function RestaurantDetailScreen() {
                               <Pressable accessibilityLabel="Delete review" onPress={() => confirmDeleteMyReview(selectedRestaurant)} hitSlop={8}><Ionicons name="trash-outline" size={20} color={tc.dangerText} /></Pressable>
                             </View>
                             <View style={{ flexDirection: "row", gap: 2, marginVertical: 6 }}>
-                              {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name={n <= full ? "star" : "star-outline"} size={18} color={n <= full ? "#F5B300" : tc.surface3} />)}
+                              {[1, 2, 3, 4, 5].map((n) => <Ionicons key={n} name={n <= full ? "star" : "star-outline"} size={18} color={n <= full ? palette.yellowL48 : tc.surface3} />)}
                             </View>
                             {my.text || my.content ? <Text style={[TYPE.body, { color: tc.textSecondary, marginBottom: 6 }]}>{my.text || my.content}</Text> : null}
                             <Text style={[TYPE.small, { color: tc.textTertiary }]}>{new Date(my.createdAt).toLocaleDateString()}</Text>
@@ -640,10 +641,10 @@ export default function RestaurantDetailScreen() {
                   .map((rev) => {
                     const full = Math.min(5, Math.max(0, Math.floor(rev.rating)));
                     return (
-                      <View key={rev.id} style={[rdm.userReview, { backgroundColor: isDark ? tc.sectionBg : "#F9FAFB" }]}>
+                      <View key={rev.id} style={[rdm.userReview, { backgroundColor: isDark ? tc.sectionBg : palette.gray50 }]}>
                         <Text style={[rdm.reviewTime, { color: tc.textTertiary, marginBottom: 4, fontWeight: "600" }]}>{rev.author.name}</Text>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                          <Text style={{ color: "#F59E0B" }}>
+                          <Text style={{ color: palette.amber500 }}>
                             {"★".repeat(full)}
                             {"☆".repeat(5 - full)}
                           </Text>
@@ -667,8 +668,8 @@ export default function RestaurantDetailScreen() {
                     end={{ x: 1, y: 0 }}
                     style={[rdm.ctaOrder, { paddingVertical: 14 }]}
                   >
-                    <Ionicons name="calendar-outline" size={16} color="#FFF" />
-                    <Text style={{ color: "#FFF", fontWeight: "800", fontSize: 15 }}>Reserve a Table</Text>
+                    <Ionicons name="calendar-outline" size={16} color={palette.white} />
+                    <Text style={{ color: palette.white, fontWeight: "800", fontSize: 15 }}>Reserve a Table</Text>
                   </LinearGradient>
                 </Pressable>
               </View>
@@ -702,9 +703,9 @@ export default function RestaurantDetailScreen() {
                             onPress={() => handleCall(reservationRestaurant)}
                             style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14, backgroundColor: Colors.brand.green, alignItems: "center" }}
                           >
-                            <Text style={{ color: "#FFF", fontWeight: "800", fontSize: 14 }}>Call Restaurant</Text>
+                            <Text style={{ color: palette.white, fontWeight: "800", fontSize: 14 }}>Call Restaurant</Text>
                           </Pressable>
-                          <Pressable onPress={() => { setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14, backgroundColor: isDark ? tc.inputBg : "#F3F4F6", alignItems: "center" }}>
+                          <Pressable onPress={() => { setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} style={{ flex: 1, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 14, backgroundColor: isDark ? tc.inputBg : palette.gray100, alignItems: "center" }}>
                             <Text style={{ color: tc.textSecondary, fontWeight: "700", fontSize: 14 }}>Done</Text>
                           </Pressable>
                         </View>
@@ -723,9 +724,9 @@ export default function RestaurantDetailScreen() {
                           dateFormat="iso"
                           minimumDate={new Date()}
                           forceDark={isDark}
-                          style={{ borderColor: reservationErrors.date ? "#EF4444" : tc.borderLight, backgroundColor: tc.inputBg, marginBottom: 4 }}
+                          style={{ borderColor: reservationErrors.date ? palette.red500 : tc.borderLight, backgroundColor: tc.inputBg, marginBottom: 4 }}
                         />
-                        {!!reservationErrors.date && <Text style={{ fontSize: 12, color: "#EF4444", marginBottom: 8 }}>{reservationErrors.date}</Text>}
+                        {!!reservationErrors.date && <Text style={{ fontSize: 12, color: palette.red500, marginBottom: 8 }}>{reservationErrors.date}</Text>}
 
                         <Text style={{ fontSize: 12, fontWeight: "700", color: tc.textTertiary, marginBottom: 6, marginTop: 4 }}>TIME</Text>
                         <TimePickerField
@@ -734,20 +735,20 @@ export default function RestaurantDetailScreen() {
                           placeholder="HH:MM or select time"
                           accentColor={Colors.brand.green}
                           forceDark={isDark}
-                          style={{ borderColor: reservationErrors.time ? "#EF4444" : tc.borderLight, backgroundColor: tc.inputBg, marginBottom: 4 }}
+                          style={{ borderColor: reservationErrors.time ? palette.red500 : tc.borderLight, backgroundColor: tc.inputBg, marginBottom: 4 }}
                         />
-                        {!!reservationErrors.time && <Text style={{ fontSize: 12, color: "#EF4444", marginBottom: 8 }}>{reservationErrors.time}</Text>}
+                        {!!reservationErrors.time && <Text style={{ fontSize: 12, color: palette.red500, marginBottom: 8 }}>{reservationErrors.time}</Text>}
 
                         <Text style={{ fontSize: 12, fontWeight: "700", color: tc.textTertiary, marginBottom: 6 }}>PARTY SIZE</Text>
                         <TextInput
-                          style={{ borderWidth: 1.5, borderColor: reservationErrors.partySize ? "#EF4444" : tc.borderLight, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: tc.textPrimary, backgroundColor: tc.inputBg, marginBottom: 4 }}
+                          style={{ borderWidth: 1.5, borderColor: reservationErrors.partySize ? palette.red500 : tc.borderLight, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, color: tc.textPrimary, backgroundColor: tc.inputBg, marginBottom: 4 }}
                           placeholder="e.g. 2"
                           placeholderTextColor={tc.textTertiary}
                           value={reservationGuests}
                           onChangeText={(v) => { setReservationGuests(v); setReservationErrors((e) => ({ ...e, partySize: undefined })); }}
                           keyboardType="number-pad"
                         />
-                        {!!reservationErrors.partySize && <Text style={{ fontSize: 12, color: "#EF4444", marginBottom: 8 }}>{reservationErrors.partySize}</Text>}
+                        {!!reservationErrors.partySize && <Text style={{ fontSize: 12, color: palette.red500, marginBottom: 8 }}>{reservationErrors.partySize}</Text>}
 
                         <Text style={{ fontSize: 12, fontWeight: "700", color: tc.textTertiary, marginBottom: 6 }}>SPECIAL REQUESTS (optional)</Text>
                         <TextInput
@@ -794,9 +795,9 @@ export default function RestaurantDetailScreen() {
                         >
                           <LinearGradient colors={[Colors.brand.blue, Colors.brand.green]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 15, alignItems: "center" }}>
                             {reservationSubmitting ? (
-                              <ActivityIndicator color="#FFF" />
+                              <ActivityIndicator color={palette.white} />
                             ) : (
-                              <Text style={{ color: "#FFF", fontWeight: "800", fontSize: 15 }}>Confirm Reservation</Text>
+                              <Text style={{ color: palette.white, fontWeight: "800", fontSize: 15 }}>Confirm Reservation</Text>
                             )}
                           </LinearGradient>
                         </Pressable>
@@ -849,13 +850,13 @@ export default function RestaurantDetailScreen() {
                   style={({ pressed }) => ({
                     flexDirection: "row", alignItems: "center", gap: 12,
                     paddingHorizontal: 20, paddingVertical: 14,
-                    backgroundColor: (pressed || (reason === "Other" && reportOtherFocused)) ? (isDark ? "#1A1A2E" : "#F5F7FA") : "transparent",
+                    backgroundColor: (pressed || (reason === "Other" && reportOtherFocused)) ? (isDark ? palette.blueL14 : palette.neutralL97_10) : "transparent",
                     borderBottomWidth: reason === "Other" ? 0 : StyleSheet.hairlineWidth,
                     borderBottomColor: tc.borderLight,
                   })}
                 >
-                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: "#FEE2E2", alignItems: "center", justifyContent: "center" }}>
-                    <Ionicons name="flag" size={16} color="#DC2626" />
+                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: palette.red100, alignItems: "center", justifyContent: "center" }}>
+                    <Ionicons name="flag" size={16} color={palette.red600} />
                   </View>
                   <Text style={{ fontSize: 14, fontWeight: "600", color: tc.textPrimary, flex: 1 }}>{reason}</Text>
                   {reason === "Other" && <Ionicons name="chevron-down" size={14} color={tc.textTertiary} />}
@@ -865,7 +866,7 @@ export default function RestaurantDetailScreen() {
                     <TextInput
                       style={{
                         borderWidth: 1.5,
-                        borderColor: reportOtherFocused ? "#DC2626" : tc.borderLight,
+                        borderColor: reportOtherFocused ? palette.red600 : tc.borderLight,
                         borderRadius: 12,
                         paddingHorizontal: 14, paddingVertical: 10,
                         fontSize: 14, color: tc.textPrimary, backgroundColor: tc.inputBg,
@@ -890,9 +891,9 @@ export default function RestaurantDetailScreen() {
                         setReportOtherText("");
                         setReportOtherFocused(false);
                       }}
-                      style={{ marginTop: 10, paddingVertical: 12, borderRadius: 12, backgroundColor: "#DC2626", alignItems: "center" }}
+                      style={{ marginTop: 10, paddingVertical: 12, borderRadius: 12, backgroundColor: palette.red600, alignItems: "center" }}
                     >
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFF" }}>Submit Report</Text>
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: palette.white }}>Submit Report</Text>
                     </Pressable>
                   </View>
                 )}
@@ -900,7 +901,7 @@ export default function RestaurantDetailScreen() {
             ))}
             <Pressable
               onPress={() => { setReportSheetId(null); setReportOtherText(""); setReportOtherFocused(false); }}
-              style={{ marginTop: 8, marginHorizontal: 20, paddingVertical: 14, borderRadius: 14, backgroundColor: isDark ? tc.inputBg : "#F3F4F6", alignItems: "center" }}
+              style={{ marginTop: 8, marginHorizontal: 20, paddingVertical: 14, borderRadius: 14, backgroundColor: isDark ? tc.inputBg : palette.gray100, alignItems: "center" }}
             >
               <Text style={{ fontSize: 15, fontWeight: "700", color: tc.textSecondary }}>Cancel</Text>
             </Pressable>

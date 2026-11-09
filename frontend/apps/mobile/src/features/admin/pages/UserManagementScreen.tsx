@@ -1,5 +1,6 @@
 // src/features/admin/pages/UserManagementScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl, Modal,
@@ -27,19 +28,19 @@ import { showToast } from '../../../shared/ui/Toast';
 const GRANT_BADGE_OPTIONS: { value: string; label: string; icon: string; color: string }[] = [
   { value: 'LANDLORD',         label: 'Verified Landlord',         icon: 'home',       color: Colors.brand.blue  },
   { value: 'RESTAURANT_OWNER', label: 'Verified Restaurant Owner', icon: 'restaurant', color: Colors.brand.green },
-  { value: 'AGENCY',           label: 'Verified Agency',           icon: 'business',   color: '#FF7B00'          },
-  { value: 'LOCAL_REVIEWER',   label: 'Local Reviewer',            icon: 'star',       color: '#8B5CF6'          },
+  { value: 'AGENCY',           label: 'Verified Agency',           icon: 'business',   color: palette.legacyOrange          },
+  { value: 'LOCAL_REVIEWER',   label: 'Local Reviewer',            icon: 'star',       color: palette.violet500          },
 ];
 
 const BADGE_META: Record<string, { color: string; bg: string; label: string; icon: string }> = {
   LANDLORD:         { color: Colors.brand.blue,  bg: Colors.brand.blueLight,  label: 'Landlord',          icon: 'home'       },
   RESTAURANT_OWNER: { color: Colors.brand.green, bg: Colors.brand.greenLight, label: 'Restaurant Owner',  icon: 'restaurant' },
-  AGENCY:           { color: '#FF7B00',           bg: '#FFF3E6',               label: 'Agency',            icon: 'business'   },
-  LOCAL_REVIEWER:   { color: '#8B5CF6',           bg: '#F3F0FF',               label: 'Local Reviewer',    icon: 'star'       },
+  AGENCY:           { color: palette.legacyOrange,           bg: palette.legacyOrangeLight,               label: 'Agency',            icon: 'business'   },
+  LOCAL_REVIEWER:   { color: palette.violet500,           bg: palette.neutralL97_7,               label: 'Local Reviewer',    icon: 'star'       },
 };
 
 const ROLE_META: Record<string, { color: string; bg: string; icon: string }> = {
-  USER:  { color: Colors.text.secondary, bg: '#F3F4F6',              icon: 'person' },
+  USER:  { color: Colors.text.secondary, bg: palette.gray100,              icon: 'person' },
   ADMIN: { color: Colors.brand.blue,     bg: Colors.brand.blueLight, icon: 'shield' },
 };
 
@@ -131,7 +132,7 @@ function UserProfileModal({
         <ScrollView keyboardShouldPersistTaps="handled" style={pm.sheet} contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
           <View style={pm.handle} />
 
-          <LinearGradient colors={['#EBF5FF', '#F4F9FF']} style={pm.headerBg}>
+          <LinearGradient colors={[palette.legacyBlueLight, palette.neutralL98]} style={pm.headerBg}>
             <View style={pm.avatarWrap}>
               {avatarUrl ? ( // SPRINT-41:
                 <FadeImage uri={avatarUrl} style={pm.avatarImg} resizeMode="cover" /> // SPRINT-41:
@@ -161,7 +162,7 @@ function UserProfileModal({
           ) : errorMessage ? ( // SPRINT-41:
             <View style={pm.statsRow}>
               <Pressable onPress={() => void refetch()} style={{ padding: 16, flex: 1 }}>
-                <Text style={{ color: '#EF4444', textAlign: 'center', fontSize: 13 }}>{errorMessage}</Text>
+                <Text style={{ color: palette.red500, textAlign: 'center', fontSize: 13 }}>{errorMessage}</Text>
                 <Text style={{ color: Colors.brand.blue, textAlign: 'center', marginTop: 6, fontWeight: '700' }}>Tap to retry</Text>
               </Pressable>
             </View>
@@ -169,7 +170,7 @@ function UserProfileModal({
             <View style={pm.statsRow}>
               {[
                 { label: 'Posts', value: counts?.feedPosts ?? 0, color: Colors.brand.blue }, // SPRINT-41:
-                { label: 'Listings', value: counts?.housingListings ?? 0, color: '#F59E0B' }, // SPRINT-41:
+                { label: 'Listings', value: counts?.housingListings ?? 0, color: palette.amber500 }, // SPRINT-41:
                 { label: 'Events', value: counts?.events ?? 0, color: Colors.brand.green }, // SPRINT-41:
               ].map((stat) => (
                 <View key={stat.label} style={pm.statCard}>
@@ -181,13 +182,13 @@ function UserProfileModal({
           )}
 
           {counts && ( // SPRINT-41:
-            <View style={[pm.statsRow, { backgroundColor: '#FFF' }]}>
+            <View style={[pm.statsRow, { backgroundColor: palette.white }]}>
               <View style={pm.statCard}>
-                <Text style={[pm.statVal, { color: '#8B5CF6', fontSize: 18 }]}>{counts.restaurants}</Text>
+                <Text style={[pm.statVal, { color: palette.violet500, fontSize: 18 }]}>{counts.restaurants}</Text>
                 <Text style={pm.statLbl}>Restaurants</Text>
               </View>
               <View style={pm.statCard}>
-                <Text style={[pm.statVal, { color: '#FF7B00', fontSize: 18 }]}>{counts.conversations}</Text>
+                <Text style={[pm.statVal, { color: palette.legacyOrange, fontSize: 18 }]}>{counts.conversations}</Text>
                 <Text style={pm.statLbl}>Chats</Text>
               </View>
             </View>
@@ -207,12 +208,12 @@ function UserProfileModal({
               </View>
               <View style={pm.divider} />
               <View style={pm.infoRow}>
-                <View style={[pm.infoIcon, { backgroundColor: isActive ? Colors.brand.greenLight : '#FEF2F2' }]}>
-                  <Ionicons name={isActive ? 'checkmark-circle' : 'close-circle'} size={14} color={isActive ? Colors.brand.green : '#EF4444'} />
+                <View style={[pm.infoIcon, { backgroundColor: isActive ? Colors.brand.greenLight : palette.red50 }]}>
+                  <Ionicons name={isActive ? 'checkmark-circle' : 'close-circle'} size={14} color={isActive ? Colors.brand.green : palette.red500} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={pm.infoKey}>Account Status</Text>
-                  <Text style={[pm.infoVal, { color: isActive ? Colors.brand.green : '#EF4444' }]}>
+                  <Text style={[pm.infoVal, { color: isActive ? Colors.brand.green : palette.red500 }]}>
                     {isActive ? 'Active' : 'Suspended'}
                   </Text>
                 </View>
@@ -221,7 +222,7 @@ function UserProfileModal({
                 <>
                   <View style={pm.divider} />
                   <View style={pm.infoRow}>
-                    <View style={[pm.infoIcon, { backgroundColor: '#F3F4F6' }]}>
+                    <View style={[pm.infoIcon, { backgroundColor: palette.gray100 }]}>
                       <Ionicons name="location" size={14} color={Colors.text.secondary} />
                     </View>
                     <View style={{ flex: 1 }}>
@@ -242,7 +243,7 @@ function UserProfileModal({
             ) : (
               <View style={pm.badgesRow}>
                 {badges.map((b: string) => {
-                  const bm = BADGE_META[b] ?? { color: Colors.text.secondary, bg: '#F3F4F6', label: b, icon: 'shield' };
+                  const bm = BADGE_META[b] ?? { color: Colors.text.secondary, bg: palette.gray100, label: b, icon: 'shield' };
                   return (
                     <View key={b} style={[pm.badgeChip, { backgroundColor: bm.bg }]}>
                       <Ionicons name={bm.icon as any} size={12} color={bm.color} />
@@ -282,14 +283,14 @@ function UserProfileModal({
                     <Text style={pm.promoteBtnText}>Promote to Admin</Text>
                   </Pressable>
                 ) : ( // SPRINT-41:
-                  <Pressable style={[pm.promoteBtn, { backgroundColor: '#FEF2F2' }]} onPress={() => { // SPRINT-41:
+                  <Pressable style={[pm.promoteBtn, { backgroundColor: palette.red50 }]} onPress={() => { // SPRINT-41:
                     appAlert('Demote to User?', `Change ${firstName} from ADMIN to USER?`, [ // SPRINT-41:
                       { text: 'Cancel', style: 'cancel' }, // SPRINT-41:
                       { text: 'Demote', style: 'destructive', onPress: () => onChangeRole(userId, 'USER') }, // SPRINT-41:
                     ]); // SPRINT-41:
                   }}>
-                    <Ionicons name="arrow-down-circle" size={14} color="#EF4444" />
-                    <Text style={[pm.promoteBtnText, { color: '#EF4444' }]}>Demote to User</Text>
+                    <Ionicons name="arrow-down-circle" size={14} color={palette.red500} />
+                    <Text style={[pm.promoteBtnText, { color: palette.red500 }]}>Demote to User</Text>
                   </Pressable>
                 )}
               </View>
@@ -298,37 +299,37 @@ function UserProfileModal({
             <Text style={[pm.sectionLabel, { marginTop: 20 }]}>ADMIN ACTIONS</Text>
             <View style={pm.actionsGrid}>
               <Pressable
-                style={[pm.actionBtn, { backgroundColor: '#F3F0FF', flex: 1, width: '100%' }]}
+                style={[pm.actionBtn, { backgroundColor: palette.neutralL97_7, flex: 1, width: '100%' }]}
                 onPress={() => { onClose(); router.push(`/admin/user-safety/${userId}` as any); }}
               >
                 <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(139,92,246,0.12)' }]}>
-                  <Ionicons name="folder-open" size={18} color="#8B5CF6" />
+                  <Ionicons name="folder-open" size={18} color={palette.violet500} />
                 </View>
-                <Text style={[pm.actionBtnText, { color: '#8B5CF6' }]}>View Safety Case File</Text>
+                <Text style={[pm.actionBtnText, { color: palette.violet500 }]}>View Safety Case File</Text>
                 <Text style={pm.actionBtnSub}>Reports, warnings, bans & sessions</Text>
               </Pressable>
 
               {isActive ? (
                 <>
                   <Pressable
-                    style={[pm.actionBtn, { backgroundColor: '#FFF3E6' }]}
+                    style={[pm.actionBtn, { backgroundColor: palette.legacyOrangeLight }]}
                     onPress={() => { onAction(userId, 'warn'); onClose(); }}
                   >
                     <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(245,158,11,0.15)' }]}>
-                      <Ionicons name="warning" size={18} color="#F59E0B" />
+                      <Ionicons name="warning" size={18} color={palette.amber500} />
                     </View>
-                    <Text style={[pm.actionBtnText, { color: '#F59E0B' }]}>Warn User</Text>
+                    <Text style={[pm.actionBtnText, { color: palette.amber500 }]}>Warn User</Text>
                     <Text style={pm.actionBtnSub}>Send a warning notification</Text>
                   </Pressable>
 
                   <Pressable
-                    style={[pm.actionBtn, { backgroundColor: '#FEF2F2' }]}
+                    style={[pm.actionBtn, { backgroundColor: palette.red50 }]}
                     onPress={() => { onAction(userId, 'suspend'); onClose(); }}
                   >
                     <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(239,68,68,0.12)' }]}>
-                      <Ionicons name="ban" size={18} color="#EF4444" />
+                      <Ionicons name="ban" size={18} color={palette.red500} />
                     </View>
-                    <Text style={[pm.actionBtnText, { color: '#EF4444' }]}>Suspend</Text>
+                    <Text style={[pm.actionBtnText, { color: palette.red500 }]}>Suspend</Text>
                     <Text style={pm.actionBtnSub}>Block account access</Text>
                   </Pressable>
 
@@ -345,28 +346,28 @@ function UserProfileModal({
 
                   {badges.length > 0 && (
                     <Pressable
-                      style={[pm.actionBtn, { backgroundColor: '#F3F0FF' }]}
+                      style={[pm.actionBtn, { backgroundColor: palette.neutralL97_7 }]}
                       onPress={handleRevokeBadge}
                     >
                       <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(139,92,246,0.12)' }]}>
-                        <Ionicons name="ribbon" size={18} color="#8B5CF6" />
+                        <Ionicons name="ribbon" size={18} color={palette.violet500} />
                       </View>
-                      <Text style={[pm.actionBtnText, { color: '#8B5CF6' }]}>Revoke Badge</Text>
+                      <Text style={[pm.actionBtnText, { color: palette.violet500 }]}>Revoke Badge</Text>
                       <Text style={pm.actionBtnSub}>Remove a granted badge</Text>
                     </Pressable>
                   )}
 
                   <Pressable
-                    style={[pm.actionBtn, { backgroundColor: '#FEF2F2' }]}
+                    style={[pm.actionBtn, { backgroundColor: palette.red50 }]}
                     onPress={() => { // SPRINT-41:
                       onClose(); // SPRINT-41:
                       onRequestDelete({ ...listUser, id: userId, email, username, firstName, lastName }); // SPRINT-41:
                     }}
                   >
                     <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(220,38,38,0.12)' }]}>
-                      <Ionicons name="trash" size={18} color="#DC2626" />
+                      <Ionicons name="trash" size={18} color={palette.red600} />
                     </View>
-                    <Text style={[pm.actionBtnText, { color: '#DC2626' }]}>Delete Account</Text>
+                    <Text style={[pm.actionBtnText, { color: palette.red600 }]}>Delete Account</Text>
                     <Text style={pm.actionBtnSub}>Permanently remove user</Text>
                   </Pressable>
                 </>
@@ -470,7 +471,7 @@ function WarnModal({
             <View style={wm.handle} />
             <View style={wm.headerRow}>
               <View style={wm.iconWrap}>
-                <Ionicons name="warning" size={20} color="#F59E0B" />
+                <Ionicons name="warning" size={20} color={palette.amber500} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={wm.title}>Send Warning</Text>
@@ -486,7 +487,7 @@ function WarnModal({
             <Text style={wm.label}>QUICK TEMPLATES</Text>
             {QUICK_WARNS.map((msg, i) => (
               <Pressable key={i} style={wm.quickRow} onPress={() => setText(msg)}>
-                <Ionicons name="flash" size={13} color="#F59E0B" />
+                <Ionicons name="flash" size={13} color={palette.amber500} />
                 <Text style={wm.quickText} numberOfLines={2}>{msg}</Text>
               </Pressable>
             ))}
@@ -511,8 +512,8 @@ function WarnModal({
                 <Text style={wm.cancelText}>Cancel</Text>
               </Pressable>
               <Pressable style={wm.sendBtnWrap} onPress={handleSend}>
-                <LinearGradient colors={['#F59E0B', '#D97706']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={wm.sendBtnGrad}>
-                  <Ionicons name="warning" size={15} color="#FFF" />
+                <LinearGradient colors={[palette.amber500, palette.amber600]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={wm.sendBtnGrad}>
+                  <Ionicons name="warning" size={15} color={palette.white} />
                   <Text style={wm.sendText}>Send Warning</Text>
                 </LinearGradient>
               </Pressable>
@@ -692,11 +693,11 @@ export default function UserManagementScreen() {
           refreshControl={<RefreshControl refreshing={isLoading && users.length > 0} onRefresh={refresh} tintColor={Colors.brand.blue} />}
         >
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={[Colors.brand.blue, '#0054CC']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="people" size={22} color="#FFF" />
+            <LinearGradient colors={[Colors.brand.blue, palette.blueL40_2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="people" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -736,7 +737,7 @@ export default function UserManagementScreen() {
 
           {isError && errorMessage ? ( // SPRINT-41:
             <View style={s.emptyCard}>
-              <Text style={{ color: '#EF4444', textAlign: 'center' }}>{errorMessage}</Text>
+              <Text style={{ color: palette.red500, textAlign: 'center' }}>{errorMessage}</Text>
               <Pressable onPress={refresh} style={{ marginTop: 12 }}>
                 <Text style={{ color: Colors.brand.blue, fontWeight: '700' }}>Retry</Text>
               </Pressable>
@@ -761,11 +762,11 @@ export default function UserManagementScreen() {
                   : '';
                 return (
                   <Pressable key={user.id} style={uc.card} onPress={() => setProfileUser(user)}>
-                    <View style={[uc.accentLine, { backgroundColor: user.isActive ? Colors.brand.blue : '#EF4444' }]} />
+                    <View style={[uc.accentLine, { backgroundColor: user.isActive ? Colors.brand.blue : palette.red500 }]} />
                     <View style={uc.inner}>
                       <View style={uc.topRow}>
                         <LinearGradient
-                          colors={user.isActive ? [Colors.brand.blue, Colors.brand.green] : ['#9CA3AF', '#6B7280']}
+                          colors={user.isActive ? [Colors.brand.blue, Colors.brand.green] : [palette.gray400, palette.gray500]}
                           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
                           style={uc.avatar}
                         >
@@ -781,9 +782,9 @@ export default function UserManagementScreen() {
                       </View>
 
                       <View style={uc.metaRow}>
-                        <View style={[uc.chip, { backgroundColor: user.isActive ? Colors.brand.greenLight : '#FEF2F2' }]}>
-                          <View style={[uc.dot, { backgroundColor: user.isActive ? Colors.brand.green : '#EF4444' }]} />
-                          <Text style={[uc.chipText, { color: user.isActive ? Colors.brand.green : '#EF4444' }]}>
+                        <View style={[uc.chip, { backgroundColor: user.isActive ? Colors.brand.greenLight : palette.red50 }]}>
+                          <View style={[uc.dot, { backgroundColor: user.isActive ? Colors.brand.green : palette.red500 }]} />
+                          <Text style={[uc.chipText, { color: user.isActive ? Colors.brand.green : palette.red500 }]}>
                             {user.isActive ? 'Active' : 'Suspended'}
                           </Text>
                         </View>
@@ -871,7 +872,7 @@ export default function UserManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:         { flex: 1, backgroundColor: '#EBF5FF' },
+  root:         { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:         { flex: 1 },
   scroll:       { flex: 1 },
   content:      { padding: 18, paddingBottom: 48 },
@@ -885,23 +886,23 @@ const s = createThemedStyles({
   countText:    { fontSize: 16, fontWeight: '900', color: Colors.brand.blue },
   countLabel:   { fontSize: 11, fontWeight: '600', color: Colors.brand.blue },
 
-  loadingCard:  { backgroundColor: '#FFF', borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, elevation: 3 },
+  loadingCard:  { backgroundColor: palette.white, borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, elevation: 3 },
   loadingText:  { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
-  emptyCard:    { backgroundColor: '#FFF', borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, elevation: 3 },
+  emptyCard:    { backgroundColor: palette.white, borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, elevation: 3 },
   emptyTitle:   { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   emptySub:     { fontSize: 13, color: Colors.text.tertiary },
-  loadMoreBtn:  { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' }, // SPRINT-41:
+  loadMoreBtn:  { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' }, // SPRINT-41:
   loadMoreText: { fontSize: 14, fontWeight: '700', color: Colors.brand.blue }, // SPRINT-41:
 });
 
 const uc = createThemedStyles({
-  card:        { backgroundColor: '#FFF', borderRadius: 18, marginBottom: 10, shadowColor: '#0A2540', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', overflow: 'hidden', flexDirection: 'row' },
+  card:        { backgroundColor: palette.white, borderRadius: 18, marginBottom: 10, shadowColor: palette.navy, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, borderWidth: 1, borderColor: 'rgba(0,0,0,0.04)', overflow: 'hidden', flexDirection: 'row' },
   accentLine:  { width: 4, flexShrink: 0 },
   inner:       { flex: 1, padding: 13 },
 
   topRow:      { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   avatar:      { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  avatarText:  { fontSize: 15, fontWeight: '900', color: '#FFF' },
+  avatarText:  { fontSize: 15, fontWeight: '900', color: palette.white },
   userName:    { fontSize: 14, fontWeight: '800', color: Colors.text.primary },
   userSub:     { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
 
@@ -917,14 +918,14 @@ const uc = createThemedStyles({
 
 const pm = createThemedStyles({
   overlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  sheet:         { backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
-  handle:        { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginTop: 12, marginBottom: 0 },
+  sheet:         { backgroundColor: palette.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
+  handle:        { width: 36, height: 4, borderRadius: 2, backgroundColor: palette.gray200, alignSelf: 'center', marginTop: 12, marginBottom: 0 },
 
   headerBg:      { padding: 24, paddingTop: 16, alignItems: 'center', borderTopLeftRadius: 28, borderTopRightRadius: 28, position: 'relative' },
   avatarWrap:    { alignItems: 'center', marginBottom: 10 },
   avatar:        { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   avatarImg:     { width: 72, height: 72, borderRadius: 22, marginBottom: 8, overflow: 'hidden' }, // SPRINT-41:
-  avatarText:    { fontSize: 26, fontWeight: '900', color: '#FFF' },
+  avatarText:    { fontSize: 26, fontWeight: '900', color: palette.white },
   roleBadge:     { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   roleBadgeText: { fontSize: 11, fontWeight: '800' },
   userName:      { fontSize: 20, fontWeight: '900', color: Colors.text.primary, marginTop: 4 },
@@ -932,7 +933,7 @@ const pm = createThemedStyles({
   userEmail:     { fontSize: 12, color: Colors.text.tertiary, marginTop: 2 },
   closeBtn:      { position: 'absolute', top: 16, right: 16, width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.08)', alignItems: 'center', justifyContent: 'center' },
 
-  statsRow:      { flexDirection: 'row', gap: 1, backgroundColor: '#F3F4F6', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', justifyContent: 'center' },
+  statsRow:      { flexDirection: 'row', gap: 1, backgroundColor: palette.gray100, borderBottomWidth: 1, borderBottomColor: palette.gray200, justifyContent: 'center' },
   statCard:      { flex: 1, paddingVertical: 16, alignItems: 'center' },
   statVal:       { fontSize: 22, fontWeight: '900' },
   statLbl:       { fontSize: 11, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
@@ -940,20 +941,20 @@ const pm = createThemedStyles({
   content:       { padding: 20 },
   sectionLabel:  { fontSize: 10, fontWeight: '900', color: Colors.text.tertiary, letterSpacing: 1.2, marginBottom: 10 },
 
-  infoCard:      { backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderColor: '#E8ECF0', marginBottom: 4 },
+  infoCard:      { backgroundColor: palette.slate50, borderRadius: 16, borderWidth: 1, borderColor: palette.neutralL93_3, marginBottom: 4 },
   infoRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   infoIcon:      { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   infoKey:       { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', marginBottom: 2 },
   infoVal:       { fontSize: 14, fontWeight: '700', color: Colors.text.primary },
-  divider:       { height: 1, backgroundColor: '#E8ECF0', marginHorizontal: 14 },
+  divider:       { height: 1, backgroundColor: palette.neutralL93_3, marginHorizontal: 14 },
 
   badgesRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
   badgeChip:     { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
   badgeChipText: { fontSize: 12, fontWeight: '700' },
-  noBadgesRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F8FAFC', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E8ECF0', marginBottom: 4 },
+  noBadgesRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: palette.slate50, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: palette.neutralL93_3, marginBottom: 4 },
   noBadgesText:  { fontSize: 13, color: Colors.text.tertiary, fontWeight: '500' },
 
-  roleCard:      { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#F8FAFC', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E8ECF0' },
+  roleCard:      { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: palette.slate50, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: palette.neutralL93_3 },
   roleIconWrap:  { width: 50, height: 50, borderRadius: 15, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   roleName:      { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginBottom: 3 },
   roleDesc:      { fontSize: 12, color: Colors.text.tertiary, lineHeight: 17 },
@@ -971,50 +972,50 @@ const pm = createThemedStyles({
 
 const wm = createThemedStyles({
   overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet:      { backgroundColor: '#FFF', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 22, maxHeight: '88%' },
-  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginBottom: 18 },
+  sheet:      { backgroundColor: palette.white, borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 22, maxHeight: '88%' },
+  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: palette.gray200, alignSelf: 'center', marginBottom: 18 },
   headerRow:  { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  iconWrap:   { width: 40, height: 40, borderRadius: 12, backgroundColor: '#FFF3E6', alignItems: 'center', justifyContent: 'center' },
+  iconWrap:   { width: 40, height: 40, borderRadius: 12, backgroundColor: palette.legacyOrangeLight, alignItems: 'center', justifyContent: 'center' },
   title:      { fontSize: 17, fontWeight: '900', color: Colors.text.primary },
   sub:        { fontSize: 12, color: Colors.text.tertiary, marginTop: 1 },
   infoBox:    { flexDirection: 'row', gap: 8, backgroundColor: Colors.brand.blueLight, borderRadius: 11, padding: 11, marginBottom: 14, alignItems: 'flex-start' },
   infoText:   { flex: 1, fontSize: 12, color: Colors.brand.blue, lineHeight: 17 },
   label:      { fontSize: 10, fontWeight: '900', color: Colors.text.tertiary, letterSpacing: 1.2, marginBottom: 7 },
-  quickRow:   { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  quickRow:   { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: palette.gray100 },
   quickText:  { flex: 1, fontSize: 12, color: Colors.text.secondary, lineHeight: 17 },
   inputWrap:  { backgroundColor: Colors.bg.secondary, borderRadius: 13, borderWidth: 1.5, borderColor: Colors.border.light, paddingHorizontal: 14, marginBottom: 4 },
   input:      { fontSize: 14, color: Colors.text.primary, paddingVertical: 10, minHeight: 100 },
   charCount:  { fontSize: 11, color: Colors.text.tertiary, textAlign: 'right', marginBottom: 16 },
   actions:    { flexDirection: 'row', gap: 10 },
-  cancelBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  cancelBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.gray100, alignItems: 'center' },
   cancelText: { fontSize: 14, fontWeight: '700', color: Colors.text.secondary },
   sendBtnWrap:{ flex: 2, borderRadius: 13, overflow: 'hidden' },
   sendBtnGrad:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13 },
-  sendText:   { fontSize: 14, fontWeight: '800', color: '#FFF' },
+  sendText:   { fontSize: 14, fontWeight: '800', color: palette.white },
 });
 
 const gbm = createThemedStyles({
   overlay:    { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)', justifyContent: 'center', padding: 24 },
-  card:       { backgroundColor: '#FFF', borderRadius: 20, padding: 22 },
+  card:       { backgroundColor: palette.white, borderRadius: 20, padding: 22 },
   title:      { fontSize: 18, fontWeight: '800', color: Colors.text.primary, marginBottom: 4 },
   sub:        { fontSize: 13, color: Colors.text.tertiary, marginBottom: 18, lineHeight: 18 },
-  optRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  optRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: palette.gray100 },
   optIcon:    { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   optLabel:   { fontSize: 14, fontWeight: '700', color: Colors.text.primary },
   optSub:     { fontSize: 11, color: Colors.text.tertiary, marginTop: 1 },
-  cancelBtn:  { paddingVertical: 13, borderRadius: 13, backgroundColor: '#F3F4F6', alignItems: 'center', marginTop: 14 },
+  cancelBtn:  { paddingVertical: 13, borderRadius: 13, backgroundColor: palette.gray100, alignItems: 'center', marginTop: 14 },
   cancelText: { fontSize: 14, fontWeight: '700', color: Colors.text.secondary },
 });
 
 const dcm = createThemedStyles({ // SPRINT-41:
   overlay:    { flex: 1, backgroundColor: 'rgba(15,23,42,0.55)', justifyContent: 'center', padding: 24 }, // SPRINT-41:
-  card:       { backgroundColor: '#FFF', borderRadius: 20, padding: 22 }, // SPRINT-41:
-  title:      { fontSize: 18, fontWeight: '800', color: '#DC2626', marginBottom: 8 }, // SPRINT-41:
+  card:       { backgroundColor: palette.white, borderRadius: 20, padding: 22 }, // SPRINT-41:
+  title:      { fontSize: 18, fontWeight: '800', color: palette.red600, marginBottom: 8 }, // SPRINT-41:
   sub:        { fontSize: 13, color: Colors.text.secondary, marginBottom: 14, lineHeight: 19 }, // SPRINT-41:
   input:      { borderWidth: 1.5, borderColor: Colors.border.light, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: Colors.text.primary, marginBottom: 16 }, // SPRINT-41:
   actions:    { flexDirection: 'row', gap: 10 }, // SPRINT-41:
-  cancelBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: '#F3F4F6', alignItems: 'center' }, // SPRINT-41:
+  cancelBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.gray100, alignItems: 'center' }, // SPRINT-41:
   cancelText: { fontSize: 14, fontWeight: '700', color: Colors.text.secondary }, // SPRINT-41:
-  deleteBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: '#DC2626', alignItems: 'center' }, // SPRINT-41:
-  deleteText: { fontSize: 14, fontWeight: '800', color: '#FFF' }, // SPRINT-41:
+  deleteBtn:  { flex: 1, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.red600, alignItems: 'center' }, // SPRINT-41:
+  deleteText: { fontSize: 14, fontWeight: '800', color: palette.white }, // SPRINT-41:
 }); // SPRINT-41:

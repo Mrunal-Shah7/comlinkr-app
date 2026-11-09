@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import React, { useRef } from "react";
 import {
@@ -15,8 +16,8 @@ import { TYPE } from "../src/theme/d";
 import { GradientButton, Reveal } from "../src/shared/d";
 import { LegalDoc } from "../src/shared/d/LegalDoc";
 
-const BRAND_BLUE = "#1A6BAE";
-const BRAND_GREEN = "#30855B";
+const BRAND_BLUE = palette.brandBlue;
+const BRAND_GREEN = palette.brandGreen;
 
 export const PRIVACY_POLICY_VERSION = "2.0";
 const LAST_UPDATED = "July 7, 2026";
@@ -323,7 +324,7 @@ export default function PrivacyPolicyScreen() {
         <View style={{ marginTop: 10, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
           <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>Questions about your privacy?</Text>
           <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 4, marginBottom: 14 }]}>Write to support@comlinkr.com and the privacy team will answer.</Text>
-          <GradientButton block label="Email the privacy team" icon={<Ionicons name="mail-outline" size={17} color="#fff" />} onPress={() => void Linking.openURL("mailto:support@comlinkr.com?subject=Privacy%20Question")} />
+          <GradientButton block label="Email the privacy team" icon={<Ionicons name="mail-outline" size={17} color={palette.white} />} onPress={() => void Linking.openURL("mailto:support@comlinkr.com?subject=Privacy%20Question")} />
         </View>
       }
     />

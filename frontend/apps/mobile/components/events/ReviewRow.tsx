@@ -1,4 +1,5 @@
 // SPRINT-42: single event review row with FadeImage avatar (not coupled to restaurant data).
+import { palette } from "../../src/theme/palette";
 import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +24,7 @@ export function ReviewRow({
   const avatar = review.author.avatarUrl ? resolveApiAssetUrl(review.author.avatarUrl) : undefined;
 
   return (
-    <View style={[styles.card, { backgroundColor: isDark ? tc.sectionBg : "#F9FAFB" }]}>
+    <View style={[styles.card, { backgroundColor: isDark ? tc.sectionBg : palette.gray50 }]}>
       <View style={styles.header}>
         {avatar ? (
           <FadeImage uri={avatar} style={styles.avatar} />
@@ -39,7 +40,7 @@ export function ReviewRow({
             {review.author.name}
           </Text>
           <View style={styles.metaRow}>
-            <Text style={{ color: "#F59E0B", fontSize: 13 }}>
+            <Text style={{ color: palette.amber500, fontSize: 13 }}>
               {"★".repeat(full)}
               {"☆".repeat(5 - full)}
             </Text>
@@ -50,7 +51,7 @@ export function ReviewRow({
         </View>
         {canDelete && onDelete ? (
           <Pressable accessibilityLabel="Delete review" onPress={onDelete} hitSlop={8}>
-            <Ionicons name="trash-outline" size={18} color="#DC2626" />
+            <Ionicons name="trash-outline" size={18} color={palette.red600} />
           </Pressable>
         ) : null}
       </View>

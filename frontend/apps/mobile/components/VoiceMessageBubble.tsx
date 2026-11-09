@@ -1,4 +1,5 @@
 // SPRINT-40: voice-message playback and delivery-state renderer
+import { palette } from "../src/theme/palette";
 import { useEffect, useSyncExternalStore } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -64,7 +65,7 @@ export function VoiceMessageBubble({
     <View
       style={[
         styles.bubble,
-        { backgroundColor: isOwn ? Colors.brand.blue : "#FFFFFF" },
+        { backgroundColor: isOwn ? Colors.brand.blue : palette.white },
         !isOwn && styles.incomingBubble,
       ]}
     >
@@ -80,12 +81,12 @@ export function VoiceMessageBubble({
           ]}
         >
           {deliveryState === "uploading" || (isActive && playback.buffering && !playback.loaded) ? (
-            <ActivityIndicator size="small" color={isOwn ? "#FFFFFF" : Colors.brand.blue} />
+            <ActivityIndicator size="small" color={isOwn ? palette.white : Colors.brand.blue} />
           ) : (
             <Ionicons
               name={isActive && playback.playing ? "pause" : "play"}
               size={rs(18)}
-              color={isOwn ? "#FFFFFF" : Colors.brand.blue}
+              color={isOwn ? palette.white : Colors.brand.blue}
             />
           )}
         </Pressable>
@@ -94,7 +95,7 @@ export function VoiceMessageBubble({
           <View
             style={[
               styles.track,
-              { backgroundColor: isOwn ? "rgba(255,255,255,0.28)" : "#D9E7F7" },
+              { backgroundColor: isOwn ? "rgba(255,255,255,0.28)" : palette.skyL91_2 },
             ]}
           >
             <View
@@ -102,7 +103,7 @@ export function VoiceMessageBubble({
                 styles.progress,
                 {
                   width: `${progress * 100}%`,
-                  backgroundColor: isOwn ? "#FFFFFF" : Colors.brand.blue,
+                  backgroundColor: isOwn ? palette.white : Colors.brand.blue,
                 },
               ]}
             />
@@ -119,16 +120,16 @@ export function VoiceMessageBubble({
 
       {deliveryState === "failed" ? (
         <View style={styles.errorRow}>
-          <Text style={[styles.errorText, { color: isOwn ? "#FFE4E4" : Colors.text.error }]} numberOfLines={2}>
+          <Text style={[styles.errorText, { color: isOwn ? palette.redL95 : Colors.text.error }]} numberOfLines={2}>
             {deliveryError || "Voice message failed to send."}
           </Text>
           <Pressable accessibilityRole="button" accessibilityLabel="Retry sending voice message" onPress={onRetryDelivery}>
-            <Text style={[styles.retryText, { color: isOwn ? "#FFFFFF" : Colors.brand.blue }]}>Retry</Text>
+            <Text style={[styles.retryText, { color: isOwn ? palette.white : Colors.brand.blue }]}>Retry</Text>
           </Pressable>
         </View>
       ) : playbackError ? (
         <View style={styles.errorRow}>
-          <Text style={[styles.errorText, { color: isOwn ? "#FFE4E4" : Colors.text.error }]} numberOfLines={2}>
+          <Text style={[styles.errorText, { color: isOwn ? palette.redL95 : Colors.text.error }]} numberOfLines={2}>
             {playbackError}
           </Text>
           <Pressable
@@ -136,7 +137,7 @@ export function VoiceMessageBubble({
             accessibilityLabel="Retry playing voice message"
             onPress={() => void toggleVoicePlayback(messageId, url)}
           >
-            <Text style={[styles.retryText, { color: isOwn ? "#FFFFFF" : Colors.brand.blue }]}>Retry</Text>
+            <Text style={[styles.retryText, { color: isOwn ? palette.white : Colors.brand.blue }]}>Retry</Text>
           </Pressable>
         </View>
       ) : null}
@@ -153,7 +154,7 @@ const styles = createThemedStyles({
     paddingVertical: rs(11),
   },
   incomingBubble: {
-    shadowColor: "#0A2540",
+    shadowColor: palette.navy,
     shadowOpacity: 0.07,
     shadowRadius: rs(5),
     shadowOffset: { width: 0, height: rs(2) },

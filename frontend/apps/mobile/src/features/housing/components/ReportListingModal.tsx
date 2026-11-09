@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -78,24 +79,24 @@ export function ReportListingModal({
           {/* Header */}
           <View style={rp.header}>
             <LinearGradient
-              colors={["#DC2626", "#B91C1C"]}
+              colors={[palette.red600, palette.red700]}
               style={rp.headerIcon}
             >
-              <Ionicons name="flag-outline" size={14} color="#FFF" />
+              <Ionicons name="flag-outline" size={14} color={palette.white} />
             </LinearGradient>
             <Text style={[rp.headerTitle, isDark && { color: tc.textPrimary }]}>Report Listing</Text>
             <Pressable onPress={handleClose} style={[rp.closeBtn, isDark && { backgroundColor: tc.inputBg }]}>
-              <Ionicons name="close" size={18} color="#6B7280" />
+              <Ionicons name="close" size={18} color={palette.gray500} />
             </Pressable>
           </View>
 
           {submitted ? (
             <View style={rp.successBody}>
               <LinearGradient
-                colors={["#30855B", "#16A34A"]}
+                colors={[palette.brandGreen, palette.green600]}
                 style={rp.successIcon}
               >
-                <Ionicons name="shield-checkmark" size={28} color="#FFF" />
+                <Ionicons name="shield-checkmark" size={28} color={palette.white} />
               </LinearGradient>
               <Text style={rp.successTitle}>Report Submitted</Text>
               <Text style={rp.successDesc}>
@@ -111,7 +112,7 @@ export function ReportListingModal({
                 }}
               >
                 <LinearGradient
-                  colors={["#30855B", "#16A34A"]}
+                  colors={[palette.brandGreen, palette.green600]}
                   style={rp.doneBtn}
                 >
                   <Text style={rp.doneBtnText}>Done</Text>
@@ -146,7 +147,7 @@ export function ReportListingModal({
                       rp.reasonIcon,
                       {
                         backgroundColor:
-                          selected === reason.label ? "#FEE2E2" : "#F5F7FA",
+                          selected === reason.label ? palette.red100 : palette.neutralL97_10,
                       },
                     ]}
                   >
@@ -154,7 +155,7 @@ export function ReportListingModal({
                       name={reason.icon}
                       size={14}
                       color={
-                        selected === reason.label ? "#DC2626" : "#6B7280"
+                        selected === reason.label ? palette.red600 : palette.gray500
                       }
                     />
                   </View>
@@ -197,7 +198,7 @@ export function ReportListingModal({
                 <Ionicons
                   name="lock-closed-outline"
                   size={12}
-                  color="#6B7280"
+                  color={palette.gray500}
                 />
                 <Text style={[rp.anonNoteText, isDark && { color: tc.textSecondary }]}>
                   Your report is anonymous. The landlord will not be notified of who filed it.
@@ -217,10 +218,10 @@ export function ReportListingModal({
                   style={{ flex: 1, borderRadius: rs(12), overflow: "hidden", opacity: submitting || !selected ? 0.7 : 1 }}
                 >
                   <LinearGradient
-                    colors={["#DC2626", "#B91C1C"]}
+                    colors={[palette.red600, palette.red700]}
                     style={rp.submitBtn}
                   >
-                    <Ionicons name="flag-outline" size={16} color="#FFF" />
+                    <Ionicons name="flag-outline" size={16} color={palette.white} />
                     <Text style={rp.submitBtnText}>{submitting ? "Submitting..." : "Submit Report"}</Text>
                   </LinearGradient>
                 </Pressable>
@@ -240,7 +241,7 @@ export const rp = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -264,26 +265,26 @@ export const rp = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
   },
   closeBtn: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     alignItems: "center",
     justifyContent: "center",
   },
   listingName: {
     fontSize: 13,
-    color: "#6B7280",
+    color: palette.gray500,
     marginBottom: 14,
     fontStyle: "italic",
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#374151",
+    color: palette.gray700,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 8,
@@ -295,14 +296,14 @@ export const rp = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     marginBottom: 6,
   },
   reasonRowActive: {
-    backgroundColor: "#FFF5F5",
-    borderColor: "#FCA5A5",
+    backgroundColor: palette.neutralL98_7,
+    borderColor: palette.red300,
   },
   reasonIcon: {
     width: 30,
@@ -314,11 +315,11 @@ export const rp = StyleSheet.create({
   reasonText: {
     flex: 1,
     fontSize: 13,
-    color: "#374151",
+    color: palette.gray700,
     fontWeight: "600",
   },
   reasonTextActive: {
-    color: "#DC2626",
+    color: palette.red600,
     fontWeight: "700",
   },
   radio: {
@@ -326,27 +327,27 @@ export const rp = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: palette.gray300,
     alignItems: "center",
     justifyContent: "center",
   },
   radioDone: {
-    borderColor: "#DC2626",
+    borderColor: palette.red600,
   },
   radioDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#DC2626",
+    backgroundColor: palette.red600,
   },
   detailsInput: {
-    backgroundColor: "#F9FAFB",
+    backgroundColor: palette.gray50,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
     padding: 12,
     fontSize: 13,
-    color: "#111827",
+    color: palette.gray900,
     height: 90,
     textAlignVertical: "top",
   },
@@ -355,14 +356,14 @@ export const rp = StyleSheet.create({
     alignItems: "flex-start",
     gap: 6,
     marginTop: 10,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     borderRadius: 8,
     padding: 10,
   },
   anonNoteText: {
     flex: 1,
     fontSize: 11,
-    color: "#6B7280",
+    color: palette.gray500,
     lineHeight: 16,
   },
   submitBtn: {
@@ -376,7 +377,7 @@ export const rp = StyleSheet.create({
   submitBtnText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   successBody: {
     alignItems: "center",
@@ -394,12 +395,12 @@ export const rp = StyleSheet.create({
   successTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#111827",
+    color: palette.gray900,
     marginBottom: 10,
   },
   successDesc: {
     fontSize: 14,
-    color: "#6B7280",
+    color: palette.gray500,
     textAlign: "center",
     lineHeight: 21,
   },
@@ -412,6 +413,6 @@ export const rp = StyleSheet.create({
   doneBtnText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
 });

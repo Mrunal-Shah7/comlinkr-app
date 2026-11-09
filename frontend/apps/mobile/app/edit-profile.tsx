@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useEffect, useRef, useState } from "react";
 import Reanimated, { ZoomIn } from "react-native-reanimated";
@@ -715,12 +716,12 @@ export default function EditProfileScreen() {
                   {profileImage ? (
                     <Image source={{ uri: profileImage }} style={{ width: "100%", height: "100%" }} contentFit={isLocalAssetUri(profileImage) ? "contain" : "cover"} cachePolicy={isLocalAssetUri(profileImage) ? "memory" : "memory-disk"} transition={200} />
                   ) : (
-                    <Text style={[display(800), { color: "#fff", fontSize: 28 }]}>{initials}</Text>
+                    <Text style={[display(800), { color: palette.white, fontSize: 28 }]}>{initials}</Text>
                   )}
                 </View>
               </GradientFill>
               <View style={{ position: "absolute", right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: tc.accent, borderWidth: 2, borderColor: tc.pageBg }}>
-                {imageLoading ? <ActivityIndicator size="small" color="#FFF" /> : <Ionicons name="camera" size={14} color="#FFF" />}
+                {imageLoading ? <ActivityIndicator size="small" color={palette.white} /> : <Ionicons name="camera" size={14} color={palette.white} />}
               </View>
             </PressableScale>
             <Pressable onPress={showImageOptions} hitSlop={8} style={{ marginTop: 10 }} accessibilityRole="button">
@@ -801,64 +802,64 @@ function Segmentish({ label, on, onPress }: { label: string; on: boolean; onPres
 }
 
 const s = createThemedStyles({
-  safe: { flex: 1, backgroundColor: "#F0F3F8" },
+  safe: { flex: 1, backgroundColor: palette.neutralL96 },
   content: { paddingBottom: rs(40) },
 
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: rs(16), paddingVertical: rs(12),
-    backgroundColor: "#FFF", borderBottomWidth: 1, borderBottomColor: "#EEF0F4",
+    backgroundColor: palette.white, borderBottomWidth: 1, borderBottomColor: palette.neutralL95_2,
   },
   backBtn: {
     width: rs(40), height: rs(40), borderRadius: rs(20),
-    backgroundColor: "#F0F5FF", alignItems: "center", justifyContent: "center",
+    backgroundColor: palette.neutralL97_2, alignItems: "center", justifyContent: "center",
   },
   headerTitle: { fontSize: rs(18), fontWeight: "800", color: Colors.text.primary, letterSpacing: -0.3 },
   saveBtn: { paddingHorizontal: rs(22), paddingVertical: rs(9), borderRadius: rs(999), minWidth: 64, alignItems: "center" },
-  saveBtnText: { fontSize: rs(13), fontWeight: "800", color: "#FFF" },
+  saveBtnText: { fontSize: rs(13), fontWeight: "800", color: palette.white },
 
-  avatarSection: { alignItems: "center", paddingVertical: rs(24), backgroundColor: "#FFF", marginBottom: 0 },
+  avatarSection: { alignItems: "center", paddingVertical: rs(24), backgroundColor: palette.white, marginBottom: 0 },
   avatarGrad: {
     width: rs(96), height: rs(96), borderRadius: rs(48),
     alignItems: "center", justifyContent: "center",
-    borderWidth: 3, borderColor: "#FFF",
+    borderWidth: 3, borderColor: palette.white,
     shadowColor: Colors.brand.blue, shadowOpacity: 0.2, shadowRadius: rs(10),
     shadowOffset: { width: 0, height: rs(4) }, elevation: 8,
   },
   avatarImage: {
     width: rs(96), height: rs(96), borderRadius: rs(48),
-    borderWidth: 3, borderColor: "#FFF",
+    borderWidth: 3, borderColor: palette.white,
     elevation: 8,
   },
-  avatarInitials: { fontSize: rs(32), fontWeight: "900", color: "#FFF" },
+  avatarInitials: { fontSize: rs(32), fontWeight: "900", color: palette.white },
   cameraBadge: {
     position: "absolute", bottom: rs(2), right: rs(2),
     width: rs(28), height: rs(28), borderRadius: rs(14),
     backgroundColor: Colors.brand.blue,
     alignItems: "center", justifyContent: "center",
-    borderWidth: 2.5, borderColor: "#FFF", elevation: 5,
+    borderWidth: 2.5, borderColor: palette.white, elevation: 5,
   },
   changePhotoBtn: {
     flexDirection: "row", alignItems: "center", gap: rs(6),
     marginTop: rs(12), paddingHorizontal: rs(16), paddingVertical: rs(8),
     borderRadius: rs(999), backgroundColor: Colors.brand.blueLight,
-    borderWidth: 1, borderColor: "#D6E8FF",
+    borderWidth: 1, borderColor: palette.skyL92_2,
   },
   changePhotoText: { fontSize: rs(13), fontWeight: "700", color: Colors.brand.blue },
   photoHint: { fontSize: rs(11), color: Colors.text.tertiary, marginTop: rs(6) },
 
   sectionLabel: {
-    fontSize: rs(11), fontWeight: "700", color: "#8FA0B4",
+    fontSize: rs(11), fontWeight: "700", color: palette.skyL63_2,
     letterSpacing: 1.2, marginTop: rs(22), marginBottom: rs(10), paddingHorizontal: rs(16),
   },
   section: {
-    marginHorizontal: rs(16), backgroundColor: "#FFF",
-    borderRadius: rs(16), borderWidth: 1, borderColor: "#ECEEF2",
+    marginHorizontal: rs(16), backgroundColor: palette.white,
+    borderRadius: rs(16), borderWidth: 1, borderColor: palette.neutralL94_3,
     overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: rs(6),
+    shadowColor: palette.black, shadowOpacity: 0.05, shadowRadius: rs(6),
     shadowOffset: { width: 0, height: rs(2) }, elevation: 2,
   },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: "#EDF2F8", marginHorizontal: rs(14) },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: palette.neutralL95, marginHorizontal: rs(14) },
   inputGroup: { padding: rs(14) },
   inputLabel: { fontSize: rs(10), fontWeight: "800", color: Colors.text.tertiary, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: rs(5) },
   input: { fontSize: rs(15), color: Colors.text.primary, fontWeight: "600", padding: 0 },
@@ -870,7 +871,7 @@ const s = createThemedStyles({
   chip: {
     flexDirection: "row", alignItems: "center", gap: rs(6),
     paddingHorizontal: rs(12), paddingVertical: rs(8), borderRadius: rs(12),
-    backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#ECEEF2",
+    backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.neutralL94_3,
   },
   chipActive: { backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   chipText: { fontSize: rs(13), fontWeight: "600", color: Colors.text.secondary },
@@ -881,9 +882,9 @@ const s = createThemedStyles({
   cultureChip: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
     paddingHorizontal: rs(14), paddingVertical: rs(10), borderRadius: rs(14),
-    backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#ECEEF2",
+    backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.neutralL94_3,
     width: "47%",
-    shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: rs(4), elevation: 1,
+    shadowColor: palette.black, shadowOpacity: 0.03, shadowRadius: rs(4), elevation: 1,
   },
   cultureChipActive: { backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   cultureEmoji: { fontSize: rs(22) },
@@ -895,11 +896,11 @@ const s = createThemedStyles({
   interestChip: {
     flexDirection: "row", alignItems: "center", gap: rs(10),
     paddingHorizontal: rs(14), paddingVertical: rs(11), borderRadius: rs(14),
-    backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#ECEEF2",
+    backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.neutralL94_3,
     width: "100%",
-    shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: rs(4), elevation: 1,
+    shadowColor: palette.black, shadowOpacity: 0.03, shadowRadius: rs(4), elevation: 1,
   },
-  interestChipActive: { backgroundColor: "#F0FFF4", borderColor: Colors.brand.green },
+  interestChipActive: { backgroundColor: palette.neutralL97_6, borderColor: Colors.brand.green },
   interestIcon: { fontSize: rs(22) },
   interestLabel: { fontSize: rs(14), fontWeight: "700", color: Colors.text.primary },
   interestLabelActive: { color: Colors.brand.green },
@@ -910,7 +911,7 @@ const s = createThemedStyles({
   categoryTab: {
     flexDirection: "row", alignItems: "center", gap: rs(5),
     paddingHorizontal: rs(14), paddingVertical: rs(7), borderRadius: rs(999),
-    backgroundColor: "#FFF", borderWidth: 1.5, borderColor: "#ECEEF2",
+    backgroundColor: palette.white, borderWidth: 1.5, borderColor: palette.neutralL94_3,
   },
   categoryTabActive: { backgroundColor: Colors.brand.blueLight, borderColor: Colors.brand.blue },
   categoryTabText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
@@ -919,7 +920,7 @@ const s = createThemedStyles({
     width: rs(17), height: rs(17), borderRadius: rs(9), backgroundColor: Colors.brand.blue,
     alignItems: "center", justifyContent: "center",
   },
-  categoryBadgeText: { fontSize: rs(9), fontWeight: "800", color: "#FFF" },
+  categoryBadgeText: { fontSize: rs(9), fontWeight: "800", color: palette.white },
 
   communitySelectedRow: { marginHorizontal: rs(16), marginTop: rs(10), paddingVertical: rs(8) },
   communitySelectedLabel: { fontSize: rs(12), fontWeight: "600", color: Colors.text.tertiary, textAlign: "center" },
@@ -930,5 +931,5 @@ const s = createThemedStyles({
     shadowColor: Colors.brand.blue, shadowOpacity: 0.25, shadowRadius: rs(12),
     shadowOffset: { width: 0, height: rs(4) }, elevation: 6,
   },
-  gradientBtnText: { fontSize: rs(16), fontWeight: "800", color: "#FFF", letterSpacing: 0.3 },
+  gradientBtnText: { fontSize: rs(16), fontWeight: "800", color: palette.white, letterSpacing: 0.3 },
 });

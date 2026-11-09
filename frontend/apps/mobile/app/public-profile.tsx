@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useState, useCallback, useRef } from "react";
 import {
@@ -38,20 +39,20 @@ import { EmptyState, GradientButton, GradientFill, Reveal, SoftButton, TileIn } 
 import { DPage, goBackOr } from '../src/shared/d/Page';
 
 const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
-  homefinder:       { icon: "home",                 color: "#0060D0" },
-  foodie:           { icon: "restaurant",           color: "#257A86" },
-  connector:        { icon: "people",               color: "#30855B" },
-  storyteller:      { icon: "book",                 color: "#8B5CF6" },
-  explorer:         { icon: "compass",              color: "#06B6D4" },
-  neighborly:       { icon: "heart",                color: "#EF4444" },
-  local_expert:     { icon: "star",                 color: "#F59E0B" },
-  event_host:       { icon: "calendar",             color: "#EC4899" },
-  verified_landlord:{ icon: "shield-checkmark",     color: "#0060D0" },
-  verified_owner:   { icon: "shield-checkmark",     color: "#30855B" },
+  homefinder:       { icon: "home",                 color: palette.skyL41 },
+  foodie:           { icon: "restaurant",           color: palette.brandTeal },
+  connector:        { icon: "people",               color: palette.brandGreen },
+  storyteller:      { icon: "book",                 color: palette.violet500 },
+  explorer:         { icon: "compass",              color: palette.cyan500 },
+  neighborly:       { icon: "heart",                color: palette.red500 },
+  local_expert:     { icon: "star",                 color: palette.amber500 },
+  event_host:       { icon: "calendar",             color: palette.pink500 },
+  verified_landlord:{ icon: "shield-checkmark",     color: palette.skyL41 },
+  verified_owner:   { icon: "shield-checkmark",     color: palette.brandGreen },
 };
 
 function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: number }) {
-  const colors = ["#1A6BAE", "#257A86", "#30855B", "#155A93", "#256B49"];
+  const colors = [palette.brandBlue, palette.brandTeal, palette.brandGreen, palette.brandBlueDark, palette.brandGreenDark];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
   const bg = colors[Math.abs(h) % colors.length];
@@ -67,7 +68,7 @@ function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: n
           transition={200}
         />
       ) : (
-        <Text style={[display(800), { fontSize: size * 0.34, color: "#FFF" }]}>{initials}</Text>
+        <Text style={[display(800), { fontSize: size * 0.34, color: palette.white }]}>{initials}</Text>
       )}
     </View>
   );
@@ -220,7 +221,7 @@ export default function PublicProfileScreen() {
             {profile.bio ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>{profile.bio}</Text> : null}
             {!isOwnProfile ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
-                <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color="#fff" />} onPress={handleMessage} />
+                <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color={palette.white} />} onPress={handleMessage} />
                 <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
               </View>
             ) : null}
@@ -245,7 +246,7 @@ export default function PublicProfileScreen() {
               {h2("Badges")}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 16 }}>
                 {profile.achievements.filter((a) => a.earned).map((a, i) => {
-                  const meta = ACHIEVEMENT_ICONS[a.id] ?? { icon: "ribbon-outline", color: "#6B7280" };
+                  const meta = ACHIEVEMENT_ICONS[a.id] ?? { icon: "ribbon-outline", color: palette.gray500 };
                   return (
                     <TileIn key={a.id} i={i} style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: tc.mintSoft }}>
                       <Ionicons name={meta.icon as any} size={15} color={tc.successText} />
@@ -305,7 +306,7 @@ const st = createThemedStyles({
     position: "absolute", bottom: 2, right: 2,
     width: rs(24), height: rs(24), borderRadius: rs(12),
     backgroundColor: Colors.brand.green, alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#FFF",
+    borderWidth: 2, borderColor: palette.white,
   },
   name: { fontSize: rs(22), fontWeight: "800", marginTop: rs(12), letterSpacing: -0.3 },
   username: { fontSize: rs(13), marginTop: rs(2) },

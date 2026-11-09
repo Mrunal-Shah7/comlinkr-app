@@ -1,3 +1,4 @@
+import { palette } from "../../src/theme/palette";
 import { useRef, useState } from "react";
 import {
   View,
@@ -27,7 +28,7 @@ import { DPage, goBackOr } from '../../src/shared/d/Page';
 
 function GradientText({
   text,
-  colors = ["#1A6BAE", "#005BE0", "#30855B"],
+  colors = [palette.brandBlue, palette.blueL44, palette.brandGreen],
   style,
 }: {
   text: string;
@@ -280,12 +281,12 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(24),
     padding: rs(22),
     width: "100%",
     maxWidth: 420,
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 28,
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: rs(13),
-    color: "#EF4444",
+    color: palette.red500,
     fontWeight: "500",
     flex: 1,
   },
@@ -339,7 +340,7 @@ const styles = StyleSheet.create({
     marginTop: rs(16),
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontSize: rs(17),
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: palette.white,
     letterSpacing: 0.4,
   },
 

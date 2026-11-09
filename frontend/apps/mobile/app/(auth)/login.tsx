@@ -1,3 +1,4 @@
+import { palette } from "../../src/theme/palette";
 import { useState, useRef } from "react";
 import {
   View,
@@ -39,7 +40,7 @@ import Reanimated from 'react-native-reanimated';
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
   text,
-  colors = ["#1A6BAE", "#30855B"],
+  colors = [palette.brandBlue, palette.brandGreen],
   style,
 }: {
   text: string;
@@ -256,7 +257,7 @@ export default function LoginScreen() {
 
             <Reveal i={1}>
               <Text style={[display(800), { fontSize: 40, lineHeight: 42, letterSpacing: -1.4, color: tc.textPrimary }]}>New city.</Text>
-              <GradientText text="Your people." style={[display(800), { fontSize: 40, lineHeight: 44, letterSpacing: -1.4 }]} colors={["#3D8FD6", "#3FB57C"]} />
+              <GradientText text="Your people." style={[display(800), { fontSize: 40, lineHeight: 44, letterSpacing: -1.4 }]} colors={[palette.skyL54, palette.greenL48]} />
               <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 8, marginBottom: 24 }]}>Homes, food and friends, around the corner.</Text>
             </Reveal>
 
@@ -335,7 +336,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#EBF5FF",
+    backgroundColor: palette.legacyBlueLight,
   },
   safe: { flex: 1 },
   flex: { flex: 1 },
@@ -377,10 +378,10 @@ const styles = StyleSheet.create({
     width: rs(104),
     height: rs(104),
     borderRadius: rs(28),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 18,
@@ -408,12 +409,12 @@ const styles = StyleSheet.create({
 
   /* Card */
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
     borderRadius: rs(24),
     padding: rs(22),
     width: "100%",
     maxWidth: 420,
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.07,
     shadowRadius: 20,
@@ -442,8 +443,8 @@ const styles = StyleSheet.create({
     height: rs(46),
     borderRadius: rs(12),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FAFAFA",
+    borderColor: palette.gray200,
+    backgroundColor: palette.neutralL98_6,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -455,7 +456,7 @@ const styles = StyleSheet.create({
     gap: rs(10),
   },
   socialBtnPressed: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     transform: [{ scale: 0.98 }],
   },
   socialLabel: {
@@ -474,11 +475,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
   dividerText: {
     fontSize: rs(12),
-    color: "#9CA3AF",
+    color: palette.gray400,
     fontWeight: "500",
   },
 
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
   /* Error */
   errorBox: {
     marginTop: rs(12),
-    backgroundColor: "#FEF2F2",
+    backgroundColor: palette.red50,
     borderRadius: rs(12),
     paddingHorizontal: rs(14),
     paddingVertical: rs(11),
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: rs(13),
-    color: "#EF4444",
+    color: palette.red500,
     fontWeight: "500",
     flex: 1,
   },
@@ -519,7 +520,7 @@ const styles = StyleSheet.create({
   loginBtn: {
     borderRadius: rs(16),
     overflow: "hidden",
-    shadowColor: "#1A6BAE",
+    shadowColor: palette.brandBlue,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 14,
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
   loginBtnText: {
     fontSize: rs(17),
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: palette.white,
     letterSpacing: 0.4,
   },
 

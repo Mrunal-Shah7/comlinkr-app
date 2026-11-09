@@ -1,6 +1,7 @@
 // src/features/admin/pages/AuthManagementScreen.tsx
 // SPRINT-41: Contract AdminSessionItem — no device/OS/IP/location/suspicious fabrications
 
+import { palette } from "../../../theme/palette";
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, RefreshControl, Pressable,
@@ -159,11 +160,11 @@ export default function AuthManagementScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.brand.blue} />}
         >
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#8B5CF6', '#6D3FD1']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="lock-closed" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.violet500, palette.legacyPurple]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="lock-closed" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -173,7 +174,7 @@ export default function AuthManagementScreen() {
 
           <View style={s.summaryRow}>
             {[
-              { label: 'Shown', value: sessions.length, color: '#8B5CF6' }, // SPRINT-41:
+              { label: 'Shown', value: sessions.length, color: palette.violet500 }, // SPRINT-41:
               { label: 'Total', value: meta?.total ?? sessions.length, color: Colors.brand.blue }, // SPRINT-41:
             ].map((item) => (
               <View key={item.label} style={s.summaryCard}>
@@ -186,7 +187,7 @@ export default function AuthManagementScreen() {
           {/* SPRINT-41: Truncation notice when Redis scan hit ceiling */}
           {truncated && (
             <View style={s.truncBanner}>
-              <Ionicons name="information-circle" size={16} color="#F59E0B" />
+              <Ionicons name="information-circle" size={16} color={palette.amber500} />
               <Text style={s.truncText}>
                 Session list may be incomplete — Redis scan reached the safety ceiling. Additional sessions may exist.
               </Text>
@@ -241,7 +242,7 @@ export default function AuthManagementScreen() {
                     ? { label: 'Current', color: Colors.brand.blue } // SPRINT-41:
                     : { label: session.user.role, color: Colors.brand.green } // SPRINT-41:
                   }
-                  accentColor={isCurrent ? Colors.brand.blue : '#8B5CF6'} // SPRINT-41:
+                  accentColor={isCurrent ? Colors.brand.blue : palette.violet500} // SPRINT-41:
                 >
                   <View style={s.detailGrid}>
                     <View style={s.detailItem}>
@@ -268,7 +269,7 @@ export default function AuthManagementScreen() {
                       disabled={isCurrent || terminating} // SPRINT-41:
                       style={[s.terminateBtn, (isCurrent || terminating) && { opacity: 0.45 }]}
                     >
-                      <Ionicons name="close-circle" size={14} color="#EF4444" />
+                      <Ionicons name="close-circle" size={14} color={palette.red500} />
                       <Text style={s.terminateText}>{isCurrent ? 'Current session' : 'Terminate'}</Text>
                     </Pressable>
                     <Pressable
@@ -276,7 +277,7 @@ export default function AuthManagementScreen() {
                       disabled={bulkPending}
                       style={[s.bulkBtn, bulkPending && { opacity: 0.45 }]}
                     >
-                      <Ionicons name="people" size={14} color="#8B5CF6" />
+                      <Ionicons name="people" size={14} color={palette.violet500} />
                       <Text style={s.bulkText}>End all for user</Text>
                     </Pressable>
                   </View>
@@ -291,7 +292,7 @@ export default function AuthManagementScreen() {
 }
 
 const s = createThemedStyles({
-  root:            { flex: 1, backgroundColor: '#EBF5FF' },
+  root:            { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:            { flex: 1 },
   scroll:          { flex: 1 },
   content:         { padding: 18, paddingBottom: 48 },
@@ -302,25 +303,25 @@ const s = createThemedStyles({
   title:           { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5 },
 
   summaryRow:      { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  summaryCard:     { flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  summaryCard:     { flex: 1, backgroundColor: palette.white, borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   summaryVal:      { fontSize: 20, fontWeight: '900' },
   summaryLbl:      { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  truncBanner:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF3E6', borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' }, // SPRINT-41:
-  truncText:       { color: '#B45309', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 }, // SPRINT-41:
+  truncBanner:     { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: palette.legacyOrangeLight, borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' }, // SPRINT-41:
+  truncText:       { color: palette.amber700, fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 }, // SPRINT-41:
 
-  filterCard:      { backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' }, // SPRINT-41:
+  filterCard:      { backgroundColor: palette.white, borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(0,118,235,0.06)' }, // SPRINT-41:
   filterLabel:     { fontSize: 10, fontWeight: '900', color: Colors.text.tertiary, letterSpacing: 1, marginBottom: 8 }, // SPRINT-41:
   filterRow:       { flexDirection: 'row', alignItems: 'center', gap: 8 }, // SPRINT-41:
   filterInput:     { flex: 1, backgroundColor: Colors.bg.secondary, borderRadius: 10, borderWidth: 1, borderColor: Colors.border.light, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: Colors.text.primary }, // SPRINT-41:
   filterBtn:       { backgroundColor: Colors.brand.blue, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10 }, // SPRINT-41:
-  filterBtnText:   { color: '#FFF', fontSize: 13, fontWeight: '800' }, // SPRINT-41:
+  filterBtnText:   { color: palette.white, fontSize: 13, fontWeight: '800' }, // SPRINT-41:
   clearBtn:        { paddingHorizontal: 10, paddingVertical: 10 }, // SPRINT-41:
   clearBtnText:    { color: Colors.text.secondary, fontSize: 13, fontWeight: '700' }, // SPRINT-41:
 
-  loadingCard:     { backgroundColor: '#FFF', borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  loadingCard:     { backgroundColor: palette.white, borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   loadingText:     { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
-  emptyCard:       { backgroundColor: '#FFF', borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  emptyCard:       { backgroundColor: palette.white, borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   emptyTitle:      { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   emptySub:        { fontSize: 13, color: Colors.text.tertiary },
 
@@ -331,8 +332,8 @@ const s = createThemedStyles({
   detailValue:     { fontSize: 12, color: Colors.text.primary, fontWeight: '700' },
 
   actionRow:       { flexDirection: 'row', gap: 8, flexWrap: 'wrap' }, // SPRINT-41:
-  terminateBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' }, // SPRINT-41:
-  terminateText:   { fontSize: 12, fontWeight: '700', color: '#EF4444' }, // SPRINT-41:
-  bulkBtn:         { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, backgroundColor: '#F5F3FF', borderWidth: 1.5, borderColor: 'rgba(139,92,246,0.25)' }, // SPRINT-41:
-  bulkText:        { fontSize: 12, fontWeight: '700', color: '#8B5CF6' }, // SPRINT-41:
+  terminateBtn:    { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.25)' }, // SPRINT-41:
+  terminateText:   { fontSize: 12, fontWeight: '700', color: palette.red500 }, // SPRINT-41:
+  bulkBtn:         { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 10, backgroundColor: palette.violet50, borderWidth: 1.5, borderColor: 'rgba(139,92,246,0.25)' }, // SPRINT-41:
+  bulkText:        { fontSize: 12, fontWeight: '700', color: palette.violet500 }, // SPRINT-41:
 });

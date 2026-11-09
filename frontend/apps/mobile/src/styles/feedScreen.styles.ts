@@ -1,16 +1,17 @@
+import { palette } from "../theme/palette";
 import { StyleSheet } from "react-native";
 import { rs } from "../utils/responsive";
 import { Colors } from "../theme/colors";
 
 export const s = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: "#F5F6FA" },
+  safe:    { flex: 1, backgroundColor: palette.neutralL97_9 },
   scroll:  { flex: 1 },
   content: { paddingBottom: rs(20) },
 
   // Hero
   hero: {
     marginHorizontal: rs(14), marginTop: rs(6), marginBottom: rs(4), borderRadius: rs(18), padding: rs(16), overflow: "hidden",
-    shadowColor: "#003080", shadowOpacity: 0.22, shadowRadius: rs(16), elevation: 8,
+    shadowColor: palette.blueL25, shadowOpacity: 0.22, shadowRadius: rs(16), elevation: 8,
   },
   heroBg1: { display: "none" },
   heroBg2: { display: "none" },
@@ -18,14 +19,14 @@ export const s = StyleSheet.create({
   heroTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: rs(10), zIndex: 2 },
   citySwitcherRow: { flexDirection: "row", alignItems: "center", gap: rs(6) },
   cityLabel: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.18)", paddingHorizontal: rs(12), paddingVertical: rs(7), borderRadius: rs(20), borderWidth: 1, borderColor: "rgba(255,255,255,0.28)" },
-  cityLabelText: { fontSize: rs(11), fontWeight: "800", color: "#FFF", letterSpacing: 0.8 },
+  cityLabelText: { fontSize: rs(11), fontWeight: "800", color: palette.white, letterSpacing: 0.8 },
   heroLiveBadge: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.14)", paddingHorizontal: rs(10), paddingVertical: rs(6), borderRadius: rs(16), borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  heroLiveDot: { width: rs(7), height: rs(7), borderRadius: rs(4), backgroundColor: "#4ADE80" },
-  heroLiveText: { fontSize: rs(10), fontWeight: "700", color: "#FFF", letterSpacing: 0.3 },
+  heroLiveDot: { width: rs(7), height: rs(7), borderRadius: rs(4), backgroundColor: palette.green400 },
+  heroLiveText: { fontSize: rs(10), fontWeight: "700", color: palette.white, letterSpacing: 0.3 },
   cityChangeBtn: { flexDirection: "row", alignItems: "center", gap: rs(5), backgroundColor: "rgba(255,255,255,0.16)", paddingHorizontal: rs(12), paddingVertical: rs(7), borderRadius: rs(20), borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
-  cityChangeBtnText: { fontSize: rs(11), fontWeight: "700", color: "#FFF" },
+  cityChangeBtnText: { fontSize: rs(11), fontWeight: "700", color: palette.white },
   heroGreet: { fontSize: rs(13), fontWeight: "600", color: "rgba(255,255,255,0.9)", marginTop: rs(2) },
-  heroTitle: { fontSize: rs(20), fontWeight: "900", color: "#FFF", marginTop: rs(4), lineHeight: rs(26), letterSpacing: -0.4 },
+  heroTitle: { fontSize: rs(20), fontWeight: "900", color: palette.white, marginTop: rs(4), lineHeight: rs(26), letterSpacing: -0.4 },
   heroBreadcrumb: { flexDirection: "row", alignItems: "center", gap: rs(5), marginTop: rs(5), marginBottom: rs(2) },
   heroBreadcrumbText: { fontSize: rs(11), color: "rgba(255,255,255,0.6)", fontWeight: "500" },
 
@@ -125,7 +126,7 @@ export const s = StyleSheet.create({
     width: rs(6),
     height: rs(6),
     borderRadius: rs(3),
-    backgroundColor: "#4ADE80",
+    backgroundColor: palette.green400,
   },
   heroTickerTitle: {
     fontSize: rs(12),
@@ -170,7 +171,7 @@ export const s = StyleSheet.create({
   heroTickerName: {
     fontSize: rs(11),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   heroTickerAction: {
     fontWeight: "500",
@@ -230,7 +231,7 @@ export const s = StyleSheet.create({
   heroChallengeLabel: {
     fontSize: rs(8),
     fontWeight: "800",
-    color: "#257A86",
+    color: palette.brandTeal,
     letterSpacing: 1.2,
     marginBottom: rs(2),
   },
@@ -256,7 +257,7 @@ export const s = StyleSheet.create({
   heroChallengeProgressFill: {
     height: rs(4),
     borderRadius: rs(2),
-    backgroundColor: "#257A86",
+    backgroundColor: palette.brandTeal,
   },
   heroChallengeProgressText: {
     fontSize: rs(9),
@@ -277,7 +278,7 @@ export const s = StyleSheet.create({
     paddingHorizontal: rs(12),
   },
   heroStat: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: rs(2), gap: rs(3) },
-  heroStatNum: { fontSize: rs(22), fontWeight: "900", color: "#FFF", letterSpacing: -0.3, textAlign: "center" },
+  heroStatNum: { fontSize: rs(22), fontWeight: "900", color: palette.white, letterSpacing: -0.3, textAlign: "center" },
   heroStatLbl: { fontSize: rs(10), fontWeight: "700", color: "rgba(255,255,255,0.75)", letterSpacing: 0.4, textTransform: "capitalize", textAlign: "center" },
   heroStatDiv: { width: rs(1), height: rs(32), backgroundColor: "rgba(255,255,255,0.2)", marginHorizontal: rs(2) },
 
@@ -302,9 +303,9 @@ export const s = StyleSheet.create({
     width: rs(8),
     height: rs(8),
     borderRadius: rs(4),
-    backgroundColor: "#4ADE80",
+    backgroundColor: palette.green400,
     flexShrink: 0,
-    shadowColor: "#4ADE80",
+    shadowColor: palette.green400,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: rs(4),
@@ -345,7 +346,7 @@ export const s = StyleSheet.create({
   eventsBannerTitle: {
     fontSize: rs(18),
     fontWeight: "900",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: -0.3,
   },
   eventsBannerPill: {
@@ -359,8 +360,8 @@ export const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.2)",
   },
-  eventsBannerDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: "#4ADE80" },
-  eventsBannerLive: { fontSize: rs(10), fontWeight: "700", color: "#FFF" },
+  eventsBannerDot: { width: rs(6), height: rs(6), borderRadius: rs(3), backgroundColor: palette.green400 },
+  eventsBannerLive: { fontSize: rs(10), fontWeight: "700", color: palette.white },
   eventsBannerStats: {
     flexDirection: "row",
     gap: rs(20),
@@ -370,7 +371,7 @@ export const s = StyleSheet.create({
     paddingHorizontal: rs(16),
   },
   eventsBannerStat: { alignItems: "center" },
-  eventsBannerStatNum: { fontSize: rs(20), fontWeight: "900", color: "#FFF" },
+  eventsBannerStatNum: { fontSize: rs(20), fontWeight: "900", color: palette.white },
   eventsBannerStatLbl: { fontSize: rs(9), fontWeight: "600", color: "rgba(255,255,255,0.6)", marginTop: rs(2), letterSpacing: 0.3 },
 
   // Tab bar
@@ -383,15 +384,15 @@ export const s = StyleSheet.create({
     paddingVertical: rs(7),
     borderRadius: rs(10),
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
   },
   tabActive: {
     backgroundColor: Colors.brand.blue,
     borderColor: Colors.brand.blue,
   },
   tabText: { fontSize: rs(12), fontWeight: "600", color: Colors.text.secondary },
-  tabTextActive: { color: "#FFF", fontWeight: "700" },
+  tabTextActive: { color: palette.white, fontWeight: "700" },
 
   // Section
   section:  { paddingHorizontal: rs(14), marginTop: rs(20) },
@@ -402,10 +403,10 @@ export const s = StyleSheet.create({
 
   // Events horizontal strip card
   stripCard: {
-    width: rs(200), backgroundColor: "#FFF", borderRadius: rs(18),
-    borderWidth: 1, borderColor: "#ECEEF1",
+    width: rs(200), backgroundColor: palette.white, borderRadius: rs(18),
+    borderWidth: 1, borderColor: palette.neutralL94_2,
     overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: rs(8), elevation: 3,
+    shadowColor: palette.black, shadowOpacity: 0.06, shadowRadius: rs(8), elevation: 3,
   },
   stripImg: { width: "100%", height: rs(110) },
   stripCardBody: { padding: rs(12) },
@@ -415,11 +416,11 @@ export const s = StyleSheet.create({
   stripMeta: { fontSize: rs(11), color: Colors.brand.blue, fontWeight: "500", marginBottom: rs(8) },
   stripBottom: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   stripGoing: { fontSize: rs(11), color: Colors.text.secondary, fontWeight: "500" },
-  stripIntBtn: { width: rs(28), height: rs(28), borderRadius: rs(14), backgroundColor: "#EBF4FF", alignItems: "center", justifyContent: "center" },
-  stripIntBtnActive: { backgroundColor: "#FEF3C7" },
+  stripIntBtn: { width: rs(28), height: rs(28), borderRadius: rs(14), backgroundColor: palette.skyL96, alignItems: "center", justifyContent: "center" },
+  stripIntBtnActive: { backgroundColor: palette.amber100 },
 
   // Trending chips (For You / Trending tab)
-  trendChip: { flexDirection: "row", alignItems: "center", gap: rs(7), backgroundColor: "#FFF", borderRadius: rs(14), paddingHorizontal: rs(14), paddingVertical: rs(10), borderWidth: 1, borderColor: "#ECEEF1" },
+  trendChip: { flexDirection: "row", alignItems: "center", gap: rs(7), backgroundColor: palette.white, borderRadius: rs(14), paddingHorizontal: rs(14), paddingVertical: rs(10), borderWidth: 1, borderColor: palette.neutralL94_2 },
   trendLabel: { fontSize: rs(13), fontWeight: "600", color: Colors.text.primary },
   trendBadge: { backgroundColor: Colors.brand.blueLight, borderRadius: rs(8), paddingHorizontal: rs(6), paddingVertical: rs(2) },
   trendCount: { fontSize: rs(11), fontWeight: "700", color: Colors.brand.blue },
@@ -427,28 +428,28 @@ export const s = StyleSheet.create({
   // Trending grid (Trending tab)
   trendGrid: { flexDirection: "row", flexWrap: "wrap", gap: rs(10) },
   trendGridCard: {
-    width: "47%", backgroundColor: "#FFF", borderRadius: rs(16), padding: rs(16),
-    borderWidth: 1, borderColor: "#ECEEF1",
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: rs(6), elevation: 2,
+    width: "47%", backgroundColor: palette.white, borderRadius: rs(16), padding: rs(16),
+    borderWidth: 1, borderColor: palette.neutralL94_2,
+    shadowColor: palette.black, shadowOpacity: 0.04, shadowRadius: rs(6), elevation: 2,
     position: "relative",
   },
   trendGridEmoji: { fontSize: rs(28), marginBottom: rs(8) },
   trendGridLabel: { fontSize: rs(14), fontWeight: "700", color: Colors.text.primary, marginBottom: rs(6) },
   trendGridBadge: { backgroundColor: Colors.brand.blueLight, borderRadius: rs(8), paddingHorizontal: rs(8), paddingVertical: rs(3), alignSelf: "flex-start" },
   trendGridCount: { fontSize: rs(11), fontWeight: "700", color: Colors.brand.blue },
-  hotBadge: { position: "absolute", top: rs(10), right: rs(10), backgroundColor: "#EF4444", borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2) },
-  hotBadgeText: { fontSize: rs(9), fontWeight: "800", color: "#FFF", letterSpacing: 0.5 },
+  hotBadge: { position: "absolute", top: rs(10), right: rs(10), backgroundColor: palette.red500, borderRadius: rs(6), paddingHorizontal: rs(6), paddingVertical: rs(2) },
+  hotBadgeText: { fontSize: rs(9), fontWeight: "800", color: palette.white, letterSpacing: 0.5 },
 
   // Poll card
   card: {
     marginHorizontal: rs(14), marginTop: rs(14),
-    backgroundColor: "#FFF", borderRadius: rs(18),
-    padding: rs(16), borderWidth: 1, borderColor: "#ECEEF1",
-    shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: rs(8), elevation: 2,
+    backgroundColor: palette.white, borderRadius: rs(18),
+    padding: rs(16), borderWidth: 1, borderColor: palette.neutralL94_2,
+    shadowColor: palette.black, shadowOpacity: 0.04, shadowRadius: rs(8), elevation: 2,
   },
   cardTag: { fontSize: rs(10), fontWeight: "700", color: Colors.brand.blue, letterSpacing: 1, marginBottom: rs(8) },
   pollQ: { fontSize: rs(16), fontWeight: "700", color: Colors.text.primary, marginBottom: rs(12) },
-  pollOpt: { flexDirection: "row", alignItems: "center", borderRadius: rs(12), borderWidth: 1.5, borderColor: "#E5E7EB", backgroundColor: "#F9FAFB", height: rs(44), paddingHorizontal: rs(14), marginBottom: rs(8), overflow: "hidden" },
+  pollOpt: { flexDirection: "row", alignItems: "center", borderRadius: rs(12), borderWidth: 1.5, borderColor: palette.gray200, backgroundColor: palette.gray50, height: rs(44), paddingHorizontal: rs(14), marginBottom: rs(8), overflow: "hidden" },
   pollOptActive: { borderColor: Colors.brand.blue, backgroundColor: Colors.brand.blueLight },
   pollBar: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(26,107,174,0.07)", borderRadius: rs(12) },
   pollBarActive: { backgroundColor: "rgba(26,107,174,0.14)" },
@@ -456,7 +457,7 @@ export const s = StyleSheet.create({
   pollPct:  { fontSize: rs(13), fontWeight: "700", color: Colors.text.tertiary, zIndex: 1 },
 
   // Neighborhood debate (Polls tab)
-  debateCard: { backgroundColor: "#FFF", borderRadius: rs(16), padding: rs(16), marginBottom: rs(12), borderWidth: 1, borderColor: "#ECEEF1" },
+  debateCard: { backgroundColor: palette.white, borderRadius: rs(16), padding: rs(16), marginBottom: rs(12), borderWidth: 1, borderColor: palette.neutralL94_2 },
   debateQ: { fontSize: rs(14), fontWeight: "700", color: Colors.text.primary, marginBottom: rs(12), lineHeight: rs(20) },
   debateRow: { flexDirection: "row", gap: rs(8), height: rs(40) },
   debateBar: { borderRadius: rs(10), borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
@@ -499,7 +500,7 @@ export const st = StyleSheet.create({
   shareStoryBtnText: {
     fontSize: rs(14),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
   },
 
   // ΓöÇΓöÇ Discussion Prompt ΓöÇΓöÇ
@@ -509,12 +510,12 @@ export const st = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(16),
     padding: rs(14),
     borderWidth: 1.5,
-    borderColor: "#ECEEF2",
-    shadowColor: "#000",
+    borderColor: palette.neutralL94_3,
+    shadowColor: palette.black,
     shadowOpacity: 0.03,
     shadowRadius: rs(8),
     elevation: 1,
@@ -547,7 +548,7 @@ export const st = StyleSheet.create({
   discussionBtnText: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
 
   // ΓöÇΓöÇ Trending Hashtags ΓöÇΓöÇ
@@ -570,18 +571,18 @@ export const st = StyleSheet.create({
     paddingVertical: rs(8),
     borderRadius: rs(20),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
   },
   hashtagChipTrending: {
-    borderColor: "#FBBF24",
-    backgroundColor: "#FFFBEB",
+    borderColor: palette.amber400,
+    backgroundColor: palette.amber50,
   },
   hashtagFireDot: {
     width: rs(6),
     height: rs(6),
     borderRadius: rs(3),
-    backgroundColor: "#EF4444",
+    backgroundColor: palette.red500,
   },
   hashtagText: {
     fontSize: rs(12),
@@ -589,7 +590,7 @@ export const st = StyleSheet.create({
     color: Colors.text.primary,
   },
   hashtagTextTrending: {
-    color: "#B45309",
+    color: palette.amber700,
   },
   hashtagCount: {
     fontSize: rs(10),
@@ -614,7 +615,7 @@ export const st = StyleSheet.create({
     paddingHorizontal: rs(14),
     paddingVertical: rs(7),
     borderRadius: rs(20),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
   },
   sortPillActive: {
     backgroundColor: Colors.brand.blue,
@@ -625,7 +626,7 @@ export const st = StyleSheet.create({
     color: Colors.text.tertiary,
   },
   sortPillTextActive: {
-    color: "#FFF",
+    color: palette.white,
     fontWeight: "700",
   },
   catRow: {
@@ -641,8 +642,8 @@ export const st = StyleSheet.create({
     paddingVertical: rs(8),
     borderRadius: rs(20),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
   },
   catChipActive: {
     borderColor: Colors.brand.blue,
@@ -664,8 +665,8 @@ export const st = StyleSheet.create({
     borderRadius: rs(22),
     overflow: "hidden",
     height: rs(380),
-    backgroundColor: "#000",
-    shadowColor: "#000",
+    backgroundColor: palette.black,
+    shadowColor: palette.black,
     shadowOpacity: 0.15,
     shadowRadius: rs(18),
     elevation: 8,
@@ -698,7 +699,7 @@ export const st = StyleSheet.create({
   featuredMediaText: {
     fontSize: rs(9),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.5,
   },
   featuredDuration: {
@@ -716,7 +717,7 @@ export const st = StyleSheet.create({
   featuredDurationText: {
     fontSize: rs(11),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   featuredCatBadge: {
     position: "absolute",
@@ -788,7 +789,7 @@ export const st = StyleSheet.create({
   featuredAuthorName: {
     fontSize: rs(14),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
   },
   featuredAuthorFollowers: {
     fontSize: rs(11),
@@ -807,12 +808,12 @@ export const st = StyleSheet.create({
   featuredFollowText: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   featuredTitle: {
     fontSize: rs(18),
     fontWeight: "900",
-    color: "#FFF",
+    color: palette.white,
     lineHeight: rs(24),
     marginBottom: rs(4),
     textShadowColor: "rgba(0,0,0,0.6)",
@@ -835,7 +836,7 @@ export const st = StyleSheet.create({
   featuredHashtag: {
     fontSize: rs(12),
     fontWeight: "700",
-    color: "#60A5FA",
+    color: palette.blue400,
   },
   featuredEngagement: {
     flexDirection: "row",
@@ -871,7 +872,7 @@ export const st = StyleSheet.create({
   featuredBadgeText: {
     fontSize: rs(9),
     fontWeight: "800",
-    color: "#F59E0B",
+    color: palette.amber500,
     letterSpacing: 0.5,
   },
 
@@ -898,13 +899,13 @@ export const st = StyleSheet.create({
     color: Colors.text.tertiary,
   },
   reelCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20),
     overflow: "hidden",
     marginBottom: rs(14),
     borderWidth: 1,
-    borderColor: "#ECEEF2",
-    shadowColor: "#000",
+    borderColor: palette.neutralL94_3,
+    shadowColor: palette.black,
     shadowOpacity: 0.05,
     shadowRadius: rs(10),
     elevation: 3,
@@ -921,7 +922,7 @@ export const st = StyleSheet.create({
     height: rs(38),
     borderRadius: rs(19),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   reelAuthorName: {
     fontSize: rs(14),
@@ -1002,7 +1003,7 @@ export const st = StyleSheet.create({
   reelDurationText: {
     fontSize: rs(10),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   reelLocation: {
     position: "absolute",
@@ -1033,7 +1034,7 @@ export const st = StyleSheet.create({
   reelNewBadgeText: {
     fontSize: rs(8),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.5,
   },
   reelContent: {
@@ -1078,13 +1079,13 @@ export const st = StyleSheet.create({
     paddingHorizontal: rs(10),
     paddingVertical: rs(6),
     borderRadius: rs(20),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
     borderWidth: 1.5,
     borderColor: "transparent",
   },
   reelReactionChipActive: {
-    backgroundColor: "#FEF3C7",
-    borderColor: "#FCD34D",
+    backgroundColor: palette.amber100,
+    borderColor: palette.amber300,
   },
   reelReactionCount: {
     fontSize: rs(11),
@@ -1092,7 +1093,7 @@ export const st = StyleSheet.create({
     color: Colors.text.secondary,
   },
   reelReactionCountActive: {
-    color: "#B45309",
+    color: palette.amber700,
   },
   reelEngBar: {
     flexDirection: "row",
@@ -1100,7 +1101,7 @@ export const st = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: rs(10),
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E8EDF5",
+    borderTopColor: palette.neutralL94,
   },
   reelEngLeft: {
     flexDirection: "row",
@@ -1128,12 +1129,12 @@ export const st = StyleSheet.create({
     marginHorizontal: rs(14),
     marginTop: rs(8),
     marginBottom: rs(8),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20),
     padding: rs(16),
     borderWidth: 1.5,
-    borderColor: "#ECEEF2",
-    shadowColor: "#000",
+    borderColor: palette.neutralL94_3,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(8),
     elevation: 2,
@@ -1154,7 +1155,7 @@ export const st = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(5),
-    backgroundColor: "#F0FDF4",
+    backgroundColor: palette.green50,
     paddingHorizontal: rs(10),
     paddingVertical: rs(4),
     borderRadius: rs(12),
@@ -1163,12 +1164,12 @@ export const st = StyleSheet.create({
     width: rs(6),
     height: rs(6),
     borderRadius: rs(3),
-    backgroundColor: "#22C55E",
+    backgroundColor: palette.green500,
   },
   storyPollLiveText: {
     fontSize: rs(10),
     fontWeight: "700",
-    color: "#22C55E",
+    color: palette.green500,
   },
   storyPollQuestion: {
     fontSize: rs(14),
@@ -1184,14 +1185,14 @@ export const st = StyleSheet.create({
   storyPollOpt: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: palette.slate50,
     borderRadius: rs(12),
     paddingHorizontal: rs(14),
     paddingVertical: rs(12),
     overflow: "hidden",
     position: "relative",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   storyPollOptBar: {
     position: "absolute",
@@ -1225,7 +1226,7 @@ export const st = StyleSheet.create({
     marginBottom: rs(8),
     borderRadius: rs(20),
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(8),
     elevation: 2,
@@ -1234,7 +1235,7 @@ export const st = StyleSheet.create({
     padding: rs(18),
     borderRadius: rs(20),
     borderWidth: 1.5,
-    borderColor: "#FDE68A",
+    borderColor: palette.amber200,
   },
   yourTakeHeader: {
     flexDirection: "row",
@@ -1275,14 +1276,14 @@ export const st = StyleSheet.create({
     backgroundColor: Colors.brand.blue,
   },
   yourTakeBtnNo: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   yourTakeBtnText: {
     fontSize: rs(13),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   yourTakeResponses: {
     fontSize: rs(11),
@@ -1329,7 +1330,7 @@ export const st = StyleSheet.create({
   emptyBtnText: {
     fontSize: rs(14),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
 
   // ΓöÇΓöÇ Engagement Footer ΓöÇΓöÇ
@@ -1396,18 +1397,18 @@ export const st = StyleSheet.create({
   engFooterBtnText: {
     fontSize: rs(15),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
   },
 
   // ── Clean Minimal Story Card ──
   storyCard: {
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     borderRadius: rs(20),
     overflow: "hidden",
     marginBottom: rs(18),
     borderWidth: 1,
     borderColor: "rgba(0,0,0,0.05)",
-    shadowColor: "#000",
+    shadowColor: palette.black,
     shadowOpacity: 0.08,
     shadowRadius: rs(12),
     shadowOffset: { width: 0, height: rs(4) },
@@ -1434,7 +1435,7 @@ export const st = StyleSheet.create({
   storyDurationText: {
     fontSize: rs(11),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
   storyNewBadge: {
     position: "absolute",
@@ -1448,7 +1449,7 @@ export const st = StyleSheet.create({
   storyNewBadgeText: {
     fontSize: rs(10),
     fontWeight: "800",
-    color: "#FFF",
+    color: palette.white,
     letterSpacing: 0.6,
   },
   storyCardBody: {
@@ -1465,7 +1466,7 @@ export const st = StyleSheet.create({
     height: rs(40),
     borderRadius: rs(20),
     borderWidth: 2,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   storyAuthorName: {
     fontSize: rs(15),
@@ -1663,7 +1664,7 @@ export const la = StyleSheet.create({
     width: rs(7),
     height: rs(7),
     borderRadius: rs(4),
-    backgroundColor: "#4ADE80",
+    backgroundColor: palette.green400,
   },
   bannerLiveText: {
     fontSize: rs(10),
@@ -1712,9 +1713,9 @@ export const la = StyleSheet.create({
     paddingVertical: rs(9),
     borderRadius: rs(22),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
+    borderColor: palette.gray200,
+    backgroundColor: palette.white,
+    shadowColor: palette.black,
     shadowOpacity: 0.04,
     shadowRadius: rs(4),
     elevation: 1,
@@ -1739,7 +1740,7 @@ export const la = StyleSheet.create({
     minWidth: 20,
     height: rs(20),
     borderRadius: rs(10),
-    backgroundColor: "#F0F2F5",
+    backgroundColor: palette.neutralL95_5,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: rs(5),
@@ -1758,7 +1759,7 @@ export const la = StyleSheet.create({
     borderRadius: rs(3),
     backgroundColor: Colors.brand.green,
     borderWidth: 1.5,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
 
   // Live count pill
@@ -1766,7 +1767,7 @@ export const la = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: rs(5),
-    backgroundColor: "#E3F1EA",
+    backgroundColor: palette.brandGreenLight,
     paddingHorizontal: rs(10),
     paddingVertical: rs(5),
     borderRadius: rs(14),
@@ -1787,11 +1788,11 @@ export const la = StyleSheet.create({
   wallCard: {
     marginBottom: rs(10),
     borderRadius: rs(18),
-    backgroundColor: "#FFF",
+    backgroundColor: palette.white,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#ECEEF1",
-    shadowColor: "#0A2540",
+    borderColor: palette.neutralL94_2,
+    shadowColor: palette.navy,
     shadowOpacity: 0.06,
     shadowRadius: rs(10),
     shadowOffset: { width: 0, height: rs(3) },
@@ -1820,7 +1821,7 @@ export const la = StyleSheet.create({
     height: rs(46),
     borderRadius: rs(14),
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
+    borderColor: palette.gray200,
   },
   wallTypeBadge: {
     position: "absolute",
@@ -1832,7 +1833,7 @@ export const la = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#FFF",
+    borderColor: palette.white,
   },
   wallContent: {
     flex: 1,
@@ -1937,7 +1938,7 @@ export const la = StyleSheet.create({
     bottom: rs(-4),
     width: rs(1.5),
     height: rs(8),
-    backgroundColor: "#E5E7EB",
+    backgroundColor: palette.gray200,
   },
 
   // Empty state

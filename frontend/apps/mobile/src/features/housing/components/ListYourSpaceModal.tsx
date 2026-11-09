@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, KeyboardAvoidingView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -61,7 +62,7 @@ export function ListYourSpaceModal({
         <Pressable style={StyleSheet.absoluteFill} onPress={reset} />
         <View style={{ backgroundColor: tc.sheetBg, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: "92%", overflow: "hidden" }} onStartShouldSetResponder={() => true}>
           {/* Handle */}
-          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: "#D1D5DB", alignSelf: "center", marginTop: 10, marginBottom: 4, ...(isDark && { backgroundColor: tc.borderMedium }) }} />
+          <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: palette.gray300, alignSelf: "center", marginTop: 10, marginBottom: 4, ...(isDark && { backgroundColor: tc.borderMedium }) }} />
           {/* Header */}
           <LinearGradient
             colors={[Colors.brand.blue, Colors.brand.green]}
@@ -69,21 +70,21 @@ export function ListYourSpaceModal({
             style={{ margin: 14, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 }}
           >
             <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="home" size={22} color="#FFF" />
+              <Ionicons name="home" size={22} color={palette.white} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>List Your Space</Text>
+              <Text style={{ fontSize: 17, fontWeight: "900", color: palette.white }}>List Your Space</Text>
               <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 2 }}>Share your spare room with neighbours</Text>
             </View>
             <Pressable onPress={reset} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" }}>
-              <Ionicons name="close" size={17} color="#FFF" />
+              <Ionicons name="close" size={17} color={palette.white} />
             </Pressable>
           </LinearGradient>
 
           {submitted ? (
             <View style={{ alignItems: "center", padding: 36 }}>
-              <LinearGradient colors={[Colors.brand.green, "#16A34A"]} style={{ width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                <Ionicons name="checkmark" size={40} color="#FFF" />
+              <LinearGradient colors={[Colors.brand.green, palette.green600]} style={{ width: 80, height: 80, borderRadius: 40, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <Ionicons name="checkmark" size={40} color={palette.white} />
               </LinearGradient>
               <Text style={{ fontSize: 20, fontWeight: "900", color: tc.textPrimary, marginBottom: 8 }}>Space Listed!</Text>
               <Text style={{ fontSize: 14, color: tc.textSecondary, textAlign: "center", lineHeight: 20 }}>
@@ -101,16 +102,16 @@ export function ListYourSpaceModal({
                     onPress={() => setRoomType(t)}
                     style={{
                       flex: 1, borderRadius: 12, paddingVertical: 10, alignItems: "center",
-                      backgroundColor: roomType === t ? Colors.brand.blue : (isDark ? tc.inputBg : "#FFF"),
-                      borderWidth: 1.5, borderColor: roomType === t ? Colors.brand.blue : (isDark ? tc.borderLight : "#E5E7EB"),
+                      backgroundColor: roomType === t ? Colors.brand.blue : (isDark ? tc.inputBg : palette.white),
+                      borderWidth: 1.5, borderColor: roomType === t ? Colors.brand.blue : (isDark ? tc.borderLight : palette.gray200),
                     }}
                   >
                     <Ionicons
                       name={t === "Private Room" ? "bed-outline" : t === "Shared Room" ? "people-outline" : "home-outline"}
                       size={18}
-                      color={roomType === t ? "#FFF" : Colors.text.tertiary}
+                      color={roomType === t ? palette.white : Colors.text.tertiary}
                     />
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: roomType === t ? "#FFF" : Colors.text.secondary, marginTop: 4, textAlign: "center" }}>{t}</Text>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: roomType === t ? palette.white : Colors.text.secondary, marginTop: 4, textAlign: "center" }}>{t}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -180,7 +181,7 @@ export function ListYourSpaceModal({
           )}
 
           {!submitted && (
-            <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: insets.bottom + 16, backgroundColor: isDark ? tc.cardBg : "#FFF", borderTopWidth: 1, borderTopColor: isDark ? tc.borderLight : "#F0F2F5" }}>
+            <View style={{ paddingHorizontal: 14, paddingTop: 12, paddingBottom: insets.bottom + 16, backgroundColor: isDark ? tc.cardBg : palette.white, borderTopWidth: 1, borderTopColor: isDark ? tc.borderLight : palette.neutralL95_5 }}>
               <Pressable
                 onPress={handleSubmit}
                 disabled={!rent.trim() || !availFrom.trim()}
@@ -191,8 +192,8 @@ export function ListYourSpaceModal({
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 16 }}
                 >
-                  <Ionicons name="home" size={18} color="#FFF" />
-                  <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>Post My Space</Text>
+                  <Ionicons name="home" size={18} color={palette.white} />
+                  <Text style={{ fontSize: 15, fontWeight: "900", color: palette.white }}>Post My Space</Text>
                 </LinearGradient>
               </Pressable>
             </View>

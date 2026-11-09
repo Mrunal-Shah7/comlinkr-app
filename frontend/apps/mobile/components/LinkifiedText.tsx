@@ -2,6 +2,7 @@
 // React Native's <Text> does not auto-linkify URLs the way native text views can,
 // so free-text fields (listing descriptions, bios, etc.) need this to make pasted
 // links (e.g. a YouTube video tour) actually open.
+import { palette } from "../src/theme/palette";
 import React from "react";
 import { Text, Linking, Alert, type TextStyle, type StyleProp } from "react-native";
 import { appAlert } from '../src/shared/ui/Dialogs';
@@ -34,7 +35,7 @@ export function LinkifiedText({
         return (
           <React.Fragment key={i}>
             <Text
-              style={linkStyle ?? { color: "#1A6BAE", textDecorationLine: "underline" }}
+              style={linkStyle ?? { color: palette.brandBlue, textDecorationLine: "underline" }}
               onPress={() => {
                 Linking.openURL(url).catch(() => {
                   appAlert("Could not open link", "This link could not be opened.");

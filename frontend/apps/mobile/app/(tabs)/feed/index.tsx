@@ -1,3 +1,4 @@
+import { palette } from "../../../src/theme/palette";
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, FlatList, KeyboardAvoidingView } from "react-native";
@@ -1961,7 +1962,7 @@ export default function FeedScreen() {
                           router.push({ pathname: "/create-post", params: { type: "news" } } as any);
                         }}
                       >
-                        <Ionicons name="add" size={16} color="#FFF" />
+                        <Ionicons name="add" size={16} color={palette.white} />
                         <Text style={nw.sectionCreateBtnText}>Post</Text>
                       </Pressable>
                     </View>
@@ -2010,7 +2011,7 @@ export default function FeedScreen() {
                         <Text style={[nw.errorTitle, { color: tc.textPrimary }]}>Couldn't load news</Text>
                         <Text style={[nw.errorSub, { color: tc.textTertiary }]}>Pull down to try again</Text>
                         <Pressable style={nw.retryBtn} onPress={() => loadNews(true)}>
-                          <Ionicons name="refresh" size={16} color="#FFF" />
+                          <Ionicons name="refresh" size={16} color={palette.white} />
                           <Text style={nw.retryText}>Retry</Text>
                         </Pressable>
                       </View>
@@ -2047,7 +2048,7 @@ export default function FeedScreen() {
                     <Text style={[nw.errorTitle, { color: tc.textPrimary }]}>Couldn't load stories</Text>
                     <Text style={[nw.errorSub, { color: tc.textTertiary }]}>Check your connection and try again</Text>
                     <Pressable style={nw.retryBtn} onPress={() => void loadStories()}>
-                      <Ionicons name="refresh" size={16} color="#FFF" />
+                      <Ionicons name="refresh" size={16} color={palette.white} />
                       <Text style={nw.retryText}>Retry</Text>
                     </Pressable>
                   </View>
@@ -2101,11 +2102,11 @@ export default function FeedScreen() {
                         onPress={() => void loadMoreNews()}
                       >
                         {newsPaging ? (
-                          <ActivityIndicator size="small" color="#FFF" />
+                          <ActivityIndicator size="small" color={palette.white} />
                         ) : (
                           <>
                             <Text style={nw.loadMoreBtnText}>Load More</Text>
-                            <Ionicons name="chevron-down" size={14} color="#FFF" />
+                            <Ionicons name="chevron-down" size={14} color={palette.white} />
                           </>
                         )}
                       </Pressable>
@@ -2129,7 +2130,7 @@ export default function FeedScreen() {
                     <Text style={[nw.emptyFilterTitle, { color: tc.textPrimary }]}>No news available right now</Text>
                     <Text style={[nw.emptyFilterSub, { color: tc.textTertiary }]}>Pull down to refresh or try changing your city</Text>
                     <Pressable style={nw.retryBtn} onPress={() => loadNews(true)}>
-                      <Ionicons name="refresh" size={16} color="#FFF" />
+                      <Ionicons name="refresh" size={16} color={palette.white} />
                       <Text style={nw.retryText}>Refresh</Text>
                     </Pressable>
                   </View>
@@ -2222,7 +2223,7 @@ export default function FeedScreen() {
                       onPress={() => Linking.openURL(selectedArticle.url).catch(() => {})}
                       style={nw.modalSourceBtn}
                     >
-                      <Ionicons name="globe-outline" size={16} color="#FFF" />
+                      <Ionicons name="globe-outline" size={16} color={palette.white} />
                       <Text style={nw.modalSourceBtnText}>Read Full Article on {selectedArticle.source}</Text>
                     </Pressable>
                   )}
@@ -2233,9 +2234,9 @@ export default function FeedScreen() {
                       <Ionicons
                         name={newsLiked.has(selectedArticle.id) ? "heart" : "heart-outline"}
                         size={20}
-                        color={newsLiked.has(selectedArticle.id) ? "#EF4444" : tc.textSecondary}
+                        color={newsLiked.has(selectedArticle.id) ? palette.red500 : tc.textSecondary}
                       />
-                      <Text style={[nw.modalActionLabel, { color: newsLiked.has(selectedArticle.id) ? "#EF4444" : tc.textSecondary }]}>
+                      <Text style={[nw.modalActionLabel, { color: newsLiked.has(selectedArticle.id) ? palette.red500 : tc.textSecondary }]}>
                         {(newsLikeCounts[selectedArticle.id] ?? 0) > 0 ? `Like · ${newsLikeCounts[selectedArticle.id]}` : "Like"}
                       </Text>
                     </Pressable>
@@ -2336,7 +2337,7 @@ export default function FeedScreen() {
                 }}
               />
             )}
-            {newsCommentsError ? <Text style={[nw.commentErr, { color: "#DC2626" }]}>{newsCommentsError}</Text> : null}
+            {newsCommentsError ? <Text style={[nw.commentErr, { color: palette.red600 }]}>{newsCommentsError}</Text> : null}
 
             <View style={[nw.commentsInputRow, { borderTopColor: tc.borderLight }]}>
               <TextInput
@@ -2353,9 +2354,9 @@ export default function FeedScreen() {
                 onPress={() => void submitNewsComment()}
               >
                 {newsCommentSending ? (
-                  <ActivityIndicator size="small" color="#FFF" />
+                  <ActivityIndicator size="small" color={palette.white} />
                 ) : (
-                  <Ionicons name="send" size={14} color="#FFF" />
+                  <Ionicons name="send" size={14} color={palette.white} />
                 )}
               </Pressable>
             </View>
@@ -2448,7 +2449,7 @@ export default function FeedScreen() {
                     paddingHorizontal: rs(16),
                     paddingTop: rs(16),
                     paddingBottom: rs(18),
-                    shadowColor: "#000",
+                    shadowColor: palette.black,
                     shadowOpacity: 0.04,
                     shadowRadius: 6,
                     elevation: 2,
@@ -2568,7 +2569,7 @@ export default function FeedScreen() {
                       <Text style={{ fontSize: rs(12), fontFamily: "Manrope_700Bold", color: Colors.brand.blue }}>{initials}</Text>
                     </View>
                   )}
-                  <View style={{ flex: 1, backgroundColor: tc.cardBg, borderRadius: rs(14), padding: rs(12), shadowColor: "#000", shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 }}>
+                  <View style={{ flex: 1, backgroundColor: tc.cardBg, borderRadius: rs(14), padding: rs(12), shadowColor: palette.black, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(5) }}>
                       <Text style={{ fontFamily: "Manrope_700Bold", fontSize: rs(13), color: tc.textPrimary }}>{authorName}</Text>
                       <Text style={{ fontSize: rs(10), color: tc.textTertiary }}>
@@ -2630,9 +2631,9 @@ export default function FeedScreen() {
                 }}
               >
                 {feedCommentSending ? (
-                  <ActivityIndicator color="#FFF" size="small" />
+                  <ActivityIndicator color={palette.white} size="small" />
                 ) : (
-                  <Text style={{ color: "#FFF", fontFamily: "Manrope_800ExtraBold", fontSize: rs(14) }}>Send</Text>
+                  <Text style={{ color: palette.white, fontFamily: "Manrope_800ExtraBold", fontSize: rs(14) }}>Send</Text>
                 )}
               </Pressable>
             </View>

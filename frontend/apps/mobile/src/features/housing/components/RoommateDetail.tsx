@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { TYPE } from "../../../theme/d";
 import { GradientButton, GradientFill, Reveal, SoftButton } from "../../../shared/d";
@@ -41,7 +42,7 @@ export function PrefRow({
   const { isDark, tc } = useTheme();
   return (
     <View style={rm.prefRow}>
-      <View style={[rm.prefIconBox, match && { backgroundColor: "#DCFCE7" }, !match && isDark && { backgroundColor: tc.inputBg }]}>
+      <View style={[rm.prefIconBox, match && { backgroundColor: palette.green100 }, !match && isDark && { backgroundColor: tc.inputBg }]}>
         <Ionicons name={icon} size={14} color={match ? Colors.brand.green : tc.textTertiary} />
       </View>
       <View style={{ flex: 1 }}>
@@ -157,7 +158,7 @@ export function RoommateDetail({
           {shared.length ? (
             <Reveal i={2}>
               {section("What you have in common")}
-              <View style={rd.wrap}>{shared.map((t) => <View key={t} style={[rd.chip, { backgroundColor: tc.mint }]}><Text style={[TYPE.label, { color: "#fff", fontSize: 13 }]}>{t}</Text></View>)}</View>
+              <View style={rd.wrap}>{shared.map((t) => <View key={t} style={[rd.chip, { backgroundColor: tc.mint }]}><Text style={[TYPE.label, { color: palette.white, fontSize: 13 }]}>{t}</Text></View>)}</View>
             </Reveal>
           ) : null}
 

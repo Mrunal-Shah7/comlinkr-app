@@ -1,3 +1,4 @@
+import { palette } from "../../../theme/palette";
 import { useState, useRef, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
 import Reanimated, { Extrapolation, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
@@ -193,7 +194,7 @@ export function FullscreenImageViewer({
     <Modal visible animationType="fade" transparent statusBarTranslucent onRequestClose={onClose}>
       {/* A React Native Modal is its own window: gestures inside it need their own root. */}
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Reanimated.View style={[StyleSheet.absoluteFill, { backgroundColor: "#000" }, bgStyle]} />
+        <Reanimated.View style={[StyleSheet.absoluteFill, { backgroundColor: palette.black }, bgStyle]} />
         <GestureDetector gesture={dismiss}>
           <View style={{ flex: 1 }}>
             <Reanimated.View style={[{ flex: 1 }, pageStyle]}>
@@ -215,7 +216,7 @@ export function FullscreenImageViewer({
         </GestureDetector>
         <Reanimated.View style={[gs.bar, { paddingTop: insets.top + 6 }, bgStyle]}>
           <Pressable onPress={onClose} hitSlop={12} style={gs.back} accessibilityLabel="Back">
-            <Ionicons name="chevron-back" size={26} color="#FFF" />
+            <Ionicons name="chevron-back" size={26} color={palette.white} />
           </Pressable>
           <Text style={gs.count}>{idx + 1} of {images.length}</Text>
           <View style={gs.back} />
@@ -231,7 +232,7 @@ export function FullscreenImageViewer({
 const gs = createDTypeStyles({
   bar: { position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, paddingBottom: 8 },
   back: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  count: { flex: 1, textAlign: "center", color: "#FFF", fontSize: 17, fontWeight: "700" },
+  count: { flex: 1, textAlign: "center", color: palette.white, fontSize: 17, fontWeight: "700" },
   hint: { position: "absolute", left: 0, right: 0, textAlign: "center", color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: "500" },
 });
 
@@ -254,7 +255,7 @@ export const cs = createDTypeStyles({
   },
   dotActive: {
     width: rs(18),
-    backgroundColor: "#FFFFFF",
+    backgroundColor: palette.white,
   },
   counter: {
     position: "absolute",
@@ -268,6 +269,6 @@ export const cs = createDTypeStyles({
   counterText: {
     fontSize: rs(11),
     fontWeight: "700",
-    color: "#FFF",
+    color: palette.white,
   },
 });

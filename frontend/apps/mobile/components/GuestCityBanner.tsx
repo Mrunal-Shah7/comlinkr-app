@@ -1,3 +1,4 @@
+import { palette } from "../src/theme/palette";
 import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Modal, TextInput, FlatList, KeyboardAvoidingView } from "react-native";
 import { DSheet } from "../src/shared/d/Sheet";
@@ -127,9 +128,9 @@ export function GuestCityBanner() {
   return (
     <>
       <View style={styles.banner}>
-        <LinearGradient colors={["#EEF6FF", "#F0FAF0"]} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[palette.skyL97, palette.neutralL96_3]} style={StyleSheet.absoluteFill} />
         <View style={styles.iconBox}>
-          <Ionicons name="location" size={rs(14)} color="#FFF" />
+          <Ionicons name="location" size={rs(14)} color={palette.white} />
         </View>
         <View style={styles.bannerText}>
           <Text style={styles.bannerTitle}>Set your city</Text>
@@ -159,7 +160,7 @@ const styles = createThemedStyles({
     padding: rs(12),
     borderRadius: rs(14),
     borderWidth: 1,
-    borderColor: "#BFDBFE",
+    borderColor: palette.blue200,
     overflow: "hidden",
     marginHorizontal: rs(14),
     marginTop: rs(12),
@@ -174,18 +175,18 @@ const styles = createThemedStyles({
     backgroundColor: Colors.brand.blue,
   },
   bannerText: { flex: 1 },
-  bannerTitle: { fontSize: rs(12), fontWeight: "700", color: "#0A2550" },
-  bannerDesc: { fontSize: rs(11), fontWeight: "500", color: "#3B5578", marginTop: 1 },
+  bannerTitle: { fontSize: rs(12), fontWeight: "700", color: palette.blueL18 },
+  bannerDesc: { fontSize: rs(11), fontWeight: "500", color: palette.skyL35, marginTop: 1 },
   setBtn: {
     paddingHorizontal: rs(12),
     paddingVertical: rs(6),
     borderRadius: rs(8),
     backgroundColor: Colors.brand.blue,
   },
-  setBtnText: { fontSize: rs(11), fontWeight: "800", color: "#FFF" },
+  setBtnText: { fontSize: rs(11), fontWeight: "800", color: palette.white },
   closeBtn: { padding: rs(2) },
 
-  modalSafe: { flex: 1, backgroundColor: "#FFF" },
+  modalSafe: { flex: 1, backgroundColor: palette.white },
   modalHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -193,7 +194,7 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(18),
     paddingVertical: rs(14),
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: palette.gray200,
   },
   modalTitle: { fontSize: rs(16), fontWeight: "800", color: Colors.text.primary },
   searchWrap: {
@@ -204,7 +205,7 @@ const styles = createThemedStyles({
     paddingHorizontal: rs(14),
     height: rs(46),
     borderRadius: rs(12),
-    backgroundColor: "#F3F4F6",
+    backgroundColor: palette.gray100,
   },
   searchInput: { flex: 1, fontSize: rs(14), color: Colors.text.primary },
   cityRow: {

@@ -5,6 +5,7 @@
 // either from a report card's "View conversation" button or a direct
 // conversationId param.
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -58,8 +59,8 @@ function ConversationViewer({ conversationId, onBack }: { conversationId: string
         <Pressable onPress={onBack} style={s.backBtn} hitSlop={10}>
           <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
         </Pressable>
-        <LinearGradient colors={['#EF4444', '#C72626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-          <Ionicons name="chatbox-ellipses" size={22} color="#FFF" />
+        <LinearGradient colors={[palette.red500, palette.redL46]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+          <Ionicons name="chatbox-ellipses" size={22} color={palette.white} />
         </LinearGradient>
         <View style={{ flex: 1 }}>
           <Text style={s.headerSub}>Admin Module</Text>
@@ -95,7 +96,7 @@ function ConversationViewer({ conversationId, onBack }: { conversationId: string
               </View>
               {!m.isDeleted && (
                 <Pressable onPress={() => handleDelete(m.id)} disabled={isDeleting} hitSlop={8}>
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={16} color={palette.red500} />
                 </Pressable>
               )}
             </View>
@@ -170,8 +171,8 @@ export default function ChatModerationScreen() {
             <Pressable onPress={() => router.back()} style={s.backBtn} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={['#EF4444', '#C72626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="chatbox-ellipses" size={22} color="#FFF" />
+            <LinearGradient colors={[palette.red500, palette.redL46]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="chatbox-ellipses" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -181,14 +182,14 @@ export default function ChatModerationScreen() {
 
           <View style={s.statsRow}>
             <View style={s.statCard}>
-              <Text style={[s.statVal, { color: '#EF4444' }]}>{meta?.total ?? reports.length}</Text>
+              <Text style={[s.statVal, { color: palette.red500 }]}>{meta?.total ?? reports.length}</Text>
               <Text style={s.statLbl}>Reported</Text>
             </View>
           </View>
 
           {isError && errorMessage ? (
             <View style={s.emptyCard}>
-              <Text style={{ color: '#EF4444', textAlign: 'center' }}>{errorMessage}</Text>
+              <Text style={{ color: palette.red500, textAlign: 'center' }}>{errorMessage}</Text>
               <Pressable onPress={refresh} style={{ marginTop: 12 }}>
                 <Text style={{ color: Colors.brand.blue, fontWeight: '700' }}>Retry</Text>
               </Pressable>
@@ -208,7 +209,7 @@ export default function ChatModerationScreen() {
               {reports.map((report) => (
                 <View key={report.id} style={s.card}>
                   <View style={s.cardHeaderRow}>
-                    <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                    <Ionicons name="alert-circle" size={16} color={palette.red500} />
                     <Text style={s.cardTitle} numberOfLines={2}>{report.targetTitle ?? 'Reported message'}</Text>
                   </View>
                   <Text style={s.cardMeta}>Reported by @{report.reporter.username} · {report.reason} · {relativeTime(report.createdAt)}</Text>
@@ -219,12 +220,12 @@ export default function ChatModerationScreen() {
                         <Text style={s.dismissText}>Dismiss</Text>
                       </Pressable>
                       <Pressable style={s.warnBtn} onPress={() => !hasMutation && handleRemoveMessage(report.id)}>
-                        <Ionicons name="trash-outline" size={13} color="#F59E0B" />
+                        <Ionicons name="trash-outline" size={13} color={palette.amber500} />
                         <Text style={s.warnBtnText}>Remove msg</Text>
                       </Pressable>
                       <Pressable style={s.resolveBtn} onPress={() => !hasMutation && handleBanSender(report.id)}>
-                        <LinearGradient colors={['#EF4444', '#C72626']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.resolveBtnGrad}>
-                          <Ionicons name="ban" size={13} color="#FFF" />
+                        <LinearGradient colors={[palette.red500, palette.redL46]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.resolveBtnGrad}>
+                          <Ionicons name="ban" size={13} color={palette.white} />
                           <Text style={s.resolveText}>Ban sender</Text>
                         </LinearGradient>
                       </Pressable>
@@ -256,56 +257,56 @@ export default function ChatModerationScreen() {
 }
 
 const s = createThemedStyles({
-  root: { flex: 1, backgroundColor: '#EBF5FF' },
+  root: { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe: { flex: 1 },
   scroll: { flex: 1 },
   content: { padding: 18, paddingBottom: 48 },
 
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
+  backBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' },
   headerIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   headerSub: { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5 },
   title: { fontSize: 20, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.4 },
 
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  statCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 13, padding: 12, alignItems: 'center' },
+  statCard: { flex: 1, backgroundColor: palette.white, borderRadius: 13, padding: 12, alignItems: 'center' },
   statVal: { fontSize: 20, fontWeight: '900' },
   statLbl: { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 32, alignItems: 'center' },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 32, alignItems: 'center' },
   loadingText: { color: Colors.text.tertiary, fontSize: 14 },
-  emptyCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
+  emptyCard: { backgroundColor: palette.white, borderRadius: 18, padding: 40, alignItems: 'center', gap: 6 },
   emptyTitle: { fontSize: 15, fontWeight: '700', color: Colors.text.primary, marginTop: 6 },
   emptySub: { fontSize: 13, color: Colors.text.tertiary },
   emptyInline: { fontSize: 12, color: Colors.text.tertiary, textAlign: 'center', marginTop: 20 },
 
-  card: { backgroundColor: '#FFF', borderRadius: 16, padding: 14, marginBottom: 12 },
+  card: { backgroundColor: palette.white, borderRadius: 16, padding: 14, marginBottom: 12 },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
   cardTitle: { flex: 1, fontSize: 13, fontWeight: '800', color: Colors.text.primary },
   cardMeta: { fontSize: 11, color: Colors.text.tertiary, marginBottom: 10 },
 
   actionsRow: { flexDirection: 'row', gap: 8 },
-  dismissBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: '#D1D5DB', backgroundColor: '#F9FAFB' },
+  dismissBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: palette.gray300, backgroundColor: palette.gray50 },
   dismissText: { fontSize: 12, fontWeight: '700', color: Colors.text.secondary },
-  warnBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.3)', backgroundColor: '#FFFBEB' },
-  warnBtnText: { fontSize: 12, fontWeight: '700', color: '#B45309' },
+  warnBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.3)', backgroundColor: palette.amber50 },
+  warnBtnText: { fontSize: 12, fontWeight: '700', color: palette.amber700 },
   resolveBtn: { flex: 1, borderRadius: 10, overflow: 'hidden' },
   resolveBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9 },
-  resolveText: { fontSize: 12, fontWeight: '800', color: '#FFF' },
-  resolvedBanner: { paddingVertical: 8, alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 10 },
+  resolveText: { fontSize: 12, fontWeight: '800', color: palette.white },
+  resolvedBanner: { paddingVertical: 8, alignItems: 'center', backgroundColor: palette.gray100, borderRadius: 10 },
   resolvedBannerText: { fontSize: 12, fontWeight: '600', color: Colors.text.tertiary },
 
   viewConvoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', backgroundColor: Colors.brand.blueLight },
   viewConvoBtnText: { fontSize: 12, fontWeight: '700', color: Colors.brand.blue },
 
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText: { fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
 
-  convoSummary: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, marginBottom: 14 },
+  convoSummary: { backgroundColor: palette.white, borderRadius: 14, padding: 14, marginBottom: 14 },
   convoParticipants: { fontSize: 13, fontWeight: '700', color: Colors.text.primary },
   convoMeta: { fontSize: 11, color: Colors.text.tertiary, marginTop: 2 },
 
-  messageRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 8 },
+  messageRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: palette.white, borderRadius: 12, padding: 12, marginBottom: 8 },
   messageSender: { fontSize: 12, fontWeight: '700', color: Colors.brand.blue },
   messageContent: { fontSize: 13, color: Colors.text.primary, marginTop: 2 },
   messageDeleted: { color: Colors.text.tertiary, fontStyle: 'italic' },

@@ -1,5 +1,6 @@
 // src/features/admin/pages/RoommatesScreen.tsx
 
+import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, Modal, Alert } from 'react-native';
 import { Image } from 'expo-image';
@@ -21,9 +22,9 @@ import { createThemedStyles } from '../../../theme/themedStyles';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   active:    { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Active'    },
-  pending:   { color: '#F59E0B',            bg: '#FFF3E6',               icon: 'time',             label: 'Pending'   },
+  pending:   { color: palette.amber500,            bg: palette.legacyOrangeLight,               icon: 'time',             label: 'Pending'   },
   matched:   { color: Colors.brand.blue,    bg: Colors.brand.blueLight,  icon: 'people',           label: 'Matched'   },
-  suspended: { color: '#EF4444',            bg: '#FEF2F2',               icon: 'close-circle',     label: 'Suspended' },
+  suspended: { color: palette.red500,            bg: palette.red50,               icon: 'close-circle',     label: 'Suspended' },
 };
 
 function PreferenceRow({ icon, label, value }: { icon: string; label: string; value: string }) {
@@ -92,9 +93,9 @@ function RoommateDetailModal({
                 </View>
               )}
               {profile.reports > 0 && (
-                <View style={[dm.badge, { backgroundColor: '#FEF2F2' }]}>
-                  <Ionicons name="flag" size={11} color="#EF4444" />
-                  <Text style={[dm.badgeText, { color: '#EF4444' }]}>{profile.reports} report{profile.reports !== 1 ? 's' : ''}</Text>
+                <View style={[dm.badge, { backgroundColor: palette.red50 }]}>
+                  <Ionicons name="flag" size={11} color={palette.red500} />
+                  <Text style={[dm.badgeText, { color: palette.red500 }]}>{profile.reports} report{profile.reports !== 1 ? 's' : ''}</Text>
                 </View>
               )}
             </View>
@@ -151,13 +152,13 @@ function RoommateDetailModal({
                 <Text style={dm.statLabel}>Views</Text>
               </View>
               <View style={dm.statCard}>
-                <Ionicons name="people" size={15} color="#8B5CF6" />
-                <Text style={[dm.statVal, { color: '#8B5CF6' }]}>{profile.matches}</Text>
+                <Ionicons name="people" size={15} color={palette.violet500} />
+                <Text style={[dm.statVal, { color: palette.violet500 }]}>{profile.matches}</Text>
                 <Text style={dm.statLabel}>Matches</Text>
               </View>
               <View style={dm.statCard}>
-                <Ionicons name="flag" size={15} color="#EF4444" />
-                <Text style={[dm.statVal, { color: '#EF4444' }]}>{profile.reports}</Text>
+                <Ionicons name="flag" size={15} color={palette.red500} />
+                <Text style={[dm.statVal, { color: palette.red500 }]}>{profile.reports}</Text>
                 <Text style={dm.statLabel}>Reports</Text>
               </View>
             </View>
@@ -176,7 +177,7 @@ function RoommateDetailModal({
                     { text: 'Approve', onPress: () => onApprove(profile.id) },
                   ])}
                 >
-                  <Ionicons name="checkmark-circle" size={15} color="#FFF" />
+                  <Ionicons name="checkmark-circle" size={15} color={palette.white} />
                   <Text style={dm.approveBtnText}>Approve</Text>
                 </Pressable>
                 <Pressable
@@ -186,7 +187,7 @@ function RoommateDetailModal({
                     { text: 'Suspend', style: 'destructive', onPress: () => onSuspend(profile.id) },
                   ])}
                 >
-                  <Ionicons name="close-circle" size={15} color="#EF4444" />
+                  <Ionicons name="close-circle" size={15} color={palette.red500} />
                   <Text style={dm.suspendBtnText}>Suspend</Text>
                 </Pressable>
               </View>
@@ -249,11 +250,11 @@ export default function RoommatesScreen() {
         >
           {/* Header */}
           <View style={s.header}>
-            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: '#EBF5FF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
+            <Pressable onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 12, backgroundColor: palette.legacyBlueLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(0,118,235,0.15)' }} hitSlop={10}>
               <Ionicons name="chevron-back" size={22} color={Colors.brand.blue} />
             </Pressable>
-            <LinearGradient colors={[Colors.brand.blue, '#0054CC']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
-              <Ionicons name="people" size={22} color="#FFF" />
+            <LinearGradient colors={[Colors.brand.blue, palette.blueL40_2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.headerIcon}>
+              <Ionicons name="people" size={22} color={palette.white} />
             </LinearGradient>
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
@@ -272,8 +273,8 @@ export default function RoommatesScreen() {
             {[
               { label: 'Total',    value: profiles.length,                                    color: Colors.brand.blue  },
               { label: 'Active',   value: profiles.filter(p => p.status === 'active').length, color: Colors.brand.green },
-              { label: 'Matched',  value: matchedCount,                                       color: '#8B5CF6'           },
-              { label: 'Reported', value: reportedCount,                                      color: '#EF4444'           },
+              { label: 'Matched',  value: matchedCount,                                       color: palette.violet500           },
+              { label: 'Reported', value: reportedCount,                                      color: palette.red500           },
             ].map((item) => (
               <View key={item.label} style={s.summaryCard}>
                 <Text style={[s.summaryVal, { color: item.color }]}>{item.value}</Text>
@@ -326,11 +327,11 @@ export default function RoommatesScreen() {
                         <Ionicons name={meta.icon as any} size={11} color={meta.color} />
                         <Text style={[s.chipText, { color: meta.color }]}>{meta.label}</Text>
                       </View>
-                      <View style={[s.chip, { backgroundColor: '#F3F4F6' }]}>
+                      <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
                         <Ionicons name="person" size={11} color={Colors.text.secondary} />
                         <Text style={[s.chipText, { color: Colors.text.secondary }]}>Age {profile.age}</Text>
                       </View>
-                      <View style={[s.chip, { backgroundColor: '#F3F4F6' }]}>
+                      <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
                         <Ionicons name="home" size={11} color={Colors.text.secondary} />
                         <Text style={[s.chipText, { color: Colors.text.secondary }]}>
                           {profile.lookingFor === 'room' ? 'Needs Room' : 'Needs Roommate'}
@@ -343,9 +344,9 @@ export default function RoommatesScreen() {
                         </View>
                       )}
                       {profile.reports > 0 && (
-                        <View style={[s.chip, { backgroundColor: '#FEF2F2' }]}>
-                          <Ionicons name="flag" size={11} color="#EF4444" />
-                          <Text style={[s.chipText, { color: '#EF4444' }]}>{profile.reports} reports</Text>
+                        <View style={[s.chip, { backgroundColor: palette.red50 }]}>
+                          <Ionicons name="flag" size={11} color={palette.red500} />
+                          <Text style={[s.chipText, { color: palette.red500 }]}>{profile.reports} reports</Text>
                         </View>
                       )}
                     </View>
@@ -396,7 +397,7 @@ export default function RoommatesScreen() {
 }
 
 const s = createThemedStyles({
-  root:        { flex: 1, backgroundColor: '#EBF5FF' },
+  root:        { flex: 1, backgroundColor: palette.legacyBlueLight },
   safe:        { flex: 1 },
   scroll:      { flex: 1 },
   content:     { padding: 18, paddingBottom: 48 },
@@ -405,18 +406,18 @@ const s = createThemedStyles({
   headerIcon:  { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   headerSub:   { fontSize: 11, color: Colors.text.tertiary, fontWeight: '600', letterSpacing: 0.5, marginBottom: 2 },
   title:       { fontSize: 22, fontWeight: '900', color: Colors.text.primary, letterSpacing: -0.5 },
-  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#FFF3E6', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
-  alertDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: '#F59E0B' },
-  alertText:   { fontSize: 12, fontWeight: '700', color: '#F59E0B' },
+  alertPill:   { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: palette.legacyOrangeLight, paddingHorizontal: 11, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'rgba(245,158,11,0.25)' },
+  alertDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: palette.amber500 },
+  alertText:   { fontSize: 12, fontWeight: '700', color: palette.amber500 },
 
   summaryRow:  { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  summaryCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  summaryCard: { flex: 1, backgroundColor: palette.white, borderRadius: 14, padding: 12, alignItems: 'center', shadowColor: palette.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   summaryVal:  { fontSize: 20, fontWeight: '900' },
   summaryLbl:  { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary, marginTop: 2 },
 
-  loadingCard: { backgroundColor: '#FFF', borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  loadingCard: { backgroundColor: palette.white, borderRadius: 18, padding: 36, alignItems: 'center', gap: 10, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   loadingText: { color: Colors.text.tertiary, fontSize: 14, fontWeight: '500' },
-  emptyCard:   { backgroundColor: '#FFF', borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  emptyCard:   { backgroundColor: palette.white, borderRadius: 18, padding: 44, alignItems: 'center', gap: 8, shadowColor: palette.black, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   emptyTitle:  { fontSize: 16, fontWeight: '800', color: Colors.text.primary, marginTop: 4 },
   emptySub:    { fontSize: 13, color: Colors.text.tertiary },
 
@@ -428,7 +429,7 @@ const s = createThemedStyles({
   infoItem:    { minWidth: '22%' },
   infoLabel:   { fontSize: 10, color: Colors.text.tertiary, fontWeight: '600', marginBottom: 1 },
   infoValue:   { fontSize: 12, color: Colors.text.primary, fontWeight: '800' },
-  loadMoreBtn: { backgroundColor: '#FFF', borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
+  loadMoreBtn: { backgroundColor: palette.white, borderRadius: 14, padding: 14, alignItems: 'center', marginTop: 4, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)' },
   loadMoreText:{ fontSize: 14, fontWeight: '700', color: Colors.brand.blue },
   viewBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 8, paddingVertical: 7, borderRadius: 10, backgroundColor: Colors.brand.blueLight, borderWidth: 1.5, borderColor: 'rgba(0,118,235,0.2)', alignSelf: 'flex-start', paddingHorizontal: 10 },
   viewBtnText: { fontSize: 11, fontWeight: '700', color: Colors.brand.blue },
@@ -436,17 +437,17 @@ const s = createThemedStyles({
 
 const dm = createThemedStyles({
   overlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
-  sheet:      { backgroundColor: '#FFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
-  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB', alignSelf: 'center', marginTop: 12 },
+  sheet:      { backgroundColor: palette.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, maxHeight: '94%' },
+  handle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: palette.gray200, alignSelf: 'center', marginTop: 12 },
 
   headerRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatarImg:  { width: 46, height: 46, borderRadius: 14, backgroundColor: '#F3F4F6' },
+  avatarImg:  { width: 46, height: 46, borderRadius: 14, backgroundColor: palette.gray100 },
   avatar:     { width: 46, height: 46, borderRadius: 14, backgroundColor: Colors.brand.blueLight, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 17, fontWeight: '900', color: Colors.brand.blue },
   title:      { fontSize: 18, fontWeight: '900', color: Colors.text.primary },
   username:   { fontSize: 12, color: Colors.text.tertiary, marginTop: 1 },
-  closeBtn:   { width: 32, height: 32, borderRadius: 10, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' },
+  closeBtn:   { width: 32, height: 32, borderRadius: 10, backgroundColor: palette.gray100, alignItems: 'center', justifyContent: 'center' },
 
   content:    { padding: 20, paddingTop: 8 },
   metaRow:    { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 16 },
@@ -454,21 +455,21 @@ const dm = createThemedStyles({
   badgeText:  { fontSize: 11, fontWeight: '800' },
 
   sectionLabel: { fontSize: 10, fontWeight: '900', letterSpacing: 1.2, color: Colors.text.tertiary, marginBottom: 8 },
-  textBox:    { backgroundColor: '#F8FAFC', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#E8ECF0' },
+  textBox:    { backgroundColor: palette.slate50, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: palette.neutralL93_3 },
   bodyText:   { fontSize: 14, color: Colors.text.primary, lineHeight: 21 },
 
-  detailsBlock: { backgroundColor: '#F8FAFC', borderRadius: 13, borderWidth: 1, borderColor: '#E8ECF0', overflow: 'hidden' },
-  detailRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8ECF0' },
+  detailsBlock: { backgroundColor: palette.slate50, borderRadius: 13, borderWidth: 1, borderColor: palette.neutralL93_3, overflow: 'hidden' },
+  detailRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 11, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: palette.neutralL93_3 },
   detailIconBox: { width: 28, height: 28, borderRadius: 8, backgroundColor: Colors.brand.blueLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
   detailKey:  { fontSize: 10, fontWeight: '700', color: Colors.text.tertiary, marginBottom: 2, letterSpacing: 0.3 },
   detailVal:  { fontSize: 13, fontWeight: '600', color: Colors.text.primary },
 
   tagRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tagChip:    { backgroundColor: '#F3F4F6', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
+  tagChip:    { backgroundColor: palette.gray100, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 },
   tagChipText:{ fontSize: 11, fontWeight: '700', color: Colors.text.secondary },
 
   statsRow:   { flexDirection: 'row', gap: 8 },
-  statCard:   { flex: 1, backgroundColor: '#F8FAFC', borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: '#E8ECF0' },
+  statCard:   { flex: 1, backgroundColor: palette.slate50, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, borderWidth: 1, borderColor: palette.neutralL93_3 },
   statVal:    { fontSize: 15, fontWeight: '900' },
   statLabel:  { fontSize: 10, fontWeight: '600', color: Colors.text.tertiary },
 
@@ -477,7 +478,7 @@ const dm = createThemedStyles({
 
   actions:    { flexDirection: 'row', gap: 10, marginTop: 18 },
   approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: Colors.brand.green },
-  approveBtnText: { fontSize: 14, fontWeight: '800', color: '#FFF' },
-  suspendBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: '#FEF2F2', borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)' },
-  suspendBtnText: { fontSize: 14, fontWeight: '800', color: '#EF4444' },
+  approveBtnText: { fontSize: 14, fontWeight: '800', color: palette.white },
+  suspendBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 13, borderRadius: 13, backgroundColor: palette.red50, borderWidth: 1.5, borderColor: 'rgba(239,68,68,0.3)' },
+  suspendBtnText: { fontSize: 14, fontWeight: '800', color: palette.red500 },
 });

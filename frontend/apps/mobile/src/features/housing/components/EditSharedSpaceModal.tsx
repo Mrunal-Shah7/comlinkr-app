@@ -2,6 +2,7 @@
 //
 // The owner's quick edit of a shared space (description, rent, deposit, spots). Opened from the room detail
 // route; moved out of the Listings tab with plan 03.
+import { palette } from "../../../theme/palette";
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, Modal, ActivityIndicator, KeyboardAvoidingView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -97,7 +98,7 @@ export function EditSharedSpaceModal({
               disabled={editRoomSaving}
               style={{ backgroundColor: Colors.brand.blue, borderRadius: rs(10), paddingHorizontal: rs(14), paddingVertical: rs(7), opacity: editRoomSaving ? 0.65 : 1 }}
             >
-              {editRoomSaving ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={{ color: "#FFF", fontWeight: "800", fontSize: rs(13) }}>Save</Text>}
+              {editRoomSaving ? <ActivityIndicator color={palette.white} size="small" /> : <Text style={{ color: palette.white, fontWeight: "800", fontSize: rs(13) }}>Save</Text>}
             </Pressable>
           </View>
 
