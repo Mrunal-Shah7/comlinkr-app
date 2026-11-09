@@ -12,7 +12,6 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect, useFocusEffect } from "expo-router";
@@ -486,7 +485,7 @@ export default function MyPostsScreen() {
             const attendees = metaNum(detailPost.metadata, "attendeeCount");
             return (
               <View style={{ paddingHorizontal: 18 }}>
-                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 560 }}>
+                <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ maxHeight: 560 }}>
                   {/* Type and time */}
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
                     <Tag label={meta.label} />
@@ -559,7 +558,7 @@ export default function MyPostsScreen() {
 
       {/* ── Edit post ── */}
       <DSheet visible={!!editPost} onClose={() => { if (!editSaving) setEditPost(null); }} title="Edit post" full>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
           <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
             <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Title</Text>
             <TextInput

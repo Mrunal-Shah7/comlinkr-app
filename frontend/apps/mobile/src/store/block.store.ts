@@ -1,5 +1,4 @@
 // src/store/block.store.ts
-import { Platform } from "react-native";
 import { create } from "zustand";
 import * as SecureStore from "expo-secure-store";
 
@@ -13,14 +12,14 @@ export interface BlockedUser {
 const BLOCKED_KEY = "comlinkr_blocked_users";
 
 async function storageGetItem(key: string): Promise<string | null> {
-  if (Platform.OS === "web") {
+  if (process.env.EXPO_OS === "web") {
     try { return typeof localStorage === "undefined" ? null : localStorage.getItem(key); } catch { return null; }
   }
   return await SecureStore.getItemAsync(key);
 }
 
 async function storageSetItem(key: string, value: string): Promise<void> {
-  if (Platform.OS === "web") {
+  if (process.env.EXPO_OS === "web") {
     try { if (typeof localStorage !== "undefined") localStorage.setItem(key, value); } catch { }
     return;
   }

@@ -1,6 +1,6 @@
 // SPRINT-40: tap-to-record composer controls, permission handling, duration, and cleanup
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, AppState, Keyboard, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native"; // SPRINT-40:
+import { Alert, AppState, Keyboard, Linking, Pressable, StyleSheet, Text, View } from "react-native"; // SPRINT-40:
 import { Ionicons } from "@expo/vector-icons";
 import {
   getRecordingPermissionsAsync,
@@ -168,7 +168,7 @@ export function VoiceRecorderControls({
           return;
         }
 
-        const platform = Platform.OS === "ios" ? "ios" : "android";
+        const platform = process.env.EXPO_OS === "ios" ? "ios" : "android";
         const completed: ReadyRecording = {
           uri,
           durationSeconds: Math.min(600, Math.max(1, roundedSeconds)),

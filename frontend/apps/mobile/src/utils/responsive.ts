@@ -29,6 +29,8 @@ const MAX_SCALE   = 1.35; // cap: stops growing beyond 35% of base (tablet/large
  * NOTE: For components that need live updates on orientation change,
  * use the useResponsive() hook instead.
  */
+// Dimensions.get, not useWindowDimensions: rs() runs outside React, inside StyleSheet.create at module scope.
+// The app is portrait-only (app.config.js), so the width does not change while it runs.
 function getDims() {
   const { width, height } = Dimensions.get('window');
   return { width, height };

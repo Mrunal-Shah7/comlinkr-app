@@ -1,4 +1,3 @@
-import { Dimensions } from "react-native";
 import { Colors } from "../../theme/colors";
 import { type NeighborhoodMood } from "../../api/feed.api";
 
@@ -25,8 +24,6 @@ export const POSTS = [
 export const FEED_TABS = ["News", "Events", "Stories", "Quests", "Polls"] as const;
 export type FeedTab = typeof FEED_TABS[number];
 
-// ── Screen dimensions ──
-export const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 // ── Community Stories Data ─────────────────────────────
 export const STORY_CATEGORIES = ["All", "Events", "Food", "Housing", "Culture", "Local News", "General"] as const;

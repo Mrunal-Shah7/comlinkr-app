@@ -9,18 +9,15 @@ import {
   StyleSheet,
   Alert,
   Modal,
-  Dimensions,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform,
   ActionSheetIOS,
+  useWindowDimensions,
 } from "react-native";
 
-const { width: SW } = Dimensions.get("window");
 // 2×2 grid: 16px padding each side, 14px gap between two columns
 const GRID_GAP = 14;
 const GRID_PAD = 16;
-const GRID_CARD_W = Math.floor((SW - GRID_PAD * 2 - GRID_GAP) / 2);
 import { SafeAreaView } from "react-native-safe-area-context";
 import Reanimated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -712,6 +709,7 @@ function PreviewModal({
   restPriceRange?: string;
   restFeatures?: string[];
 }) {
+  const { width: SW } = useWindowDimensions();
   const { isDark, tc } = useTheme();
   const renderStoryPreview = () => (
     <View style={[pv.card, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
@@ -1382,7 +1380,7 @@ function PreviewModal({
             </Pressable>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
             {/* Tab label */}
             <View style={[pv.feedTabHint, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <Ionicons name="phone-portrait-outline" size={13} color={tc.textTertiary} />
@@ -1831,7 +1829,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
 
   // Replaces appAlert("Add Media", ...) everywhere with native pickers
   const showMediaPicker = (onLibrary: () => void, onCamera: () => void, title?: string) => {
-    if (Platform.OS === "ios") {
+    if (process.env.EXPO_OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         { options: ["Cancel", "Photo Library", "Camera"], cancelButtonIndex: 0, title },
         (idx) => { if (idx === 1) onLibrary(); else if (idx === 2) onCamera(); }
@@ -4558,7 +4556,7 @@ function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBac
       />
 
       {/* ── Native media picker sheet (Android) ── */}
-      {Platform.OS === "android" && (
+      {process.env.EXPO_OS === "android" && (
         <MediaPickerSheet
           visible={pickerSheetVisible}
           onClose={() => setPickerSheetVisible(false)}
@@ -4609,7 +4607,7 @@ export default function CreatePostScreen() {
   if (selectedType) {
     return (
       <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
           <PostForm type={selectedType} onBack={params.type ? () => router.back() : () => setSelectedType(null)} initialMode={params.mode} editId={params.id} />
             {/* SPRINT-42: deep-linked type (from Listings/Food/etc.) returns to the originating screen; in-app chooser selection returns to the chooser. */}
         </KeyboardAvoidingView>
@@ -4625,7 +4623,7 @@ export default function CreatePostScreen() {
           <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
         </Pressable>
       </View>
-      <ScrollView style={s.scroll} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView keyboardShouldPersistTaps="handled" style={s.scroll} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <Text style={[TYPE.pageTitle, { color: tc.textPrimary, marginLeft: 2 }]}>Post something</Text>
         <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 2, marginBottom: 16, marginLeft: 2 }]}>What would you like to share with your city?</Text>
         {POST_TYPES.map((type, i) => (
@@ -4702,7 +4700,6 @@ const s = createThemedStyles({
     gap: GRID_GAP,
   },
   typeGridCard: {
-    width: GRID_CARD_W,
     backgroundColor: "#FFFFFF",
     borderRadius: 18,
     borderWidth: 1,

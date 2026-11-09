@@ -1,6 +1,6 @@
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, Platform, FlatList, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, FlatList, KeyboardAvoidingView } from "react-native";
 import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
@@ -1343,7 +1343,7 @@ export default function FeedScreen() {
       await Share.share({
         title: article.title,
         message: body,
-        ...(Platform.OS === "ios" && link ? { url: link } : {}),
+        ...(process.env.EXPO_OS === "ios" && link ? { url: link } : {}),
       });
     } catch {}
   };
@@ -1356,7 +1356,7 @@ export default function FeedScreen() {
       await Share.share({
         title: post.title,
         message,
-        ...(Platform.OS === "ios" ? { url } : {}),
+        ...(process.env.EXPO_OS === "ios" ? { url } : {}),
       });
     } catch {
       /* user dismissed */
@@ -2233,7 +2233,7 @@ export default function FeedScreen() {
               </View>
               </SheetDragArea>
 
-              <ScrollView style={{ flex: 1 }} contentContainerStyle={nw.modalScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={nw.modalScroll} showsVerticalScrollIndicator={false}>
                 {/* Hero Image — placeholder + optional RSS overlay */}
                 <NewsLeadImage
                   article={selectedArticle}
@@ -2346,7 +2346,7 @@ export default function FeedScreen() {
           setNewsCommentsError(null);
         }}
       >
-        <KeyboardAvoidingView style={nw.commentsOverlay} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={nw.commentsOverlay} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
           <View style={[nw.commentsSheet, { backgroundColor: tc.cardBg }]}>
             <View style={[nw.commentsHeader, { borderBottomColor: tc.borderLight }]}>
               <Text style={[nw.commentsTitle, { color: tc.textPrimary }]} numberOfLines={2}>
@@ -2374,7 +2374,7 @@ export default function FeedScreen() {
                 <Text style={{ color: tc.textTertiary }}>Be the first to comment</Text>
               </View>
             ) : (
-              <FlatList
+              <FlatList keyboardShouldPersistTaps="handled"
                 data={newsComments}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={nw.commentsList}
@@ -2541,8 +2541,8 @@ export default function FeedScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: tc.pageBg }} edges={["top"]}>
         <KeyboardAvoidingView
           style={{ flex: 1, backgroundColor: tc.pageBg }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 56 : 0}
+          behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={process.env.EXPO_OS === "ios" ? 56 : 0}
         >
           {/* Top nav bar */}
           <View

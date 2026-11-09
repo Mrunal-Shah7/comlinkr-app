@@ -14,7 +14,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Keyboard,
-  Platform,
 } from "react-native";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: use the shared renderer for every settings image.
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -242,8 +241,8 @@ function SettingsModal({
   const { tc } = useTheme();
   const [kbVisible, setKbVisible] = useState(false);
   useEffect(() => {
-    const showEvt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvt = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvt = process.env.EXPO_OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt = process.env.EXPO_OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
     const a = Keyboard.addListener(showEvt, () => setKbVisible(true));
     const b = Keyboard.addListener(hideEvt, () => setKbVisible(false));
     return () => { a.remove(); b.remove(); };

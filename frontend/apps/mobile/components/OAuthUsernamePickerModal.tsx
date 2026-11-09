@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -85,7 +84,7 @@ export default function OAuthUsernamePickerModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={() => { if (!loading) onCancel(); }}>
-      <KeyboardAvoidingView style={[styles.backdrop, { backgroundColor: tc.overlay }]} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <KeyboardAvoidingView style={[styles.backdrop, { backgroundColor: tc.overlay }]} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => { if (!loading) onCancel(); }} accessibilityRole="button" accessibilityLabel="Dismiss" />
         <View
           style={[

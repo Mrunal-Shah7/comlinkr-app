@@ -2,7 +2,7 @@
 // Photo hero with glass buttons, a body that overlaps it, the host with the match, the facts as one list, the rules
 // and amenities as chips, and a glass bar with Message and Apply. Apply with a note opens a D sheet.
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, useWindowDimensions, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, Modal, useWindowDimensions, KeyboardAvoidingView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -124,7 +124,7 @@ export function AvailableRoomDetailModal({
           ) : null}
         </View>
 
-        <ScrollView style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }}
+        <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }}
           contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
           <Reveal i={0}>
             <View style={{ flexDirection: "row", gap: 6 }}>
@@ -203,7 +203,7 @@ export function AvailableRoomDetailModal({
         </View>
 
         <DSheet visible={applySheet} onClose={() => setApplySheet(false)} title="Apply for this room">
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
             <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
               <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 10 }]}>A short hello helps the host say yes.</Text>
               <TextInput

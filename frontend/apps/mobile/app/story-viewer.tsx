@@ -15,7 +15,6 @@ import {
   FlatList,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -784,7 +783,7 @@ export default function StoryViewerScreen() {
       >
         <KeyboardAvoidingView
           style={st.sheetBackdrop}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}
         >
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setCommentsOpen(false)} />
           <View style={[st.sheetCard, { backgroundColor: tc.pageBg }]}>
@@ -812,7 +811,7 @@ export default function StoryViewerScreen() {
                 <ActivityIndicator color={Colors.brand.blue} />
               </View>
             ) : (
-              <FlatList
+              <FlatList keyboardShouldPersistTaps="handled"
                 data={storyComments}
                 keyExtractor={(item) => item.id}
                 style={{ flex: 1 }}

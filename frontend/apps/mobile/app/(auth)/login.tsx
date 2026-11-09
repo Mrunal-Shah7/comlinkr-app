@@ -8,7 +8,6 @@ import {
   TextInput,
   StyleSheet,
   Alert,
-  Platform,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -173,7 +172,7 @@ export default function LoginScreen() {
     }
     if (provider === "Apple") {
       // SPRINT-39: shared Apple helper; authorizationCode included when Apple provides it
-      if (Platform.OS !== "ios") {
+      if (process.env.EXPO_OS !== "ios") {
         appAlert("Apple Sign In", "Apple sign-in is only available on iOS devices.");
         return;
       }
@@ -215,9 +214,9 @@ export default function LoginScreen() {
   const social = (
     <View style={{ flexDirection: "row", gap: 10 }}>
       <SoftButton ghost block outerStyle={{ flex: 1 }} disabled={busy} onPress={() => void handleSocialLogin("Google")}
-        label={loadingProvider === "google" ? "Opening Google…" : Platform.OS === "ios" ? "Google" : "Continue with Google"}
+        label={loadingProvider === "google" ? "Opening Google…" : process.env.EXPO_OS === "ios" ? "Google" : "Continue with Google"}
         icon={<Ionicons name="logo-google" size={19} color={tc.textPrimary} />} />
-      {Platform.OS === "ios" ? (
+      {process.env.EXPO_OS === "ios" ? (
         <SoftButton ghost block outerStyle={{ flex: 1 }} disabled={busy} onPress={() => void handleSocialLogin("Apple")}
           label={loadingProvider === "apple" ? "Opening Apple…" : "Apple"}
           icon={<Ionicons name="logo-apple" size={20} color={tc.textPrimary} />} />

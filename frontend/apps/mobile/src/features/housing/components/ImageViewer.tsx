@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, Modal, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, Modal, useWindowDimensions } from "react-native";
 import Reanimated, { Extrapolation, interpolate, useAnimatedStyle, useReducedMotion, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { SPRING } from "../../../shared/motion/presets";
@@ -157,8 +157,7 @@ export function FullscreenImageViewer({
 }) {
   const [idx, setIdx] = useState(startIndex);
   const [zoomed, setZoomed] = useState(false);
-  const W = Dimensions.get("window").width;
-  const H = Dimensions.get("window").height;
+  const { width: W, height: H } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduce = useReducedMotion();
   const scrollRef = useRef<GHScrollView>(null);

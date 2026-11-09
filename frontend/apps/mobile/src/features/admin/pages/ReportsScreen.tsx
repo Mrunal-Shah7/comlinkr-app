@@ -446,7 +446,7 @@ export default function ReportsScreen() {
       <AdminBackdrop />
 
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled"
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}

@@ -13,7 +13,6 @@ import {
   Modal,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
@@ -808,7 +807,7 @@ export default function ProfileScreen() {
 
         {/* ── ROOMMATE EDIT SHEET ── */}
         <DSheet visible={rmModalVisible} onClose={() => setRmModalVisible(false)} title="Roommate preferences" full>
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
             <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Monthly budget</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>

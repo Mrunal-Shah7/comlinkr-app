@@ -147,7 +147,7 @@ export default function UserSafetyCaseFileScreen() {
     <View style={s.root}>
       <AdminBackdrop />
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled"
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}

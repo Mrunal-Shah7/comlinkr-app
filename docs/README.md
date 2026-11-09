@@ -122,6 +122,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-09: [Expo conventions](build/2026-11-09-expo-conventions.md) (TR-013, points 1, 2, 4, 5, 9a): `keyboardShouldPersistTaps` on forms, one HTTP client (axios removed), `useWindowDimensions`, `EXPO_OS`, onboarding
+  dots without layout animation. Walked the auth journeys on Android.
 - 2026-11-09: [Native navigation](build/2026-11-09-native-navigation.md) (TR-012, plan 02): `NativeTabs` with a Post
   trigger for the compose sheet, the native stack, `@expo/ui` switches, segmented control and bottom sheet. Tab swipe,
   zoom transitions and tab long-press are gone. Walked on Android; iOS not checked.

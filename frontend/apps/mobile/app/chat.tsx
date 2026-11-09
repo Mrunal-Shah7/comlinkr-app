@@ -8,7 +8,6 @@ import {
   TextInput,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   StyleSheet,
   BackHandler,
   Pressable,
@@ -584,8 +583,8 @@ function Thread({
   // insets.bottom on top of that (below) leaves a visible gap above the keyboard.
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   useEffect(() => {
-    const showEvt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvt = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvt = process.env.EXPO_OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt = process.env.EXPO_OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
     const showSub = Keyboard.addListener(showEvt, () => setKeyboardVisible(true));
     const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardVisible(false));
     return () => {
@@ -993,7 +992,7 @@ function Thread({
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
       {/* Bar (design D): back, the person, ··· */}
       <View style={{ paddingTop: insets.top, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
         <View style={{ height: 58, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, gap: 8 }}>
@@ -1314,7 +1313,7 @@ function Thread({
         paddingHorizontal: 10, paddingTop: 8,
         borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.glassLine,
         backgroundColor: tc.glass, gap: 8,
-        paddingBottom: (keyboardVisible ? 0 : insets.bottom) + (Platform.OS === "ios" ? 10 : rs(10)),
+        paddingBottom: (keyboardVisible ? 0 : insets.bottom) + (process.env.EXPO_OS === "ios" ? 10 : rs(10)),
       }}>
         <View style={{ display: voiceComposerActive ? "none" : "flex", flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: tc.inputBg, borderRadius: 22, paddingLeft: 16, paddingRight: 8, paddingVertical: 6, minHeight: 44, maxHeight: 120 }}>
           {/* SPRINT-40: hide text controls without unmounting recorder */}
@@ -1391,7 +1390,7 @@ function Thread({
             ))}
           </ScrollView>
           {/* Emoji grid */}
-          <ScrollView style={{ maxHeight: rs(160) }} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: rs(8), paddingBottom: rs(10) }}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: rs(160) }} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", paddingHorizontal: rs(8), paddingBottom: rs(10) }}>
             {(EMOJI_CATS.find((c) => c.key === emojiCat)?.emojis ?? []).map((e) => (
               <TouchableOpacity
                 key={e}

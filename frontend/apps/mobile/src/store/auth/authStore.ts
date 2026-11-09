@@ -4,7 +4,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile, SessionCookieHeader } from '@shared/types/api';
-import { configureSessionAuth } from '@services/http/apiClient';
 
 interface AuthState {
   user: UserProfile | null;
@@ -36,10 +35,6 @@ async function purgeLegacyPersistedCookie(): Promise<void> {
   }
 }
 
-const bindSessionAuth = (get: () => AuthState) => {
-  configureSessionAuth(() => get().sessionCookie ?? null);
-};
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -51,12 +46,10 @@ export const useAuthStore = create<AuthState>()(
       error: null,
 
       login: (user, sessionCookie) => {
-        bindSessionAuth(get);
         set({ user, sessionCookie, isAuthenticated: true, error: null });
       },
 
       setSessionCookie: (sessionCookie) => {
-        bindSessionAuth(get);
         set({ sessionCookie, isAuthenticated: true, error: null });
       },
 
@@ -67,7 +60,6 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
 
       initialize: () => {
-        bindSessionAuth(get);
         set({ isInitialized: true });
       },
     }),

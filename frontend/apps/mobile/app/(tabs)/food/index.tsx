@@ -21,9 +21,8 @@ import {
   Share,
   ActivityIndicator,
   RefreshControl,
-  Platform,
   KeyboardAvoidingView,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
@@ -211,8 +210,6 @@ const REPORT_REASONS = [
 ] as const;
 
 
-const CARD_WIDTH = Dimensions.get("window").width - rs(32);
-const SCREEN_WIDTH = Dimensions.get("window").width;
 
 /** The shared design D gallery (black, 1 of n, swipe down to close). */
 function FoodFullscreenViewer({ images, startIndex, onClose }: { images: string[]; startIndex: number; onClose: () => void }) {
@@ -221,7 +218,8 @@ function FoodFullscreenViewer({ images, startIndex, onClose }: { images: string[
 
 function ImageCarousel({ images, height = rs(165), itemWidth, onImagePress }: { images: string[]; height?: number; itemWidth?: number; onImagePress?: (idx: number) => void }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const w = itemWidth ?? CARD_WIDTH;
+  const { width: windowW } = useWindowDimensions();
+  const w = itemWidth ?? windowW - rs(32);
   if (!images || images.length === 0) return null;
   if (images.length === 1) return (
     <Pressable onPress={() => onImagePress?.(0)} style={{ width: "100%", height }}>
@@ -284,6 +282,7 @@ const carouselSt = StyleSheet.create({
 });
 
 export default function FoodScreen() {
+  const { width: windowWidth } = useWindowDimensions();
   const foodScrollRef = useRef<ScrollView>(null);
   useScrollToTop(foodScrollRef); // re-tap the Food tab → back to top
   const insets = useSafeAreaInsets();
@@ -605,7 +604,7 @@ export default function FoodScreen() {
       await Share.share({
         title: r.name,
         message: `Check out ${r.name} — ${r.cuisine} cuisine, ${r.rating}⭐ rating! ${r.distance} away. Found on ComLinkr 🍽️\n\n${link}`,
-        ...(Platform.OS === "ios" ? { url: link } : {}),
+        ...(process.env.EXPO_OS === "ios" ? { url: link } : {}),
       });
     } catch { /* ignore */ }
   };
@@ -620,9 +619,9 @@ export default function FoodScreen() {
       Number.isFinite(lng);
     let url: string;
     if (coordsOk) {
-      if (Platform.OS === "ios") {
+      if (process.env.EXPO_OS === "ios") {
         url = `maps://app?ll=${lat},${lng}&q=${encodeURIComponent(r.name)}`;
-      } else if (Platform.OS === "android") {
+      } else if (process.env.EXPO_OS === "android") {
         url = `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(r.name)})`;
       } else {
         url = `https://maps.google.com/?q=${encodeURIComponent(`${lat},${lng}`)}`;
@@ -1036,7 +1035,7 @@ export default function FoodScreen() {
               <ImageCarousel
                 images={selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]}
                 height={350}
-                itemWidth={SCREEN_WIDTH}
+                itemWidth={windowWidth}
                 onImagePress={(idx) => { const imgs = selectedRestaurant.images && selectedRestaurant.images.length > 0 ? selectedRestaurant.images : [selectedRestaurant.image]; setFsImages(imgs); setFsStartIdx(idx); setFsVisible(true); }}
               />
               {(() => {
@@ -1067,7 +1066,7 @@ export default function FoodScreen() {
               })()}
             </SheetDragArea>
 
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={0}>
           <ScrollView style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }} contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 80 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               {(() => {
                 const r = selectedRestaurant;
@@ -1261,7 +1260,7 @@ export default function FoodScreen() {
               <View style={StyleSheet.absoluteFill}>
                 <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: "rgba(0,0,0,0.45)" }]}
                   onPress={() => { setReservationRestaurant(null); setReservationSubmitted(false); setReservationSubmitting(false); setReservationErrors({}); }} />
-                <KeyboardAvoidingView style={{ flex: 1, justifyContent: "flex-end" }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+                <KeyboardAvoidingView style={{ flex: 1, justifyContent: "flex-end" }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
                   <ScrollView
                     style={{ backgroundColor: tc.cardBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "90%" as any }}
                     contentContainerStyle={{ padding: 20, paddingBottom: 36 }}
@@ -1401,7 +1400,7 @@ export default function FoodScreen() {
         onRequestClose={() => { setReportSheetId(null); setReportOtherText(""); setReportOtherFocused(false); }}
         onDismiss={() => { setReportSheetId(null); setReportOtherText(""); setReportOtherFocused(false); }}
       >
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
           <Pressable style={StyleSheet.absoluteFill} onPress={() => { setReportSheetId(null); setReportOtherText(""); setReportOtherFocused(false); }} />
           <View style={{ backgroundColor: tc.cardBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 32 }}>

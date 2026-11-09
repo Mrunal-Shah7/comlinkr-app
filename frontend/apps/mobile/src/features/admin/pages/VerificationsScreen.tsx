@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
   RefreshControl, Alert, TextInput, Modal, Linking,
-  KeyboardAvoidingView, Platform,
-} from 'react-native';
+  KeyboardAvoidingView, } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -156,7 +155,7 @@ function RejectModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={m.overlay}>
           <ScrollView
             style={m.sheet}
@@ -588,7 +587,7 @@ export default function VerificationsScreen() {
       <View style={s.decorCircle} />
 
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled"
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
