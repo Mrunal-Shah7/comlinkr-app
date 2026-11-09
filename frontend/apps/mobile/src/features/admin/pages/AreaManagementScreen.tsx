@@ -17,6 +17,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: string, active: boolean) => void }) {
   const activeColor = area.isActive ? Colors.brand.green : Colors.text.tertiary;
@@ -83,7 +84,7 @@ function AreaCard({ area, onToggle }: { area: AreaNeighborhood; onToggle: (id: s
 }
 
 export default function AreaManagementScreen() {
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filter, setFilter] = useBackState<'all' | 'active' | 'inactive'>('all');
   const { data, isLoading, refetch, isRefetching } = useAdminAreaData();
   const { mutate: toggleArea } = useToggleAreaMutation();
 

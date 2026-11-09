@@ -6,7 +6,7 @@
 // of an immutable record.
 
 import { palette } from "../../../theme/palette";
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,6 +17,7 @@ import { FilterBar } from '../components/FilterBar';
 import { Colors } from '@theme/colors';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
+import { useBackState } from '../../../hooks/useBackState';
 
 const ACTION_META: Record<string, { color: string; icon: string }> = {
   USER_WARN: { color: palette.amber500, icon: 'warning' },
@@ -50,22 +51,20 @@ function relativeTime(date: string): string {
 }
 
 export default function AuditLogScreen() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [filter, setFilter] = useBackState('all');
   const {
     items: entries, meta, isLoading, isLoadingMore, isError, errorMessage, refresh, loadMore, setParams,
   } = useAdminAuditLog();
 
-  const handleFilterChange = (value: string) => {
-    setFilter(value);
-    const cfg = CATEGORY_FILTERS.find((f) => f.value === value);
+  // The query follows the screen's filter and search, so Back can undo either (plan 05).
+  useEffect(() => {
+    const cfg = CATEGORY_FILTERS.find((f) => f.value === filter);
     setParams({ targetType: cfg?.targetType, search: search || undefined });
-  };
+  }, [filter, search, setParams]);
 
-  const handleSearchChange = (text: string) => {
-    setSearch(text);
-    setParams((prev) => ({ ...prev, search: text || undefined }));
-  };
+  const handleFilterChange = (value: string) => setFilter(value);
+  const handleSearchChange = (text: string) => setSearch(text);
 
   const todayCount = useMemo(() => {
     const today = new Date().toDateString();

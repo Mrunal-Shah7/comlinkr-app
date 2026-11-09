@@ -89,6 +89,7 @@ import { Chip, EmptyState, GradientButton, GradientFill, Reveal, SoftButton, Tag
 const AnimatedPressable = Reanimated.createAnimatedComponent(Pressable);
 import { DPage, goBackOr, type DPageList } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';
+import { useBackState } from '../src/hooks/useBackState';
 
 // SPRINT-39: typing emit debounce / remote expiry intervals
 const TYPING_STOP_IDLE_MS = 2000;
@@ -278,7 +279,7 @@ function ConvList({
   setTab: (t: Tab) => void;
 }) {
   const { tc } = useTheme();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useBackState("", { coalesceMs: 1200 });
 
   const data = conversations.filter((c) => {
     if (!c.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -1656,7 +1657,7 @@ export default function ChatScreen() {
   // stack twice and leave zero screens to render (the "app goes black" bug).
   const threadBackInFlightRef = useRef(false);
   const listBackInFlightRef = useRef(false);
-  const [listTab, setListTab] = useState<Tab>("All");
+  const [listTab, setListTab] = useBackState<Tab>("All");
   const [conversations, setConversations] = useState<ChatListRow[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

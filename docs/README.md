@@ -106,6 +106,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [02. Native tabs, screen transitions and controls](plan/02-native-navigation.md) (TR-012): built; replaces plan 01's tab
   pager, floating tab bar, zoom transitions and custom controls.
 - [04. Hide the Android navigation bar](plan/04-immersive-navigation-bar.md) (TR-021): built.
+- [05. Back returns to the previous state](plan/05-back-history.md) (TR-023): built.
 
 ## Reviews (`review/`)
 
@@ -133,6 +134,9 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.
+- 2026-11-09: [Back returns to the previous state](build/2026-11-09-back-history.md) (TR-023, plan 05): tab history,
+  and `useBackState` so Android Back undoes sections, filters and searches on 28 screens before leaving. Walked on
+  Android with the Back button.
 - 2026-11-09: [Hide the Android navigation bar](build/2026-11-09-immersive-navigation-bar.md) (TR-021, plan 04):
   `expo-navigation-bar` hides the bar; a swipe up from the bottom edge shows it for a moment. Walked on Android.
 - 2026-11-09: [Palette colours in dark mode](build/2026-11-09-dark-mode-palette.md) (TR-017, point 1): a lightness

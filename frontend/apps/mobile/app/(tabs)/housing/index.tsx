@@ -44,6 +44,7 @@ import { SafeRentingGuide } from "../../../src/features/housing/components/SafeR
 import { MemoRoommateCard } from "../../../src/features/housing/components/MemoRows";
 import { ListYourSpaceModal } from "../../../src/features/housing/components/ListYourSpaceModal";
 import { openGallery } from "../../../src/features/housing/galleryStore";
+import { useBackState, useBackBatch } from "../../../src/hooks/useBackState";
 
 // ── Tab type ─────────────────────────────────────────────────────────────────
 type HousingTab = "listings" | "roommates";
@@ -85,8 +86,8 @@ export default function HousingScreen() {
   const openedRoommateDeepLink = useRef<string | null>(null);
 
   // ── Shared state ──
-  const [activeTab, setActiveTab] = useState<HousingTab>("listings");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab, setActiveTabSilently] = useBackState<HousingTab>("listings");
+  const [search, setSearch, setSearchSilently] = useBackState("", { coalesceMs: 1200 });
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
@@ -95,16 +96,22 @@ export default function HousingScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   // ── Listings state ──
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState("All");
-  const [minPriceFilter, setMinPriceFilter] = useState<string>("");
-  const [maxPriceFilter, setMaxPriceFilter] = useState<string>("");
-  const [bedsFilter, setBedsFilter] = useState<number | null>(null);
-  const [petsFilter, setPetsFilter] = useState<boolean | null>(null);
+  const [propertyTypeFilter, setPropertyTypeFilter, setPropertyTypeFilterSilently] = useBackState("All");
+  const [minPriceFilter, setMinPriceFilter] = useBackState<string>("", { coalesceMs: 1200 });
+  const [maxPriceFilter, setMaxPriceFilter] = useBackState<string>("", { coalesceMs: 1200 });
+  const [bedsFilter, setBedsFilter] = useBackState<number | null>(null);
+  const [petsFilter, setPetsFilter] = useBackState<boolean | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
+  // Everything changed in the filter sheet is one Back step (plan 05).
+  const filterBatch = useBackBatch();
+  useEffect(() => {
+    if (showFilterSheet) filterBatch.begin();
+    else filterBatch.end();
+  }, [showFilterSheet, filterBatch.begin, filterBatch.end]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   // ── Roommates state ──
-  const [rmFilter, setRmFilter] = useState("Best Match");
+  const [rmFilter, setRmFilter, setRmFilterSilently] = useBackState("Best Match");
   const [roommateSavedIds, setRoommateSavedIds] = useState<Set<string>>(new Set());
 
   // ── Available Rooms state ──
@@ -173,7 +180,7 @@ export default function HousingScreen() {
   )
 
   // ── Roommates sub-tab ──
-  const [rmSubTab, setRmSubTab] = useState<"searching" | "matching">("searching");
+  const [rmSubTab, setRmSubTab, setRmSubTabSilently] = useBackState<"searching" | "matching">("searching");
 
   // Listings: one cached query per city + filter set. Page 1 also merges the user's own listings so an owner
   // always sees their post even if the public feed filters it out. Refetched on every focus (staleTime 0) so
@@ -374,10 +381,10 @@ export default function HousingScreen() {
     const id = typeof raw === "string" ? raw.trim() : Array.isArray(raw) ? String(raw[0] ?? "").trim() : "";
     if (!id || openedListingDeepLink.current === id) return;
     openedListingDeepLink.current = id;
-    setActiveTab("listings");
+    setActiveTabSilently("listings");
     // Older links and callers still pass ?openListing=; the detail is its own route now (plan 03).
     router.push(`/listing/${encodeURIComponent(id)}` as never);
-  }, [params.openListing]);
+  }, [params.openListing, setActiveTabSilently]);
 
   useEffect(() => {
     const raw = params.openRoommate;
@@ -385,18 +392,18 @@ export default function HousingScreen() {
     if (!id || openedRoommateDeepLink.current === id) return;
     if (!requireAuth(undefined, "Sign in to view roommate profiles.")) return;
     openedRoommateDeepLink.current = id;
-    setActiveTab("roommates");
-    setRmSubTab("searching");
+    setActiveTabSilently("roommates");
+    setRmSubTabSilently("searching");
     openRoommateProfile(id);
-  }, [params.openRoommate, requireAuth, openRoommateProfile]);
+  }, [params.openRoommate, requireAuth, openRoommateProfile, setActiveTabSilently, setRmSubTabSilently]);
 
   const onRefresh = useCallback(() => {
     (async () => {
       try {
         setRefreshing(true);
-        setSearch("");
-        setPropertyTypeFilter("All");
-        setRmFilter("Best Match");
+        setSearchSilently("");
+        setPropertyTypeFilterSilently("All");
+        setRmFilterSilently("Best Match");
         if (activeTab === "listings") {
           await loadListings();
         } else if (activeTab === "roommates") {
@@ -406,7 +413,7 @@ export default function HousingScreen() {
         setRefreshing(false);
       }
     })();
-  }, [activeTab, loadAvailableRooms, loadListings, loadRoommates]);
+  }, [activeTab, loadAvailableRooms, loadListings, loadRoommates, setSearchSilently, setPropertyTypeFilterSilently, setRmFilterSilently]);
 
   const handleConnect = async (rm: Roommate) => {
     try {

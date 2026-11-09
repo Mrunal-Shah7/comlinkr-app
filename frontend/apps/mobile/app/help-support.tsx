@@ -23,6 +23,7 @@ import { TYPE } from '../src/theme/d';
 import { SPRING, layoutEase } from '../src/shared/motion/presets';
 import { Chip, EmptyState, Reveal } from '../src/shared/d';
 import { DPage, DRow, goBackOr } from '../src/shared/d/Page';
+import { useBackState } from '../src/hooks/useBackState';
 
 const BRAND_BLUE = palette.brandBlue;
 const BRAND_GREEN = palette.brandGreen;
@@ -104,7 +105,7 @@ function FaqItem({ q, a, first, open, onToggle, helpful, onHelpful }: {
 export default function HelpSupportScreen() {
   const { tc } = useTheme();
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useBackState("", { coalesceMs: 1200 });
   const [helpfulIds, setHelpfulIds] = useState<Set<string>>(new Set());
 
   const toggleItem = (key: string) => {

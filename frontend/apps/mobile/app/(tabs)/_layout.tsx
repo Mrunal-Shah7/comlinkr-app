@@ -14,6 +14,8 @@ export default function TabsLayout() {
   return (
     <>
       <NativeTabs
+        // Plan 05: Back retraces the tabs in the order visited, then leaves the app from the first tab.
+        backBehavior="history"
         backgroundColor={tc.cardBg}
         tintColor={tc.accent}
         iconColor={{ default: tc.textSecondary, selected: tc.accent }}

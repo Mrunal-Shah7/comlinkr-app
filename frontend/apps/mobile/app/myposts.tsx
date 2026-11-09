@@ -37,6 +37,7 @@ import { TYPE } from '../src/theme/d';
 import { Chip, EmptyState, GradientButton, PressableScale, Reveal, SoftButton, Tag } from '../src/shared/d';
 import { DSheet } from '../src/shared/d/Sheet';
 import { DPage, goBackOr } from '../src/shared/d/Page';
+import { useBackState } from '../src/hooks/useBackState';
 
 /** Post types the backend supports editing via `PATCH /feed/:id` (mirrors deletePost's NEWS/ANNOUNCEMENT/JOBS coverage). */
 const EDITABLE_TYPES: ReadonlySet<UnifiedMyPostType> = new Set(["NEWS", "ANNOUNCEMENT", "JOBS"]);
@@ -130,7 +131,7 @@ export default function MyPostsScreen() {
   const isAuthed = useAuthStore((s) => s.isAuthed);
   const user = useAuthStore((s) => s.user);
   const { tc } = useTheme();
-  const [filter, setFilter] = useState<FilterTab>("All");
+  const [filter, setFilter] = useBackState<FilterTab>("All");
   const [detailPost, setDetailPost] = useState<UnifiedMyPost | null>(null); // SPRINT-42: declare detail state before the edit subscription patches it.
 
   const PAGE_SIZE = 30;

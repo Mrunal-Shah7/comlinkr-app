@@ -64,6 +64,7 @@ import { GuestCityPickerModal } from '../../../components/GuestCityBanner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ApiError } from '../../../src/api/client';
 import { createThemedStyles } from '../../../src/theme/themedStyles';
+import { useBackState } from '../../../src/hooks/useBackState';
 
 const TOPICS = ["All", "Housing", "Food", "Transit", "Events", "Safety", "General"];
 const ASK_TOPICS = ["Housing", "Food", "Transit", "Events", "Safety", "General"];
@@ -513,7 +514,7 @@ export default function CommunityScreen() {
   const onCommunityScroll = useAnimatedScrollHandler((e) => { communityScrollY.set(e.contentOffset.y); });
   const blockUser = useBlockStore((s) => s.blockUser);
   const isBlocked = useBlockStore((s) => s.isBlocked);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [filter, setFilter] = useBackState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [showAsk, setShowAsk] = useState(false);
   // Long-press on the Community tab opens the composer (`/community?ask=<token>`); each token fires once.
@@ -532,7 +533,7 @@ export default function CommunityScreen() {
   const [answeringId, setAnsweringId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
   const [answerVotedIds, setAnswerVotedIds] = useState<Set<string>>(new Set());
-  const [sortBy, setSortBy] = useState<"recent" | "popular">("recent");
+  const [sortBy, setSortBy] = useBackState<"recent" | "popular">("recent");
   const [stats, setStats] = useState<CommunityStats>({
     membersCount: 0,
     questionsCount: 0,

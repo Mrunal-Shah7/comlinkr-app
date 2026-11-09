@@ -62,6 +62,7 @@ import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
 import { safeList, distanceMiles, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
+import { useBackState } from '../../../src/hooks/useBackState';
 
 export default function FoodScreen() {
   const { width: windowWidth } = useWindowDimensions();
@@ -81,9 +82,9 @@ export default function FoodScreen() {
     ((user?.country || guestCountry) === "United Kingdom" ? "GB" : "US");
   const params = useLocalSearchParams<{ openRestaurant?: string }>();
   const openedRestaurantRef = useRef<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [cuisine, setCuisine] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [search, setSearch, setSearchSilently] = useBackState("", { coalesceMs: 1200 });
+  const [cuisine, setCuisine, setCuisineSilently] = useBackState<string | null>(null);
+  const [activeTab, setActiveTab, setActiveTabSilently] = useBackState("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const { city: appCity, hasCity, chooseCity } = useAppCity(() => setCityPickerVisible(true));
@@ -148,15 +149,15 @@ export default function FoodScreen() {
     (async () => {
       try {
         setRefreshing(true);
-        setSearch("");
-        setCuisine(null);
-        setActiveTab("all");
+        setSearchSilently("");
+        setCuisineSilently(null);
+        setActiveTabSilently("all");
         await foodQ.refetch();
       } finally {
         setRefreshing(false);
       }
     })();
-  }, [foodQ.refetch]);
+  }, [foodQ.refetch, setSearchSilently, setCuisineSilently, setActiveTabSilently]);
 
 
   const toggleBookmark = async (id: string) => {

@@ -17,6 +17,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const TYPE_META: Record<string, { icon: string; color: string; bg: string }> = {
   listing:    { icon: 'home',         color: Colors.brand.blue,   bg: Colors.brand.blueLight  },
@@ -129,7 +130,7 @@ function TrendingCard({ post, rank }: { post: TrendingPost; rank: number }) {
 }
 
 export default function TrendingPostsScreen() {
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useBackState('all');
   const { data, isLoading, refetch, isRefetching } = useAdminTrendingPosts();
 
   const posts: TrendingPost[] = data ?? [];

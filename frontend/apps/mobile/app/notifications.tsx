@@ -19,6 +19,7 @@ import Reanimated, { ZoomOut } from "react-native-reanimated";
 import { TYPE } from "../src/theme/d";
 import { EmptyState, PressableScale, Reveal, Segmented } from "../src/shared/d";
 import { DPage, goBackOr } from "../src/shared/d/Page";
+import { useBackState } from '../src/hooks/useBackState';
 
 function formatRelativeTime(iso: string): string {
   try {
@@ -40,7 +41,7 @@ function formatRelativeTime(iso: string): string {
 export default function NotificationsScreen() {
   const { tc } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [filter, setFilter] = useBackState<"all" | "unread">("all");
   const queryClient = useQueryClient();
   const [markingAll, setMarkingAll] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);

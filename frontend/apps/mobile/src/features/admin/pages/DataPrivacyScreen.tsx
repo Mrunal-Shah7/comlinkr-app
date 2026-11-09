@@ -6,7 +6,7 @@
 // answer a data-subject request.
 
 import { palette } from "../../../theme/palette";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, Pressable, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,6 +27,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
   PENDING: { color: palette.amber500, bg: palette.legacyOrangeLight, label: 'Pending' },
@@ -140,7 +141,7 @@ function ManualLookup() {
 }
 
 export default function DataPrivacyScreen() {
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useBackState('all');
   const {
     items: requests, meta, isLoading, isLoadingMore, isError, errorMessage, refresh, loadMore, setParams,
   } = useAdminPrivacyRequests();
@@ -148,10 +149,12 @@ export default function DataPrivacyScreen() {
   const { mutate: reject, isPending: isRejecting } = useRejectPrivacyRequestMutation();
   const hasMutation = isApproving || isRejecting;
 
-  const handleFilterChange = (value: string) => {
-    setFilter(value);
-    setParams({ status: value === 'all' ? undefined : (value.toUpperCase() as any) });
-  };
+  // The query follows the screen's filter, so Back can undo it (plan 05).
+  useEffect(() => {
+    setParams({ status: filter === 'all' ? undefined : (filter.toUpperCase() as any) });
+  }, [filter, setParams]);
+
+  const handleFilterChange = (value: string) => setFilter(value);
 
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');

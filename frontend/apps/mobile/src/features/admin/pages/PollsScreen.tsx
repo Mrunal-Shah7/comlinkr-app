@@ -22,6 +22,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const STATUS_META: Record<string, { color: string; bg: string; label: string }> = {
   active:  { color: Colors.brand.green,  bg: Colors.brand.greenLight, label: 'Live'   },
@@ -231,7 +232,7 @@ function PollCard({ poll, onChanged }: { poll: AdminPoll; onChanged: () => void 
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function PollsScreen() {
-  const [tab, setTab] = useState<'create' | 'polls'>('create');
+  const [tab, setTab, setTabSilently] = useBackState<'create' | 'polls'>('create');
   const [page, setPage] = useState(1); // SPRINT-41:
   const pageSize = 20; // SPRINT-41:
   const { data, isLoading, refetch, isRefetching } = useAdminPolls({ page, pageSize }); // SPRINT-41:
@@ -295,7 +296,7 @@ export default function PollsScreen() {
           </View>
 
           {tab === 'create' ? (
-            <CreatePollForm onCreated={() => { setTab('polls'); refetch(); }} />
+            <CreatePollForm onCreated={() => { setTabSilently('polls'); refetch(); }} />
           ) : isLoading ? (
             <View style={s.loadingCard}>
               <ActivityIndicator color={Colors.brand.blue} />

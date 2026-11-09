@@ -25,6 +25,7 @@ import { showToast } from "../../../src/shared/ui/Toast";
 import { DPage } from "../../../src/shared/d/Page";
 import { Chip, EmptyState, PersonAvatar, PressableScale, Reveal, RollNumber, Tag } from "../../../src/shared/d";
 import { TYPE, body, display } from "../../../src/theme/d";
+import { useBackState } from '../../../src/hooks/useBackState';
 
 type OutcomeKind = EventCheckInReasonCode | "NETWORK_ERROR" | "PARSE_ERROR"; // SPRINT-42:
 
@@ -82,7 +83,7 @@ export default function EventCheckInScreen() {
   const lastCodeAtRef = useRef(0);
   const inflightRef = useRef(false); // SPRINT-42: sync lock — clear only on outcome dismiss
 
-  const [filter, setFilter] = useState<EventCheckInFilter | undefined>(undefined);
+  const [filter, setFilter] = useBackState<EventCheckInFilter | undefined>(undefined);
   const [totals, setTotals] = useState<{
     totalRegistered: number | null;
     checkedIn: number | null;

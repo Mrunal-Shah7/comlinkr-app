@@ -58,6 +58,7 @@ import { LiveNewsCard } from "../../../src/features/explore/components/LiveNewsC
 import { NewsCommentsSheet } from "../../../src/features/explore/components/NewsCommentsSheet";
 import { onNewsPatch, rememberArticle } from "../../../src/features/explore/newsArticleStore";
 import { useStableCallback } from "../../../src/shared/hooks/useStableCallback";
+import { useBackState } from '../../../src/hooks/useBackState';
 
 /** A row of the Explore FlatList — which kind depends on the active tab / news sub-tab. */
 type FeedRow =
@@ -122,7 +123,7 @@ export default function FeedScreen() {
   const [wyrIndex, setWyrIndex] = useState(0);
   const [wyrPolls, setWyrPolls] = useState<Poll[]>([]);
   const [wyrPollsLoading, setWyrPollsLoading] = useState(false);
-  const [feedTab, setFeedTab] = useState<FeedTab>("News");
+  const [feedTab, setFeedTab, setFeedTabSilently] = useBackState<FeedTab>("News");
   // The event detail is its own route (plan 03).
   const openEvent = (eid: string) => router.push(`/events/${encodeURIComponent(eid)}` as never);
   const [heroMood, setHeroMood] = useState<string | null>(null);
@@ -150,14 +151,14 @@ export default function FeedScreen() {
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>(() => LIVE_NEWS_SESSION_CACHE.articles);
   const [newsLoading, setNewsLoading] = useState(() => LIVE_NEWS_SESSION_CACHE.articles.length === 0);
   const [newsError, setNewsError] = useState<string | null>(null);
-  const [newsCategory, setNewsCategory] = useState<NewsCategory>("all");
+  const [newsCategory, setNewsCategory] = useBackState<NewsCategory>("all");
   const [newsLastFetched, setNewsLastFetched] = useState<number>(() => LIVE_NEWS_SESSION_CACHE.lastFetched);
   const [primaryLoaded, setPrimaryLoaded] = useState(false);
   const [newsCurrentPage, setNewsCurrentPage] = useState(() => LIVE_NEWS_SESSION_CACHE.currentPage);
   const [newsHasMore, setNewsHasMore] = useState(() => LIVE_NEWS_SESSION_CACHE.hasMore);
   const [newsTotal, setNewsTotal] = useState(() => LIVE_NEWS_SESSION_CACHE.total);
   const [newsPaging, setNewsPaging] = useState(false);
-  const [newsSubTab, setNewsSubTab] = useState<"community" | "live">("live");
+  const [newsSubTab, setNewsSubTab, setNewsSubTabSilently] = useBackState<"community" | "live">("live");
   const [exploreEvents, setExploreEvents] = useState<ExploreEventRow[]>([]);
   const [exploreEventsLoading, setExploreEventsLoading] = useState(false);
   const [apiStoriesList, setApiStoriesList] = useState<CommunityStory[]>([]);
@@ -878,8 +879,8 @@ export default function FeedScreen() {
   const filteredNews = newsCategory === "all"
     ? newsArticles
     : newsArticles.filter((a) => a.category === newsCategory);
-  const [storyFilter, setStoryFilter] = useState<StoryCategory>("All");
-  const [storySortBy, setStorySortBy] = useState<"trending" | "latest" | "popular">("trending");
+  const [storyFilter, setStoryFilter] = useBackState<StoryCategory>("All");
+  const [storySortBy, setStorySortBy] = useBackState<"trending" | "latest" | "popular">("trending");
 
   const storyAuthorGroups = useMemo(
     () => buildStoryAuthorGroups(storiesFromApi, user?.id),
@@ -1361,11 +1362,11 @@ export default function FeedScreen() {
     const id = typeof raw === "string" ? raw.trim() : Array.isArray(raw) ? String(raw[0] ?? "").trim() : "";
     if (!id || deepLinkPostRef.current === id) return;
     deepLinkPostRef.current = id;
-    setFeedTab("News");
-    setNewsSubTab("community");
+    setFeedTabSilently("News");
+    setNewsSubTabSilently("community");
     setFeedCommentPostId(id);
     setFeedCommentTitle("Post");
-  }, [params.openPost]);
+  }, [params.openPost, setFeedTabSilently, setNewsSubTabSilently]);
 
   useEffect(() => {
     const raw = params.exploreTab;
@@ -1374,19 +1375,19 @@ export default function FeedScreen() {
     const allowed: FeedTab[] = ["News", "Events", "Stories", "Quests", "Polls"];
     const match = allowed.find((a) => a.toLowerCase() === tabRaw.toLowerCase());
     if (match) {
-      setFeedTab(match);
+      setFeedTabSilently(match);
       router.setParams({ exploreTab: "" });
     }
-  }, [params.exploreTab]);
+  }, [params.exploreTab, setFeedTabSilently]);
 
   useEffect(() => {
     const raw = params.openEvent;
     const id = typeof raw === "string" ? raw.trim() : Array.isArray(raw) ? String(raw[0] ?? "").trim() : "";
     if (!id || deepLinkEventRef.current === id) return;
     deepLinkEventRef.current = id;
-    setFeedTab("Events");
+    setFeedTabSilently("Events");
     openEvent(id);
-  }, [params.openEvent]);
+  }, [params.openEvent, setFeedTabSilently]);
 
   useEffect(() => {
     const raw = params.openStory;

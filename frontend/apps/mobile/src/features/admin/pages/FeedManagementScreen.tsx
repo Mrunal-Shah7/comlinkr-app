@@ -20,6 +20,7 @@ import { Colors } from '@theme/colors';
 import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   published: { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Published' },
@@ -169,8 +170,8 @@ function FeedPostDetailModal({
 }
 
 export default function FeedManagementScreen() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [filter, setFilter] = useBackState('all');
   const [detailPost, setDetailPost] = useState<FeedPost | null>(null);
   const {
     items: posts,

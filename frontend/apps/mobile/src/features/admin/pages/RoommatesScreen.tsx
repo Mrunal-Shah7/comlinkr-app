@@ -21,6 +21,7 @@ import { Colors } from '@theme/colors';
 import { resolveApiAssetUrl } from '../../../api/feed.api';
 import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
+import { useBackState } from '../../../hooks/useBackState';
 
 const STATUS_META: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   active:    { color: Colors.brand.green,   bg: Colors.brand.greenLight, icon: 'checkmark-circle', label: 'Active'    },
@@ -203,8 +204,8 @@ function RoommateDetailModal({
 }
 
 export default function RoommatesScreen() {
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useBackState('', { coalesceMs: 1200 });
+  const [filter, setFilter] = useBackState('all');
   const [detailProfile, setDetailProfile] = useState<RoommateProfile | null>(null);
   const {
     items: profiles,

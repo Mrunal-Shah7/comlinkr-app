@@ -44,6 +44,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { TYPE } from "../src/theme/d";
 import { Chip, EmptyState, PressableScale, Segmented } from "../src/shared/d";
 import { DPage, goBackOr } from "../src/shared/d/Page";
+import { useBackState } from '../src/hooks/useBackState';
 
 const TABS: { type: SaveTypeQuery; label: string; empty: string }[] = [
   { type: "news", label: "News", empty: "No saved news yet — bookmark posts you like to find them here." },
@@ -142,8 +143,8 @@ export default function SavedScreen() {
   const { tc, isDark } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
   const params = useLocalSearchParams<{ seg?: string }>();
-  const [seg, setSeg] = useState<Seg>(params.seg === "int" || params.seg === "fav" ? params.seg : "saved");
-  const [active, setActive] = useState<SaveTypeQuery>("news");
+  const [seg, setSeg] = useBackState<Seg>(params.seg === "int" || params.seg === "fav" ? params.seg : "saved");
+  const [active, setActive] = useBackState<SaveTypeQuery>("news");
   const queryClient = useQueryClient();
   const totalQuery = useQuery({
     queryKey: [...queryKeys.saved(), "total"],

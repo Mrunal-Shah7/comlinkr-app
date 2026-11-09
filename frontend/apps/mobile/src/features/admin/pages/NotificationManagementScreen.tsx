@@ -18,6 +18,7 @@ import { appAlert } from '../../../shared/ui/Dialogs';
 import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
+import { useBackState } from '../../../hooks/useBackState';
 
 // ── Compose Form ──────────────────────────────────────────────────────────────
 
@@ -211,7 +212,7 @@ function NotificationHistoryCard({ item }: { item: AdminNotification }) {
 // ── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function NotificationManagementScreen() {
-  const [tab, setTab] = useState<'compose' | 'history'>('compose');
+  const [tab, setTab, setTabSilently] = useBackState<'compose' | 'history'>('compose');
   const { data, isLoading, refetch, isRefetching } = useAdminNotifications();
   const notifications: AdminNotification[] = data?.data ?? [];
 
@@ -265,7 +266,7 @@ export default function NotificationManagementScreen() {
 
           {/* Tab Content */}
           {tab === 'compose' ? (
-            <ComposeForm onSent={() => setTab('history')} />
+            <ComposeForm onSent={() => setTabSilently('history')} />
           ) : (
             <>
               <Text style={s.sectionLabel}>SENT & SCHEDULED</Text>
