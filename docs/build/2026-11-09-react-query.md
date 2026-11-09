@@ -56,4 +56,5 @@ Hearts, bookmarks and votes stay local state seeded from each fetch, as before.
 ## How it was checked
 
 `pnpm typecheck` after each file. On the phone, with the backend log open, see the run log. Not checked: Load more
-(no list in the seed is longer than one page), my posts delete and Undo (the test user has no posts), iOS.
+(no list in the seed is longer than one page) and iOS. My posts delete and Undo was checked later, on
+`chore/split-compose`.
