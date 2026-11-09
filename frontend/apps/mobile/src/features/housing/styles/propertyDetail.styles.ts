@@ -1,8 +1,8 @@
 import { palette } from "../../../theme/palette";
-import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
-export const md = StyleSheet.create({
+export const md = createThemedStyles({
   floatBtn: {
     width: 36,
     height: 36,
@@ -298,4 +298,4 @@ export const md = StyleSheet.create({
     fontWeight: "700",
     color: palette.red600,
   },
-});
+}, { fonts: false });

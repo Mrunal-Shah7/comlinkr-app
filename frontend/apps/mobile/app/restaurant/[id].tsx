@@ -1,6 +1,7 @@
 // A restaurant's detail (plan 03): photos, hours, reviews, reservation, report. Opened from the Food tab, Saved,
 // notifications and share links (/app/food?openRestaurant=<id>).
 import { palette } from "../../src/theme/palette";
+import { usePaletteColor } from "../../src/theme/themedStyles";
 import { useState, useEffect, useCallback } from "react";
 import Reanimated from "react-native-reanimated";
 import { GradientButton, PressableScale, Reveal } from "../../src/shared/d";
@@ -96,6 +97,7 @@ export default function RestaurantDetailScreen() {
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isDark, tc } = useTheme();
+  const pc = usePaletteColor();
   const user = useAuthStore((s) => s.user);
   const { requireAuth } = useRequireAuth();
   const guestCity = useGuestLocationStore((s) => s.city);
@@ -858,7 +860,7 @@ export default function RestaurantDetailScreen() {
                     borderBottomColor: tc.borderLight,
                   })}
                 >
-                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: palette.red100, alignItems: "center", justifyContent: "center" }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: pc(palette.red100, "backgroundColor"), alignItems: "center", justifyContent: "center" }}>
                     <Ionicons name="flag" size={16} color={palette.red600} />
                   </View>
                   <Text style={{ fontSize: 14, fontWeight: "600", color: tc.textPrimary, flex: 1 }}>{reason}</Text>

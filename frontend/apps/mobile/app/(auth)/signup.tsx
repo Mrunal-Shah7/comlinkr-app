@@ -37,6 +37,7 @@ import { TYPE, display } from '../../src/theme/d';
 import { GradientButton, Reveal, SoftButton } from '../../src/shared/d';
 import { PasswordRules } from '../../src/shared/d/PasswordRules';
 import { OtpBoxes, ResendCode, type OtpHandle } from '../../src/shared/d/Otp';
+import { createThemedStyles } from '../../src/theme/themedStyles';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
@@ -499,7 +500,7 @@ export default function SignupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: {
     flex: 1,
     backgroundColor: palette.legacyBlueLight,
@@ -808,4 +809,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.brand.blue,
   },
-});
+}, { fonts: false });

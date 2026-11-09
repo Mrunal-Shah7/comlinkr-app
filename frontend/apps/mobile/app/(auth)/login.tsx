@@ -36,6 +36,7 @@ import { appAlert } from '../../src/shared/ui/Dialogs';
 import { TYPE, display } from '../../src/theme/d';
 import { GradientButton, Reveal, SoftButton, useShake } from '../../src/shared/d';
 import Reanimated from 'react-native-reanimated';
+import { createThemedStyles } from '../../src/theme/themedStyles';
 
 /* ── Gradient Text helper ────────────────────────── */
 function GradientText({
@@ -333,7 +334,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   root: {
     flex: 1,
     backgroundColor: palette.legacyBlueLight,
@@ -555,4 +556,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.brand.blue,
   },
-});
+}, { fonts: false });

@@ -1,9 +1,10 @@
 import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
 // ── Available Rooms styles (declared before components that reference it) ─────
-export const ar = StyleSheet.create({
+export const ar = createThemedStyles({
   // ── Card ──
   card: {
     marginHorizontal: 16, marginBottom: 16,
@@ -158,4 +159,4 @@ export const ar = StyleSheet.create({
   listYourSpaceSub: { fontSize: 12, color: "rgba(255,255,255,0.82)", marginTop: 2, lineHeight: 17 },
   listYourSpaceArrow: { width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
   dividerStrip: { height: 6, backgroundColor: palette.neutralL95_4, marginVertical: 14 },
-});
+}, { fonts: false });

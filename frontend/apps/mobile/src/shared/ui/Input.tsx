@@ -6,11 +6,11 @@ import {
   Text,
   Pressable,
   type TextInputProps,
-  StyleSheet,
 } from "react-native";
 import { Colors } from "../../theme/colors";
 import { useTheme } from "../../theme/useTheme";
 import { TYPE } from "../../theme/d";
+import { createThemedStyles } from '../../theme/themedStyles';
 
 interface InputProps extends TextInputProps {
   label: string;
@@ -62,7 +62,7 @@ const Input = forwardRef<TextInput, InputProps>(
 Input.displayName = "Input";
 export default Input;
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     gap: 6,
   },
@@ -107,4 +107,4 @@ const styles = StyleSheet.create({
     color: Colors.text.error,
     marginLeft: 2,
   },
-});
+}, { fonts: false });

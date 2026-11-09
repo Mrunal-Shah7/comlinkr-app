@@ -16,6 +16,7 @@ import { reportCommunityPost } from "../../../api/community.api";
 import { showToast } from "../../../shared/ui/Toast";
 import { appAlert } from "../../../shared/ui/Dialogs";
 import { type PostCardModel } from "../models";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
 const LIKE = palette.pinkL61;
 
@@ -99,7 +100,7 @@ export function PostCard({
   );
 }
 
-const pcd = StyleSheet.create({
+const pcd = createThemedStyles({
   bubble: { padding: 16, paddingBottom: 8, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderBottomRightRadius: 22, borderBottomLeftRadius: 6, marginBottom: 12, shadowColor: palette.shadowNavy, shadowOpacity: 0.1, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
   head: { flexDirection: "row", alignItems: "center", gap: 10 },
   avatar: { width: 32, height: 32, borderRadius: 16 },
@@ -110,7 +111,7 @@ const pcd = StyleSheet.create({
   tag: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
   actions: { flexDirection: "row", alignItems: "center", marginTop: 6, marginHorizontal: -8 },
   act: { flexDirection: "row", alignItems: "center", gap: 5, height: 36, paddingHorizontal: 8 },
-});
+}, { fonts: false });
 
 // ── Report post modal (proper modal with a real close button, instead of
 //    nesting one Alert.alert inside another's callback — nested native Alerts
@@ -193,7 +194,7 @@ export function ReportPostModal({
   );
 }
 
-export const rpm = StyleSheet.create({
+export const rpm = createThemedStyles({
   overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.5)" },
   sheet: { backgroundColor: palette.white, borderTopLeftRadius: rs(20), borderTopRightRadius: rs(20), padding: rs(20), paddingBottom: rs(32) },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: rs(6) },
@@ -205,9 +206,9 @@ export const rpm = StyleSheet.create({
   reasonText: { fontSize: rs(14), fontWeight: "700" },
   submitBtn: { marginTop: rs(8), backgroundColor: palette.red600, borderRadius: rs(14), paddingVertical: rs(14), alignItems: "center" },
   submitText: { color: palette.white, fontSize: rs(15), fontWeight: "800" },
-});
+}, { fonts: false });
 
-export const pc = StyleSheet.create({
+export const pc = createThemedStyles({
   card: { backgroundColor: palette.white, borderRadius: rs(18), marginBottom: rs(14), borderWidth: 1, borderColor: palette.neutralL94_2, shadowColor: palette.black, shadowOpacity: 0.05, shadowRadius: rs(8), elevation: 2, overflow: "hidden" },
   img: { width: "100%", height: rs(185) },
   body: { padding: rs(14) },
@@ -229,4 +230,4 @@ export const pc = StyleSheet.create({
   action: { flexDirection: "row", alignItems: "center", gap: rs(5) },
   actionText: { fontSize: rs(13), fontWeight: "600", color: Colors.text.secondary },
   reportBtn: { width: rs(30), height: rs(30), borderRadius: rs(8), backgroundColor: palette.gray100, alignItems: "center", justifyContent: "center" },
-});
+}, { fonts: false });

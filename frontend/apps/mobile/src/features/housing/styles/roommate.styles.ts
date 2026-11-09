@@ -2,9 +2,10 @@ import { palette } from "../../../theme/palette";
 import { StyleSheet } from "react-native";
 import { Colors } from "../../../theme/colors";
 import { rs } from "../../../utils/responsive";
+import { createThemedStyles } from '../../../theme/themedStyles';
 
 // ── Roommate styles ──────────────────────────────────────────────────────────
-export const rm = StyleSheet.create({
+export const rm = createThemedStyles({
   // Card
   card: {
     marginHorizontal: rs(16),
@@ -548,4 +549,4 @@ export const rm = StyleSheet.create({
     fontWeight: "700",
     color: palette.white,
   },
-});
+}, { fonts: false });

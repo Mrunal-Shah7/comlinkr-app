@@ -4,7 +4,7 @@
 // moved out of app/(tabs)/food/index.tsx.
 import { palette } from "../../theme/palette";
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, useWindowDimensions } from "react-native";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { FlatList as GHFlatList } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +13,7 @@ import { FadeImage } from "../../../components/FadeImage";
 import type { Restaurant } from "../../api/food.api";
 import { rs } from "../../utils/responsive";
 import { getPriceRangeSymbol, getBusinessCurrency, formatPrice } from "../../utils/currency";
+import { createThemedStyles } from '../../theme/themedStyles';
 
 export function restaurantIsMine(r: Restaurant, userId: string | undefined): boolean {
   if (!userId) return false;
@@ -205,7 +206,7 @@ export function ImageCarousel({ images, height = rs(165), itemWidth, onImagePres
   );
 }
 
-export const carouselSt = StyleSheet.create({
+export const carouselSt = createThemedStyles({
   dots: {
     position: "absolute", bottom: rs(8), alignSelf: "center",
     flexDirection: "row", gap: rs(5),
@@ -224,12 +225,12 @@ export const carouselSt = StyleSheet.create({
     paddingHorizontal: rs(8), paddingVertical: rs(4),
   },
   counterText: { fontSize: rs(10), fontWeight: "700", color: palette.white },
-});
+}, { fonts: false });
 
 export const EMPTY_RESTAURANTS: Restaurant[] = [];
 export const restaurantId = (r: Restaurant) => r.id;
 
-export const s = StyleSheet.create({
+export const s = createThemedStyles({
   safe: { flex: 1, backgroundColor: palette.gray50 },
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
@@ -430,10 +431,10 @@ export const s = StyleSheet.create({
   empty: { alignItems: "center", paddingVertical: rs(40), marginHorizontal: rs(16) },
   emptyTitle: { fontSize: rs(15), fontWeight: "600", marginTop: rs(12) },
   emptyDesc: { fontSize: rs(13), marginTop: rs(4), textAlign: "center" },
-});
+}, { fonts: false });
 
 /* ── Restaurant Detail Modal Styles ────────────────────────── */
-export const rdm = StyleSheet.create({
+export const rdm = createThemedStyles({
   backBtn: {
     position: "absolute", top: 50, left: 16, width: 38, height: 38,
     borderRadius: 12, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center",
@@ -544,4 +545,4 @@ export const rdm = StyleSheet.create({
     paddingVertical: 14, borderRadius: 14,
   },
   ctaOrderText: { fontSize: 14, fontWeight: "700", color: palette.white },
-});
+}, { fonts: false });
