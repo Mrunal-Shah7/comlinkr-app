@@ -3,7 +3,22 @@
 _Where the work stopped and how to pick it up. Newest first; the next session reads the top entry before anything
 else. Keep old entries short: what was done and where it is written._
 
-## 2026-11-09 (latest) - admin reports filter and Data privacy crash (TR-015)
+## 2026-11-09 (latest) - the three open Expo-skill points (TR-017)
+
+- All three merged into `main`:
+  - PR 16, point 4: the news article as a route with `GET /news/articles/:id`
+    ([build note](build/2026-11-09-news-article-route.md)).
+  - PR 17, point 2: sheets moved to `DSheet`, which now sizes itself on Android; the post preview and the photo
+    gallery are modal routes ([build note](build/2026-11-09-native-sheets.md)).
+  - PR 18, point 1: palette colours follow dark mode through a fallback in `createThemedStyles`, 15 stylesheets moved
+    onto it (colour only) and `usePaletteColor()` ([build note](build/2026-11-09-dark-mode-palette.md)).
+- Logged for later: TR-018 (editing a room overwrites its description), TR-019 (ten files still render `Modal`),
+  TR-020 (first tap after a sheet closes is lost).
+- Not walked: iOS for all three; the login, sign-up and forgot-password screens in dark mode (the `ui_tester`
+  password is not in the repository); pinch zoom in the gallery.
+- `ui_tester` is USER and in light mode. Metro and the backend stopped at the end.
+
+## 2026-11-09 (earlier) - admin reports filter and Data privacy crash (TR-015)
 
 - `fix/admin-reports-privacy`: `/admin/reports` accepts `status` (default PENDING); `/admin/privacy-requests`
   filters by `status` / `type`; the Data privacy screen uses the API's snapshot fields and real enums.

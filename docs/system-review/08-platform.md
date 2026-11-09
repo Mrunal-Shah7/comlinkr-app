@@ -56,6 +56,9 @@ deep links work, the scheduled jobs, and the app's navigation, theme and gesture
   preview (`/compose-preview`, form sheet) and the photo gallery (`/gallery`, transparent modal) are modal routes; the
   opener hands its in-memory data over through a small store [walked, Android]. React Native `Modal` remains in the
   ten files listed in TR-019 [code].
+- **Navigation bar (Android):** hidden throughout the app by `<NavigationBar hidden />` in `app/_layout.tsx` and the
+  `expo-navigation-bar` plugin. A swipe up from the bottom edge shows it for a moment. It shows while a native
+  sheet or `Modal` is open, because those have their own window. Plan 04 [walked, Android].
 - **Theme:** `src/theme/` light and dark tokens through `useTheme()`; the root view is painted with the page
   colour [code]. Screens styled with the static `palette` follow dark mode through `createThemedStyles`. Its tables,
   and a lightness fallback for colours they do not name, map light surfaces and dark text. Colours passed as props go

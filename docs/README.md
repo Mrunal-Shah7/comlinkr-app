@@ -105,6 +105,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [01. Build design D](plan/01-design-d.md) (TR-005): Building, phase 1 (look and motion).
 - [02. Native tabs, screen transitions and controls](plan/02-native-navigation.md) (TR-012): built; replaces plan 01's tab
   pager, floating tab bar, zoom transitions and custom controls.
+- [04. Hide the Android navigation bar](plan/04-immersive-navigation-bar.md) (TR-021): built.
 
 ## Reviews (`review/`)
 
@@ -132,6 +133,8 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-09: [Compose split](build/2026-11-09-split-compose.md) (TR-013, point 9b): `app/create-post.tsx` cut
   from 5,000 lines to the route alone; forms, preview, media picker and helpers moved to `src/features/compose/`.
   No behaviour change; publish, delete and Undo walked on Android.
+- 2026-11-09: [Hide the Android navigation bar](build/2026-11-09-immersive-navigation-bar.md) (TR-021, plan 04):
+  `expo-navigation-bar` hides the bar; a swipe up from the bottom edge shows it for a moment. Walked on Android.
 - 2026-11-09: [Palette colours in dark mode](build/2026-11-09-dark-mode-palette.md) (TR-017, point 1): a lightness
   fallback in `createThemedStyles`, 15 screens' styles moved onto it (colour only), and `usePaletteColor()` for
   colours passed as props. Walked on Android, including a toggle with screens left mounted.
