@@ -1,4 +1,5 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { queryClient } from "../../services/cache/queryClient";
 import { palette } from "../../theme/palette";
 import { Switch } from "../../shared/ui/Switch";
 import { useEffect, useState, useRef } from "react";
@@ -135,7 +136,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     const load = async () => { // SPRINT-42: branch by the reused composer type.
       try { // SPRINT-42: surface load failures without partially populated forms.
         if (type.id === "news") { // SPRINT-42: load the standard feed post detail.
-          const post = await getPost(editId); // SPRINT-42: fetch all six editable fields and persisted media.
+          const post = await queryClient.fetchQuery({ queryKey: ["feed", "post", editId], queryFn: () => getPost(editId), staleTime: 0 }); // SPRINT-42: fetch all six editable fields and persisted media.
           if (cancelled) return; // SPRINT-42: stop after unmount.
           const baseline = { title: post.title, content: post.content, category: post.category, tags: post.tags ?? [], location: post.location ?? "", sourceLabel: post.sourceLabel ?? "" }; // SPRINT-42: normalize nullable fields for dirty comparison.
           editOriginalRef.current = baseline; // SPRINT-42: save the original feed values in memory only.
@@ -144,7 +145,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
           setAttachedFiles((post.media ?? []).map((m) => ({ uri: m.url, name: m.id, mediaType: "photo" as const }))); // SPRINT-42: show existing feed media read-only.
           setNewsMoreOpen(true); // SPRINT-42: reveal all editable post fields immediately.
         } else if (type.id === "listing") { // SPRINT-42: load the standard listing detail.
-          const listing = await getListing(editId); // SPRINT-42: fetch all Sprint 37 editable fields and ordered images.
+          const listing = await queryClient.fetchQuery({ queryKey: ["housing", "edit", editId], queryFn: () => getListing(editId), staleTime: 0 }); // SPRINT-42: fetch all Sprint 37 editable fields and ordered images.
           if (cancelled) return; // SPRINT-42: stop after unmount.
           if (listing.isOwner !== true) { // SPRINT-42: deep-link edit must reject non-owners before prefill.
             appAlert("Not allowed", "You can only edit listings you own.", [{ text: "Back", onPress: () => router.back() }]); // SPRINT-42: clear ownership rejection.

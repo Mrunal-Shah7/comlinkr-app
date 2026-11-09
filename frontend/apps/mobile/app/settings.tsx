@@ -2,6 +2,7 @@ import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
 import { rs } from "../src/utils/responsive";
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   View,
   Text,
@@ -430,18 +431,20 @@ export default function SettingsScreen() {
     })); // SPRINT-42: finish preview patch.
   }), []); // SPRINT-42: subscribe while Settings is mounted.
 
+  // Blocked users come through React Query while the sheet is open (TR-013); fetched fresh each time it opens.
+  const blockedQuery = useQuery({
+    queryKey: ["settings", "blocked"],
+    queryFn: () => getSettingsBlockedUsers().catch((): BlockedUserEntry[] => []),
+    enabled: blockedModal,
+    staleTime: 0,
+  });
   useEffect(() => {
-    if (!blockedModal) return;
-    let cancelled = false;
-    setBlockedLoading(true);
-
-    const mergeBlocked = async () => {
-      let apiRows: BlockedUserEntry[] = [];
-      try {
-        apiRows = await getSettingsBlockedUsers();
-      } catch {
-        apiRows = [];
-      }
+    setBlockedLoading(blockedModal && blockedQuery.isFetching && !blockedQuery.data);
+  }, [blockedModal, blockedQuery.isFetching, blockedQuery.data]);
+  useEffect(() => {
+    if (!blockedModal || !blockedQuery.data) return;
+    const mergeBlocked = () => {
+      const apiRows: BlockedUserEntry[] = blockedQuery.data;
 
       // Merge locally-stored blocked users that aren't already in the API list
       const localUsers = useBlockStore.getState().blockedUsers;
@@ -455,15 +458,10 @@ export default function SettingsScreen() {
           localOnly: true as const,
         }));
 
-      if (!cancelled) setBlockedRows([...apiRows, ...localOnlyRows]);
+      setBlockedRows([...apiRows, ...localOnlyRows]);
     };
-
-    mergeBlocked().finally(() => {
-      if (!cancelled) setBlockedLoading(false);
-    });
-
-    return () => { cancelled = true; };
-  }, [blockedModal]);
+    mergeBlocked();
+  }, [blockedModal, blockedQuery.data]);
 
   useEffect(() => {
     if (!accountModal) {

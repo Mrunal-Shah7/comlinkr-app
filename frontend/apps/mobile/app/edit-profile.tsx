@@ -1,6 +1,8 @@
 import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "../src/services/cache/queryClient";
 import Reanimated, { ZoomIn } from "react-native-reanimated";
 import {
   View,
@@ -354,12 +356,17 @@ export default function EditProfileScreen() {
   const [imageLoading, setImageLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // The profile comes through React Query (TR-013); the form is filled once, from the first answer.
+  const profileQuery = useQuery({ queryKey: ["me", "fullProfile"], queryFn: getMyFullProfile, staleTime: 0 });
+  const formFilled = useRef(false);
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    if (formFilled.current) return;
+    if (!profileQuery.isSuccess && !profileQuery.isError) return;
+    formFilled.current = true;
+    (() => {
       try {
-        const p = await getMyFullProfile();
-        if (cancelled) return;
+        if (!profileQuery.isSuccess) throw profileQuery.error;
+        const p = profileQuery.data;
         setName(p.name || "");
         setUsername(p.username || "");
         setEmail(p.email || "");
@@ -380,7 +387,7 @@ export default function EditProfileScreen() {
         setProfileImage(resolveAvatarDisplayUrl(p.avatarUrl));
       } catch {
         const u = useAuthStore.getState().user;
-        if (!cancelled && u) {
+        if (u) {
           setName(u.name || "");
           setUsername(u.username || "");
           setEmail(u.email || "");
@@ -397,13 +404,10 @@ export default function EditProfileScreen() {
           setProfileImage(null);
         }
       } finally {
-        if (!cancelled) setProfileLoading(false);
+        setProfileLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [profileQuery.isSuccess, profileQuery.isError, profileQuery.data, profileQuery.error]);
 
   const initials = name
     ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -562,7 +566,7 @@ export default function EditProfileScreen() {
     setTimeout(() => { prefsReady.current = true; }, 0);
   }, [profileLoading, name, username, phone, bio]);
   const refreshUser = async () => {
-    const fresh = await getMyFullProfile();
+    const fresh = await queryClient.fetchQuery({ queryKey: ["me", "fullProfile"], queryFn: getMyFullProfile, staleTime: 0 });
     await applyUser(mergeFullProfileIntoUser(fresh, useAuthStore.getState().user));
     return fresh;
   };

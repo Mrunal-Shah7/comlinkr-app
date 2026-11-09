@@ -1,6 +1,8 @@
 // SPRINT-42: full event reviews section — newest-first pagination, eligibility, create/edit/delete + aggregate refetch.
 import { palette } from "../../src/theme/palette";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "../../src/services/cache/queryKeys";
 import {
   View,
   Text,
@@ -52,6 +54,17 @@ export function EventReviewsSection({
   const [editing, setEditing] = useState(false);
   const [localDetail, setLocalDetail] = useState<ApiEvent | null>(detailEvent);
   const loadGenRef = useRef(0); // SPRINT-42: cancel stale sequential loads
+  // Pages and the detail refresh go through the React Query cache (TR-013), always fetched fresh.
+  const qc = useQueryClient();
+  const fetchReviewsPage = useCallback(
+    (pageNo: number) =>
+      qc.fetchQuery({
+        queryKey: [...queryKeys.event(eventId), "reviews", pageNo],
+        queryFn: () => getEventReviews(eventId, { page: pageNo, pageSize: PAGE_SIZE }),
+        staleTime: 0,
+      }),
+    [qc, eventId],
+  );
 
   useEffect(() => {
     setLocalDetail(detailEvent);
@@ -59,11 +72,13 @@ export function EventReviewsSection({
 
   const refreshDetail = useCallback(async () => {
     // SPRINT-42: refetch aggregates + caller review state after every mutation
-    const fresh = await getEvent(eventId);
+    const fresh = await qc.fetchQuery({ queryKey: queryKeys.event(eventId), queryFn: () => getEvent(eventId), staleTime: 0 });
+    // The event route keeps its own copy (keyed by user); refresh it too.
+    void qc.invalidateQueries({ queryKey: queryKeys.event(eventId) });
     setLocalDetail(fresh);
     onDetailRefreshed?.(fresh);
     return fresh;
-  }, [eventId, onDetailRefreshed]);
+  }, [qc, eventId, onDetailRefreshed]);
 
   /**
    * One controlled sequential list pagination: load pages until myReviewId is found (when hasReviewed),
@@ -84,7 +99,7 @@ export function EventReviewsSection({
           // SPRINT-42: sequential pages until own review found or exhausted
           if (gen !== loadGenRef.current) return; // SPRINT-42:
           if (nextPage > 1) setLoadingMore(true); // SPRINT-42:
-          const res = await getEventReviews(eventId, { page: nextPage, pageSize: PAGE_SIZE }); // SPRINT-42:
+          const res = await fetchReviewsPage(nextPage); // SPRINT-42:
           if (gen !== loadGenRef.current) return; // SPRINT-42:
           accumulated = nextPage === 1 ? res.data : [...accumulated, ...res.data]; // SPRINT-42:
           setReviews(accumulated); // SPRINT-42:
@@ -109,7 +124,7 @@ export function EventReviewsSection({
         }
       }
     },
-    [eventId],
+    [fetchReviewsPage],
   );
 
   const loadMore = useCallback(async () => {
@@ -117,7 +132,7 @@ export function EventReviewsSection({
     if (!hasMore || loading || loadingMore) return; // SPRINT-42:
     setLoadingMore(true); // SPRINT-42:
     try {
-      const res = await getEventReviews(eventId, { page: page + 1, pageSize: PAGE_SIZE }); // SPRINT-42:
+      const res = await fetchReviewsPage(page + 1); // SPRINT-42:
       setReviews((prev) => [...prev, ...res.data]); // SPRINT-42:
       setPage(res.page); // SPRINT-42:
       setHasMore(res.hasMore); // SPRINT-42:
@@ -126,7 +141,7 @@ export function EventReviewsSection({
     } finally {
       setLoadingMore(false); // SPRINT-42:
     }
-  }, [eventId, hasMore, loading, loadingMore, page]);
+  }, [fetchReviewsPage, hasMore, loading, loadingMore, page]);
 
   useEffect(() => {
     // SPRINT-42: when detail says hasReviewed, keep paging until myReviewId is in the list

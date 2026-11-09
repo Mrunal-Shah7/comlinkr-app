@@ -2,6 +2,8 @@
 // up on each admission, and the list of who is in. SPRINT-42 rules kept: owner gate before the camera, one scan at a time.
 import { palette } from "../../../src/theme/palette";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../../src/services/cache/queryKeys";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator, Linking } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -92,39 +94,42 @@ export default function EventCheckInScreen() {
   const [statusError, setStatusError] = useState("");
   const knownRef = useRef<Set<string> | null>(null); // rows seen so far; null until the first list arrives
 
+  // The organiser check reads the event through React Query (TR-013); fetched fresh on every visit.
+  const ownerQuery = useQuery({
+    queryKey: [...queryKeys.event(String(eventId ?? "")), "check-in"],
+    queryFn: () => getEvent(String(eventId)),
+    enabled: !!eventId,
+    staleTime: 0,
+  });
   useEffect(() => {
     // SPRINT-42: detail authority before camera/status — never mount CameraView for non-owners
     if (!eventId) {
-      setOwnerGate("error"); // SPRINT-42:
-      setOwnerError("Missing event id."); // SPRINT-42:
+      setOwnerGate("error");
+      setOwnerError("Missing event id.");
       return;
     }
-    let cancelled = false; // SPRINT-42:
-    setOwnerGate("loading"); // SPRINT-42:
-    setOwnerError(""); // SPRINT-42:
-    void getEvent(eventId)
-      .then((ev) => {
-        if (cancelled) return; // SPRINT-42:
-        if (!ev.isOwner) {
-          // SPRINT-42:
-          setOwnerGate("denied"); // SPRINT-42:
-          appAlert("Organiser only", "Only the event organiser can use door check-in.", [
-            { text: "OK", onPress: () => router.back() }, // SPRINT-42:
-          ]);
-          return;
-        }
-        setEventTitle(ev.title?.trim() || (typeof title === "string" ? title : "Event")); // SPRINT-42:
-        setOwnerGate("owner"); // SPRINT-42:
-      })
-      .catch((err) => {
-        if (cancelled) return; // SPRINT-42:
-        setOwnerGate("error"); // SPRINT-42:
-        setOwnerError(err instanceof ApiError ? err.message : "Could not verify organiser access."); // SPRINT-42:
-      });
-    return () => {
-      cancelled = true; // SPRINT-42:
-    };
-  }, [eventId, router, title]);
+    if (ownerQuery.isPending) {
+      setOwnerGate("loading");
+      setOwnerError("");
+      return;
+    }
+    if (ownerQuery.isError) {
+      const err = ownerQuery.error;
+      setOwnerGate("error");
+      setOwnerError(err instanceof ApiError ? err.message : "Could not verify organiser access.");
+      return;
+    }
+    const ev = ownerQuery.data;
+    if (!ev.isOwner) {
+      setOwnerGate("denied");
+      appAlert("Organiser only", "Only the event organiser can use door check-in.", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+      return;
+    }
+    setEventTitle(ev.title?.trim() || (typeof title === "string" ? title : "Event"));
+    setOwnerGate("owner");
+  }, [eventId, ownerQuery.isPending, ownerQuery.isError, ownerQuery.error, ownerQuery.data, router, title]);
 
   const refreshStatus = useCallback(async () => {
     // SPRINT-42:

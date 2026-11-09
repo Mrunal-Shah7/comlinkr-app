@@ -174,23 +174,28 @@ export default function RestaurantDetailScreen() {
 
 
 
+  // The reviews come through React Query (TR-013), fetched fresh each time the detail opens.
+  const reviewsRestaurantId = selectedRestaurant?.id;
+  const reviewsQuery = useQuery({
+    queryKey: ["food", "reviews", reviewsRestaurantId ?? ""],
+    queryFn: () => getReviews(String(reviewsRestaurantId)),
+    enabled: !!reviewsRestaurantId,
+    staleTime: 0,
+  });
   useEffect(() => {
-    const r = selectedRestaurant;
-    const id = r?.id;
+    const id = reviewsRestaurantId;
     if (!id) return;
-    void getReviews(id)
-      .then((list) => {
-        setReviewsList((prev) => ({ ...prev, [id]: list }));
-        const mine = user?.id
-          ? list.find((rv) => String(rv.author.id) === String(user.id)) ?? null
-          : null;
-        setMyRestaurantReviews((prev) => ({ ...prev, [id]: mine }));
-      })
-      .catch(() => {
-        setReviewsList((prev) => ({ ...prev, [id]: [] }));
-        setMyRestaurantReviews((prev) => ({ ...prev, [id]: null }));
-      });
-  }, [selectedRestaurant?.id, user?.id]);
+    if (reviewsQuery.isError) {
+      setReviewsList((prev) => ({ ...prev, [id]: [] }));
+      setMyRestaurantReviews((prev) => ({ ...prev, [id]: null }));
+      return;
+    }
+    const list = reviewsQuery.data;
+    if (!list) return;
+    setReviewsList((prev) => ({ ...prev, [id]: list }));
+    const mine = user?.id ? list.find((rv) => String(rv.author.id) === String(user.id)) ?? null : null;
+    setMyRestaurantReviews((prev) => ({ ...prev, [id]: mine }));
+  }, [reviewsRestaurantId, reviewsQuery.data, reviewsQuery.isError, user?.id]);
 
 
   const confirmDeleteRestaurant = useCallback((id: string) => {

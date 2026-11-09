@@ -58,7 +58,7 @@ function PostDetailModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={dm.overlay}>
-        <ScrollView style={dm.sheet} contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
+        <ScrollView keyboardShouldPersistTaps="handled" style={dm.sheet} contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
           <View style={dm.handle} />
 
           {/* Gradient header */}
@@ -302,7 +302,7 @@ export default function AllPostsScreen() {
       <View style={s.decorCircle} />
 
       <SafeAreaView style={s.safe}>
-        <ScrollView
+        <ScrollView keyboardShouldPersistTaps="handled" 
           style={s.scroll}
           contentContainerStyle={s.content}
           showsVerticalScrollIndicator={false}
@@ -376,7 +376,7 @@ export default function AllPostsScreen() {
           />
 
           {/* Type filter pills */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.typeScroll} contentContainerStyle={s.typeContent}>
+          <ScrollView keyboardShouldPersistTaps="handled" horizontal showsHorizontalScrollIndicator={false} style={s.typeScroll} contentContainerStyle={s.typeContent}>
             {TYPE_FILTERS.map((f) => (
               <Pressable
                 key={f.value}
