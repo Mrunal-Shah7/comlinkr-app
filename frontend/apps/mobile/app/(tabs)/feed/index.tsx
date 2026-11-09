@@ -1,7 +1,7 @@
 import { palette } from "../../../src/theme/palette";
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, Linking, ActivityIndicator, Share, FlatList, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, Modal, TextInput, ActivityIndicator, Share, FlatList, KeyboardAvoidingView } from "react-native";
 import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
@@ -32,7 +32,7 @@ import { getEvents, registerForEvent, unregisterFromEvent, toggleSaveEvent } fro
 import { getActiveStories, getMyStories, getStory, toggleStorySave, toggleStoryLike, getStoryLikeStatus, deleteStory, buildStoryAuthorGroups, type ApiStory, type StoryLikeStatus } from "../../../src/api/stories.api";
 import { getCommunityStats, type CommunityStats } from "../../../src/api/community-qa.api";
 import { getListings } from "../../../src/api/housing.api";
-import { addArticleComment, getArticleComments, getArticleStatsBatch, getNewsExplore, saveNewsArticle, toggleArticleLike, type NewsArticleComment } from "../../../src/api/news.api";
+import { getArticleStatsBatch, getNewsExplore, saveNewsArticle, toggleArticleLike } from "../../../src/api/news.api";
 import { LinkifiedText } from "../../../components/LinkifiedText";
 import { getPolls, votePoll, type Poll } from "../../../src/api/community.api";
 import { getChallenges, joinChallenge, type ApiChallenge } from "../../../src/api/challenges.api";
@@ -54,6 +54,8 @@ import { PostCard } from "../../../src/features/explore/components/PostCard";
 import { StoryCard, AddStoryTile } from "../../../src/features/explore/components/StoryCard";
 import { QuestCard } from "../../../src/features/explore/components/QuestCard";
 import { LiveNewsCard } from "../../../src/features/explore/components/LiveNewsCard";
+import { NewsCommentsSheet } from "../../../src/features/explore/components/NewsCommentsSheet";
+import { onNewsPatch, rememberArticle } from "../../../src/features/explore/newsArticleStore";
 import { useStableCallback } from "../../../src/shared/hooks/useStableCallback";
 
 /** A row of the Explore FlatList — which kind depends on the active tab / news sub-tab. */
@@ -276,7 +278,6 @@ export default function FeedScreen() {
       isOwner: p?.isOwner === true, // SPRINT-42: remove client id-comparison ownership fallbacks.
     };
   };
-  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [feedCommentPostId, setFeedCommentPostId] = useState<string | null>(null);
   const [feedCommentTitle, setFeedCommentTitle] = useState("");
   /** Full post when opening comments (e.g. from Saved) so title/body show even if not in Community list. */
@@ -296,13 +297,6 @@ export default function FeedScreen() {
   const [newsLikeCounts, setNewsLikeCounts] = useState<Record<string, number>>({});
   const [newsCommentCounts, setNewsCommentCounts] = useState<Record<string, number>>({});
   const [newsCommentsOpen, setNewsCommentsOpen] = useState<string | null>(null);
-  const [newsComments, setNewsComments] = useState<NewsArticleComment[]>([]);
-  const [newsCommentsLoading, setNewsCommentsLoading] = useState(false);
-  const [newsCommentDraft, setNewsCommentDraft] = useState("");
-  const [newsCommentSending, setNewsCommentSending] = useState(false);
-  const [newsCommentsPage, setNewsCommentsPage] = useState(1);
-  const [newsCommentsHasMore, setNewsCommentsHasMore] = useState(false);
-  const [newsCommentsError, setNewsCommentsError] = useState<string | null>(null);
   const [expandedArticles, setExpandedArticles] = useState<Set<string>>(new Set());
   const [readArticles, setReadArticles] = useState<Set<string>>(new Set());
   const newsSkeletonOpacity = useSharedValue(0.4);
@@ -1225,59 +1219,26 @@ export default function FeedScreen() {
       useSidebarStore.getState().incrementSaved(wasSaved ? 1 : -1);
     }
   }, [newsSaved, newsArticles, requireAuth]);
-  const openNewsComments = useCallback(async (articleId: string) => {
+  // Comments open in the native sheet (NewsCommentsSheet), which loads and posts on its own.
+  const openNewsComments = useCallback((articleId: string) => {
     setNewsCommentsOpen(articleId);
-    setNewsComments([]);
-    setNewsCommentsLoading(true);
-    setNewsCommentsPage(1);
-    setNewsCommentsHasMore(false);
-    setNewsCommentsError(null);
-    try {
-      const res = await getArticleComments(articleId, { page: 1, pageSize: 20 });
-      setNewsComments(Array.isArray(res?.data) ? res.data : []);
-      setNewsCommentsHasMore((res?.meta?.page ?? 1) < (res?.meta?.totalPages ?? 1));
-      setNewsCommentCounts((prev) => ({ ...prev, [articleId]: res?.meta?.total ?? 0 }));
-    } catch {
-      setNewsCommentsError("Could not load comments.");
-    } finally {
-      setNewsCommentsLoading(false);
-    }
   }, []);
-  const loadMoreNewsComments = useCallback(async () => {
-    if (!newsCommentsOpen || !newsCommentsHasMore || newsCommentsLoading) return;
-    const nextPage = newsCommentsPage + 1;
-    setNewsCommentsLoading(true);
-    try {
-      const res = await getArticleComments(newsCommentsOpen, { page: nextPage, pageSize: 20 });
-      const rows = Array.isArray(res?.data) ? res.data : [];
-      setNewsComments((prev) => [...prev, ...rows]);
-      setNewsCommentsPage(nextPage);
-      setNewsCommentsHasMore((res?.meta?.page ?? nextPage) < (res?.meta?.totalPages ?? nextPage));
-    } catch {
-      setNewsCommentsError("Could not load more comments.");
-    } finally {
-      setNewsCommentsLoading(false);
-    }
-  }, [newsCommentsHasMore, newsCommentsLoading, newsCommentsOpen, newsCommentsPage]);
-  const submitNewsComment = useCallback(async () => {
-    if (!newsCommentsOpen || !newsCommentDraft.trim()) return;
-    if (!requireAuth(undefined, "Sign in to join the conversation.")) return;
-    setNewsCommentSending(true);
-    setNewsCommentsError(null);
-    try {
-      const created = await addArticleComment(newsCommentsOpen, newsCommentDraft.trim());
-      setNewsComments((prev) => [created, ...prev]);
-      setNewsCommentDraft("");
-      setNewsCommentCounts((prev) => ({
-        ...prev,
-        [newsCommentsOpen]: Math.max(0, (prev[newsCommentsOpen] ?? 0) + 1),
-      }));
-    } catch {
-      setNewsCommentsError("Could not post comment.");
-    } finally {
-      setNewsCommentSending(false);
-    }
-  }, [newsCommentDraft, newsCommentsOpen, requireAuth]);
+  const onNewsCommentCount = useCallback((articleId: string, n: number) => {
+    setNewsCommentCounts((prev) => ({ ...prev, [articleId]: n }));
+  }, []);
+  // Likes, saves and comments made on the article route (app/news/[id].tsx) show on the cards when the user is back.
+  useEffect(() => onNewsPatch((p) => {
+    const flip = (set: Set<string>, on: boolean) => {
+      if (set.has(p.id) === on) return set;
+      const n = new Set(set);
+      if (on) n.add(p.id); else n.delete(p.id);
+      return n;
+    };
+    if (p.liked !== undefined) setNewsLiked((prev) => flip(prev, p.liked as boolean));
+    if (p.saved !== undefined) setNewsSaved((prev) => flip(prev, p.saved as boolean));
+    if (p.likeCount !== undefined) setNewsLikeCounts((prev) => ({ ...prev, [p.id]: p.likeCount as number }));
+    if (p.commentCount !== undefined) setNewsCommentCounts((prev) => ({ ...prev, [p.id]: p.commentCount as number }));
+  }), []);
   const toggleExpandArticle = (id: string) => {
     setExpandedArticles((p) => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
@@ -1652,7 +1613,8 @@ export default function FeedScreen() {
   });
   const onOpenArticleRow = useStableCallback((article: NewsArticle) => {
     setReadArticles((p) => { const n = new Set(p); n.add(article.id); return n; });
-    setSelectedArticle(article);
+    rememberArticle(article);
+    router.push(`/news/${encodeURIComponent(article.id)}` as never);
   });
   const onToggleExpandArticleRow = useStableCallback(toggleExpandArticle);
   const onLikeArticleRow = useStableCallback(handleNewsLike);
@@ -2143,226 +2105,12 @@ export default function FeedScreen() {
         }
       />
 
-      {/* ── Article Detail Modal ── (same mount condition as when it lived inside the News section) */}
-      {hasChosenCity && feedTab === "News" && (
-        <Modal
-          visible={!!selectedArticle}
-          animationType="slide"
-          onRequestClose={() => setSelectedArticle(null)}
-          statusBarTranslucent
-        >
-          {selectedArticle && (
-            <View style={[nw.modalRoot, { backgroundColor: tc.pageBg }]}>
-              {/* Sticky header */}
-              <View style={[nw.modalHeader, { backgroundColor: tc.cardBg, borderBottomColor: tc.borderLight }]}>
-                <Pressable onPress={() => setSelectedArticle(null)} style={[nw.modalBackBtn, { backgroundColor: tc.inputBg }]}>
-                  <Ionicons name="chevron-back" size={22} color={tc.textPrimary} />
-                </Pressable>
-                <Text style={[nw.modalHeaderTitle, { color: tc.textPrimary, flex: 1, textAlign: "center", marginHorizontal: rs(8) }]} numberOfLines={1}>Article</Text>
-                <Pressable onPress={() => shareArticle(selectedArticle)} style={[nw.modalShareBtn, { backgroundColor: tc.inputBg }]}>
-                  <Ionicons name="share-social-outline" size={20} color={tc.textPrimary} />
-                </Pressable>
-              </View>
-
-              <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }} contentContainerStyle={nw.modalScroll} showsVerticalScrollIndicator={false}>
-                {/* Hero Image — placeholder + optional RSS overlay */}
-                <NewsLeadImage
-                  article={selectedArticle}
-                  city={city}
-                  userCountry={userCountry}
-                  remoteUri={selectedArticle.image}
-                  variant="modal"
-                  style={nw.modalHeroImg}
-                />
-
-                <View style={[nw.modalBody, { backgroundColor: tc.pageBg }]}>
-                  {/* Category */}
-                  <View style={[nw.articleCatPill, { alignSelf: "flex-start", marginBottom: rs(8), backgroundColor: tc.pillBg, flexDirection: "row", alignItems: "center", gap: rs(4) }]}>
-                    <Ionicons name={((NEWS_CATEGORIES.find((c) => c.id === selectedArticle.category)?.icon) ?? "newspaper-outline") as any} size={rs(10)} color={tc.textSecondary as string} />
-                    <Text style={[nw.articleCatText, { color: tc.textSecondary }]}>
-                      {NEWS_CATEGORIES.find((c) => c.id === selectedArticle.category)?.label || "News"}
-                    </Text>
-                  </View>
-
-                  {/* Title */}
-                  <Text style={[nw.modalTitle, { color: tc.textPrimary }]}>{selectedArticle.title}</Text>
-
-                  {/* Source & Time */}
-                  <View style={nw.modalMeta}>
-                    <View style={nw.sourceDot} />
-                    <Text style={[nw.modalSource, { color: tc.textSecondary }]}>{selectedArticle.source}</Text>
-                    <Text style={[nw.modalTime, { color: tc.textTertiary }]}>• {newsTimeAgo(selectedArticle.publishedAt)}</Text>
-                  </View>
-
-                  {/* Full description / article content */}
-                  <View style={[nw.modalDivider, { backgroundColor: tc.borderLight }]} />
-                  {selectedArticle.description.length > 0 && !isSameContent(selectedArticle.title, selectedArticle.description) ? (
-                    <Text style={[nw.modalContent, { color: tc.textSecondary }]}>{selectedArticle.description}</Text>
-                  ) : (
-                    <View style={[nw.modalContentNote, { backgroundColor: tc.secondaryBg }]}>
-                      <Ionicons name="document-text-outline" size={16} color={tc.textTertiary} />
-                      <Text style={[nw.modalContentNoteText, { color: tc.textTertiary }]}>
-                        Tap below to read the full article from {selectedArticle.source}.
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* If there's more to the article, show helpful message */}
-                  {selectedArticle.description.length > 50 && !isSameContent(selectedArticle.title, selectedArticle.description) && (
-                    <View style={[nw.modalContentNote, { backgroundColor: tc.secondaryBg }]}>
-                      <Ionicons name="information-circle-outline" size={16} color={tc.textTertiary} />
-                      <Text style={[nw.modalContentNoteText, { color: tc.textTertiary }]}>
-                        This is the article summary. Tap below to read the complete article from the original source.
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Visit original source — only if url is valid */}
-                  {selectedArticle.url && selectedArticle.url !== "#" && (
-                    <Pressable
-                      onPress={() => Linking.openURL(selectedArticle.url).catch(() => {})}
-                      style={nw.modalSourceBtn}
-                    >
-                      <Ionicons name="globe-outline" size={16} color={palette.white} />
-                      <Text style={nw.modalSourceBtnText}>Read Full Article on {selectedArticle.source}</Text>
-                    </Pressable>
-                  )}
-
-                  {/* Interaction bar */}
-                  <View style={[nw.modalActions, { borderTopColor: tc.borderLight, backgroundColor: tc.cardBg }]}>
-                    <Pressable onPress={() => void handleNewsLike(selectedArticle.id)} style={nw.modalActionBtn}>
-                      <Ionicons
-                        name={newsLiked.has(selectedArticle.id) ? "heart" : "heart-outline"}
-                        size={20}
-                        color={newsLiked.has(selectedArticle.id) ? palette.red500 : tc.textSecondary}
-                      />
-                      <Text style={[nw.modalActionLabel, { color: newsLiked.has(selectedArticle.id) ? palette.red500 : tc.textSecondary }]}>
-                        {(newsLikeCounts[selectedArticle.id] ?? 0) > 0 ? `Like · ${newsLikeCounts[selectedArticle.id]}` : "Like"}
-                      </Text>
-                    </Pressable>
-                    <Pressable onPress={() => void openNewsComments(selectedArticle.id)} style={nw.modalActionBtn}>
-                      <Ionicons name="chatbubble-outline" size={20} color={tc.textSecondary} />
-                      <Text style={[nw.modalActionLabel, { color: tc.textSecondary }]}>
-                        {(newsCommentCounts[selectedArticle.id] ?? 0) > 0 ? `Comment · ${newsCommentCounts[selectedArticle.id]}` : "Comment"}
-                      </Text>
-                    </Pressable>
-                    <Pressable onPress={() => shareArticle(selectedArticle)} style={nw.modalActionBtn}>
-                      <Ionicons name="share-social-outline" size={20} color={tc.textSecondary} />
-                      <Text style={[nw.modalActionLabel, { color: tc.textSecondary }]}>Share</Text>
-                    </Pressable>
-                    <Pressable onPress={() => toggleNewsSave(selectedArticle.id)} style={nw.modalActionBtn}>
-                      <Ionicons
-                        name={newsSaved.has(selectedArticle.id) ? "bookmark" : "bookmark-outline"}
-                        size={20}
-                        color={newsSaved.has(selectedArticle.id) ? Colors.brand.blue : tc.textSecondary}
-                      />
-                      <Text style={[nw.modalActionLabel, { color: tc.textSecondary }]}>Save</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </ScrollView>
-            </View>
-          )}
-        </Modal>
-      )}
-
-      <Modal
-        visible={!!newsCommentsOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => {
-          setNewsCommentsOpen(null);
-          setNewsComments([]);
-          setNewsCommentDraft("");
-          setNewsCommentsError(null);
-        }}
-      >
-        <KeyboardAvoidingView style={nw.commentsOverlay} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
-          <View style={[nw.commentsSheet, { backgroundColor: tc.cardBg }]}>
-            <View style={[nw.commentsHeader, { borderBottomColor: tc.borderLight }]}>
-              <Text style={[nw.commentsTitle, { color: tc.textPrimary }]} numberOfLines={2}>
-                {newsArticles.find((a) => a.id === newsCommentsOpen)?.title ?? "Comments"}
-              </Text>
-              <Pressable
-                onPress={() => {
-                  setNewsCommentsOpen(null);
-                  setNewsComments([]);
-                  setNewsCommentDraft("");
-                  setNewsCommentsError(null);
-                }}
-              >
-                <Ionicons name="close" size={22} color={tc.textSecondary} />
-              </Pressable>
-            </View>
-
-            {newsCommentsLoading && newsComments.length === 0 ? (
-              <View style={nw.commentsLoadingWrap}>
-                <ActivityIndicator color={Colors.brand.blue} />
-              </View>
-            ) : newsComments.length === 0 ? (
-              <View style={nw.commentsLoadingWrap}>
-                <Ionicons name="chatbubble-ellipses-outline" size={24} color={tc.textTertiary} />
-                <Text style={{ color: tc.textTertiary }}>Be the first to comment</Text>
-              </View>
-            ) : (
-              <FlatList keyboardShouldPersistTaps="handled"
-                data={newsComments}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={nw.commentsList}
-                onEndReachedThreshold={0.35}
-                onEndReached={() => void loadMoreNewsComments()}
-                renderItem={({ item }) => {
-                  const initials = (item.author.name || item.author.username || "U")
-                    .split(" ")
-                    .map((p) => p[0] ?? "")
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
-                  return (
-                    <View style={[nw.commentRow, { borderBottomColor: tc.borderLight }]}>
-                      {item.author.avatarUrl ? (
-                        <FadeImage uri={item.author.avatarUrl} style={nw.commentAvatar} /> // SPRINT-42: render news-comment avatars with FadeImage.
-                      ) : (
-                        <View style={[nw.commentAvatar, { backgroundColor: tc.inputBg, alignItems: "center", justifyContent: "center" }]}>
-                          <Text style={{ color: tc.textSecondary, fontSize: rs(11), fontWeight: "700" }}>{initials}</Text>
-                        </View>
-                      )}
-                      <View style={{ flex: 1 }}>
-                        <Text style={[nw.commentAuthor, { color: tc.textPrimary }]}>@{item.author.username}</Text>
-                        <LinkifiedText text={item.content} style={[nw.commentText, { color: tc.textSecondary }]} />
-                        <Text style={[nw.commentTime, { color: tc.textTertiary }]}>{newsTimeAgo(item.createdAt)}</Text>
-                      </View>
-                    </View>
-                  );
-                }}
-              />
-            )}
-            {newsCommentsError ? <Text style={[nw.commentErr, { color: palette.red600 }]}>{newsCommentsError}</Text> : null}
-
-            <View style={[nw.commentsInputRow, { borderTopColor: tc.borderLight }]}>
-              <TextInput
-                value={newsCommentDraft}
-                onChangeText={setNewsCommentDraft}
-                placeholder="Add a comment..."
-                placeholderTextColor={tc.textTertiary}
-                maxLength={1000}
-                style={[nw.commentsInput, { color: tc.textPrimary, borderColor: tc.borderLight, backgroundColor: tc.inputBg }]}
-              />
-              <Pressable
-                style={[nw.commentsSendBtn, newsCommentSending && { opacity: 0.6 }]}
-                disabled={newsCommentSending || !newsCommentDraft.trim()}
-                onPress={() => void submitNewsComment()}
-              >
-                {newsCommentSending ? (
-                  <ActivityIndicator size="small" color={palette.white} />
-                ) : (
-                  <Ionicons name="send" size={14} color={palette.white} />
-                )}
-              </Pressable>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      <NewsCommentsSheet
+        articleId={newsCommentsOpen}
+        title={newsArticles.find((a) => a.id === newsCommentsOpen)?.title}
+        onClose={() => setNewsCommentsOpen(null)}
+        onCountChange={onNewsCommentCount}
+      />
 
 
 

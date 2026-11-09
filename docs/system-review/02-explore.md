@@ -34,7 +34,8 @@ a city the user gets the choose-city state [code].
   (`buildHeroTickerRows`) [code]. Sub-tabs:
   - **Live News**: Google News RSS per city and country (`GET /news/explore`), refreshed on the server every
     4 minutes by `news.cron`. Category chips, expandable cards, like, save, comment and share on
-    `NewsArticle*` tables, a detail modal with "visit source". Placeholder images (`newsImageUrl`) when the RSS item
+    `NewsArticle*` tables, an article route (`/news/[id]`, TR-017) with "visit source" and comments in the native
+    sheet. Placeholder images (`newsImageUrl`) when the RSS item
     has none [code].
   - **Community**: `FeedPost`s from locals (`GET /feed?city=`), category filter, like, comment, save, detail with
     comment thread, owner edit and delete, report [code].
