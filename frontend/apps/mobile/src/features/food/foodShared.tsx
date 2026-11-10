@@ -114,6 +114,8 @@ export function hasDistance(r: Restaurant): boolean {
 
 /** Plan 13 (TR-032): Nearby is restaurants within this many miles of the phone. */
 export const NEARBY_MILES = 3;
+/** Nearby loads more pages until this many restaurants are in; past it, "Load more" stays on screen. */
+export const NEARBY_LOAD_CAP = 200;
 
 export function hasCoordinates(r: Restaurant): boolean {
   return r.latitude != null && r.longitude != null && Number.isFinite(r.latitude) && Number.isFinite(r.longitude);

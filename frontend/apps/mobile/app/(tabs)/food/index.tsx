@@ -61,7 +61,7 @@ import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuer
 import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
-import { safeList, distanceMiles, hasDistance, hasCoordinates, milesBetween, NEARBY_MILES, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
+import { safeList, distanceMiles, hasDistance, hasCoordinates, milesBetween, NEARBY_MILES, NEARBY_LOAD_CAP, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
 import { useBackState } from '../../../src/hooks/useBackState';
 import { currentPosition, openLocationSettings } from '../../../src/features/location/detectLocation';
 
@@ -299,6 +299,14 @@ export default function FoodScreen() {
     if (activeTab === "nearby" && (!anyCoordinates || !here) && !loading) setActiveTabSilently("all");
   }, [activeTab, anyCoordinates, here, loading, setActiveTabSilently]);
 
+  // The list loads 20 at a time; a nearby restaurant can be on a later page. While Nearby is on, keep loading pages
+  // up to NEARBY_LOAD_CAP restaurants, and keep the empty state hidden until they are in.
+  const loadMoreFood = foodQ.loadMore;
+  useEffect(() => {
+    if (activeTab === "nearby" && here && hasMore && !loadingMore && restaurants.length < NEARBY_LOAD_CAP) loadMoreFood();
+  }, [activeTab, here, hasMore, loadingMore, restaurants.length, loadMoreFood]);
+  const nearbyFilling = activeTab === "nearby" && hasMore && restaurants.length < NEARBY_LOAD_CAP;
+
   const pickTab = useCallback(async (k: string) => {
     if (k !== "nearby") { setActiveTab(k); return; }
     if (locatingRef.current) return;
@@ -508,7 +516,7 @@ export default function FoodScreen() {
           ));
         })()}
 
-        {hasCity && hasMore && filtered.length > 0 ? (
+        {hasCity && hasMore && (filtered.length > 0 || activeTab === "nearby") ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Load more restaurants"
@@ -520,7 +528,19 @@ export default function FoodScreen() {
           </Pressable>
         ) : null}
 
-        {hasCity && filtered.length === 0 && !loading && !loadError && (
+        {/* Plan 13: the coordinates come from OpenStreetMap (Nominatim), whose policy asks for visible attribution. */}
+        {hasCity && activeTab === "nearby" && here ? (
+          <Pressable
+            onPress={() => void Linking.openURL("https://www.openstreetmap.org/copyright")}
+            accessibilityRole="link"
+            hitSlop={8}
+            style={{ alignSelf: "center", paddingVertical: 8 }}
+          >
+            <Text style={[TYPE.small, { color: tc.textTertiary }]}>Locations © OpenStreetMap contributors</Text>
+          </Pressable>
+        ) : null}
+
+        {hasCity && filtered.length === 0 && !loading && !loadError && !nearbyFilling && (
           <View style={s.empty}>
             <Ionicons
               name={activeTab === "open" ? "time-outline" : activeTab === "favorites" ? "heart-outline" : activeTab === "nearby" ? "location-outline" : "restaurant-outline"}

@@ -12,7 +12,7 @@ practice is never.
 
 ## What will change
 
-- **Restaurants get coordinates on the server.** A cron (every minute, ten at a time) sends each restaurant's public
+- **Restaurants get coordinates on the server.** A cron (every minute, four at a time: Nominatim's limit for scheduled scripts) sends each restaurant's public
   address (street, city, state, country) to OpenStreetMap's Nominatim and stores the latitude and longitude.
   - Nominatim's policy: at most one request a second (requests are queued 1.1 s apart), a User-Agent naming the app
     (`Comlinkr/1.0 (+https://comlinkr.com)`), results cached. Nothing about any user is sent.
@@ -33,6 +33,17 @@ practice is never.
     settings. Location off or no fix: a dialog says so.
   - Empty: "Nothing within 3 miles".
 - **Sharing a restaurant** no longer includes "x mi away": it would tell the recipient how near the sender is.
+
+## Decided while building
+
+- **Four a minute, not ten.** [Nominatim's usage policy](https://operations.osmfoundation.org/policies/nominatim/)
+  limits scheduled scripts to 4 requests a minute, on one machine (production runs one PM2 process). The policy also
+  asks that the service can be switched off without a software update: `GEOCODING_ENABLED=false` and a restart.
+- **Attribution.** Nearby shows "Locations © OpenStreetMap contributors", linking to OpenStreetMap's copyright page,
+  as the policy asks.
+- **All pages.** The list loads 20 at a time, so a nearby restaurant can be on a later page. While Nearby is on, the
+  app loads further pages, up to 200 restaurants, and holds the empty state until they are in. Past 200, "Load more"
+  stays on screen.
 
 ## What will not change
 

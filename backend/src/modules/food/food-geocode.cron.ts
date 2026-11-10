@@ -1,6 +1,6 @@
 // src/modules/food/food-geocode.cron.ts
 //
-// Plan 13 (TR-032): every minute, geocode up to ten restaurants that have no coordinates and whose address has not
+// Plan 13 (TR-032): every minute, geocode up to four restaurants that have no coordinates and whose address has not
 // been tried since it last changed. An address the geocoder cannot find is not tried again until it changes; a
 // failed request (network, rate limit) is retried on a later run.
 
@@ -9,7 +9,8 @@ import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GeocodingService } from './geocoding.service';
 
-const BATCH = 10;
+// Nominatim limits scheduled scripts to 4 requests a minute.
+const BATCH = 4;
 
 @Injectable()
 export class FoodGeocodeCron {

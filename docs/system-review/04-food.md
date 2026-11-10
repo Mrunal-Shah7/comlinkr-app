@@ -100,11 +100,12 @@ Walked on the phone; rows F- in the [run log](../device-runs/2026-11-10-full-wal
 ## Update 2026-11-10: Nearby (TR-032, plan 13, branch `feature/nearby`, not merged)
 
 From the [build note](../build/2026-11-10-nearby.md).
-- Restaurants get coordinates from their address: a cron (`FoodGeocodeCron`, every minute, ten at a time) asks
+- Restaurants get coordinates from their address: a cron (`FoodGeocodeCron`, every minute, four at a time, Nominatim's limit) asks
   OpenStreetMap's Nominatim, one request a second, with only the business address. An address it cannot find is
   marked (`geocodeTriedAt`) and not retried until it changes; editing the address clears the coordinates. Off in
   tests and with `GEOCODING_ENABLED=false` [code].
 - Nearby shows once a restaurant in the list has coordinates. Tapping it reads the phone's position (asking for
   permission the first time) and works out the distances on the phone; the position is not sent. Nearby lists
-  restaurants within 3 miles, nearest first; cards then show "x.x mi" **[phone]**.
+  restaurants within 3 miles, nearest first, loading further pages (up to 200 restaurants); cards then show
+  "x.x mi", and the list credits OpenStreetMap **[phone]**.
 - Sharing a restaurant no longer says how far away it is [code].
