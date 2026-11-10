@@ -1116,6 +1116,8 @@ model Event {
   totalReviews   Int           @default(0) // SPRINT-38: Mirror Restaurant.totalReviews for denormalised review counts.
   conversationId String?       @unique
   createdAt      DateTime      @default(now())
+  /// Plan 15 (TR-047): set when the host cancels. The event is kept, marked Cancelled.
+  cancelledAt    DateTime?
 
   author       User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)

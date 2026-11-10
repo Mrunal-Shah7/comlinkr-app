@@ -126,7 +126,9 @@ function subtitleLine(item: Row, tab: SaveTypeQuery): string {
   }
   if (tab === "events") {
     const a = item.author as { name?: string; username?: string } | undefined;
-    return a?.name || a?.username || String(item.venue ?? "");
+    const who = a?.name || a?.username || String(item.venue ?? "");
+    // Plan 15: a cancelled event stays saved, marked Cancelled.
+    return item.cancelled === true ? ["Cancelled", who].filter(Boolean).join(" · ") : who;
   }
   if (tab === "listings") return String(item.city ?? item.address ?? "");
   if (tab === "food") return String(item.cuisine ?? "");

@@ -118,6 +118,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [12. The move-in date and the order of the offer](plan/12-move-in-and-offer-order.md) (TR-036): built.
 - [13. Nearby in Food](plan/13-nearby.md) (TR-032): built.
 - [14. Follow](plan/14-follow.md) (TR-029): built.
+- [15. A cancelled event is kept](plan/15-event-cancelled.md) (TR-047): built.
 
 ## Reviews (`review/`)
 
@@ -141,6 +142,7 @@ Each gets a plan in `plan/` when it is picked up.
 
 - 2026-11-10: [The brand is spelled "ComLinkr"](build/2026-11-10-brand-spelling.md) (TR-046).
 - 2026-11-10: [A tenant signs only after the landlord approves](build/2026-11-10-sign-after-approval.md) (TR-048).
+- 2026-11-10: [A cancelled event is kept, marked Cancelled](build/2026-11-10-event-cancelled.md) (TR-047, plan 15).
 - 2026-11-10: [Accepting a message request](build/2026-11-10-chat-request-accept.md) (TR-043): the banner and the
   disabled composer go at once.
 - 2026-11-10: [Follow](build/2026-11-10-follow.md) (TR-029): follow and unfollow, counts, the Follows screen, a

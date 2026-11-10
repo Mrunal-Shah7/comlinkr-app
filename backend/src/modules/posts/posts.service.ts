@@ -94,6 +94,7 @@ export class PostsService {
           attendeeCount: true,
           averageRating: true, // SPRINT-38: Include event aggregate in the unified posts projection.
           totalReviews: true, // SPRINT-38: Include event review count in the unified posts projection.
+          cancelledAt: true, // plan 15
         },
       }),
       this.prisma.story.findMany({
@@ -145,7 +146,7 @@ export class PostsService {
       type: 'EVENT',
       title: e.title,
       category: e.category,
-      status: null,
+      status: e.cancelledAt ? 'CANCELLED' : null, // plan 15: kept, marked Cancelled
       createdAt: e.createdAt,
       metadata: {
         date: e.date,

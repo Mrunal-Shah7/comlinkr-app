@@ -109,6 +109,22 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Quest composer: Start from templates fill the title, goal, reward and length.
 - News composer: tags as chips; your city as a location chip.
 
+## Update 2026-11-10: a cancelled event is kept (plan 15, TR-047, branch `feature/event-cancelled`, not merged)
+
+- Cancel (the event's page, or My posts) no longer deletes: `DELETE /events/:id` sets `Event.cancelledAt` and keeps
+  registrations, saves, chat and photos. Everyone registered is told once, and the notice opens the event. A second
+  cancel sends nothing. [e2e] **[phone]**
+- The event's page says "You cancelled this event." or "The host cancelled this event."; Edit, Cancel event, Door
+  check-in, RSVP and reviews are gone, and the bottom bar says Cancelled. **[phone]**
+- A cancelled event leaves Explore's list and the story strip; it stays, marked Cancelled, in My posts (with no Edit
+  or Cancel), the registered list and Saved. [e2e] **[phone]** (My posts)
+- Registering, editing, adding photos, reviewing, saving and the ticket answer 409 `EVENT_CANCELLED`; unsaving and
+  unregistering still work. The door scan answers `EVENT_CANCELLED` (not admitted). [e2e]
+- Event notifications (changed, cancelled, new nearby) now open the event in the app; before, tapping them did
+  nothing. **[phone]**
+- My posts shows an event's date as its calendar day ("Nov 15, 2026"), not converted through the phone's zone
+  ("5:30 AM" in India) (rule B10). **[phone]**
+
 ## Update 2026-11-10: editing and cancelling an event; the city's day (plan 11, TR-037, branch `feature/event-edit`, not merged)
 
 - The host sees **Edit** and **Cancel event** on the event's page. Edit (`/events/[id]/edit`) changes the title,
@@ -118,7 +134,8 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
   the event's city, the capacity may not go below the number registered; a `city` in the body is ignored. [e2e]
 - A change of date, time or place notifies everyone registered ("<title> has changed", what changed); a title-only
   edit tells nobody. Cancel is confirmed, removes the event (as delete in My posts) and notifies everyone registered
-  ("<title> was cancelled", with no link, since the event is gone). **[phone]**
+  ("<title> was cancelled", with no link, since the event is gone). **[phone]** Plan 15 replaces this: the event is
+  kept, marked Cancelled.
 - An event's day is read in its city's zone (`common/utils/city-day.ts`): upcoming means from today in the city, the
   day filter is that calendar day, create refuses a day before today in the city, reviews open after the end time
   in the city. An event dated today stays in Explore all day. [e2e]

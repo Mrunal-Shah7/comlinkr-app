@@ -451,39 +451,59 @@ describe('ChallengesService.deleteChallenge: authors delete their own challenge'
   });
 });
 
-describe('EventsService.deleteEvent removes the images from storage', () => {
-  it('deletes each stored image after the event row goes', async () => {
-    const tx: any = {
-      event: {
-        findUnique: jest.fn().mockResolvedValue({ conversationId: null }),
-        delete: jest.fn(),
-      },
-      eventSave: { deleteMany: jest.fn() },
-      eventAttendee: { deleteMany: jest.fn() },
-    };
+describe('EventsService.deleteEvent cancels and keeps the event (plan 15)', () => {
+  function make(cancelledAt: Date | null, count: number) {
     const prisma: any = {
       event: {
         findUnique: jest.fn().mockResolvedValue({
           id: 'e1',
           authorId: 'me',
-          eventImages: [
-            { imageUrl: 'https://res.cloudinary.com/x/a.jpg' },
-            { imageUrl: null },
-          ],
+          title: 'Meetup',
+          cancelledAt,
         }),
+        updateMany: jest.fn().mockResolvedValue({ count }),
+        delete: jest.fn(),
       },
-      eventAttendee: { findMany: jest.fn().mockResolvedValue([]) },
-      $transaction: (fn: (t: any) => Promise<unknown>) => fn(tx),
+      eventAttendee: {
+        findMany: jest.fn().mockResolvedValue([{ userId: 'guest' }]),
+      },
     };
-    const deleteFile = jest.fn().mockRejectedValueOnce(new Error('gone'));
-    const service = new EventsService(prisma, {} as any, { deleteFile } as any);
-    await expect(service.deleteEvent('me', 'e1')).resolves.toEqual({
-      ok: true,
-    });
-    expect(tx.event.delete).toHaveBeenCalledWith({ where: { id: 'e1' } });
-    expect(deleteFile).toHaveBeenCalledTimes(1);
-    expect(deleteFile).toHaveBeenCalledWith(
-      'https://res.cloudinary.com/x/a.jpg',
+    const notifications = {
+      createNotification: jest.fn().mockResolvedValue({}),
+    };
+    const deleteFile = jest.fn();
+    const service = new EventsService(
+      prisma,
+      notifications as any,
+      { deleteFile } as any,
     );
+    return { prisma, notifications, deleteFile, service };
+  }
+
+  it('sets cancelledAt, deletes nothing, and tells the people registered with a link', async () => {
+    const t = make(null, 1);
+    await expect(t.service.deleteEvent('me', 'e1')).resolves.toMatchObject({
+      ok: true,
+      cancelled: true,
+    });
+    expect(t.prisma.event.updateMany).toHaveBeenCalledWith({
+      where: { id: 'e1', cancelledAt: null },
+      data: { cancelledAt: expect.any(Date) },
+    });
+    expect(t.prisma.event.delete).not.toHaveBeenCalled();
+    expect(t.deleteFile).not.toHaveBeenCalled();
+    expect(t.notifications.createNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'guest',
+        referenceType: 'EVENT',
+        referenceId: 'e1',
+      }),
+    );
+  });
+
+  it('tells nobody on a second cancel', async () => {
+    const t = make(new Date(), 0);
+    await t.service.deleteEvent('me', 'e1');
+    expect(t.notifications.createNotification).not.toHaveBeenCalled();
   });
 });

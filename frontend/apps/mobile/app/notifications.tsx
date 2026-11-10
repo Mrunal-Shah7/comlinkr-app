@@ -115,6 +115,9 @@ export default function NotificationsScreen() {
       else router.push("/chat" as any);
     } else if (n.type === "badge") {
       router.push("/verification-status" as any);
+    } else if (n.targetType === "EVENT" && n.targetId) {
+      // Plan 15: event notices (changed, cancelled, nearby) open the event; a cancelled one shows marked Cancelled.
+      router.push(`/events/${encodeURIComponent(n.targetId)}` as never);
     } else if (n.targetType === "USER" && n.targetId) {
       // Plan 14: "New follower" opens the follower's profile.
       router.push({ pathname: "/public-profile", params: { userId: n.targetId } } as any);
