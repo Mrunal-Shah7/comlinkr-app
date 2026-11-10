@@ -66,6 +66,16 @@ export class EventsService {
     return loc?.city ?? null;
   }
 
+  /** Plan 15 (TR-047): a cancelled event is kept, but nothing new happens on it. */
+  private refuseIfCancelled(event: { cancelledAt?: Date | null }) {
+    if (event.cancelledAt) {
+      throw new ConflictException({
+        code: 'EVENT_CANCELLED',
+        message: 'This event was cancelled.',
+      });
+    }
+  }
+
   private async formatEvent(event: any, currentUserId?: string) {
     const attendeeCount = event.attendeeCount ?? event._count?.attendees ?? 0;
     const capacity = event.capacity;
@@ -104,6 +114,9 @@ export class EventsService {
       averageRating: Number(event.averageRating ?? 0), // SPRINT-38: Match restaurant aggregate response naming and numeric shape.
       totalReviews: event.totalReviews ?? 0, // SPRINT-38: Expose denormalised event review count everywhere this formatter is used.
       createdAt: event.createdAt,
+      // Plan 15: kept, marked Cancelled. Older builds ignore these and never see it in the feed.
+      cancelled: !!event.cancelledAt,
+      cancelledAt: event.cancelledAt ?? null,
       images,
       author: {
         id: event.author?.id ?? null,
@@ -148,7 +161,8 @@ export class EventsService {
     let city: string | null = query.city ?? null;
     if (!city) city = await this.getUserCity(userId);
 
-    const where: Prisma.EventWhereInput = {};
+    // Plan 15: a cancelled event leaves the feed (an older build would show it as live).
+    const where: Prisma.EventWhereInput = { cancelledAt: null };
     if (city) {
       where.city = { contains: city, mode: 'insensitive' };
     }
@@ -375,6 +389,7 @@ export class EventsService {
         startTime: true, // SPRINT-38: Fallback completion time.
         endTime: true, // SPRINT-38: Preferred completion time.
         city: true, // plan 11: the time is read in the city's zone
+        cancelledAt: true, // plan 15: a cancelled event cannot be reviewed
         attendees: {
           // SPRINT-38: Verify active registration.
           where: { userId, status: EventRegistrationStatus.ACTIVE }, // SPRINT-38: Cancelled registrations are not attendees.
@@ -391,6 +406,7 @@ export class EventsService {
         message: 'Event not found', // SPRINT-38: Explain the missing event.
       }); // SPRINT-38: Complete missing event exception.
     } // SPRINT-38: End existence check.
+    this.refuseIfCancelled(event);
     if (event.attendees.length === 0) {
       // SPRINT-38: Restrict reviews to active registered attendees.
       throw new ForbiddenException({
@@ -682,6 +698,7 @@ export class EventsService {
         message: 'You can only add images to your own events',
       });
     }
+    this.refuseIfCancelled(event);
     const existing = event.eventImages.length;
     if (existing + files.length > EVENT_IMAGE_MAX) {
       throw new BadRequestException({
@@ -775,6 +792,7 @@ export class EventsService {
         message: 'You cannot RSVP to your own event.',
       });
     }
+    this.refuseIfCancelled(event);
     if (event.attendees.length > 0) {
       return {
         attending: true,
@@ -1139,6 +1157,7 @@ export class EventsService {
     if (!cityFilter) cityFilter = await this.getUserCity(userId);
     const where: Prisma.EventWhereInput = {
       date: { gte: dayStart(cityToday(cityFilter)) }, // plan 11: from today in the city
+      cancelledAt: null, // plan 15
       ...(cityFilter
         ? { city: { contains: cityFilter, mode: 'insensitive' } }
         : {}),
@@ -1288,6 +1307,7 @@ export class EventsService {
       await this.prisma.eventSave.delete({ where: { id: existing.id } });
       return { saved: false };
     }
+    this.refuseIfCancelled(event); // plan 15: unsaving still works
     await this.prisma.eventSave.create({ data: { userId, eventId } });
     return { saved: true };
   }
@@ -1335,6 +1355,7 @@ export class EventsService {
         message: 'Only the host can update this event.',
       });
     }
+    this.refuseIfCancelled(event);
     // Plan 11: the checks create makes. The city stays the one the event was created in (plan 08): a `city` in
     // the body is ignored.
     const ticketType = dto.ticketType ?? event.ticketType;
@@ -1436,7 +1457,7 @@ export class EventsService {
     message: { title: string; body: string },
     userIds?: string[],
   ) {
-    // A cancelled event is gone: its notification links nowhere rather than to "Event not found".
+    // The notification opens the event, unless the caller gave the people (a link would then go nowhere).
     const linked = userIds == null;
     const ids =
       userIds ??
@@ -1465,10 +1486,15 @@ export class EventsService {
     );
   }
 
+  /**
+   * Plan 15 (TR-047): `DELETE /events/:id` cancels. The event and everything on it (registrations, saves, chat,
+   * photos) is kept, marked Cancelled, and the people registered are told with a notification that opens it. A second
+   * call changes nothing. Installed builds call this from "Cancel event" and My posts.
+   */
   async deleteEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
-      include: { eventImages: { select: { imageUrl: true } } },
+      select: { id: true, authorId: true, title: true, cancelledAt: true },
     });
     if (!event) {
       throw new NotFoundException({
@@ -1479,54 +1505,22 @@ export class EventsService {
     if (event.authorId !== userId) {
       throw new ForbiddenException({
         code: 'FORBIDDEN',
-        message: 'Only the host can delete this event.',
+        message: 'Only the host can cancel this event.',
       });
     }
-    // Plan 11: the people registered are told after the event is gone (collected first: the rows go with it).
-    const registered = (
-      await this.prisma.eventAttendee.findMany({
-        where: { eventId, status: EventRegistrationStatus.ACTIVE },
-        select: { userId: true },
-      })
-    ).map((a) => a.userId);
-    await this.prisma.$transaction(async (tx) => {
-      const ev = await tx.event.findUnique({
-        where: { id: eventId },
-        select: { conversationId: true },
-      });
-      const cid = ev?.conversationId;
-      if (cid) {
-        await tx.conversationMember.deleteMany({
-          where: { conversationId: cid },
-        });
-        await tx.message.deleteMany({ where: { conversationId: cid } });
-        await tx.conversation.delete({ where: { id: cid } });
-      }
-      await tx.eventSave.deleteMany({ where: { eventId } });
-      await tx.eventAttendee.deleteMany({ where: { eventId } });
-      await tx.event.delete({ where: { id: eventId } });
+    const now = new Date();
+    // Only the call that sets cancelledAt tells anyone: a retry or a double tap sends nothing.
+    const { count } = await this.prisma.event.updateMany({
+      where: { id: eventId, cancelledAt: null },
+      data: { cancelledAt: now },
     });
-    // The images on Cloudinary go too, as for restaurants and listings; they were left behind before.
-    await Promise.all(
-      event.eventImages.map(async (img) => {
-        if (!img.imageUrl) return;
-        try {
-          await this.storageService.deleteFile(img.imageUrl);
-        } catch {
-          // ignore missing objects
-        }
-      }),
-    );
-    await this.notifyRegistered(
-      eventId,
-      userId,
-      {
+    if (count > 0) {
+      await this.notifyRegistered(eventId, userId, {
         title: `"${event.title}" was cancelled`,
         body: 'The host cancelled this event.',
-      },
-      registered,
-    );
-    return { ok: true };
+      });
+    }
+    return { ok: true, cancelled: true, cancelledAt: event.cancelledAt ?? now };
   }
 
   async getEventAttendees(userId: string, eventId: string) {
@@ -1595,6 +1589,7 @@ export class EventsService {
         message: 'No ticket for this event',
       });
     }
+    this.refuseIfCancelled(event); // plan 15: no usable ticket for a cancelled event
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { fullName: true, email: true },
@@ -1668,7 +1663,7 @@ export class EventsService {
     const event = await this.prisma.event.findUnique({
       // SPRINT-38: Resolve endpoint context before inspecting a ticket.
       where: { id: eventId }, // SPRINT-38: Load the path event.
-      select: { id: true, title: true, authorId: true }, // SPRINT-38: Fetch existence, notification title, and organiser ownership.
+      select: { id: true, title: true, authorId: true, cancelledAt: true }, // SPRINT-38: Fetch existence, notification title, and organiser ownership. Plan 15: and whether it was cancelled.
     }); // SPRINT-38: Complete event lookup.
     if (!event) {
       // SPRINT-38: Keep endpoint misuse as an HTTP exception.
@@ -1722,6 +1717,15 @@ export class EventsService {
         attendee, // SPRINT-38: Show known ticket holder for diagnosis.
       }; // SPRINT-38: End wrong-event result.
     } // SPRINT-38: End event membership check.
+    if (event.cancelledAt) {
+      // Plan 15: registrations of a cancelled event stay ACTIVE (so it stays in the person's list); nobody is admitted.
+      return {
+        admitted: false,
+        reasonCode: 'EVENT_CANCELLED' as const,
+        message: 'This event was cancelled.',
+        attendee,
+      };
+    }
     if (registration.checkedInAt) {
       // SPRINT-38: Reject replay before considering cancellation, matching the required order.
       return {

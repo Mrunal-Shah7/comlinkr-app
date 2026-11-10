@@ -144,7 +144,7 @@ describe('plan 11: editing and cancelling an event', () => {
       .expect(400);
   });
 
-  it('cancelling removes the event and tells the people registered', async () => {
+  it('cancelling keeps the event, marked Cancelled, and tells the people registered once (plan 15)', async () => {
     const host = await seedUser({ label: 'ch' });
     const guest = await seedUser({ label: 'cg' });
     const id = await event(host.id, { attendees: [guest.id] });
@@ -157,12 +157,122 @@ describe('plan 11: editing and cancelling an event', () => {
       .delete(`/events/${id}`)
       .set('Cookie', host.cookie)
       .expect(200);
+    const row = await getTestPrisma().event.findUnique({ where: { id } });
+    expect(row?.cancelledAt).toBeInstanceOf(Date);
     expect(
-      await getTestPrisma().event.findUnique({ where: { id } }),
-    ).toBeNull();
+      await getTestPrisma().eventAttendee.count({
+        where: { eventId: id, status: 'ACTIVE' },
+      }),
+    ).toBe(1);
+    // A second cancel changes nothing and sends nothing.
+    await request(base)
+      .delete(`/events/${id}`)
+      .set('Cookie', host.cookie)
+      .expect(200);
     const n = await notes(guest.id);
     expect(n.map((x) => x.title)).toEqual(['"Plan 11 meetup" was cancelled']);
-    expect(n[0].referenceId).toBeNull();
+    expect(n[0]).toMatchObject({ referenceType: 'EVENT', referenceId: id });
+
+    // The page still opens, marked Cancelled.
+    const page = await request(base)
+      .get(`/events/${id}`)
+      .set('Cookie', guest.cookie)
+      .expect(200);
+    expect(page.body.data ?? page.body).toMatchObject({
+      cancelled: true,
+      registeredByMe: true,
+    });
+  });
+
+  it('a cancelled event leaves the feed, stays in the lists, and refuses new activity (plan 15)', async () => {
+    const host = await seedUser({ label: 'xh' });
+    const guest = await seedUser({ label: 'xg' });
+    const other = await seedUser({ label: 'xo' });
+    const id = await event(host.id, { attendees: [guest.id] });
+    await request(base)
+      .post(`/events/${id}/save`)
+      .set('Cookie', guest.cookie)
+      .expect(201);
+    await request(base)
+      .delete(`/events/${id}`)
+      .set('Cookie', host.cookie)
+      .expect(200);
+    const ids = (res: request.Response) => {
+      const d = res.body.data ?? res.body;
+      return ((d.items ?? d.data ?? d) as { id: string }[]).map((e) => e.id);
+    };
+
+    const feed = await request(base)
+      .get('/events?city=Los%20Angeles')
+      .set('Cookie', other.cookie)
+      .expect(200);
+    expect(ids(feed)).not.toContain(id);
+    const stories = await request(base)
+      .get('/events/stories?city=Los%20Angeles')
+      .set('Cookie', other.cookie)
+      .expect(200);
+    expect(JSON.stringify(stories.body)).not.toContain(id);
+    for (const [path, who] of [
+      ['/events/registered', guest],
+      ['/events/saved', guest],
+      ['/events/me', host],
+    ] as const) {
+      const res = await request(base)
+        .get(path)
+        .set('Cookie', who.cookie)
+        .expect(200);
+      expect(JSON.stringify(res.body)).toContain(id);
+      expect(JSON.stringify(res.body)).toContain('"cancelled":true');
+    }
+
+    const cancelled = (res: request.Response) =>
+      expect(JSON.stringify(res.body)).toContain('EVENT_CANCELLED');
+    cancelled(
+      await request(base)
+        .post(`/events/${id}/register`)
+        .set('Cookie', other.cookie)
+        .send({})
+        .expect(409),
+    );
+    cancelled(
+      await request(base)
+        .patch(`/events/${id}`)
+        .set('Cookie', host.cookie)
+        .send({ title: 'Back on' })
+        .expect(409),
+    );
+    cancelled(
+      await request(base)
+        .post(`/events/${id}/save`)
+        .set('Cookie', other.cookie)
+        .expect(409),
+    );
+    cancelled(
+      await request(base)
+        .get(`/events/${id}/ticket`)
+        .set('Cookie', guest.cookie)
+        .expect(409),
+    );
+    // Unsaving still works.
+    const unsave = await request(base)
+      .post(`/events/${id}/save`)
+      .set('Cookie', guest.cookie)
+      .expect(201);
+    expect((unsave.body.data ?? unsave.body).saved).toBe(false);
+
+    // The door refuses the ticket.
+    const reg = await getTestPrisma().eventAttendee.findFirstOrThrow({
+      where: { eventId: id, userId: guest.id },
+    });
+    const scan = await request(base)
+      .post(`/events/${id}/check-in`)
+      .set('Cookie', host.cookie)
+      .send({ ticketId: reg.id })
+      .expect(200);
+    expect(scan.body.data ?? scan.body).toMatchObject({
+      admitted: false,
+      reasonCode: 'EVENT_CANCELLED',
+    });
   });
 
   it("lists an event dated today in the city all day, and filters by the city's calendar day", async () => {

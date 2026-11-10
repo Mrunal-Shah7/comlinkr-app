@@ -188,8 +188,8 @@ export default function MyListingsScreen() {
   ]);
   const TIPS: [keyof typeof Ionicons.glyphMap, string, string][] = [
     ["shield-checkmark-outline", "Never take money before a viewing", "Deposits go through official channels, after a verified viewing."],
-    ["person-circle-outline", "Check who you are talking to", "Before a video tour, ask the tenant to confirm their verified Comlinkr profile."],
-    ["videocam-outline", "Keep tours in Comlinkr chat", "Arrange and confirm tours in the app, so there is a record that protects you both."],
+    ["person-circle-outline", "Check who you are talking to", "Before a video tour, ask the tenant to confirm their verified ComLinkr profile."],
+    ["videocam-outline", "Keep tours in ComLinkr chat", "Arrange and confirm tours in the app, so there is a record that protects you both."],
     ["document-text-outline", "Sign the agreement before keys", "Both sides sign the in-app tenancy agreement before move-in."],
     ["flag-outline", "UK: EPC, gas safety, deposit protection", "UK listings need a valid EPC (E or better), a gas safety certificate and a protected deposit."],
     ["scale-outline", "US: the Fair Housing Act applies", "No criteria based on race, colour, religion, sex, national origin, disability or family status."],

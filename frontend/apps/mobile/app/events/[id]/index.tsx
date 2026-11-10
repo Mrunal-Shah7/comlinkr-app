@@ -101,14 +101,14 @@ export default function EventDetailScreen() {
     }
   };
 
-  // Plan 11: the host cancels from the page. Everyone registered is told by the server before the event goes.
+  // Plan 11: the host cancels from the page; plan 15: the event is kept, marked Cancelled, and everyone registered is told.
   const cancelEvent = (r: ExploreEventRow) => {
     const going = r.interested;
     appAlert(
       "Cancel this event?",
       going > 0
-        ? `It will be removed, and the ${going === 1 ? "person" : `${going} people`} registered will be told.`
-        : "It will be removed.",
+        ? `It stays on ComLinkr marked Cancelled, and the ${going === 1 ? "person" : `${going} people`} registered will be told. This can't be undone.`
+        : "It stays on ComLinkr marked Cancelled. This can't be undone.",
       [
         { text: "Keep it", style: "cancel" },
         {
@@ -119,9 +119,9 @@ export default function EventDetailScreen() {
               await deleteEvent(r.id);
               refreshLists();
               void qc.invalidateQueries({ queryKey: ["me"] });
-              qc.removeQueries({ queryKey: queryKeys.event(r.id) });
+              // Plan 15: the page stays, now marked Cancelled.
+              void qc.invalidateQueries({ queryKey: queryKeys.event(r.id) });
               showToast("Event cancelled.", "success");
-              closeDetail();
             } catch (e) {
               showToast(e instanceof ApiError ? e.message : "Could not cancel the event. Please try again.", "error");
             }

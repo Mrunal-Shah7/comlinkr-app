@@ -14,6 +14,7 @@ export const queryKeys = {
   myListings: () => ['me', 'listings'] as const,
   myRestaurants: () => ['me', 'restaurants'] as const,
   myPosts: () => ['me', 'posts'] as const,
+  follows: (kind: 'followers' | 'following' | 'requests') => ['me', 'follows', kind] as const,
   saved: () => ['me', 'saved'] as const,
   landlordDashboard: () => ['me', 'landlord'] as const,
   restaurantPicker: (city: string | null | undefined) => ['restaurants', 'picker', city ?? ''] as const,
