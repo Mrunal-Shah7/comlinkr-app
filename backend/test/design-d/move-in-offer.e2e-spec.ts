@@ -177,6 +177,34 @@ describe('plan 12: move-in date and the order of the offer', () => {
       .expect(409);
   });
 
+  it('refuses signing before the landlord approves (TR-048)', async () => {
+    const s = await setup(addDays(10));
+    await request(base)
+      .patch(`/property-applications/${s.id}/step/1`)
+      .set('Cookie', s.tenant.cookie)
+      .send(step1(addDays(30)))
+      .expect(200);
+    await request(base)
+      .post(`/property-applications/${s.id}/submit`)
+      .set('Cookie', s.tenant.cookie)
+      .expect(200);
+    const early = await sign(s).expect(409);
+    expect(JSON.stringify(early.body)).toContain('NOT_APPROVED');
+    const row = await getTestPrisma().propertyApplication.findUniqueOrThrow({
+      where: { id: s.id },
+    });
+    expect(row.tenantSignedAt).toBeNull();
+    expect(row.signature).toBeNull();
+    // Once approved, the same signature goes through.
+    await request(base)
+      .patch(`/property-applications/${s.id}/decision`)
+      .set('Cookie', s.landlord.cookie)
+      .send({ decision: 'approved' })
+      .expect(200);
+    const late = await sign(s).expect(200);
+    expect((late.body.data ?? late.body).status).toBe('signed');
+  });
+
   it('declining an approved offer withdraws it and tells the landlord', async () => {
     const s = await setup(addDays(10));
     await sendAndApprove(s);

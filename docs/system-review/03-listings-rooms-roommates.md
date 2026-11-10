@@ -175,5 +175,6 @@ Walked on the phone; rows L- and S-14 in the [run log](../device-runs/2026-11-10
 - Tapping an application notification opens it: the applicant's application (the offer once approved), or the
   landlord dashboard. **[phone]** (applicant side)
 - The landlord dashboard labels an approved, unsigned application "Waiting for signature". [code]
-- The server still accepts a tenant signature before approval, for installed builds that sign when sending.
+- The server refuses a tenant signature before approval (409 `NOT_APPROVED`, TR-048). A row an older build signed
+  early still becomes signed when approved. [test]
 
