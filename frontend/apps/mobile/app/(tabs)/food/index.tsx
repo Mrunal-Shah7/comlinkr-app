@@ -61,8 +61,9 @@ import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuer
 import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
-import { safeList, distanceMiles, hasDistance, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
+import { safeList, distanceMiles, hasDistance, hasCoordinates, milesBetween, NEARBY_MILES, NEARBY_LOAD_CAP, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
 import { useBackState } from '../../../src/hooks/useBackState';
+import { currentPosition, openLocationSettings } from '../../../src/features/location/detectLocation';
 
 export default function FoodScreen() {
   const { width: windowWidth } = useWindowDimensions();
@@ -243,7 +244,7 @@ export default function FoodScreen() {
       const link = getShareLink("restaurant", r.id);
       await Share.share({
         title: r.name,
-        message: `Check out ${r.name} — ${r.cuisine} cuisine, ${r.rating}⭐ rating! ${r.distance} away. Found on ComLinkr 🍽️\n\n${link}`,
+        message: `Check out ${r.name} — ${r.cuisine} cuisine, ${r.rating}⭐ rating! Found on ComLinkr 🍽️\n\n${link}`,
         ...(process.env.EXPO_OS === "ios" ? { url: link } : {}),
       });
     } catch { /* ignore */ }
@@ -285,14 +286,54 @@ export default function FoodScreen() {
 
 
 
-  // The Nearby chip hides when no restaurant has a distance (e.g. after a city change); leave its empty filter too.
-  const anyDistance = restaurants.some(hasDistance);
+  // Plan 13 (TR-032): Nearby asks for the phone's position when tapped, and the distances are worked out here, so the
+  // position never leaves the phone. The chip shows once any restaurant has coordinates (geocoded on the server).
+  const [here, setHere] = useState<{ latitude: number; longitude: number } | null>(null);
+  const locatingRef = useRef(false);
+  const withDistance = useMemo(
+    () => (here ? restaurants.map((r) => (hasCoordinates(r) ? { ...r, distance: `${milesBetween(here, { latitude: r.latitude!, longitude: r.longitude! })} mi` } : { ...r, distance: "—" })) : restaurants),
+    [here, restaurants],
+  );
+  const anyCoordinates = restaurants.some(hasCoordinates);
   useEffect(() => {
-    if (activeTab === "nearby" && !anyDistance && !loading) setActiveTabSilently("all");
-  }, [activeTab, anyDistance, loading, setActiveTabSilently]);
+    if (activeTab === "nearby" && (!anyCoordinates || !here) && !loading) setActiveTabSilently("all");
+  }, [activeTab, anyCoordinates, here, loading, setActiveTabSilently]);
+
+  // The list loads 20 at a time; a nearby restaurant can be on a later page. While Nearby is on, keep loading pages
+  // up to NEARBY_LOAD_CAP restaurants, and keep the empty state hidden until they are in.
+  const loadMoreFood = foodQ.loadMore;
+  useEffect(() => {
+    if (activeTab === "nearby" && here && hasMore && !loadingMore && restaurants.length < NEARBY_LOAD_CAP) loadMoreFood();
+  }, [activeTab, here, hasMore, loadingMore, restaurants.length, loadMoreFood]);
+  const nearbyFilling = activeTab === "nearby" && hasMore && restaurants.length < NEARBY_LOAD_CAP;
+
+  const pickTab = useCallback(async (k: string) => {
+    if (k !== "nearby") { setActiveTab(k); return; }
+    if (locatingRef.current) return;
+    locatingRef.current = true;
+    const pos = await currentPosition().catch(() => ({ ok: false as const, reason: "no-fix" as const }));
+    locatingRef.current = false;
+    if (pos.ok) {
+      setHere({ latitude: pos.latitude, longitude: pos.longitude });
+      setActiveTab("nearby");
+      return;
+    }
+    if (pos.reason === "blocked") {
+      appAlert("Location is off for ComLinkr", "Allow location in settings to see restaurants near you.", [
+        { text: "Not now", style: "cancel" },
+        { text: "Open settings", onPress: openLocationSettings },
+      ]);
+    } else if (pos.reason === "denied") {
+      appAlert("Location needed", "Allow location to see restaurants near you. It is only used on your phone.");
+    } else if (pos.reason === "services-off") {
+      appAlert("Location is off", "Turn on your phone's location to see restaurants near you.");
+    } else {
+      appAlert("Could not find you", "Could not find your location. Try again in a moment.");
+    }
+  }, [setActiveTab]);
 
   const filtered = useMemo(() => {
-    const list = restaurants.filter((r) => {
+    const list = withDistance.filter((r) => {
       if (search && search.trim() === debouncedSearch) {
         // Server already matched name/cuisine/description/tags; also allow dish matches among returned rows.
         const q = search.toLowerCase();
@@ -304,15 +345,15 @@ export default function FoodScreen() {
       }
       if (activeTab === "favorites" && !favorites.has(r.id)) return false;
       if (activeTab === "top" && r.rating < 4.5) return false;
-      if (activeTab === "nearby" && distanceMiles(r.distance) > 1.0) return false;
+      if (activeTab === "nearby" && distanceMiles(r.distance) > NEARBY_MILES) return false;
       if (activeTab === "open" && !restaurantIsOpen(r)) return false;
       return true;
     });
-    if (sortBy === "Distance") list.sort((a, b) => distanceMiles(a.distance) - distanceMiles(b.distance));
+    if (activeTab === "nearby" || sortBy === "Distance") list.sort((a, b) => distanceMiles(a.distance) - distanceMiles(b.distance));
     else if (sortBy === "Reviews") list.sort((a, b) => (b.reviews ?? 0) - (a.reviews ?? 0));
     else list.sort((a, b) => b.rating - a.rating);
     return list;
-  }, [search, debouncedSearch, activeTab, favorites, restaurants, sortBy]);
+  }, [search, debouncedSearch, activeTab, favorites, withDistance, sortBy]);
 
   const renderStars = (rating: number) => {
     const full = Math.floor(rating);
@@ -426,9 +467,9 @@ export default function FoodScreen() {
 
         {hasCity ? (
           <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
-            {/* Nearby only when distances are known: no listing has coordinates yet, and an always-empty filter looks broken. */}
-            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].filter(([k]) => k !== "nearby" || anyDistance).map(([k, label]) => (
-              <Chip key={k} label={label} on={activeTab === k} onPress={() => setActiveTab(k)} />
+            {/* Nearby only once a restaurant has coordinates: without them the filter is always empty. */}
+            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].filter(([k]) => k !== "nearby" || anyCoordinates).map(([k, label]) => (
+              <Chip key={k} label={label} on={activeTab === k} onPress={() => void pickTab(k)} />
             ))}
           </GHScrollView>
         ) : null}
@@ -465,7 +506,7 @@ export default function FoodScreen() {
                       </Pressable>
                     </View>
                     <Text style={[TYPE.cardTitle, { fontSize: 14.5, lineHeight: 17, color: tc.textPrimary, marginTop: 8, marginHorizontal: 2 }]} numberOfLines={1}>{r.name}</Text>
-                    <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{[r.cuisine, r.price ? getDisplayPrice(r, countryCode) : ""].filter(Boolean).join(" · ")}</Text>
+                    <Text style={[TYPE.small, { color: tc.textSecondary, marginHorizontal: 2 }]} numberOfLines={1}>{[r.cuisine, r.price ? getDisplayPrice(r, countryCode) : "", hasDistance(r) ? r.distance : ""].filter(Boolean).join(" · ")}</Text>
                   </PressableScale>
                   </DetailLink>
                 );
@@ -475,7 +516,7 @@ export default function FoodScreen() {
           ));
         })()}
 
-        {hasCity && hasMore && filtered.length > 0 ? (
+        {hasCity && hasMore && (filtered.length > 0 || activeTab === "nearby") ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Load more restaurants"
@@ -487,22 +528,36 @@ export default function FoodScreen() {
           </Pressable>
         ) : null}
 
-        {hasCity && filtered.length === 0 && !loading && !loadError && (
+        {/* Plan 13: the coordinates come from OpenStreetMap (Nominatim), whose policy asks for visible attribution. */}
+        {hasCity && activeTab === "nearby" && here ? (
+          <Pressable
+            onPress={() => void Linking.openURL("https://www.openstreetmap.org/copyright")}
+            accessibilityRole="link"
+            hitSlop={8}
+            style={{ alignSelf: "center", paddingVertical: 8 }}
+          >
+            <Text style={[TYPE.small, { color: tc.textTertiary }]}>Locations © OpenStreetMap contributors</Text>
+          </Pressable>
+        ) : null}
+
+        {hasCity && filtered.length === 0 && !loading && !loadError && !nearbyFilling && (
           <View style={s.empty}>
             <Ionicons
-              name={activeTab === "open" ? "time-outline" : activeTab === "favorites" ? "heart-outline" : "restaurant-outline"}
+              name={activeTab === "open" ? "time-outline" : activeTab === "favorites" ? "heart-outline" : activeTab === "nearby" ? "location-outline" : "restaurant-outline"}
               size={48}
               color={palette.slate300}
             />
             <Text style={[s.emptyTitle, { color: tc.textSecondary }]}>
               {activeTab === "open" ? "No restaurants open now"
                 : activeTab === "favorites" ? "No favourites yet"
+                : activeTab === "nearby" ? `Nothing within ${NEARBY_MILES} miles`
                 : search ? `No results for "${search}"`
                 : "No restaurants found"}
             </Text>
             <Text style={[s.emptyDesc, { color: tc.textTertiary }]}>
               {activeTab === "open" ? "Check back later or try a different cuisine"
                 : activeTab === "favorites" ? "Double-tap a photo, or press and hold a restaurant, to add it here"
+                : activeTab === "nearby" ? "Only restaurants with a known address show here. Try All."
                 : search ? "Try a different search term or cuisine filter"
                 : "Try adjusting your filters or pull to refresh"}
             </Text>

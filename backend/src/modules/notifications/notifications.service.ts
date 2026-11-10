@@ -14,7 +14,11 @@ const DEFAULT_PREFERENCES = {
   comments: true,
   likes: false,
   messages: true,
+  followers: true, // plan 16 (TR-049)
 };
+
+/** Plan 16: the notices the "New followers" switch mutes (FollowsService: new follower, request, accepted). */
+const FOLLOW_REFERENCE_TYPES = new Set(['USER', 'FOLLOW_REQUEST']);
 
 export interface CreateNotificationParams {
   userId: string;
@@ -167,8 +171,12 @@ export class NotificationsService {
         enabled = preferences.messages;
         break;
       case 'BADGE_UPDATE':
-      case 'SYSTEM':
         enabled = true;
+        break;
+      case 'SYSTEM':
+        enabled =
+          !FOLLOW_REFERENCE_TYPES.has(referenceType ?? '') ||
+          preferences.followers !== false;
         break;
       default:
         enabled = true;
@@ -424,17 +432,20 @@ export class NotificationsService {
     userId: string,
     dto: UpdateNotificationPreferencesDto,
   ) {
-    const data: Record<string, boolean> = { ...DEFAULT_PREFERENCES };
+    // TR-053: change only the fields sent. Before, every default was written too, so the push switch reset the
+    // categories and saving the categories turned push back on.
+    const data: Record<string, boolean> = {};
     if (dto.pushEnabled !== undefined) data.pushEnabled = dto.pushEnabled;
     if (dto.emailEnabled !== undefined) data.emailEnabled = dto.emailEnabled;
     if (dto.eventsNearby !== undefined) data.eventsNearby = dto.eventsNearby;
     if (dto.comments !== undefined) data.comments = dto.comments;
     if (dto.likes !== undefined) data.likes = dto.likes;
     if (dto.messages !== undefined) data.messages = dto.messages;
+    if (dto.followers !== undefined) data.followers = dto.followers;
 
     const updated = await this.prisma.notificationPreference.upsert({
       where: { userId },
-      create: { userId, ...data },
+      create: { userId, ...DEFAULT_PREFERENCES, ...data },
       update: data,
     });
     return updated;

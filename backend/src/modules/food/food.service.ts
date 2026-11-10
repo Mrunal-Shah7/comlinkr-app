@@ -443,6 +443,17 @@ export class FoodService {
       if (v === undefined) continue;
       (updateData as any)[key] = v;
     }
+    // Plan 13: a new address is geocoded again (by the cron), unless the owner sent coordinates with it.
+    const moved =
+      (dto.address !== undefined && dto.address !== restaurant.address) ||
+      (dto.city !== undefined && dto.city !== restaurant.city) ||
+      (dto.state !== undefined && dto.state !== restaurant.state) ||
+      (dto.country !== undefined && dto.country !== restaurant.country);
+    if (moved && dto.latitude === undefined && dto.longitude === undefined) {
+      updateData.latitude = null;
+      updateData.longitude = null;
+      updateData.geocodeTriedAt = null;
+    }
     // A known city decides the zone whatever the phone sent (TR-033).
     const cityTz = cityTimezone(dto.city ?? restaurant.city);
     if (cityTz) updateData.timezone = cityTz;

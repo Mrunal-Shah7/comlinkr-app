@@ -8,6 +8,7 @@ import { getShareLink } from "../../utils/shareLinks";
 import { type Poll } from "../../api/community.api";
 import { CATEGORY_COLOR, type CommunityStory, type StoryCategory, LIVE_WALL_ITEMS, type LiveCategory, LIVE_CATEGORY_META, POSTS } from "./constants";
 import { newsTimeAgo } from "./news";
+import { eventDayDate } from "../../utils/eventDay";
 
 /** Deep link for sharing feed posts — opens the app directly via the comlinkr.app universal link. */
 export function getFeedPostShareUrl(postId: string): string {
@@ -79,6 +80,8 @@ export interface ExploreEventRow {
   isAttending: boolean; // SPRINT-42: active registration alias
   hasReviewed?: boolean; // SPRINT-42: detail-only caller state
   myReviewId?: string | null; // SPRINT-42: detail-only caller review id
+  /** Plan 15: the host cancelled it; kept, marked Cancelled. */
+  cancelled?: boolean;
 }
 
 export const EVENT_IMAGE_BY_CATEGORY: Record<string, string> = {
@@ -126,10 +129,11 @@ export function eventCategoryEmoji(category: string): string {
 }
 
 export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
-  const d = new Date(e.date);
-  const dateStr = Number.isNaN(d.getTime())
-    ? String(e.date).slice(0, 10)
-    : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // Plan 11: the calendar day as stored, not converted through the phone's zone.
+  const d = eventDayDate(e.date);
+  const dateStr = d
+    ? d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : String(e.date).slice(0, 10);
   const uiCat = mapApiEventCategoryToUi(e.category);
   const price =
     e.ticketType === "FREE" || e.ticketPrice == null || Number(e.ticketPrice) === 0
@@ -166,6 +170,7 @@ export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
     startTimeRaw: String(e.startTime ?? ""), // SPRINT-42:
     endTimeRaw: e.endTime ?? null, // SPRINT-42:
     isAttending: !!(e.isAttending || e.registeredByMe), // SPRINT-42:
+    cancelled: e.cancelled === true || !!e.cancelledAt, // plan 15
     hasReviewed: e.hasReviewed === true, // SPRINT-42:
     myReviewId: e.myReviewId ?? null, // SPRINT-42:
   };

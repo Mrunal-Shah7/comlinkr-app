@@ -38,6 +38,7 @@ export const QuestCard = memo(function QuestCard({
     return `${Math.ceil(diff / 3600000)}H LEFT`;
   })() : null;
   const participants = quest.participantCount ?? 0;
+  const done = quest.completedCount ?? 0; // plan 17
   const maxP = quest.maxParticipants ?? 0;
   const pct = maxP > 0 ? Math.min(100, Math.round((participants / maxP) * 100)) : 0;
   const share = () => void Share.share({ message: `${quest.title}${quest.details ? ` — ${quest.details}` : ""}\n\nJoin this quest on ComLinkr!` });
@@ -70,7 +71,7 @@ export const QuestCard = memo(function QuestCard({
 
       {participants > 0 ? (
         <View style={{ marginTop: 12 }}>
-          <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 6 }]}>{maxP > 0 ? `${participants} of ${maxP} joined` : `${participants} joined`}</Text>
+          <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 6 }]}>{(maxP > 0 ? `${participants} of ${maxP} joined` : `${participants} joined`) + (done > 0 ? ` · ${done} done` : "")}</Text>
           {maxP > 0 ? (
             <View style={[s.track, { backgroundColor: tc.surface3 }]}><GradientFill style={[s.fill, { width: `${pct}%` }]} /></View>
           ) : null}
@@ -83,7 +84,7 @@ export const QuestCard = memo(function QuestCard({
 
       <View style={{ marginTop: 12 }}>
         {isJoined
-          ? <SoftButton small label="Joined" icon={<Ionicons name="checkmark-circle" size={16} color={tc.accentText} />} />
+          ? <SoftButton small label={quest.isCompleted ? "Done" : "Joined"} icon={<Ionicons name={quest.isCompleted ? "trophy" : "checkmark-circle"} size={16} color={tc.accentText} />} />
           : <GradientButton small label="Join" onPress={() => onJoin(quest)} />}
       </View>
     </BentoTile>

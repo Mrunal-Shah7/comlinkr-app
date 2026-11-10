@@ -156,6 +156,7 @@ export function PropertyDetail({
         landlordName:    listing.landlord.name,
         country:         market,
         dealType:        "rent",
+        availableDay:    listing.availableDay ?? "",
       },
       });
     }, needsPrompt ? 400 : 0);
