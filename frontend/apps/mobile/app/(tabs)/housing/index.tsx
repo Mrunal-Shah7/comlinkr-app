@@ -276,7 +276,7 @@ export default function HousingScreen() {
   // the old 10-minute window and keyed by the user's city.
   const roommatesQ = useScreenQuery({
     queryKey: ["housing", "roommates", user?.city?.trim() ?? "", user?.id ?? ""],
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!user?.onboardingDone, // TR-035: 403 until onboarding is done
     staleTime: LIST_STALE_MS,
     initial: EMPTY_ROOMMATES,
     queryFn: async () => {
@@ -307,7 +307,7 @@ export default function HousingScreen() {
 
   const roomsQ = useScreenQuery({
     queryKey: ["housing", "rooms", user?.city?.trim() ?? "", user?.id ?? ""],
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!user?.onboardingDone, // TR-035: 403 until onboarding is done
     staleTime: LIST_STALE_MS,
     initial: EMPTY_ROOMS,
     queryFn: async () => {
@@ -418,9 +418,7 @@ export default function HousingScreen() {
     (async () => {
       try {
         setRefreshing(true);
-        setSearchSilently("");
-        setPropertyTypeFilterSilently("All");
-        setRmFilterSilently("Best Match");
+        // TR-040 L-17: refresh reloads what is shown; it reset search, type and sort but kept price, beds and pets.
         if (activeTab === "listings") {
           await loadListings();
         } else if (activeTab === "roommates") {
@@ -430,7 +428,7 @@ export default function HousingScreen() {
         setRefreshing(false);
       }
     })();
-  }, [activeTab, loadAvailableRooms, loadListings, loadRoommates, setSearchSilently, setPropertyTypeFilterSilently, setRmFilterSilently]);
+  }, [activeTab, loadAvailableRooms, loadListings, loadRoommates]);
 
   const handleConnect = async (rm: Roommate) => {
     try {
@@ -790,9 +788,15 @@ export default function HousingScreen() {
                         <Chip key={f} label={f} on={rmFilter === f} onPress={() => setRmFilter(f)} />
                       ))}
                     </GHScrollView>
-                    <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginBottom: 10 }]}>
-                      {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · matched on communities, vibes, interests and lifestyle
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 18, marginBottom: 10 }}>
+                      <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]}>
+                        {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · matched on communities, vibes, interests and lifestyle
+                      </Text>
+                      {/* L-18: preferences open from here too, not only from the empty state or Profile. */}
+                      <Pressable onPress={() => openRmPrefsModal()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Edit your roommate preferences">
+                        <Text style={[TYPE.small, { color: tc.accentText, fontFamily: "Manrope_700Bold" }]}>Your preferences</Text>
+                      </Pressable>
+                    </View>
 
                     {roommatesLoading ? (
                       <View accessibilityLabel="Loading roommate matches">

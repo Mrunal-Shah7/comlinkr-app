@@ -3,9 +3,16 @@
 import { palette } from "../../../theme/palette";
 import React, { useState, useMemo } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Pressable,
-  RefreshControl, Alert, Modal, TextInput,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  RefreshControl,
+  Alert,
+  TextInput,
 } from 'react-native';
+import { InWindowModal } from '../../../shared/d/InWindowModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,7 +64,7 @@ function PostDetailModal({
   const statusMeta = STATUS_META[post.status] ?? STATUS_META.active;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={dm.overlay}>
         <ScrollView keyboardShouldPersistTaps="handled" style={dm.sheet} contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
           <View style={dm.handle} />
@@ -161,7 +168,7 @@ function PostDetailModal({
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </InWindowModal>
   );
 }
 

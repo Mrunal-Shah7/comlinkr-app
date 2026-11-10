@@ -632,7 +632,7 @@ export class AuthService {
       });
       await this.regenerateSession(req.session);
       (req.session as any).userId = user.id;
-    (req.session as any).sv = await this.getSessionVersion(user.id);
+      (req.session as any).sv = await this.getSessionVersion(user.id);
       (req.session as any).provider = 'GOOGLE';
       await this.saveSession(req.session);
       return this.toAuthSession(user);
@@ -652,7 +652,7 @@ export class AuthService {
       });
       await this.regenerateSession(req.session);
       (req.session as any).userId = existingUser.id;
-    (req.session as any).sv = await this.getSessionVersion(existingUser.id);
+      (req.session as any).sv = await this.getSessionVersion(existingUser.id);
       (req.session as any).provider = 'GOOGLE';
       await this.saveSession(req.session);
       return this.toAuthSession(existingUser);
@@ -916,7 +916,7 @@ export class AuthService {
       }); // SPRINT-34: complete returning-user activity update
       await this.regenerateSession(req.session); // SPRINT-34: prevent session fixation on repeat Apple sign-in
       (req.session as any).userId = user.id;
-    (req.session as any).sv = await this.getSessionVersion(user.id); // SPRINT-34: bind the session to the stable-subject user
+      (req.session as any).sv = await this.getSessionVersion(user.id); // SPRINT-34: bind the session to the stable-subject user
       (req.session as any).provider = 'APPLE'; // SPRINT-34: record the authentication provider
       await this.saveSession(req.session); // SPRINT-34: persist the session before responding
       return this.toAuthSession(user); // SPRINT-34: return stored user data without name or email mutation
@@ -960,7 +960,7 @@ export class AuthService {
       } // SPRINT-34: finish optional token storage
       await this.regenerateSession(req.session); // SPRINT-34: prevent session fixation after auto-link
       (req.session as any).userId = existingUser.id;
-    (req.session as any).sv = await this.getSessionVersion(existingUser.id); // SPRINT-34: establish the resolved account session
+      (req.session as any).sv = await this.getSessionVersion(existingUser.id); // SPRINT-34: establish the resolved account session
       (req.session as any).provider = 'APPLE'; // SPRINT-34: record Apple as the session provider
       await this.saveSession(req.session); // SPRINT-34: persist session before response
       return this.toAuthSession(existingUser); // SPRINT-34: keep the existing stored name and email unchanged

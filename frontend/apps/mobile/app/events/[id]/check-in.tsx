@@ -252,6 +252,15 @@ export default function EventCheckInScreen() {
             checkedInAt: formatCheckedInAt(result.checkedInAt),
           });
           break;
+        case "EVENT_CANCELLED":
+          showOutcome({
+            kind: "EVENT_CANCELLED",
+            title: "EVENT CANCELLED",
+            subtitle: result.message || "This event was cancelled.",
+            color: palette.red600,
+            name,
+          });
+          break;
         case "REGISTRATION_CANCELLED":
           showOutcome({
             kind: "REGISTRATION_CANCELLED",
@@ -326,7 +335,7 @@ export default function EventCheckInScreen() {
         <EmptyState
           icon="camera-outline"
           title="Camera access needed"
-          sub="Comlinkr uses the camera to scan ticket QR codes at the door."
+          sub="ComLinkr uses the camera to scan ticket QR codes at the door."
           actionLabel={permanent ? "Open settings" : "Allow camera"}
           onAction={() => (permanent ? void Linking.openSettings() : void requestPermission())}
         />

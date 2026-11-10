@@ -4,7 +4,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   // Expo Go does not support remote push notifications on SDK 53+.
   // Keep this flow as a no-op so normal app usage continues in Expo Go.
   if (Constants.appOwnership === 'expo') {
-    console.warn('Push notifications are disabled in Expo Go. Use a development build.');
+    console.info('Push notifications are disabled in Expo Go. Use a development build.');
     return null;
   }
 

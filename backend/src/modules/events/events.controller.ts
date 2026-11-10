@@ -202,7 +202,7 @@ export class EventsController {
     // SPRINT-38: Document the complete scanner result contract.
     summary: 'Validate and check in a scanned event ticket (organiser only)', // SPRINT-38: Describe host-only mutation.
     description:
-      'Returns reasonCode ADMITTED, INVALID_TICKET, WRONG_EVENT, ALREADY_CHECKED_IN, or REGISTRATION_CANCELLED with HTTP 200 for ticket outcomes.', // SPRINT-38: Make result-versus-exception behavior explicit.
+      'Returns reasonCode ADMITTED, INVALID_TICKET, WRONG_EVENT, ALREADY_CHECKED_IN, REGISTRATION_CANCELLED, or EVENT_CANCELLED (plan 15) with HTTP 200 for ticket outcomes.', // SPRINT-38: Make result-versus-exception behavior explicit.
   }) // SPRINT-38: Complete check-in operation documentation.
   @ApiResponse({
     status: 200,
@@ -266,7 +266,9 @@ export class EventsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete own event' })
+  @ApiOperation({
+    summary: 'Cancel own event (plan 15: kept, marked Cancelled)',
+  })
   async deleteEvent(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,

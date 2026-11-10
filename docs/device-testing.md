@@ -59,8 +59,10 @@ Both apps let a variable already set in the process win over `.env`, so nothing 
 # backend: email sending off for this process (OTP codes go to the log)
 cd backend && RESEND_API_KEY= npx pnpm@9.15.0 start:dev
 
-# Metro: local API for this process only; .env keeps the production URL
-cd frontend/apps/mobile && EXPO_PUBLIC_API_BASE_URL=http://localhost:4000/api npx expo start --lan --port 8083
+# Metro: local API for this process only; .env keeps the production URL. GoogleService-Info.plist is not in the
+# repository (gitignored); without a file at GOOGLE_SERVICE_INFO_PLIST every cold start of the app fails ("Something
+# went wrong", "Failed to download remote update"). Point it at any placeholder plist outside the repository.
+cd frontend/apps/mobile && GOOGLE_SERVICE_INFO_PLIST=<path to a placeholder plist> EXPO_PUBLIC_API_BASE_URL=http://localhost:4000/api npx expo start --lan --port 8083
 
 adb -s <ip:port> reverse tcp:4000 tcp:4000
 adb -s <ip:port> reverse tcp:8083 tcp:8083

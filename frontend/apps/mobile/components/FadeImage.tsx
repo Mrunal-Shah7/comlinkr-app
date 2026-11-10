@@ -85,6 +85,9 @@ export function FadeImage({
   };
 
   const noUri = !resolveImageUri(uri);
+  // The fallback icon fits the box: a 26 px avatar with no photo showed a 32 px icon cut off.
+  const boxW = (StyleSheet.flatten(style) as { width?: unknown } | undefined)?.width;
+  const iconSize = typeof boxW === "number" ? Math.max(12, Math.min(32, Math.round(boxW * 0.55))) : 32;
   const contentFit = toContentFit(resizeMode);
 
   return (
@@ -99,7 +102,7 @@ export function FadeImage({
       importantForAccessibility={accessibilityLabel ? "yes" : "no-hide-descendants"}
     >
       {errored || noUri ? (
-        fallbackComponent ?? <Ionicons name={fallbackIcon as any} size={32} color={iconColor} />
+        fallbackComponent ?? <Ionicons name={fallbackIcon as any} size={iconSize} color={iconColor} />
       ) : (
         <>
           {loading && showLoadingSpinner ? (

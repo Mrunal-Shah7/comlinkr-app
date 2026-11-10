@@ -956,17 +956,9 @@ export class RoommatesService {
     const existing = await this.prisma.userLocation.findUnique({
       where: { userId },
     });
-    if (existing) {
-      await this.prisma.userLocation.update({
-        where: { userId },
-        data: {
-          ...(dto.city !== undefined && { city: dto.city }),
-          ...(dto.stateProvince !== undefined && { state: dto.stateProvince }),
-          ...(dto.country !== undefined && { country: dto.country }),
-        },
-      });
-      return;
-    }
+    // Plan 08 (TR-042): the user's city comes from their location (or an admin), not from the roommate profile;
+    // the profile only fills it when there is none.
+    if (existing) return;
     if (dto.city) {
       await this.prisma.userLocation.create({
         data: {

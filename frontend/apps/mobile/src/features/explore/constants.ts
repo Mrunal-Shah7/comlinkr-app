@@ -11,18 +11,19 @@ export const HERO_MOOD_OPTIONS: { mood: NeighborhoodMood; emoji: string; label: 
 ];
 
 export const POSTS = [
-  { id: "1", author: "Sarah M.", avatar: "https://randomuser.me/api/portraits/women/44.jpg", time: "2h ago", title: "New bike lanes coming to downtown!", content: "The city just approved 15 miles of protected bike lanes. Construction starts this spring.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=500&q=70", likes: 127, comments: 34, tags: ["Transit", "City"], verified: true },
-  { id: "2", author: "Mike R.", avatar: "https://randomuser.me/api/portraits/men/32.jpg", time: "4h ago", title: "Hidden gem restaurant in Midtown", content: "Just discovered an amazing Thai place on 5th Ave. The pad thai is incredible and super affordable!", image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=500&q=70", likes: 89, comments: 22, tags: ["Food", "Review"], verified: false },
+  { id: "1", author: "Sarah M.", avatar: "", time: "2h ago", title: "New bike lanes coming to downtown!", content: "The city just approved 15 miles of protected bike lanes. Construction starts this spring.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=500&q=70", likes: 127, comments: 34, tags: ["Transit", "City"], verified: true },
+  { id: "2", author: "Mike R.", avatar: "", time: "4h ago", title: "Hidden gem restaurant in Midtown", content: "Just discovered an amazing Thai place on 5th Ave. The pad thai is incredible and super affordable!", image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=500&q=70", likes: 89, comments: 22, tags: ["Food", "Review"], verified: false },
   { id: "3", author: "Community Board", avatar: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=80&q=60", time: "6h ago", title: "Free concert in Central Park this Saturday", content: "Local bands performing from 2–8 PM. Bring blankets and food. Family friendly!", image: "https://images.unsplash.com/photo-1464983953574-0892a716854b?w=500&q=70", likes: 234, comments: 56, tags: ["Events", "Free"], verified: true },
-  { id: "4", author: "Lisa K.", avatar: "https://randomuser.me/api/portraits/women/68.jpg", time: "8h ago", title: "Tips for apartment hunting in this market", content: "After searching for 3 months, here are my top tips for finding affordable housing...", image: "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=500&q=70", likes: 186, comments: 41, tags: ["Housing", "Tips"], verified: false },
-  { id: "5", author: "James T.", avatar: "https://randomuser.me/api/portraits/men/55.jpg", time: "10h ago", title: "New dog park opening next month!", content: "Great news for pet owners — the city approved a brand new off-leash dog park on Oak St. It'll have separate areas for small and large dogs.", image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500&q=70", likes: 312, comments: 67, tags: ["Pets", "Community"], verified: true },
-  { id: "6", author: "Priya S.", avatar: "https://randomuser.me/api/portraits/women/29.jpg", time: "12h ago", title: "Street fair this weekend — road closures", content: "Heads up! Main St will be closed Saturday 8 AM – 6 PM for the annual spring street fair. 100+ vendors, live music, and kids' activities.", image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500&q=70", likes: 245, comments: 53, tags: ["Events", "Alert"], verified: true },
-  { id: "7", author: "David L.", avatar: "https://randomuser.me/api/portraits/men/76.jpg", time: "1d ago", title: "Water main repair update", content: "The city says the water main repair on Elm Ave is 80% complete. Full pressure should be restored by Wednesday.", image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=500&q=70", likes: 98, comments: 19, tags: ["City", "Update"], verified: false },
+  { id: "4", author: "Lisa K.", avatar: "", time: "8h ago", title: "Tips for apartment hunting in this market", content: "After searching for 3 months, here are my top tips for finding affordable housing...", image: "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=500&q=70", likes: 186, comments: 41, tags: ["Housing", "Tips"], verified: false },
+  { id: "5", author: "James T.", avatar: "", time: "10h ago", title: "New dog park opening next month!", content: "Great news for pet owners — the city approved a brand new off-leash dog park on Oak St. It'll have separate areas for small and large dogs.", image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=500&q=70", likes: 312, comments: 67, tags: ["Pets", "Community"], verified: true },
+  { id: "6", author: "Priya S.", avatar: "", time: "12h ago", title: "Street fair this weekend — road closures", content: "Heads up! Main St will be closed Saturday 8 AM – 6 PM for the annual spring street fair. 100+ vendors, live music, and kids' activities.", image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=500&q=70", likes: 245, comments: 53, tags: ["Events", "Alert"], verified: true },
+  { id: "7", author: "David L.", avatar: "", time: "1d ago", title: "Water main repair update", content: "The city says the water main repair on Elm Ave is 80% complete. Full pressure should be restored by Wednesday.", image: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=500&q=70", likes: 98, comments: 19, tags: ["City", "Update"], verified: false },
   { id: "8", author: "Neighborhood Watch", avatar: "https://images.unsplash.com/photo-1531956656798-56686eeef3d4?w=80&q=60", time: "1d ago", title: "Package theft prevention tips", content: "With the holidays coming, here are some smart ways to protect your deliveries. Consider a lockbox or coordinate with neighbors.", image: "https://images.unsplash.com/photo-1590247813693-5541d1c609fd?w=500&q=70", likes: 156, comments: 38, tags: ["Safety", "Tips"], verified: true },
 ];
 
 // ── Feed tabs ──────────────────────────────────────────
-export const FEED_TABS = ["News", "Events", "Stories", "Quests", "Polls"] as const;
+// Plan 16 (TR-050): "Following" shows what the people you follow posted, from any city.
+export const FEED_TABS = ["News", "Following", "Events", "Stories", "Quests", "Polls"] as const;
 export type FeedTab = typeof FEED_TABS[number];
 
 
@@ -69,18 +70,18 @@ export const TRENDING_HASHTAGS = [
 
 // Top creators for spotlight section
 export const TOP_CREATORS = [
-  { id: "tc1", name: "NYC Events", avatar: "https://randomuser.me/api/portraits/women/44.jpg", posts: 156, followers: 23400, verified: true, badge: "🏆" },
-  { id: "tc2", name: "FoodieNY", avatar: "https://randomuser.me/api/portraits/men/32.jpg", posts: 89, followers: 18900, verified: true, badge: "🔥" },
-  { id: "tc3", name: "Desi Vibes", avatar: "https://randomuser.me/api/portraits/women/68.jpg", posts: 134, followers: 15600, verified: true, badge: "⭐" },
-  { id: "tc4", name: "CityBeat", avatar: "https://randomuser.me/api/portraits/men/22.jpg", posts: 201, followers: 31200, verified: true, badge: "📰" },
-  { id: "tc5", name: "Sarah Kim", avatar: "https://randomuser.me/api/portraits/women/33.jpg", posts: 67, followers: 8900, verified: false, badge: "🌟" },
+  { id: "tc1", name: "NYC Events", avatar: "", posts: 156, followers: 23400, verified: true, badge: "🏆" },
+  { id: "tc2", name: "FoodieNY", avatar: "", posts: 89, followers: 18900, verified: true, badge: "🔥" },
+  { id: "tc3", name: "Desi Vibes", avatar: "", posts: 134, followers: 15600, verified: true, badge: "⭐" },
+  { id: "tc4", name: "CityBeat", avatar: "", posts: 201, followers: 31200, verified: true, badge: "📰" },
+  { id: "tc5", name: "Sarah Kim", avatar: "", posts: 67, followers: 8900, verified: false, badge: "🌟" },
 ];
 
 export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s1",
     author: "NYC Events",
-    authorAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    authorAvatar: "",
     authorBio: "Your go-to for all NYC events & happenings",
     authorFollowers: 23400,
     verified: true,
@@ -104,7 +105,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s2",
     author: "FoodieNY",
-    authorAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    authorAvatar: "",
     authorBio: "Discovering NYC's best eats, one slice at a time",
     authorFollowers: 18900,
     verified: true,
@@ -128,7 +129,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s3",
     author: "Raj Patel",
-    authorAvatar: "https://randomuser.me/api/portraits/men/45.jpg",
+    authorAvatar: "",
     authorBio: "Brooklyn apartment hunter & housing tips",
     authorFollowers: 5600,
     verified: false,
@@ -152,7 +153,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s4",
     author: "Desi Vibes",
-    authorAvatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    authorAvatar: "",
     authorBio: "Celebrating South Asian culture in NYC",
     authorFollowers: 15600,
     verified: true,
@@ -176,7 +177,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s5",
     author: "CityBeat",
-    authorAvatar: "https://randomuser.me/api/portraits/men/22.jpg",
+    authorAvatar: "",
     authorBio: "Breaking local news & city updates",
     authorFollowers: 31200,
     verified: true,
@@ -200,7 +201,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s6",
     author: "Sarah Kim",
-    authorAvatar: "https://randomuser.me/api/portraits/women/33.jpg",
+    authorAvatar: "",
     authorBio: "Korean food explorer in NYC 🇰🇷",
     authorFollowers: 8900,
     verified: false,
@@ -224,7 +225,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s7",
     author: "Apt Hunter",
-    authorAvatar: "https://randomuser.me/api/portraits/men/55.jpg",
+    authorAvatar: "",
     authorBio: "Helping you find your perfect NYC home",
     authorFollowers: 12300,
     verified: true,
@@ -248,7 +249,7 @@ export const COMMUNITY_STORIES: CommunityStory[] = [
   {
     id: "s8",
     author: "Community",
-    authorAvatar: "https://randomuser.me/api/portraits/women/12.jpg",
+    authorAvatar: "",
     authorBio: "Official community page for local events",
     authorFollowers: 45600,
     verified: true,
@@ -306,7 +307,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Doorman building, laundry in unit, near subway",
     icon: "home-outline",
     author: "Alex Rivera",
-    authorAvatar: "https://randomuser.me/api/portraits/men/36.jpg",
+    authorAvatar: "",
     timeAgo: "3m ago",
     location: "Midtown West",
     isNew: true,
@@ -319,7 +320,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "2BR apt, $1,350/person, pet-friendly",
     icon: "people-outline",
     author: "Priya Sharma",
-    authorAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    authorAvatar: "",
     timeAgo: "12m ago",
     location: "East Village",
     isNew: true,
@@ -332,7 +333,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Authentic Japanese tonkotsu — grand opening today",
     icon: "restaurant-outline",
     author: "FoodieNY",
-    authorAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    authorAvatar: "",
     timeAgo: "28m ago",
     location: "3rd Avenue",
     isNew: true,
@@ -345,7 +346,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Free community class, all levels welcome",
     icon: "calendar-outline",
     author: "Wellness NYC",
-    authorAvatar: "https://randomuser.me/api/portraits/women/22.jpg",
+    authorAvatar: "",
     timeAgo: "45m ago",
     location: "Central Park",
     isNew: false,
@@ -358,7 +359,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Expected to last through the weekend",
     icon: "warning-outline",
     author: "CityAlerts",
-    authorAvatar: "https://randomuser.me/api/portraits/men/55.jpg",
+    authorAvatar: "",
     timeAgo: "1h ago",
     location: "Lower East Side",
     isNew: false,
@@ -371,7 +372,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "City announces $8M infrastructure upgrade",
     icon: "newspaper-outline",
     author: "CityBeat",
-    authorAvatar: "https://randomuser.me/api/portraits/men/22.jpg",
+    authorAvatar: "",
     timeAgo: "2h ago",
     location: "Brooklyn",
     isNew: false,
@@ -383,7 +384,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Renovated kitchen, hardwood floors, W/D in unit",
     icon: "home-outline",
     author: "Lisa Chen",
-    authorAvatar: "https://randomuser.me/api/portraits/women/33.jpg",
+    authorAvatar: "",
     timeAgo: "2h ago",
     location: "Williamsburg",
     isNew: false,
@@ -396,7 +397,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Spacious common areas, near N/W train, no smoking",
     icon: "people-outline",
     author: "Mike Torres",
-    authorAvatar: "https://randomuser.me/api/portraits/men/45.jpg",
+    authorAvatar: "",
     timeAgo: "3h ago",
     location: "Astoria",
     isNew: false,
@@ -409,7 +410,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Fresh produce, baked goods, local vendors",
     icon: "restaurant-outline",
     author: "Community",
-    authorAvatar: "https://randomuser.me/api/portraits/women/12.jpg",
+    authorAvatar: "",
     timeAgo: "4h ago",
     location: "Union Square",
     isNew: false,
@@ -422,7 +423,7 @@ export const LIVE_WALL_ITEMS: LiveWallItem[] = [
     subtitle: "Special guest performance — limited seats",
     icon: "musical-notes-outline",
     author: "Blue Note NYC",
-    authorAvatar: "https://randomuser.me/api/portraits/men/67.jpg",
+    authorAvatar: "",
     timeAgo: "5h ago",
     location: "Greenwich Village",
     isNew: false,

@@ -35,7 +35,10 @@ export class SaveNewsArticleDto {
   @MaxLength(200)
   source?: string;
 
-  @ApiPropertyOptional({ description: 'ISO date string (RFC-2822 from RSS is accepted and normalized)' })
+  @ApiPropertyOptional({
+    description:
+      'ISO date string (RFC-2822 from RSS is accepted and normalized)',
+  })
   @IsOptional()
   @Transform(({ value }) => toIsoDateString(value))
   @IsDateString()

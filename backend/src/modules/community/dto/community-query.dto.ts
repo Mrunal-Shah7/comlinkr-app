@@ -28,7 +28,9 @@ export class CommunityQueryDto extends PaginationDto {
   @Type(() => String)
   sort?: string;
 
-  @ApiPropertyOptional({ description: 'Case-insensitive text search over title/body' })
+  @ApiPropertyOptional({
+    description: 'Case-insensitive text search over title/body',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(100)

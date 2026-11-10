@@ -20,6 +20,7 @@ import { useAuthStore } from '../src/store/auth.store';
 import { useThemeStore } from '../src/store/theme.store';
 import { useBlockStore } from '../src/store/block.store';
 import { useGuestLocationStore } from '../src/store/guestLocation.store';
+import { SheetPortalHost } from '../src/shared/d/SheetPortal';
 import { useSidebarStore } from '../src/store/sidebar.store';
 import { registerForPushNotificationsAsync } from '../src/utils/pushNotifications';
 import { registerPushToken } from '../src/api/users.api';
@@ -133,6 +134,8 @@ export default function RootLayout() {
                 options={{ presentation: 'formSheet', sheetGrabberVisible: true, sheetAllowedDetents: [0.92], sheetCornerRadius: 28 }}
               />
             </Stack>
+            {/* Plan 07: Android sheets drawn in this window, above the screens and the tab bar. */}
+            <SheetPortalHost />
             <ToastHost />
             <DialogHost />
           </ErrorBoundary>

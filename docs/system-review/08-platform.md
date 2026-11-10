@@ -140,3 +140,15 @@ Rows E-07, E-23, F-05, F-06 and F-14 in the [run log](../device-runs/2026-11-10-
 - Uploads go through `postFormData`, which reads each file for `expo/fetch` (E-07).
 - Sheets lift above the keyboard (E-23) and above a three-button navigation bar (F-05).
 - Composers ask "Discard your changes?" when leaving with something typed (F-14, owner's decision).
+
+## Update 2026-11-10: sheets and dialogs in the app's window (TR-041, plan 07, branch `feature/in-window-sheets`)
+
+- On Android, `DSheet` no longer opens Material's ModalBottomSheet: `SheetFrame.android.tsx` hands the content to
+  `SheetPortalHost` (`src/shared/d/SheetPortal.tsx`), mounted in `app/_layout.tsx` after the stack. The host draws the
+  scrim, the card, drag down on the handle, Back, and the keyboard lift. The navigation bar stays hidden.
+- `appAlert`, `confirmDialog` and `actionSheet` (`DialogHost`) draw in the window on Android; iOS keeps a `Modal` so a
+  dialog can sit above a native sheet.
+- The screens' own `Modal`s (edit profile, restaurant report, settings, story comments, four admin screens, the OAuth
+  username picker) use `InWindowModal`, the same props, drawn as a full-screen layer on Android (TR-019).
+- The first tap after a sheet closes now works (TR-020): there is no closing window left on top.
+- A Listings sheet closes when the tab loses focus (TR-009).
