@@ -139,6 +139,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Accepting a message request](build/2026-11-10-chat-request-accept.md) (TR-043): the banner and the
+  disabled composer go at once.
 - 2026-11-10: [Follow](build/2026-11-10-follow.md) (TR-029): follow and unfollow, counts, the Follows screen, a
   notification to the person followed.
 - 2026-11-10: [Nearby in Food](build/2026-11-10-nearby.md) (TR-032): restaurant addresses geocoded on the server;

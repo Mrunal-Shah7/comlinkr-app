@@ -109,3 +109,10 @@ Walked on the phone; rows S- in the [run log](../device-runs/2026-11-10-full-wal
 - A message arriving live is drawn as the receiver's, not as their own (TR-044). **[phone]**
 - Open: after Accept on a request, the banner stays until the chat is reopened (TR-043).
 - Saved → News lists saved news articles as well as posts (S-01); My posts deletes quests and stories too (S-03).
+
+## Update 2026-11-10: accepting a request (TR-043, branch `fix/chat-request-accept`, not merged)
+
+From the [build note](../build/2026-11-10-chat-request-accept.md).
+- Accept in an open request ends it at once: the banner goes and the composer works without reopening the chat
+  **[phone]**.
+- Open: on Android the composer sits half under the keyboard (TR-045).

@@ -559,7 +559,10 @@ function Thread({
   }, []);
 
   const isGroupChat = !!conv?.isGroup;
-  const isPending = conv?.status === "pending";
+  // TR-043: Accept ends the request at once; the inbox refresh later brings the same status in `conv`.
+  const [acceptedHere, setAcceptedHere] = useState(false);
+  useEffect(() => { setAcceptedHere(false); }, [id]);
+  const isPending = conv?.status === "pending" && !acceptedHere;
 
   const [threadMsgs, setThreadMsgs] = useState<ThreadMsg[]>([]);
   // Messages on screen when the thread opens appear at once; later ones pop in from their own side.
@@ -968,6 +971,7 @@ function Thread({
   const handleAccept = async () => {
     try {
       await acceptRequest(id, currentUserId);
+      setAcceptedHere(true);
       await loadThread();
       onConversationUpdated();
     } catch (e) {
@@ -2016,6 +2020,15 @@ export default function ChatScreen() {
     });
     return () => sub.remove();
   }, [selectedId]);
+
+  // TR-043: the open thread's row is a snapshot from when it was opened; take a changed status from the refreshed
+  // inbox (an accepted request), so the thread stops showing it as pending.
+  useEffect(() => {
+    if (!selectedId) return;
+    const fresh = conversations.find((c) => c.id === selectedId);
+    if (!fresh) return;
+    setSelectedRow((prev) => (prev && prev.id === fresh.id && prev.status !== fresh.status ? { ...prev, status: fresh.status } : prev));
+  }, [conversations, selectedId]);
 
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;
