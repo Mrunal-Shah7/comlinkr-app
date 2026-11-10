@@ -18,6 +18,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `feature/quest-detail` (from `feature/chat-delete`), TR-038, plan 10: quest page, leave, wording; built, tested, walked, build note written. Left: the owner's review.
 - `feature/event-edit` (from `feature/quest-detail`), TR-037, plan 11: event edit and cancel, the city's day; built, tested, walked, build note written. Left: the owner's review.
 - `feature/move-in-rules` (from `feature/event-edit`), TR-036, plan 12: move-in not before the home is available; the offer after the landlord approves; built, tested, walked, build note written. Left: the owner's review.
+- `feature/nearby` (from `feature/move-in-rules`), TR-032, plan 13: restaurant addresses geocoded on the server; Nearby asks for the phone's position and measures on the phone; built, tested, walked, build note written. Left: the owner's review.
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 

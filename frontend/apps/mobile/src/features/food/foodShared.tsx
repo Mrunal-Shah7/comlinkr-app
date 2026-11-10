@@ -112,6 +112,22 @@ export function hasDistance(r: Restaurant): boolean {
   return !!r.distance && r.distance !== "—";
 }
 
+/** Plan 13 (TR-032): Nearby is restaurants within this many miles of the phone. */
+export const NEARBY_MILES = 3;
+
+export function hasCoordinates(r: Restaurant): boolean {
+  return r.latitude != null && r.longitude != null && Number.isFinite(r.latitude) && Number.isFinite(r.longitude);
+}
+
+/** Great-circle distance in miles, one decimal. */
+export function milesBetween(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): number {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b.latitude - a.latitude);
+  const dLng = rad(b.longitude - a.longitude);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(3958.8 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)) * 10) / 10;
+}
+
 export function hasReservations(r: Restaurant): boolean {
   return safeList(r.services as unknown as string[]).some((s) =>
     itemLabel(s).toLowerCase().includes("reserv")

@@ -116,6 +116,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [10. A quest's own page](plan/10-quest-detail.md) (TR-038): built.
 - [11. Editing and cancelling an event; event days in the city's time](plan/11-event-edit-and-city-time.md) (TR-037): built.
 - [12. The move-in date and the order of the offer](plan/12-move-in-and-offer-order.md) (TR-036): built.
+- [13. Nearby in Food](plan/13-nearby.md) (TR-032): built.
 
 ## Reviews (`review/`)
 
@@ -137,6 +138,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Nearby in Food](build/2026-11-10-nearby.md) (TR-032): restaurant addresses geocoded on the server;
+  Nearby measures from the phone's position, which stays on the phone.
 - 2026-11-10: [The move-in date and the order of the offer](build/2026-11-10-move-in-rules.md) (TR-036): no
   move-in before the home is available; the offer after the landlord approves.
 - 2026-11-10: [Editing and cancelling an event](build/2026-11-10-event-edit.md) (TR-037): edit and cancel from

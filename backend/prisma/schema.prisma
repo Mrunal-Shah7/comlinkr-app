@@ -837,6 +837,8 @@ model Restaurant {
   country            String
   latitude           Float?
   longitude          Float?
+  /// Plan 13 (TR-032): when the address was last sent to the geocoder; null = not tried since it changed.
+  geocodeTriedAt     DateTime?
   phoneNumber        String?
   priceRange         PriceRange
   avgPricePerPerson  Int?      // SPRINT-33: persist optional average spend per diner
