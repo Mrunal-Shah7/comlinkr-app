@@ -5,6 +5,7 @@ import { getUnreadNotificationCount } from "../api/notifications.api";
 import { getSaveCounts, totalSaveCount } from "../api/saves.api";
 import { getMyListings } from "../api/housing.api";
 import { getMyRestaurants } from "../api/food.api";
+import { apiRoleToAppRole, useAuthStore } from "./auth.store";
 
 type SidebarState = {
   sidebarStats: UserStats | null;
@@ -41,6 +42,10 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
   ...initialState,
   fetchSidebarData: async () => {
     if (get().isFetching) return;
+    // Before onboarding is complete every sidebar endpoint answers 403 "Complete onboarding" (TR-035); the menu
+    // fetches once it is (nothing has been fetched yet, so refreshIfStale goes ahead).
+    const u = useAuthStore.getState().user;
+    if (!u || !u.onboardingDone) return;
     set({ isFetching: true });
     try {
       const [statsRes, meRes, unreadRes, savesRes, listingsRes, restaurantsRes] = await Promise.allSettled([
@@ -60,6 +65,12 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       if (meRes.status === "fulfilled") {
         updates.sessionCity = meRes.value.data?.city?.trim() || null;
         updates.sessionAvatar = meRes.value.data?.avatar?.trim() || null;
+        // The stored user keeps the role from the last sign-in; follow the server's (TR-030).
+        const apiRole = (meRes.value.data as { role?: string } | undefined)?.role;
+        const current = useAuthStore.getState().user;
+        if (apiRole && current && current.role !== apiRoleToAppRole(apiRole)) {
+          void useAuthStore.getState().applyUser({ ...current, role: apiRoleToAppRole(apiRole) });
+        }
       }
       if (unreadRes.status === "fulfilled") {
         updates.unreadNotifCount = Math.max(0, unreadRes.value.count);

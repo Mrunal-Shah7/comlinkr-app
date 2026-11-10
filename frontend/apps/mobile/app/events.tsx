@@ -43,6 +43,7 @@ import type { ExploreEventRow } from '../src/features/explore/models';
 import { DPage, goBackOr } from '../src/shared/d/Page';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { useBackState } from '../src/hooks/useBackState';
+import { cityTodayIso, eventDayDate, eventDayIso } from '../src/utils/eventDay';
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const CATEGORY_EMOJI: Record<string, string> = {
@@ -95,24 +96,14 @@ type EventItem = {
 };
 
 function formatEventDateLabel(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  } catch {
-    return iso;
-  }
+  // Plan 11: the calendar day as stored, not converted through the phone's zone.
+  const d = eventDayDate(iso);
+  return d ? d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : iso;
 }
 
 function toUiEvent(e: ApiEvent): EventItem {
-  const isPast = (() => {
-    try {
-      const d = new Date(e.date);
-      return !isNaN(d.getTime()) && d.getTime() < Date.now();
-    } catch {
-      return false;
-    }
-  })();
+  // Plan 11: past once the event's day is before today in its city.
+  const isPast = /^\d{4}-\d{2}-\d{2}$/.test(eventDayIso(e.date)) && eventDayIso(e.date) < cityTodayIso(e.city);
   return {
     id: e.id,
     emoji: CATEGORY_EMOJI[e.category?.toUpperCase?.() ?? ""] || "🎊",

@@ -33,6 +33,8 @@ type Props = {
   onEvent: (e: ExploreEventRow) => void;
   homesCount: number;
   onHomes: () => void;
+  /** E-14: the next event and the homes count are still loading for the first time; their place is kept. */
+  heroLoading?: boolean;
   stories: StoryAuthorGroup[];
   onAddStory: () => void;
   onStory: (authorIndex: number) => void;
@@ -100,6 +102,11 @@ export function ExploreBento(p: Props) {
               {e.interested > 0 ? <TileLabel light style={{ marginTop: 2 }}>{e.interested} going</TileLabel> : null}
             </BentoTile>
           </TileIn>
+        ) : p.heroLoading ? (
+          // E-14: an empty tile holds the next event's place while it loads, so nothing below jumps when it arrives.
+          <View style={s.col} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <BentoTile style={{ minHeight: 246 }}><View /></BentoTile>
+          </View>
         ) : null}
         <View style={[s.col, { gap: 10 }]}>
           {p.homesCount > 0 ? (
@@ -109,6 +116,10 @@ export function ExploreBento(p: Props) {
                 <Text style={[TYPE.tileBig, { color: palette.white, marginTop: "auto" }]}>{p.homesCount}</Text>
               </BentoTile>
             </TileIn>
+          ) : p.heroLoading ? (
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <BentoTile style={{ minHeight: 118 }}><View /></BentoTile>
+            </View>
           ) : null}
           {question && questionText ? (
             <TileIn i={i++}>
@@ -155,7 +166,7 @@ export function ExploreBento(p: Props) {
               <BentoTile onPress={p.onQuest} accessibilityLabel={`Quest: ${p.quest.title}`}>
                 <TileLabel>QUEST{p.quest.isJoined ? " · JOINED" : ""}</TileLabel>
                 <Text style={[display(700), { color: tc.textPrimary, fontSize: 15, lineHeight: 18, marginTop: 4 }]} numberOfLines={3}>{p.quest.title}</Text>
-                {(p.quest.participantsCount ?? 0) > 0 ? <TileLabel style={{ marginTop: "auto" }}>{p.quest.participantsCount} joined</TileLabel> : null}
+                {(p.quest.participantCount ?? 0) > 0 ? <TileLabel style={{ marginTop: "auto" }}>{p.quest.participantCount} joined</TileLabel> : null}
               </BentoTile>
             </TileIn>
           ) : null}

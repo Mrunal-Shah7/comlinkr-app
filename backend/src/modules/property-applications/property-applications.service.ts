@@ -44,11 +44,13 @@ const APPLICATION_INCLUDE = {
       country: true,
       currency: true,
       status: true,
+      availableDate: true,
     },
   },
   applicant: {
     select: { id: true, fullName: true, username: true, avatarUrl: true },
   },
+  landlord: { select: { fullName: true, username: true } },
   document: { select: { id: true } },
 } satisfies Prisma.PropertyApplicationInclude;
 
@@ -264,6 +266,10 @@ export class PropertyApplicationsService {
     if (step === 1) {
       const dto = await this.validateBody(PersonalInfoDto, body);
       const moveInDate = this.parseMoveInDateOrThrow(dto.moveInDate, region);
+      this.assertMoveInFromAvailable(
+        moveInDate,
+        application.listing.availableDate,
+      );
       data.personalInfo = toJson({
         ...dto,
         moveInDate: moveInDate.toISOString().slice(0, 10),
@@ -280,11 +286,16 @@ export class PropertyApplicationsService {
     } else {
       const dto = await this.validateBody(AgreementTermsDto, body);
       const moveInDate = this.parseMoveInDateOrThrow(dto.moveInDate, region);
+      this.assertMoveInFromAvailable(
+        moveInDate,
+        application.listing.availableDate,
+      );
       data.agreementTerms = {
         leaseTerm: dto.leaseTerm,
         moveInDate: moveInDate.toISOString().slice(0, 10),
-        termsRead: dto.termsRead,
-        termsAgreed: dto.termsAgreed,
+        // Plan 12: optional; the signature on the offer is the acknowledgement.
+        termsRead: dto.termsRead ?? false,
+        termsAgreed: dto.termsAgreed ?? false,
         // Amounts always come from the listing snapshot, never from the client.
         rentAmount: application.rentAmount?.toNumber() ?? null,
         depositAmount: application.depositAmount?.toNumber() ?? null,
@@ -348,9 +359,9 @@ export class PropertyApplicationsService {
   }
 
   /**
-   * The tenant may sign once the application is submitted. The application only
-   * becomes SIGNED when the landlord has also approved it; until then the
-   * signature is stored and the status stays where it is.
+   * The tenant signs the offer after the landlord approves (TR-048, the owner's decision); signing then makes the
+   * application SIGNED. Before approval it is refused. Applications an older build signed before approval are still
+   * finalised when the landlord approves (`decide`).
    */
   async sign(userId: string, id: string, dto: SignApplicationDto) {
     const application = await this.findOrThrow(id);
@@ -372,6 +383,13 @@ export class PropertyApplicationsService {
       throw invalidStatus(
         `This application was ${application.status.toLowerCase()} and cannot be signed`,
       );
+    }
+    if (application.status !== Status.APPROVED) {
+      throw new ConflictException({
+        code: 'NOT_APPROVED',
+        message:
+          'The landlord has not approved this application yet. You can sign once they do.',
+      });
     }
 
     const signatureType =
@@ -401,7 +419,7 @@ export class PropertyApplicationsService {
       where: {
         id,
         tenantSignedAt: null,
-        status: { in: [...AWAITING_DECISION, Status.APPROVED] },
+        status: Status.APPROVED,
       },
       data: {
         signature:
@@ -439,15 +457,28 @@ export class PropertyApplicationsService {
     if (application.status === Status.WITHDRAWN) {
       return this.toResponse(application);
     }
-    // The tenant may withdraw until the landlord approves (the landlord's signature): a draft, or one sent and
-    // possibly signed by the tenant. The status guard in the update makes a race with the landlord's decision safe.
+    // The tenant may withdraw until the agreement is made: a draft, one sent and waiting for the landlord, or (plan
+    // 12) an approved offer they have not signed, which is declining it. An older build signs before the landlord
+    // decides; such an application can be withdrawn until the landlord approves, as before. The guards in the update
+    // make a race with the landlord's decision or the tenant's own signature safe.
     const message =
-      'This application can no longer be withdrawn: the landlord has already decided';
-    if (!WITHDRAWABLE_STATUSES.includes(application.status)) {
+      'This application can no longer be withdrawn: the agreement is already made';
+    const approvedUnsigned =
+      application.status === Status.APPROVED && !application.tenantSignedAt;
+    if (
+      !WITHDRAWABLE_STATUSES.includes(application.status) &&
+      !approvedUnsigned
+    ) {
       throw invalidStatus(message);
     }
     const { count } = await this.prisma.propertyApplication.updateMany({
-      where: { id, status: { in: WITHDRAWABLE_STATUSES } },
+      where: {
+        id,
+        OR: [
+          { status: { in: WITHDRAWABLE_STATUSES } },
+          { status: Status.APPROVED, tenantSignedAt: null },
+        ],
+      },
       data: { status: Status.WITHDRAWN, withdrawnAt: new Date() },
     });
     const updated = await this.findOrThrow(id);
@@ -676,6 +707,26 @@ export class PropertyApplicationsService {
     return JSON.parse(JSON.stringify(instance)) as T;
   }
 
+  /** Plan 12 (TR-036): no move-in before the home's available day. Both are calendar dates: compare date parts. */
+  private assertMoveInFromAvailable(moveIn: Date, availableDate: Date | null) {
+    if (!availableDate) return;
+    const available = availableDate.toISOString().slice(0, 10);
+    if (moveIn.toISOString().slice(0, 10) >= available) return;
+    const label = new Date(`${available}T00:00:00Z`).toLocaleDateString(
+      'en-GB',
+      {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      },
+    );
+    throw new BadRequestException({
+      code: 'MOVE_IN_BEFORE_AVAILABLE',
+      message: `This home is available from ${label}. Choose a move-in date on or after it.`,
+    });
+  }
+
   private parseMoveInDateOrThrow(value: string, region: 'US' | 'UK'): Date {
     const date = parseMoveInDate(value, region);
     if (!date) {
@@ -846,7 +897,13 @@ export class PropertyApplicationsService {
         title: application.listing.title,
         address: application.listing.address,
         city: application.listing.city,
+        country: application.listing.country,
+        // Plan 12: the earliest move-in, a calendar date.
+        availableDate:
+          application.listing.availableDate?.toISOString().slice(0, 10) ?? null,
       },
+      landlordName:
+        application.landlord.fullName || application.landlord.username,
       applicantId: application.applicantId,
       applicant: {
         id: application.applicant.id,

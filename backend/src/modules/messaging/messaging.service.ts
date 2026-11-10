@@ -94,6 +94,7 @@ export interface MessageResponse {
   imageUrl: string | null;
   durationSeconds: number | null; // SPRINT-36: include audio duration in history and real-time payloads
   isOwn: boolean;
+  deletedAt?: Date; // plan 09: only in the admin transcript, for a message its sender deleted
 }
 
 @Injectable()
@@ -115,6 +116,7 @@ export class MessagingService {
         messagePreview: string;
         unreadCount: number;
         updatedAt: string;
+        removed?: boolean; // plan 09: a message was deleted; lists reload
       },
     ): void;
     emitMessageRemoved( // SPRINT-53: real-time removal broadcast
@@ -213,6 +215,7 @@ export class MessagingService {
         },
       },
       messages: {
+        where: { deletedAt: null }, // plan 09: the preview skips deleted messages
         take: 1,
         orderBy: { createdAt: 'desc' as const },
         include: { sender: { select: { fullName: true } } },
@@ -303,6 +306,7 @@ export class MessagingService {
     } // SPRINT-44
     const unreadCount = await this.prisma.message.count({
       where: {
+        deletedAt: null, // plan 09
         conversationId: conv.id,
         senderId: { not: userId },
         ...(myMember?.lastReadAt
@@ -447,10 +451,12 @@ export class MessagingService {
       };
       imageUrl?: string | null;
       durationSeconds?: number | null; // SPRINT-36: accept persisted audio duration in the shared formatter
+      deletedAt?: Date | null; // plan 09
     },
     currentUserId: string,
   ): MessageResponse {
     return {
+      ...(raw.deletedAt ? { deletedAt: raw.deletedAt } : {}), // plan 09: admin transcript only
       id: raw.id,
       content: raw.content,
       type: raw.type,
@@ -532,6 +538,7 @@ export class MessagingService {
           },
         },
         messages: {
+          where: { deletedAt: null }, // plan 09: the preview skips deleted messages
           take: 1,
           orderBy: { createdAt: 'desc' },
           include: { sender: { select: { fullName: true } } },
@@ -580,6 +587,7 @@ export class MessagingService {
       const lastReadAt = myMember?.lastReadAt ?? null;
       const unreadCount = await this.prisma.message.count({
         where: {
+          deletedAt: null, // plan 09
           conversationId: conv.id,
           createdAt: lastReadAt ? { gt: lastReadAt } : undefined,
           senderId: { not: userId },
@@ -624,6 +632,7 @@ export class MessagingService {
           },
         },
         messages: {
+          where: { deletedAt: null }, // plan 09: the preview skips deleted messages
           take: 1,
           orderBy: { createdAt: 'desc' },
           include: { sender: { select: { fullName: true } } },
@@ -637,6 +646,7 @@ export class MessagingService {
     const lastReadAt = member.lastReadAt ?? null;
     const unreadCount = await this.prisma.message.count({
       where: {
+        deletedAt: null, // plan 09
         conversationId: conv.id,
         createdAt: lastReadAt ? { gt: lastReadAt } : undefined,
         senderId: { not: userId },
@@ -801,7 +811,7 @@ export class MessagingService {
     }
 
     const messages = await this.prisma.message.findMany({
-      where,
+      where: { ...where, deletedAt: null }, // plan 09: deleted messages are gone for members
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
       include: {
@@ -972,6 +982,7 @@ export class MessagingService {
         where: {
           // SPRINT-36: count only messages unread by this recipient
           conversationId, // SPRINT-36: constrain the updated conversation
+          deletedAt: null, // plan 09
           senderId: { not: m.userId }, // SPRINT-36: exclude the recipient's own messages
           createdAt: m.lastReadAt ? { gt: m.lastReadAt } : undefined, // SPRINT-36: respect the recipient's read watermark
         }, // SPRINT-36: complete unread filter
@@ -1058,6 +1069,7 @@ export class MessagingService {
     for (const m of members) {
       const count = await this.prisma.message.count({
         where: {
+          deletedAt: null, // plan 09
           conversationId: m.conversationId,
           senderId: { not: userId },
           createdAt: m.lastReadAt ? { gt: m.lastReadAt } : undefined,
@@ -1182,12 +1194,112 @@ export class MessagingService {
   } // SPRINT-45: complete per-conversation mute method
 
   // SPRINT-51: submit a chat-message report (actions deferred; submission required for nine-type coverage)
+  /**
+   * Plan 09 (TR-039): the sender deletes their own message. Soft delete: the row stays for moderation (a report
+   * on it can still be acted on), and every member-facing read skips it.
+   */
+  async deleteOwnMessage(
+    userId: string,
+    conversationId: string,
+    messageId: string,
+  ): Promise<{ message: string; conversationId: string; messageId: string }> {
+    const member = await this.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId, userId } },
+      select: { status: true },
+    });
+    if (!member || member.status === 'BLOCKED') {
+      throw new ForbiddenException('FORBIDDEN');
+    }
+    const existing = await this.prisma.message.findUnique({
+      where: { id: messageId },
+      select: { conversationId: true, senderId: true, deletedAt: true },
+    });
+    // Another conversation's id answers as if it did not exist.
+    if (
+      !existing ||
+      existing.conversationId !== conversationId ||
+      existing.deletedAt
+    ) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Message not found',
+      });
+    }
+    if (existing.senderId !== userId) {
+      throw new ForbiddenException('You can only delete your own messages.');
+    }
+
+    const newest = await this.prisma.$transaction(async (tx) => {
+      await tx.message.update({
+        where: { id: messageId },
+        data: { deletedAt: new Date() },
+      });
+      const latest = await tx.message.findFirst({
+        where: { conversationId, deletedAt: null },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          content: true,
+          type: true,
+          durationSeconds: true,
+          createdAt: true,
+        },
+      });
+      const conv = await tx.conversation.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: latest?.createdAt ?? null },
+        select: { createdAt: true },
+      });
+      return { latest, conversationCreatedAt: conv.createdAt };
+    });
+
+    try {
+      const g = this.getGateway();
+      g?.emitMessageRemoved?.(conversationId, { conversationId, messageId });
+      const { latest } = newest;
+      const preview = !latest
+        ? ''
+        : latest.type === 'AUDIO'
+          ? formatVoiceMessagePreview(latest.durationSeconds ?? 0)
+          : latest.content.length > 100
+            ? latest.content.slice(0, 100) + '…'
+            : latest.content;
+      const updatedAt = (
+        latest?.createdAt ?? newest.conversationCreatedAt
+      ).toISOString();
+      const members = await this.prisma.conversationMember.findMany({
+        where: { conversationId, status: 'ACCEPTED' },
+        select: { userId: true, lastReadAt: true },
+      });
+      for (const m of members) {
+        const unreadCount = await this.prisma.message.count({
+          where: {
+            conversationId,
+            deletedAt: null,
+            senderId: { not: m.userId },
+            createdAt: m.lastReadAt ? { gt: m.lastReadAt } : undefined,
+          },
+        });
+        g?.emitConversationUpdated(m.userId, {
+          conversationId,
+          messagePreview: preview,
+          unreadCount,
+          updatedAt,
+          removed: true,
+        });
+      }
+    } catch {
+      // Emission must never fail the deletion (Sprint 36/45 pattern).
+    }
+
+    return { message: 'Message deleted.', conversationId, messageId };
+  }
+
   async reportMessage(reporterId: string, messageId: string, reason: string) {
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
-      select: { id: true, senderId: true },
+      select: { id: true, senderId: true, deletedAt: true },
     });
-    if (!message) {
+    if (!message || message.deletedAt) {
       throw new NotFoundException({
         code: 'RESOURCE_NOT_FOUND',
         message: 'Message not found',
@@ -1313,7 +1425,7 @@ export class MessagingService {
 
       // SPRINT-53: recompute Conversation.lastMessageAt from remaining newest message
       const newest = await tx.message.findFirst({
-        where: { conversationId },
+        where: { conversationId, deletedAt: null },
         orderBy: { createdAt: 'desc' },
         select: { createdAt: true },
       });

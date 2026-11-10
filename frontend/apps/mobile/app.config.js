@@ -89,6 +89,12 @@ module.exports = ({ config }) => ({
     // Android: the navigation bar starts hidden; a swipe up from the bottom edge shows it for a moment.
     ['expo-navigation-bar', { hidden: true }],
     'expo-web-browser',
+    // Plan 08: the city comes from the phone's location, read once while the app is open.
+    ['expo-location', {
+      locationWhenInUsePermission: 'ComLinkr uses your location to set your city, so what you see and post belongs to where you are.',
+      locationAlwaysAndWhenInUsePermission: false,
+      isAndroidBackgroundLocationEnabled: false,
+    }],
     [
       'expo-build-properties',
       {

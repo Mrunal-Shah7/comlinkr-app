@@ -1,6 +1,6 @@
 import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   View,
@@ -10,6 +10,8 @@ import {
   TextInput,
   FlatList,
   KeyboardAvoidingView,
+  type StyleProp,
+  type ViewStyle,
   StyleSheet,
   BackHandler,
   Pressable,
@@ -41,6 +43,7 @@ import {
   acceptRequest,
   declineRequest,
   deleteConversation,
+  deleteMessage,
   getUnreadCount,
   mapConversationToListRow,
   normalizeGatewayMessage,
@@ -61,6 +64,7 @@ import {
   leaveConversationRoom,
   subscribeMessagingEvent, // SPRINT-39:
   type ConversationUpdatedSocketPayload, // SPRINT-39:
+  type MessageRemovedSocketPayload,
   type NewMessageSocketPayload,
   type TypingIndicatorPayload, // SPRINT-39:
   type TypingStoppedPayload, // SPRINT-39:
@@ -80,7 +84,7 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
-import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedKeyboard, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { SPRING } from '../src/shared/motion/presets';
 import { DSheet } from '../src/shared/d/Sheet';
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -557,7 +561,10 @@ function Thread({
   }, []);
 
   const isGroupChat = !!conv?.isGroup;
-  const isPending = conv?.status === "pending";
+  // TR-043: Accept ends the request at once; the inbox refresh later brings the same status in `conv`.
+  const [acceptedHere, setAcceptedHere] = useState(false);
+  useEffect(() => { setAcceptedHere(false); }, [id]);
+  const isPending = conv?.status === "pending" && !acceptedHere;
 
   const [threadMsgs, setThreadMsgs] = useState<ThreadMsg[]>([]);
   // Messages on screen when the thread opens appear at once; later ones pop in from their own side.
@@ -819,7 +826,16 @@ function Thread({
       clearRemoteTypingUser(payload.userId);
     };
 
+    // Plan 09: a message deleted by its sender (or removed by an admin) leaves every open chat.
+    const onMessageRemoved = (raw: unknown) => {
+      const payload = raw as MessageRemovedSocketPayload;
+      if (payload?.conversationId !== id) return;
+      setThreadMsgs((prev) => prev.filter((m) => m.id !== payload.messageId));
+      onInboxRefreshRef.current();
+    };
+
     const unsubMessage = subscribeMessagingEvent("new_message", handler); // SPRINT-39:
+    const unsubRemoved = subscribeMessagingEvent("message_removed", onMessageRemoved);
     const unsubTyping = subscribeMessagingEvent("typing_indicator", onTypingIndicator); // SPRINT-39:
     const unsubTypingStop = subscribeMessagingEvent("typing_stopped", onTypingStopped); // SPRINT-39:
     const unsubConnect = subscribeMessagingEvent("connect", () => {
@@ -838,6 +854,7 @@ function Thread({
       emitTypingStop(); // SPRINT-39: stop on leave
       clearAllRemoteTyping(); // SPRINT-39:
       unsubMessage();
+      unsubRemoved();
       unsubTyping();
       unsubTypingStop();
       unsubConnect();
@@ -956,6 +973,7 @@ function Thread({
   const handleAccept = async () => {
     try {
       await acceptRequest(id, currentUserId);
+      setAcceptedHere(true);
       await loadThread();
       onConversationUpdated();
     } catch (e) {
@@ -964,27 +982,32 @@ function Thread({
     }
   };
 
+  // Plan 09: your own sent message (text, photo, voice) can be deleted for everyone in the chat. Copy stays hidden
+  // until expo-clipboard is installed (needs a new native build); other people's messages offer nothing yet.
   const handleLongPressMsg = (msg: ThreadMsg) => {
-    if (msg.kind !== "text") return;
-    const isMe = msg.isOwn;
-    const options = [
-      // TODO(next build): Copy is hidden for now — it only showed an alert and never wrote to the clipboard.
-      // Re-enable once expo-clipboard is installed (needs a new native build) and use Clipboard.setStringAsync(msg.text).
-      // { text: "Copy", onPress: () => appAlert("Copied", msg.text) },
-      ...(isMe
-        ? [
-            {
-              text: "Delete",
-              style: "destructive" as const,
-              onPress: () => setThreadMsgs((prev) => prev.filter((m) => m.id !== msg.id)),
-            },
-          ]
-        : []),
-      { text: "Cancel", style: "cancel" as const },
-    ];
-    // Show a short preview as the dialog body; a bare "Message" title left the dialog looking empty.
-    const preview = msg.text.length > 120 ? `${msg.text.slice(0, 120)}…` : msg.text;
-    appAlert("Message options", preview, options);
+    if (msg.kind === "system" || !msg.isOwn) return;
+    if (msg.kind === "audio" && msg.deliveryState !== "sent") return; // not on the server yet
+    const preview =
+      msg.kind === "text"
+        ? msg.text.length > 120 ? `${msg.text.slice(0, 120)}…` : msg.text
+        : msg.kind === "image" ? "Photo" : "Voice message";
+    appAlert("Delete message?", `${preview}\n\nIt will be removed for everyone in this chat.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteMessage(id, msg.id);
+            setThreadMsgs((prev) => prev.filter((m) => m.id !== msg.id));
+            onInboxRefreshRef.current();
+          } catch (e) {
+            const why = e instanceof ApiError ? e.message : "Check your connection and try again.";
+            appAlert("Could not delete", why);
+          }
+        },
+      },
+    ]);
   };
 
   const handleDecline = async () => {
@@ -999,7 +1022,7 @@ function Thread({
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
+    <KeyboardFrame style={{ flex: 1, backgroundColor: tc.pageBg }}>
       {/* Bar (design D): back, the person, ··· */}
       <View style={{ paddingTop: insets.top, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
         <View style={{ height: 58, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, gap: 8 }}>
@@ -1169,8 +1192,9 @@ function Thread({
             const isMe = msg.isOwn;
             const isHost = msg.isHost;
             return (
-              <View
+              <Pressable
                 key={msg.id}
+                onLongPress={() => handleLongPressMsg(msg)}
                 style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}
               >
                 {!isMe ? <Avatar name={msg.senderName} size={28} /> : null}
@@ -1202,7 +1226,7 @@ function Thread({
                     <MessageTick isOwn={isMe} />
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           }
 
@@ -1210,7 +1234,7 @@ function Thread({
             const isMe = msg.isOwn;
             const isHost = msg.isHost;
             return (
-              <View key={msg.id} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}>
+              <Pressable key={msg.id} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}>
                 {!isMe && <Avatar name={msg.senderName} size={28} />}
                 <View style={{ maxWidth: "74%", gap: rs(3) }}>
                   {isGroupChat && !isMe && (
@@ -1240,7 +1264,7 @@ function Thread({
                     <MessageTick isOwn={isMe} read={(msg as any).read} />
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           }
 
@@ -1524,8 +1548,28 @@ function Thread({
             ))}
           </View>
       </DSheet>
-    </KeyboardAvoidingView>
+    </KeyboardFrame>
   );
+}
+
+/**
+ * TR-045: keeps the composer above the keyboard. iOS uses KeyboardAvoidingView. On Android it lifted the thread by
+ * the keyboard event's height, about 130 px short (the hidden navigation bar's height), so the composer sat half under
+ * the keyboard. Android uses Reanimated's keyboard height instead, as the in-window sheets do (plan 07).
+ */
+function KeyboardFrame({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
+  if (process.env.EXPO_OS === "ios") {
+    return <KeyboardAvoidingView style={style} behavior="padding">{children}</KeyboardAvoidingView>;
+  }
+  return <AndroidKeyboardFrame style={style}>{children}</AndroidKeyboardFrame>;
+}
+
+function AndroidKeyboardFrame({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
+  // The navigation bar is hidden (app/_layout.tsx) but comes back over the bottom while the keyboard is up. Without
+  // this flag Reanimated takes the bar's height off the keyboard's, which leaves the composer that much too low.
+  const keyboard = useAnimatedKeyboard({ isNavigationBarTranslucentAndroid: true });
+  const lift = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.get() }));
+  return <Reanimated.View style={[style, lift]}>{children}</Reanimated.View>;
 }
 
 const th = createThemedStyles({
@@ -1741,6 +1785,11 @@ export default function ChatScreen() {
 
       const prev = conversationsRef.current;
       const idx = prev.findIndex((c) => c.id === payload.conversationId);
+      if (payload.removed) {
+        // Plan 09: a deleted message changes the preview and order; reload rather than move the row to the top.
+        void loadConversations();
+        return;
+      }
       if (idx < 0) {
         // Brand-new conversation not in list — refetch rather than invent a partial row
         void loadConversations(); // SPRINT-39:
@@ -1993,6 +2042,15 @@ export default function ChatScreen() {
     });
     return () => sub.remove();
   }, [selectedId]);
+
+  // TR-043: the open thread's row is a snapshot from when it was opened; take a changed status from the refreshed
+  // inbox (an accepted request), so the thread stops showing it as pending.
+  useEffect(() => {
+    if (!selectedId) return;
+    const fresh = conversations.find((c) => c.id === selectedId);
+    if (!fresh) return;
+    setSelectedRow((prev) => (prev && prev.id === fresh.id && prev.status !== fresh.status ? { ...prev, status: fresh.status } : prev));
+  }, [conversations, selectedId]);
 
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;

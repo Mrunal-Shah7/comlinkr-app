@@ -73,3 +73,33 @@ Walked on the phone; rows C- in the [run log](../device-runs/2026-11-10-full-wal
 - Blocking hides the author's questions and answers at once (C-03).
 - Follow on a public profile is hidden: there is no follow API (S-06, TR-029).
 - Open: C-08, C-15.
+
+## Update 2026-11-10: Follow (TR-029, plan 14, branch `feature/follow`, not merged)
+
+From the [build note](../build/2026-11-10-follow.md).
+- Follow is built: one-way and without approval (`UserFollow`). `POST /users/:id/follow` toggles it, and
+  `GET /users/me/followers` and `GET /users/me/following` list your follows, newest first [code].
+- Profiles show "N followers · M following". On your own profile the line opens Follows, with Followers and
+  Following tabs and "Follow back" **[phone]**.
+- The person followed gets "New follower", at most once a week per follower; tapping it opens the follower's profile
+  **[phone]**.
+- Blocking removes the follows both ways, and a blocked user cannot be followed [code].
+- Following does not change the feed (the owner's call). Changed by plan 16, below.
+
+## Update 2026-11-10: follow requests and the Following tab (TR-050, TR-051, plan 16, branch `feature/follow-requests`, not merged)
+
+From the [build note](../build/2026-11-10-follow-requests.md).
+- **Private accounts** ("Public profile" off) approve their followers:
+  - following one makes a request (`UserFollow.status` `PENDING`), and the profile's button reads Requested; tapping
+    it again cancels **[phone]**;
+  - the account gets "Follow request", which opens Follows on a Requests tab with Accept and Decline **[phone]**;
+  - accepting tells the requester; declining is silent [e2e];
+  - turning "Public profile" on accepts every waiting request [e2e].
+- **Counts, lists and "follows you"** count accepted follows only [e2e].
+- **A private profile and its posts** open to the person and their accepted followers. Everyone else sees the base
+  and "This account is private" **[phone]**.
+- **Unchanged:** a private account's posts still show in the city's lists.
+- **Explore has a Following tab** after News: what the people you follow posted, newest first, from any city. It
+  covers news posts, events not cancelled, stories not expired and quests. Each row opens the item **[phone]** for a
+  news post, [e2e] for the rest.
+- **Explore's six tabs** scroll sideways in a row of text tabs, which replaces the segmented control **[phone]**.

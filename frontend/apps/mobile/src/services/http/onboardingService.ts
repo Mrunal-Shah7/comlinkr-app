@@ -230,6 +230,10 @@ export type SubmitOnboardingPayload = {
   stateProvince: string;
   city: string;
   dialCode: string;
+  /** Plan 08: the phone's position when the city was detected, and the geocoder's ISO country code. */
+  latitude?: number;
+  longitude?: number;
+  countryCode?: string;
   cultureUiIds: string[];
   interestUiIds: string[];
   communityUiIds: string[];
@@ -265,7 +269,7 @@ function idsFromSlugs(
 export async function submitOnboardingToApi(
   payload: SubmitOnboardingPayload
 ): Promise<BackendAuthUser> {
-  const countryCode = COUNTRY_NAME_TO_ISO[payload.country];
+  const countryCode = COUNTRY_NAME_TO_ISO[payload.country] ?? payload.countryCode;
   if (!countryCode) {
     throw new Error(`Unknown country "${payload.country}" — add it to COUNTRY_NAME_TO_ISO in onboardingService.`);
   }
@@ -304,6 +308,7 @@ export async function submitOnboardingToApi(
     dialCode: payload.dialCode,
     state: payload.stateProvince,
     city: payload.city,
+    ...(payload.latitude != null && payload.longitude != null ? { latitude: payload.latitude, longitude: payload.longitude } : {}),
   });
 
   // CMP-02: a location-only edit must work for accounts that never picked interests. Empty
@@ -323,9 +328,6 @@ export async function submitOnboardingToApi(
 }
 
 export type ProfileSelectionsPayload = {
-  country: string;
-  stateProvince: string;
-  city: string;
   cultureUiIds: string[];
   interestUiIds: string[];
   communityUiIds: string[];
@@ -335,15 +337,8 @@ export type ProfileSelectionsPayload = {
  * Updates location + vibes + interests + communities without running onboarding completion.
  * Used by Edit Profile to stay in sync with POST /onboarding/* endpoints.
  */
+/** The vibe, interest and community chips. The city is not here: it comes from the phone's location (plan 08). */
 export async function syncProfileSelectionsToApi(payload: ProfileSelectionsPayload): Promise<void> {
-  const countryCode = COUNTRY_NAME_TO_ISO[payload.country];
-  if (!countryCode) {
-    throw new Error(
-      `Unknown country "${payload.country}". Pick a country from the supported list or add it to COUNTRY_NAME_TO_ISO.`,
-    );
-  }
-  const dialCode = COUNTRY_DIAL_CODE[payload.country]?.trim() || "+1";
-
   const vibes = await getVibes();
   const interests = await getInterests();
   const communities = await getCommunities();
@@ -372,19 +367,26 @@ export async function syncProfileSelectionsToApi(payload: ProfileSelectionsPaylo
   const interestIds = idsFromSlugs(interests, interestSlugs, "interest");
   const communityIds = idsFromSlugs(communities, communitySlugs, "community");
 
-  await api.post("/onboarding/location", {
-    country: payload.country,
-    countryCode,
-    dialCode,
-    state: payload.stateProvince,
-    city: payload.city,
-  });
-
   // CMP-02: a location-only edit must work for accounts that never picked interests. Empty
   // selections are left as they are on the server rather than posted (the endpoints require >= 1).
   if (vibeIds.length > 0) await api.post("/onboarding/vibes", { vibeIds });
   if (interestIds.length > 0) await api.post("/onboarding/interests", { interestIds });
   if (communityIds.length > 0) await api.post("/onboarding/communities", { communityIds });
+}
+
+/** Plan 08 (TR-042): set the signed-in user's city from a detected location (`PATCH /settings/city`, source GPS). */
+export async function updateCityFromLocation(loc: {
+  country: string; state: string; city: string; countryCode: string; latitude: number; longitude: number;
+}): Promise<void> {
+  await api.patch("/settings/city", {
+    country: loc.country,
+    countryCode: loc.countryCode || COUNTRY_NAME_TO_ISO[loc.country],
+    dialCode: COUNTRY_DIAL_CODE[loc.country]?.trim() || "+1",
+    state: loc.state,
+    city: loc.city,
+    latitude: loc.latitude,
+    longitude: loc.longitude,
+  });
 }
 
 const onboardingService = {

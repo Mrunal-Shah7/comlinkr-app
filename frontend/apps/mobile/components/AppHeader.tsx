@@ -34,7 +34,7 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
   const { data: chatUnread } = useQuery({
     queryKey: ["chat-unread-count"],
     queryFn: getUnreadCount,
-    enabled: !!user,
+    enabled: !!user?.onboardingDone, // TR-035: the API refuses it (403) until onboarding is done
     staleTime: 60_000,
   });
 

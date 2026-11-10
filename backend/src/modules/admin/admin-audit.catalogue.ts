@@ -101,6 +101,7 @@ export const ADMIN_MUTATING_ROUTE_CATALOGUE: Record<
     targetType: 'badge_application',
   },
   'PATCH /admin/users/:id': { targetParam: 'id', targetType: 'user' },
+  'PATCH /admin/users/:id/location': { targetParam: 'id', targetType: 'user' }, // plan 08
   'POST /admin/users/:id/warn': { targetParam: 'id', targetType: 'user' },
   // SPRINT-55: privacy export / erasure / compliance decisions
   'POST /admin/users/:id/data-export': {
