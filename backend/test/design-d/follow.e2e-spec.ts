@@ -38,7 +38,11 @@ describe('plan 14: follow', () => {
     const b = await seedUser({ label: 'fb' });
 
     const on = await follow(a.cookie, b.id).expect(200);
-    expect(data(on)).toEqual({ following: true, followersCount: 1 });
+    expect(data(on)).toEqual({
+      following: true,
+      requested: false,
+      followersCount: 1,
+    });
 
     const seenByA = data(await profile(a.cookie, b.id).expect(200));
     expect(seenByA.followedByMe).toBe(true);
@@ -56,7 +60,11 @@ describe('plan 14: follow', () => {
     });
 
     const off = await follow(a.cookie, b.id).expect(200);
-    expect(data(off)).toEqual({ following: false, followersCount: 0 });
+    expect(data(off)).toEqual({
+      following: false,
+      requested: false,
+      followersCount: 0,
+    });
     expect(await getTestPrisma().userFollow.count()).toBe(0);
   });
 

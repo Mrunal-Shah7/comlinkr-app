@@ -24,6 +24,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `chore/brand-comlinkr` (from `fix/chat-request-accept`), TR-046: "ComLinkr" everywhere a user reads it; build note written. Left: the owner's review.
 - `fix/sign-after-approval` (from `chore/brand-comlinkr`), TR-048: the server refuses a signature before approval; build note written. Left: the owner's review.
 - `feature/event-cancelled` (from `fix/sign-after-approval`), TR-047, plan 15: a cancelled event is kept, marked Cancelled; built, tested, walked, build note written. Left: the owner's review.
+- `feature/follow-requests` (from `feature/event-cancelled`), TR-049, 050, 051, 053, plan 16: follow requests, the Following tab, the switch, the settings reset bug. Built, tested, walked, build note written. Left: the owner's review.
 
 ## 2026-11-10 - the open triage rows, one stacked PR each (TR-036, 037, 032, 029, 043)
 

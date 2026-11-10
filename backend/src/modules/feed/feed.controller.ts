@@ -21,6 +21,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { OptionalAuth } from '../../common/decorators/optional-auth.decorator';
 import { FeedService } from './feed.service';
+import { FollowingFeedService } from './following-feed.service';
 import { FeedQueryDto } from './dto/feed-query.dto';
 import { CreateFeedPostDto } from './dto/create-feed-post.dto';
 import { UpdateFeedPostDto } from './dto/update-feed-post.dto';
@@ -34,7 +35,27 @@ const FEED_MEDIA_MAX_SIZE = 5 * 1024 * 1024;
 @ApiTags('Feed')
 @Controller('feed')
 export class FeedController {
-  constructor(private readonly feedService: FeedService) {}
+  constructor(
+    private readonly feedService: FeedService,
+    private readonly followingFeed: FollowingFeedService,
+  ) {}
+
+  // Plan 16 (TR-050): the Following tab (before GET :id, which would take "following" as an id).
+  @Get('following')
+  @ApiOperation({
+    summary:
+      'What the people you follow posted: news posts, events, stories and quests, newest first',
+  })
+  async getFollowingFeed(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.followingFeed.list(
+      userId,
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+  }
 
   @Get()
   @OptionalAuth()

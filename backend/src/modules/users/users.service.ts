@@ -307,6 +307,8 @@ export class UsersService {
     },
     privacySettings: { publicProfile?: boolean; showLocation?: boolean } | null,
     stats: UserStatsDto,
+    /** Plan 16: an accepted follower (or the person) sees a private profile in full. */
+    canSeePrivate = false,
   ) {
     const base = {
       id: user.id,
@@ -324,8 +326,9 @@ export class UsersService {
     };
 
     const isPublic = privacySettings?.publicProfile !== false;
-    if (!isPublic) {
-      return base;
+    if (!isPublic && !canSeePrivate) {
+      // Plan 16: the app shows "This account is private" and the Follow (request) button.
+      return { ...base, isPrivate: true };
     }
 
     const showLocation = privacySettings?.showLocation !== false;
@@ -535,12 +538,21 @@ export class UsersService {
       });
     }
 
-    const [stats, relation] = await Promise.all([
+    const isPublic = user.privacySettings?.publicProfile !== false;
+    const [stats, relation, canSeePrivate] = await Promise.all([
       this.computeStats(targetUserId),
       this.followsService.relation(requestingUserId, targetUserId),
+      isPublic
+        ? Promise.resolve(false)
+        : this.followsService.canSeePrivate(requestingUserId, targetUserId),
     ]);
     return {
-      ...this.formatPublicProfile(user, user.privacySettings ?? null, stats),
+      ...this.formatPublicProfile(
+        user,
+        user.privacySettings ?? null,
+        stats,
+        canSeePrivate,
+      ),
       ...relation,
     };
   }

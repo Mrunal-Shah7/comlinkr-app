@@ -172,6 +172,40 @@ export class UsersController {
     );
   }
 
+  // Plan 16 (TR-051): the requests to follow you (a private account), accept and decline.
+  @Get('me/follow-requests')
+  @ApiOperation({ summary: 'Requests to follow the current user' })
+  async getMyFollowRequests(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.followsService.list(
+      userId,
+      'requests',
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+  }
+
+  @Post('me/follow-requests/:userId/accept')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept a request to follow the current user' })
+  async acceptFollowRequest(
+    @CurrentUser('id') userId: string,
+    @Param('userId') requesterId: string,
+  ) {
+    return this.followsService.accept(userId, requesterId);
+  }
+
+  @Delete('me/follow-requests/:userId')
+  @ApiOperation({ summary: 'Decline a request to follow the current user' })
+  async declineFollowRequest(
+    @CurrentUser('id') userId: string,
+    @Param('userId') requesterId: string,
+  ) {
+    return this.followsService.decline(userId, requesterId);
+  }
+
   @Post('push-token')
   async registerPushToken(
     @CurrentUser('id') userId: string,
