@@ -740,6 +740,10 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
         router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Stories" } } as any);
       } else if (type.id === "listing" && createdListingId) {
         router.push(`/listing/${encodeURIComponent(createdListingId)}` as never);
+      } else if (targetRoute === "/(tabs)/feed") {
+        // TR-040 E-27: open the section the post went to (it landed on News › For you).
+        const exploreTab = type.id === "event" ? "Events" : type.id === "challenge" ? "Quests" : "Neighbours";
+        router.push({ pathname: "/(tabs)/feed", params: { exploreTab } } as any);
       } else {
         router.push(targetRoute as any);
       }
@@ -1826,7 +1830,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
-                placeholder="e.g. Sunny room in shared Williamsburg loft"
+                placeholder="e.g. Sunny room in a shared loft"
                 placeholderTextColor={tc.textTertiary}
                 value={title}
                 onChangeText={setTitle}

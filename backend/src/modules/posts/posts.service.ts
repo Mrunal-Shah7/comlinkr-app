@@ -51,7 +51,10 @@ export class PostsService {
       });
     }
     // Respect the profile-privacy toggle: a private profile exposes no posts to other users.
-    if (target.privacySettings?.publicProfile === false && viewerId !== targetUserId) {
+    if (
+      target.privacySettings?.publicProfile === false &&
+      viewerId !== targetUserId
+    ) {
       const page = query.page ?? 1;
       const limit = query.limit ?? 20;
       return { data: [], meta: createPaginationMeta(page, limit, 0) };
@@ -65,7 +68,10 @@ export class PostsService {
 
     const [feedPosts, events, stories, challenges] = await Promise.all([
       this.prisma.feedPost.findMany({
-        where: { authorId: userId, ...(publicOnly ? { isPublished: true } : {}) },
+        where: {
+          authorId: userId,
+          ...(publicOnly ? { isPublished: true } : {}),
+        },
         select: {
           id: true,
           title: true,

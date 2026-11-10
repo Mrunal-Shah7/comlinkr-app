@@ -77,7 +77,7 @@ export function AvailableRoomCard({
         {/* Host row */}
         <View style={ar.hostRow}>
           <View style={[ar.hostAvatarWrap, { borderColor: room.hostColor + "40" }]}>
-            <FadeImage uri={room.hostAvatar} style={ar.hostAvatar} />
+            <FadeImage fallbackIcon="person" uri={room.hostAvatar} style={ar.hostAvatar} />
             {room.hostVerified && (
               <View style={ar.hostVerifiedBadge}>
                 <Ionicons name="shield-checkmark" size={9} color={palette.white} />

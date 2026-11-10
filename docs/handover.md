@@ -13,6 +13,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `fix/triage-sweep` (from `chore/docs-cleanup`), the open triage bugs: TR-003, 007, 009, 030, 033 (migration), 035 (part) done, build note written. Left: the owner's review; the rest of the open rows go on a later branch.
 - `feature/in-window-sheets` (from `fix/triage-sweep`), TR-041, TR-019, TR-020, plan 07: built and checked on the phone (profile menu, Post sheet, filters, keyboard, dialogs, settings modal). Built, walked on the phone, build note written. Left: the owner's review.
 - `feature/gps-city` (from `feature/in-window-sheets`), TR-042, plan 08: built, tested, walked on the phone. Left: the owner's review.
+- `fix/triage-leftovers` (from `feature/gps-city`), TR-035, TR-040, lint: built, build note written. Left: the owner's review.
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 

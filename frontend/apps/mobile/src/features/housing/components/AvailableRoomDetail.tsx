@@ -136,7 +136,7 @@ export function AvailableRoomDetail({
 
           <Reveal i={1} style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 16, padding: 12, borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg }}>
             <View>
-              <FadeImage uri={room.hostAvatar} style={{ width: 50, height: 50, borderRadius: 25 }} />
+              <FadeImage fallbackIcon="person" uri={room.hostAvatar} style={{ width: 50, height: 50, borderRadius: 25 }} />
               {room.hostVerified ? (
                 <View style={{ position: "absolute", right: -2, bottom: -2, width: 18, height: 18, borderRadius: 9, alignItems: "center", justifyContent: "center", backgroundColor: tc.mint, borderWidth: 2, borderColor: tc.cardBg }}>
                   <Ionicons name="checkmark" size={10} color={palette.white} />

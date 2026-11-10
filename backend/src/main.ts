@@ -18,10 +18,10 @@ async function bootstrap() {
   const trustProxy = configService.get<string>('TRUST_PROXY');
   if (trustProxy) {
     const hops = Number(trustProxy);
-    app.getHttpAdapter().getInstance().set(
-      'trust proxy',
-      Number.isInteger(hops) ? hops : trustProxy,
-    );
+    app
+      .getHttpAdapter()
+      .getInstance()
+      .set('trust proxy', Number.isInteger(hops) ? hops : trustProxy);
   }
   const redisService = app.get(RedisService);
   const redisClient = redisService.getClient();
@@ -47,7 +47,10 @@ async function bootstrap() {
     .map((s) => s.trim())
     .filter(Boolean);
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
-  if (nodeEnv === 'production' && (originList.length === 0 || originList.includes('*'))) {
+  if (
+    nodeEnv === 'production' &&
+    (originList.length === 0 || originList.includes('*'))
+  ) {
     throw new Error('CORS_ORIGINS must list explicit origins in production');
   }
   // Mobile / Expo web: empty CORS_ORIGINS + dev → reflect Origin so LAN testing works.
@@ -72,13 +75,13 @@ async function bootstrap() {
     nodeEnv !== 'production' ||
     configService.get<string>('ENABLE_SWAGGER') === 'true';
   if (swaggerEnabled) {
-  const config = new DocumentBuilder()
-    .setTitle('ComLinkr API')
-    .setDescription('Community-First Housing & Lifestyle Discovery Platform')
-    .setVersion('1.0.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const config = new DocumentBuilder()
+      .setTitle('ComLinkr API')
+      .setDescription('Community-First Housing & Lifestyle Discovery Platform')
+      .setVersion('1.0.0')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
   }
 
   const port = configService.get<number>('PORT', 4000);

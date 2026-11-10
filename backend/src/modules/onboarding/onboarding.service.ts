@@ -78,7 +78,14 @@ export class OnboardingService {
 
   async setLocation(userId: string, dto: SetLocationDto) {
     this.assertSupportedEnrollmentRegion(dto.country);
-    const fields = { country: dto.country, countryCode: dto.countryCode, dialCode: dto.dialCode, state: dto.state, city: dto.city, ...locationProvenance(dto) };
+    const fields = {
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      ...locationProvenance(dto),
+    };
     await this.prisma.userLocation.upsert({
       where: { userId },
       create: { userId, ...fields },

@@ -463,6 +463,7 @@ export class StorageService {
         },
         (error, result) => {
           if (error) {
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- always an Error: the ternary wraps anything else
             reject(
               error instanceof Error
                 ? error

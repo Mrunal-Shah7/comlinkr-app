@@ -262,7 +262,7 @@ export default function FeedScreen() {
   const toUiFeedPostCard = (p: any) => {
     const authorName = p?.author?.name || p?.author?.username || "User";
     const rawAv = p?.author?.avatarUrl;
-    const avatarUrl = rawAv ? resolveApiAssetUrl(rawAv) : "https://randomuser.me/api/portraits/lego/1.jpg";
+    const avatarUrl = rawAv ? resolveApiAssetUrl(rawAv) : "";
     const rawMedia = Array.isArray(p?.media) ? p.media?.[0]?.url : undefined;
     const mediaUrl = rawMedia ? resolveApiAssetUrl(String(rawMedia)) : undefined;
 
@@ -345,6 +345,10 @@ export default function FeedScreen() {
     return true;
   };
 
+  // loadNews reads the current articles through a ref: depending on `newsArticles` gave it a new identity each time
+  // it set them, the focus effect then ran it again, and a failing request (a 403, offline) looped without pause.
+  const newsArticlesRef = useRef(newsArticles);
+  newsArticlesRef.current = newsArticles;
   const loadNews = useCallback(async (force = false) => {
     if (!city) { setNewsLoading(false); return; } // no resolved location: Explore shows the choose-city prompt
     // Cache for 2 minutes — pull-to-refresh always forces a fresh fetch
@@ -421,8 +425,8 @@ export default function FeedScreen() {
 
     try {
       let primaryArticles: NewsArticle[] = [];
-      if (cacheFresh && cache.phase === "primary" && newsArticles.length > 0) {
-        primaryArticles = newsArticles;
+      if (cacheFresh && cache.phase === "primary" && newsArticlesRef.current.length > 0) {
+        primaryArticles = newsArticlesRef.current;
       } else {
         const primaryRes = await cached(["news", city, userCountry, userState ?? "", "primary"], () => getNewsExplore({
           city,
@@ -486,7 +490,7 @@ export default function FeedScreen() {
     } finally {
       setNewsLoading(false);
     }
-  }, [city, userCountry, userState, newsArticles]);
+  }, [city, userCountry, userState]);
 
   const loadMoreNews = useCallback(async () => {
     if (newsPaging || newsLoading || !newsHasMore) return;
@@ -1402,13 +1406,20 @@ export default function FeedScreen() {
     const raw = params.exploreTab;
     const tabRaw = typeof raw === "string" ? raw.trim() : Array.isArray(raw) ? String(raw[0] ?? "").trim() : "";
     if (!tabRaw) return;
+    if (tabRaw.toLowerCase() === "neighbours") {
+      // News written by neighbours (a post just published) lives under News › Neighbours.
+      setFeedTabSilently("News");
+      setNewsSubTabSilently("community");
+      router.setParams({ exploreTab: "" });
+      return;
+    }
     const allowed: FeedTab[] = ["News", "Events", "Stories", "Quests", "Polls"];
     const match = allowed.find((a) => a.toLowerCase() === tabRaw.toLowerCase());
     if (match) {
       setFeedTabSilently(match);
       router.setParams({ exploreTab: "" });
     }
-  }, [params.exploreTab, setFeedTabSilently]);
+  }, [params.exploreTab, setFeedTabSilently, setNewsSubTabSilently]);
 
   useEffect(() => {
     const raw = params.openEvent;

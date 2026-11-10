@@ -65,7 +65,7 @@ export function PostCard({
   return (
     <View style={[pcd.bubble, { backgroundColor: tc.cardBg, borderWidth: isDark ? 1 : 0, borderColor: tc.glassLine }]}>
       <View style={pcd.head}>
-        <FadeImage uri={post.avatar} style={pcd.avatar} resizeMode="cover" />
+        <FadeImage fallbackIcon="person" uri={post.avatar} style={pcd.avatar} resizeMode="cover" />
         <View style={{ flex: 1, minWidth: 0 }}>
           <View style={pcd.nameRow}>
             <Text style={[body(700), { color: tc.textPrimary, fontSize: 14 }]} numberOfLines={1}>{post.author}</Text>

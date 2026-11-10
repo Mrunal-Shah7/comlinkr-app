@@ -225,7 +225,7 @@ export function buildHeroTickerRows(args: {
 
   for (const p of args.posts) {
     const name = p.author?.name || p.author?.username || "Neighbor";
-    const av = p.author?.avatarUrl ? resolveApiAssetUrl(p.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/1.jpg";
+    const av = p.author?.avatarUrl ? resolveApiAssetUrl(p.author.avatarUrl) : "";
     const target = (p.title || String(p.category || "Post")).slice(0, 38);
     acc.push({
       t: new Date(p.createdAt).getTime(),
@@ -246,7 +246,7 @@ export function buildHeroTickerRows(args: {
 
   for (const e of args.events) {
     const name = e.author?.name || e.author?.username || "Host";
-    const av = e.author?.avatarUrl ? resolveApiAssetUrl(e.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/1.jpg";
+    const av = e.author?.avatarUrl ? resolveApiAssetUrl(e.author.avatarUrl) : "";
     acc.push({
       t: new Date(e.createdAt).getTime(),
       row: {
@@ -268,7 +268,7 @@ export function buildHeroTickerRows(args: {
 
   for (const L of args.listings) {
     const name = L.owner?.name || L.owner?.username || L.landlord?.name || "Host"; // SPRINT-42: prefer the canonical listing owner alias.
-    const av = resolveApiAssetUrl(L.owner?.avatarUrl ?? L.landlord?.avatarUrl) || "https://randomuser.me/api/portraits/lego/2.jpg"; // SPRINT-42: use canonical owner avatar for the housing ticker.
+    const av = resolveApiAssetUrl(L.owner?.avatarUrl ?? L.landlord?.avatarUrl) || ""; // SPRINT-42: use canonical owner avatar for the housing ticker.
     acc.push({
       t: new Date(L.createdAt).getTime(),
       row: {
@@ -289,7 +289,7 @@ export function buildHeroTickerRows(args: {
     const sl = (s.location || "").toLowerCase();
     if (sl && cityLc && !sl.includes(cityLc)) continue;
     const name = s.author?.name || s.author?.username || "Creator";
-    const av = s.author?.avatarUrl ? resolveApiAssetUrl(s.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/3.jpg";
+    const av = s.author?.avatarUrl ? resolveApiAssetUrl(s.author.avatarUrl) : "";
     acc.push({
       t: new Date(s.createdAt).getTime(),
       row: {
@@ -341,7 +341,7 @@ export function mapApiStoryToCommunityStory(s: ApiStory): CommunityStory {
   const thumb =
     mediaUrl ||
     "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=400&q=70";
-  const av = resolveApiAssetUrl(s.author.avatarUrl) || "https://randomuser.me/api/portraits/lego/1.jpg";
+  const av = resolveApiAssetUrl(s.author.avatarUrl) || "";
   const mediaType: CommunityStory["mediaType"] =
     s.mediaType === "REEL" ? "reel" : s.mediaType === "VIDEO" ? "video" : "photo";
 
@@ -398,7 +398,7 @@ export function mapFeedPostToLiveItem(p: FeedPost): (typeof LIVE_WALL_ITEMS)[0] 
 
   const meta = LIVE_CATEGORY_META[type];
   const author = p.author?.name || p.author?.username || "Neighbor";
-  const avatar = resolveApiAssetUrl(p.author?.avatarUrl) || "https://randomuser.me/api/portraits/lego/2.jpg";
+  const avatar = resolveApiAssetUrl(p.author?.avatarUrl) || "";
   const created = p.createdAt ? new Date(p.createdAt).getTime() : 0;
   const isNew = Date.now() - created < 48 * 3600 * 1000;
 

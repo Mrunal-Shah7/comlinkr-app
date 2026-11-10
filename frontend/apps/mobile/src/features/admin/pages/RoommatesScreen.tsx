@@ -331,10 +331,12 @@ export default function RoommatesScreen() {
                         <Ionicons name={meta.icon as any} size={11} color={meta.color} />
                         <Text style={[s.chipText, { color: meta.color }]}>{meta.label}</Text>
                       </View>
-                      <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
-                        <Ionicons name="person" size={11} color={Colors.text.secondary} />
-                        <Text style={[s.chipText, { color: Colors.text.secondary }]}>Age {profile.age}</Text>
-                      </View>
+                      {profile.age ? ( // TR-040 S-17: a profile without an age showed "Age 0" (rule B6)
+                        <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
+                          <Ionicons name="person" size={11} color={Colors.text.secondary} />
+                          <Text style={[s.chipText, { color: Colors.text.secondary }]}>Age {profile.age}</Text>
+                        </View>
+                      ) : null}
                       <View style={[s.chip, { backgroundColor: palette.gray100 }]}>
                         <Ionicons name="home" size={11} color={Colors.text.secondary} />
                         <Text style={[s.chipText, { color: Colors.text.secondary }]}>

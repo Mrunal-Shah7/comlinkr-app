@@ -133,6 +133,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Triage leftovers](build/2026-11-10-triage-leftovers.md) (TR-035, TR-040): requests wait for
+  onboarding, the Explore news retry loop, ten small walkthrough findings, randomuser.me removed, backend lint clean.
 - 2026-11-10: [The city comes from the phone's location](build/2026-11-10-gps-city.md) (TR-042, plan 08): GPS sets
   the city in onboarding, Settings and Edit profile; admins can override it.
 - 2026-11-10: [Sheets and dialogs in the app's window](build/2026-11-10-in-window-sheets.md) (TR-041, TR-019, TR-020,

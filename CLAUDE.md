@@ -181,6 +181,8 @@ none is in `docs/production-lessons.md`.
 - On iOS, inside the native `@expo/ui` sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
   not rely on gesture-handler gestures (they never fire); use `Pressable` or the React Native responder props
   ([native navigation](docs/build/2026-11-09-native-navigation.md)).
+- A loader that a focus effect depends on must not depend on state it sets; read that state through a ref.
+  Otherwise every failure re-runs it without pause ([triage leftovers](docs/build/2026-11-10-triage-leftovers.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`
   ([performance note](docs/build/2026-10-29-ui-performance-tab-jank.md)).
 

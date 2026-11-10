@@ -284,7 +284,14 @@ export class SettingsService {
   }
 
   async updateCity(userId: string, dto: UpdateCityDto) {
-    const fields = { country: dto.country, countryCode: dto.countryCode, dialCode: dto.dialCode, state: dto.state, city: dto.city, ...locationProvenance(dto) };
+    const fields = {
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      ...locationProvenance(dto),
+    };
     await this.prisma.userLocation.upsert({
       where: { userId },
       create: { userId, ...fields },
