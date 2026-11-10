@@ -115,6 +115,9 @@ export default function NotificationsScreen() {
       else router.push("/chat" as any);
     } else if (n.type === "badge") {
       router.push("/verification-status" as any);
+    } else if (n.targetType === "USER" && n.targetId) {
+      // Plan 14: "New follower" opens the follower's profile.
+      router.push({ pathname: "/public-profile", params: { userId: n.targetId } } as any);
     } else if (n.targetType === "PROPERTY_APPLICATION" && n.targetId) {
       // Plan 12: the applicant opens their application (the offer, once approved); the landlord the dashboard.
       try {

@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Image } from "expo-image"; // SPRINT-31:
+import { UserAvatar } from "../components/UserAvatar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -51,33 +51,7 @@ const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
   verified_owner:   { icon: "shield-checkmark",     color: palette.brandGreen },
 };
 
-function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: number }) {
-  const colors = [palette.brandBlue, palette.brandTeal, palette.brandGreen, palette.brandBlueDark, palette.brandGreenDark];
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  const bg = colors[Math.abs(h) % colors.length];
-  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-      {uri ? (
-        <Image
-          source={{ uri }}
-          style={{ width: size, height: size }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={200}
-        />
-      ) : (
-        <Text style={[display(800), { fontSize: size * 0.34, color: palette.white }]}>{initials}</Text>
-      )}
-    </View>
-  );
-}
-
 type PostLike = { id: string; title: string; content: string; createdAt: string; likesCount: number; commentsCount: number };
-
-/** The backend has no follow endpoint yet; turn this on when it does. */
-const FOLLOW_ENABLED = false;
 
 export default function PublicProfileScreen() {
   const { isDark, tc } = useTheme();
@@ -112,6 +86,10 @@ export default function PublicProfileScreen() {
   const [followOverride, setFollowing] = useState<boolean | null>(null);
   const following = followOverride ?? profile?.followedByMe ?? false;
   const [followLoading, setFollowLoading] = useState(false);
+  // Plan 14: the server's follower count after a tap; the counts line shows only when the profile carries them.
+  const [followersOverride, setFollowersOverride] = useState<number | null>(null);
+  const followersCount = followersOverride ?? profile?.stats.followersCount;
+  const followingCount = profile?.stats.followingCount;
 
   const handleFollow = async () => {
     if (!profile) return;
@@ -121,6 +99,7 @@ export default function PublicProfileScreen() {
     try {
       const res = await toggleFollow(profile.id);
       setFollowing(res.following);
+      if (typeof res.followersCount === "number") setFollowersOverride(res.followersCount);
     } catch (e) {
       setFollowing(prev);
       appAlert("Error", e instanceof ApiError ? e.message : "Could not update follow.");
@@ -211,7 +190,7 @@ export default function PublicProfileScreen() {
           <Reveal i={0} style={{ alignItems: "center", paddingTop: 6, paddingHorizontal: 24 }}>
             <GradientFill style={{ width: 98, height: 98, borderRadius: 49, alignItems: "center", justifyContent: "center" }}>
               <View style={{ width: 92, height: 92, borderRadius: 46, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden" }}>
-                <Avatar name={profile.name} uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined} size={86} />
+                <UserAvatar name={profile.name} uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined} size={86} />
               </View>
             </GradientFill>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 }}>
@@ -222,14 +201,26 @@ export default function PublicProfileScreen() {
               {[profile.username ? `@${profile.username}` : "", [profile.city, profile.country].filter(Boolean).join(", "), profile.joinedAt ? `member since ${new Date(profile.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : ""].filter(Boolean).join(" · ")}
             </Text>
             {profile.bio ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>{profile.bio}</Text> : null}
+            {followersCount != null && followingCount != null ? (
+              <Pressable
+                disabled={!isOwnProfile}
+                onPress={() => router.push("/follows" as never)}
+                accessibilityRole={isOwnProfile ? "button" : "text"}
+                hitSlop={6}
+                style={{ marginTop: 8 }}
+              >
+                <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>
+                  <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{followersCount}</Text>
+                  {followersCount === 1 ? " follower" : " followers"}{"  ·  "}
+                  <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{followingCount}</Text> following
+                </Text>
+              </Pressable>
+            ) : null}
             {!isOwnProfile ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
                 <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color={palette.white} />} onPress={handleMessage} />
-                {/* Follow is hidden until the backend has it: POST /users/:id/follow does not exist and every tap showed
-                    "Cannot POST" (walkthrough S-06, TR-029). */}
-                {FOLLOW_ENABLED ? (
-                  <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
-                ) : null}
+                {/* Plan 14 (TR-029): tapping "Following" unfollows. */}
+                <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
               </View>
             ) : null}
           </Reveal>

@@ -188,6 +188,15 @@ export class SettingsService {
       await tx.blockedUser.create({
         data: { blockerId: userId, blockedId: dto.userId },
       });
+      // Plan 14: blocking ends following, both ways.
+      await tx.userFollow.deleteMany({
+        where: {
+          OR: [
+            { followerId: userId, followingId: dto.userId },
+            { followerId: dto.userId, followingId: userId },
+          ],
+        },
+      });
       const blockerMemberships = await tx.conversationMember.findMany({
         where: { userId },
         select: { conversationId: true },

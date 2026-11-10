@@ -66,14 +66,14 @@ enum NoiseTolerance {
   SOCIAL
 }
 
-enum RoomType { // SPRINT-28
+enum RoomType {
   PRIVATE_ROOM
   SHARED_ROOM
   STUDIO
   EN_SUITE
 }
 
-enum FurnishedStatus { // SPRINT-28
+enum FurnishedStatus {
   FULLY_FURNISHED
   PARTIALLY_FURNISHED
   UNFURNISHED
@@ -201,10 +201,11 @@ enum TicketType {
   PAID
 }
 
-enum EventRegistrationStatus { // SPRINT-38: Preserve cancelled tickets so scanners can distinguish them from invalid identifiers.
+enum EventRegistrationStatus {
   ACTIVE // SPRINT-38: The registration currently grants admission.
   CANCELLED // SPRINT-38: The attendee cancelled and the persisted ticket must be rejected explicitly.
-} // SPRINT-38: End event registration lifecycle states.
+}
+// SPRINT-38: End event registration lifecycle states.
 
 enum StoryMediaType {
   REEL
@@ -363,102 +364,104 @@ enum CommunityCategory {
 // ============== USER & AUTH ==============
 
 model User {
-  id                   String    @id @default(uuid())
-  email                String    @unique
-  username             String    @unique
+  id                   String         @id @default(uuid())
+  email                String         @unique
+  username             String         @unique
   fullName             String
   avatarUrl            String?
-  bio                  String?   @db.VarChar(200)
+  bio                  String?        @db.VarChar(200)
   phoneNumber          String?
   dateOfBirth          DateTime? // SPRINT-57: date of birth is the durable source for displayed age (age itself would go stale)
-  role                 Role      @default(USER)
-  isActive             Boolean   @default(true)
-  sessionVersion       Int       @default(0) // SEC-02: bumped on password recovery/suspension to revoke existing sessions
+  role                 Role           @default(USER)
+  isActive             Boolean        @default(true)
+  sessionVersion       Int            @default(0) // SEC-02: bumped on password recovery/suspension to revoke existing sessions
   deletedAt            DateTime?
   deletionSource       DeletionSource @default(NONE) // SPRINT-55: SELF vs ADMIN pending deletion; NONE preserves pre-sprint self-cancel
-  onboardingCompleted  Boolean   @default(false)
+  onboardingCompleted  Boolean        @default(false)
   agreementAcceptedAt  DateTime?
-  termsAcceptedVersion String?   @db.VarChar(20) // SPRINT-32: server-side terms version audit
+  termsAcceptedVersion String?        @db.VarChar(20) // SPRINT-32: server-side terms version audit
   lastActiveAt         DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
-  authProviders           AuthProvider[]
-  location                UserLocation?
-  vibes                   Vibe[]                 @relation("UserVibes")
-  interests               Interest[]            @relation("UserInterests")
-  communities             Community[]           @relation("UserCommunities")
-  roommatePreferences     RoommatePreferences?
-  feedPosts               FeedPost[]
-  feedLikes               FeedLike[]
-  feedComments            FeedComment[]
-  feedSaves               FeedSave[]
-  feedPostViews           FeedPostView[]        // SPRINT-57
-  housingListings         HousingListing[]
-  housingInterests        HousingInterest[]
-  restaurants             Restaurant[]
-  restaurantReviews       RestaurantReview[]
-  restaurantReservations  RestaurantReservation[]
-  restaurantFavorites     RestaurantFavorite[]
-  communityQuestions      CommunityQuestion[]
-  communityAnswers        CommunityAnswer[]
-  communityUpvotes        CommunityUpvote[]
-  communitySaves          CommunitySave[]
-  communityPollVotes      CommunityPollVote[]
-  neighborhoodMoodVotes   NeighborhoodMoodVote[]
-  createdConversations    Conversation[]
-  conversationMemberships ConversationMember[]
-  sentMessages            Message[]
-  events                   Event[]
-  eventAttendances         EventAttendee[]
-  eventReviews             EventReview[] // SPRINT-38: Reciprocal relation for reviews authored by this user.
-  eventCheckIns            EventAttendee[] @relation("EventCheckIns") // SPRINT-38: Registrations this user checked in.
-  eventSaves               EventSave[]
-  housingSaves             HousingSave[]
-  restaurantSaves          RestaurantSave[]
-  roommateSaves            RoommateSave[]       @relation("RoommateSaver")
-  savedByUsers             RoommateSave[]       @relation("RoommateSavedProfile")
-  storySaves               StorySave[]
-  contentReports           ContentReport[]       @relation("UserContentReports")
-  stories                  Story[]
-  challenges               Challenge[]
-  challengeParticipations ChallengeParticipant[]
-  badgeApplications        BadgeApplication[]     @relation("Applicant")
-  userBadges               UserBadge[]
-  reviewedBadgeApplications BadgeApplication[]    @relation("Reviewer")
-  notifications           Notification[]
-  newsArticleLikes        NewsArticleLike[]
-  newsArticleComments     NewsArticleComment[]
-  newsArticleSaves        NewsArticleSave[] // SPRINT-30
-  storyComments           StoryComment[]
-  storyLikes              StoryLike[]
-  listingReports          ListingReport[]
-  pushDevices             PushDevice[]
-  pushTokens              PushToken[]
-  broadcastsSent          BroadcastNotification[]
-  supportTickets          SupportTicket[]
-  repliedSupportTickets   SupportTicket[]          @relation("SupportTicketRepliedBy")
-  adminPolls              AdminPoll[]
-  adminPollVotes          AdminPollVote[]
-  notificationPreference  NotificationPreference?
-  privacySettings         PrivacySettings?
-  blockedUsers            BlockedUser[]          @relation("Blocker")
-  blockedBy               BlockedUser[]         @relation("Blocked")
-  sharedSpaces            SharedSpace[]
-  sharedSpaceApplications SharedSpaceApplication[]
-  sharedSpaceSaves        SharedSpaceSave[]
-  warningRecordsReceived  WarningRecord[] @relation("WarnedUser") // SPRINT-51: warnings issued against this user
-  warningRecordsIssued    WarningRecord[] @relation("WarningIssuer") // SPRINT-51: warnings issued by this admin
-  banRecordsReceived      BanRecord[]     @relation("BannedUser") // SPRINT-51: suspensions against this user
-  banRecordsIssued        BanRecord[]     @relation("BanIssuer") // SPRINT-51: suspensions issued by this admin
-  banRecordsLifted        BanRecord[]     @relation("BanLifter") // SPRINT-51: suspensions manually lifted by this admin
-  adminAuditLogs          AdminAuditLog[] // SPRINT-52: general admin activity trail
-  privacyRequestsAsTarget PrivacyRequest[] @relation("PrivacyRequestTarget") // SPRINT-55
-  privacyRequestsRequested PrivacyRequest[] @relation("PrivacyRequestRequester") // SPRINT-55
-  privacyRequestsResolved PrivacyRequest[] @relation("PrivacyRequestResolver") // SPRINT-55
-  propertyApplications    PropertyApplication[] @relation("PropertyApplicant")
-  receivedPropertyApplications PropertyApplication[] @relation("PropertyLandlord")
-  documents               UserDocument[]
+  authProviders                AuthProvider[]
+  location                     UserLocation?
+  vibes                        Vibe[]                   @relation("UserVibes")
+  interests                    Interest[]               @relation("UserInterests")
+  communities                  Community[]              @relation("UserCommunities")
+  roommatePreferences          RoommatePreferences?
+  feedPosts                    FeedPost[]
+  feedLikes                    FeedLike[]
+  feedComments                 FeedComment[]
+  feedSaves                    FeedSave[]
+  feedPostViews                FeedPostView[] // SPRINT-57
+  housingListings              HousingListing[]
+  housingInterests             HousingInterest[]
+  restaurants                  Restaurant[]
+  restaurantReviews            RestaurantReview[]
+  restaurantReservations       RestaurantReservation[]
+  restaurantFavorites          RestaurantFavorite[]
+  communityQuestions           CommunityQuestion[]
+  communityAnswers             CommunityAnswer[]
+  communityUpvotes             CommunityUpvote[]
+  communitySaves               CommunitySave[]
+  communityPollVotes           CommunityPollVote[]
+  neighborhoodMoodVotes        NeighborhoodMoodVote[]
+  createdConversations         Conversation[]
+  conversationMemberships      ConversationMember[]
+  sentMessages                 Message[]
+  events                       Event[]
+  eventAttendances             EventAttendee[]
+  eventReviews                 EventReview[] // SPRINT-38: Reciprocal relation for reviews authored by this user.
+  eventCheckIns                EventAttendee[]          @relation("EventCheckIns") // SPRINT-38: Registrations this user checked in.
+  eventSaves                   EventSave[]
+  housingSaves                 HousingSave[]
+  restaurantSaves              RestaurantSave[]
+  roommateSaves                RoommateSave[]           @relation("RoommateSaver")
+  savedByUsers                 RoommateSave[]           @relation("RoommateSavedProfile")
+  storySaves                   StorySave[]
+  contentReports               ContentReport[]          @relation("UserContentReports")
+  stories                      Story[]
+  challenges                   Challenge[]
+  challengeParticipations      ChallengeParticipant[]
+  badgeApplications            BadgeApplication[]       @relation("Applicant")
+  userBadges                   UserBadge[]
+  reviewedBadgeApplications    BadgeApplication[]       @relation("Reviewer")
+  notifications                Notification[]
+  newsArticleLikes             NewsArticleLike[]
+  newsArticleComments          NewsArticleComment[]
+  newsArticleSaves             NewsArticleSave[] // SPRINT-30
+  storyComments                StoryComment[]
+  storyLikes                   StoryLike[]
+  listingReports               ListingReport[]
+  pushDevices                  PushDevice[]
+  pushTokens                   PushToken[]
+  broadcastsSent               BroadcastNotification[]
+  supportTickets               SupportTicket[]
+  repliedSupportTickets        SupportTicket[]          @relation("SupportTicketRepliedBy")
+  adminPolls                   AdminPoll[]
+  adminPollVotes               AdminPollVote[]
+  notificationPreference       NotificationPreference?
+  privacySettings              PrivacySettings?
+  blockedUsers                 BlockedUser[]            @relation("Blocker")
+  following                    UserFollow[]             @relation("Follower")
+  followers                    UserFollow[]             @relation("Followed")
+  blockedBy                    BlockedUser[]            @relation("Blocked")
+  sharedSpaces                 SharedSpace[]
+  sharedSpaceApplications      SharedSpaceApplication[]
+  sharedSpaceSaves             SharedSpaceSave[]
+  warningRecordsReceived       WarningRecord[]          @relation("WarnedUser") // SPRINT-51: warnings issued against this user
+  warningRecordsIssued         WarningRecord[]          @relation("WarningIssuer") // SPRINT-51: warnings issued by this admin
+  banRecordsReceived           BanRecord[]              @relation("BannedUser") // SPRINT-51: suspensions against this user
+  banRecordsIssued             BanRecord[]              @relation("BanIssuer") // SPRINT-51: suspensions issued by this admin
+  banRecordsLifted             BanRecord[]              @relation("BanLifter") // SPRINT-51: suspensions manually lifted by this admin
+  adminAuditLogs               AdminAuditLog[] // SPRINT-52: general admin activity trail
+  privacyRequestsAsTarget      PrivacyRequest[]         @relation("PrivacyRequestTarget") // SPRINT-55
+  privacyRequestsRequested     PrivacyRequest[]         @relation("PrivacyRequestRequester") // SPRINT-55
+  privacyRequestsResolved      PrivacyRequest[]         @relation("PrivacyRequestResolver") // SPRINT-55
+  propertyApplications         PropertyApplication[]    @relation("PropertyApplicant")
+  receivedPropertyApplications PropertyApplication[]    @relation("PropertyLandlord")
+  documents                    UserDocument[]
 
   @@index([email])
   @@index([username])
@@ -466,11 +469,11 @@ model User {
 }
 
 model AuthProvider {
-  id             String            @id @default(uuid())
+  id             String           @id @default(uuid())
   userId         String
   provider       AuthProviderType
   providerUserId String?
-  refreshToken   String?           @db.Text // SPRINT-34: retain Apple's refresh token for account-deletion revocation
+  refreshToken   String?          @db.Text // SPRINT-34: retain Apple's refresh token for account-deletion revocation
   passwordHash   String?
   createdAt      DateTime         @default(now())
 
@@ -497,19 +500,19 @@ model OtpCode {
 // ============== ONBOARDING & PROFILE ==============
 
 model UserLocation {
-  id         String   @id @default(uuid())
-  userId     String   @unique
-  country    String
+  id          String         @id @default(uuid())
+  userId      String         @unique
+  country     String
   countryCode String
-  dialCode   String
-  state      String
-  city       String
-  latitude   Float?
-  longitude  Float?
+  dialCode    String
+  state       String
+  city        String
+  latitude    Float?
+  longitude   Float?
   /// Plan 08 (TR-042): where the city came from. GPS: the phone's location; ADMIN: set by an admin; MANUAL: typed
   /// (before plan 08, or an older app version).
-  source     LocationSource @default(MANUAL)
-  updatedAt  DateTime       @default(now()) @updatedAt
+  source      LocationSource @default(MANUAL)
+  updatedAt   DateTime       @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -521,8 +524,8 @@ enum LocationSource {
 }
 
 model Vibe {
-  id          String  @id @default(uuid())
-  slug        String  @unique
+  id          String @id @default(uuid())
+  slug        String @unique
   name        String
   description String
   emoji       String
@@ -531,8 +534,8 @@ model Vibe {
 }
 
 model Interest {
-  id          String  @id @default(uuid())
-  slug        String  @unique
+  id          String @id @default(uuid())
+  slug        String @unique
   name        String
   description String
   icon        String
@@ -553,19 +556,19 @@ model Community {
 
 model RoommatePreferences {
   id              String           @id @default(uuid())
-  userId          String          @unique
+  userId          String           @unique
   budgetMin       Int?
   budgetMax       Int?
   moveInDate      DateTime?
   sleepSchedule   SleepSchedule?
   cleanliness     Cleanliness?
   noiseTolerance  NoiseTolerance?
-  petFriendly     Boolean         @default(false)
-  smokingAllowed  Boolean         @default(false)
+  petFriendly     Boolean          @default(false)
+  smokingAllowed  Boolean          @default(false)
   guestsFrequency GuestsFrequency?
-  workFromHome    Boolean         @default(false)
-  aboutMe         String?         @db.VarChar(500)
-  isLooking       Boolean         @default(false)
+  workFromHome    Boolean          @default(false)
+  aboutMe         String?          @db.VarChar(500)
+  isLooking       Boolean          @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -588,14 +591,14 @@ model FeedPost {
   isPublished   Boolean      @default(true)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  editedAt      DateTime?    // SPRINT-37: track explicit author edits separately from automatic updates
+  editedAt      DateTime? // SPRINT-37: track explicit author edits separately from automatic updates
 
-  author  User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  media   FeedPostMedia[]
-  likes   FeedLike[]
+  author   User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  media    FeedPostMedia[]
+  likes    FeedLike[]
   comments FeedComment[]
-  saves   FeedSave[]
-  views   FeedPostView[] // SPRINT-57
+  saves    FeedSave[]
+  views    FeedPostView[] // SPRINT-57
 }
 
 // SPRINT-57: one row per viewer per post so viewsCount counts people, not scroll events
@@ -613,10 +616,10 @@ model FeedPostView {
 }
 
 model FeedPostMedia {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   feedPostId String
   imageUrl   String
-  order      Int      @default(0)
+  order      Int    @default(0)
 
   feedPost FeedPost @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
 }
@@ -659,58 +662,58 @@ model FeedSave {
 // ============== HOUSING ==============
 
 model HousingListing {
-  id             String        @id @default(uuid())
-  ownerId        String
-  title          String        @db.VarChar(120)
-  description    String
-  propertyType   PropertyType
-  price          Decimal
-  currency       String        @default("USD")
-  deposit        Decimal?
-  bedrooms       Int
-  bathrooms      Int
-  sqft           Int?
-  floor          String?
-  address        String
-  neighborhood   String?
-  city           String
-  state          String?
-  country        String
-  latitude       Float?
-  longitude      Float?
-  availableDate  DateTime?
-  leaseTerm      String?
-  isFurnished    Boolean       @default(false)
-  petPolicy      String?
-  parking        String?
-  laundry        String?
-  heating        String?
-  cooling        String?
-  utilities      String?
-  yearBuilt      Int?
-  amenities      String[]
-  transitInfo    String?
-  walkScore      Int?
-  isVerified     Boolean       @default(false)
-  isFeatured     Boolean       @default(false)
-  status         ListingStatus @default(AVAILABLE)
-  viewsCount     Int           @default(0)
-  moderationReason String?     @db.VarChar(500) // SPRINT-54: admin rejection note visible only to listing owner
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id               String        @id @default(uuid())
+  ownerId          String
+  title            String        @db.VarChar(120)
+  description      String
+  propertyType     PropertyType
+  price            Decimal
+  currency         String        @default("USD")
+  deposit          Decimal?
+  bedrooms         Int
+  bathrooms        Int
+  sqft             Int?
+  floor            String?
+  address          String
+  neighborhood     String?
+  city             String
+  state            String?
+  country          String
+  latitude         Float?
+  longitude        Float?
+  availableDate    DateTime?
+  leaseTerm        String?
+  isFurnished      Boolean       @default(false)
+  petPolicy        String?
+  parking          String?
+  laundry          String?
+  heating          String?
+  cooling          String?
+  utilities        String?
+  yearBuilt        Int?
+  amenities        String[]
+  transitInfo      String?
+  walkScore        Int?
+  isVerified       Boolean       @default(false)
+  isFeatured       Boolean       @default(false)
+  status           ListingStatus @default(AVAILABLE)
+  viewsCount       Int           @default(0)
+  moderationReason String?       @db.VarChar(500) // SPRINT-54: admin rejection note visible only to listing owner
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  owner   User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  images  HousingImage[]
-  interests HousingInterest[]
-  saves   HousingSave[]
+  owner        User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images       HousingImage[]
+  interests    HousingInterest[]
+  saves        HousingSave[]
   applications PropertyApplication[]
 }
 
 model HousingImage {
-  id        String   @id @default(uuid())
+  id        String  @id @default(uuid())
   listingId String
   imageUrl  String
-  order     Int      @default(0)
+  order     Int     @default(0)
   caption   String?
 
   listing HousingListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
@@ -743,10 +746,10 @@ model HousingSave {
 }
 
 model SharedSpace {
-  id               String   @id @default(uuid())
+  id               String           @id @default(uuid())
   ownerId          String
-  title            String   @db.VarChar(120)
-  description      String   @db.VarChar(2000)
+  title            String           @db.VarChar(120)
+  description      String           @db.VarChar(2000)
   address          String
   city             String
   state            String?
@@ -754,30 +757,30 @@ model SharedSpace {
   latitude         Float?
   longitude        Float?
   price            Decimal
-  currency         String   @default("USD")
+  currency         String           @default("USD")
   deposit          Decimal?
   rooms            Int
   bathrooms        Int
   totalOccupants   Int
-  currentOccupants Int      @default(0)
+  currentOccupants Int              @default(0)
   availableSpots   Int
   petPolicy        String?
-  smoking          Boolean  @default(false)
-  sleepSchedule    SleepSchedule?   // SPRINT-28
-  noiseTolerance   NoiseTolerance?  // SPRINT-28
-  roomType         RoomType?        // SPRINT-28
+  smoking          Boolean          @default(false)
+  sleepSchedule    SleepSchedule? // SPRINT-28
+  noiseTolerance   NoiseTolerance? // SPRINT-28
+  roomType         RoomType? // SPRINT-28
   furnishedStatus  FurnishedStatus? // SPRINT-28
-  availableFrom    DateTime?        // SPRINT-28
+  availableFrom    DateTime? // SPRINT-28
   cleanliness      String?          @db.VarChar(100) // SPRINT-28
   guestPolicy      String?          @db.VarChar(200) // SPRINT-28
   leaseTerm        String?          @db.VarChar(100) // SPRINT-28
   genderPreference String?          @db.VarChar(100) // SPRINT-28
   amenities        String[]
   houseRules       String[]
-  isVerified       Boolean  @default(false)
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  isVerified       Boolean          @default(false)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   owner        User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   images       SharedSpaceImage[]
@@ -826,51 +829,51 @@ model SharedSpaceSave {
 // ============== FOOD / RESTAURANT ==============
 
 model Restaurant {
-  id                 String    @id @default(uuid())
-  ownerId            String
-  name               String
-  cuisine            String
-  description        String?
-  address            String
-  city               String
-  state              String?
-  country            String
-  latitude           Float?
-  longitude          Float?
+  id                String     @id @default(uuid())
+  ownerId           String
+  name              String
+  cuisine           String
+  description       String?
+  address           String
+  city              String
+  state             String?
+  country           String
+  latitude          Float?
+  longitude         Float?
   /// Plan 13 (TR-032): when the address was last sent to the geocoder; null = not tried since it changed.
-  geocodeTriedAt     DateTime?
-  phoneNumber        String?
-  priceRange         PriceRange
-  avgPricePerPerson  Int?      // SPRINT-33: persist optional average spend per diner
-  averageRating      Decimal   @default(0)
-  totalReviews       Int       @default(0)
-  distanceMiles      Decimal?
-  waitTimeMinutes    Int?
-  openingTime        String?
-  closingTime        String?
-  timezone           String?   // FOD-02: IANA business timezone (e.g. America/New_York)
-  currency           String?   // FOD-02: ISO-4217 code the prices are quoted in
-  isOpen             Boolean   @default(true)
-  isVerified         Boolean   @default(false)
-  availableServices  String[]
-  popularDishes      Json?
-  tags               String[]
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  geocodeTriedAt    DateTime?
+  phoneNumber       String?
+  priceRange        PriceRange
+  avgPricePerPerson Int? // SPRINT-33: persist optional average spend per diner
+  averageRating     Decimal    @default(0)
+  totalReviews      Int        @default(0)
+  distanceMiles     Decimal?
+  waitTimeMinutes   Int?
+  openingTime       String?
+  closingTime       String?
+  timezone          String? // FOD-02: IANA business timezone (e.g. America/New_York)
+  currency          String? // FOD-02: ISO-4217 code the prices are quoted in
+  isOpen            Boolean    @default(true)
+  isVerified        Boolean    @default(false)
+  availableServices String[]
+  popularDishes     Json?
+  tags              String[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
-  owner       User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  images      RestaurantImage[]
-  reviews     RestaurantReview[]
+  owner        User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images       RestaurantImage[]
+  reviews      RestaurantReview[]
   reservations RestaurantReservation[]
-  favorites   RestaurantFavorite[]
-  saves       RestaurantSave[]
+  favorites    RestaurantFavorite[]
+  saves        RestaurantSave[]
 }
 
 model RestaurantImage {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
   restaurantId String
   imageUrl     String
-  order        Int      @default(0)
+  order        Int    @default(0)
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
@@ -933,29 +936,29 @@ model RestaurantSave {
 // ============== COMMUNITY Q&A ==============
 
 model CommunityQuestion {
-  id         String                     @id @default(uuid())
-  authorId  String
-  title     String                     @db.VarChar(300)
-  body      String?
-  category  CommunityQuestionCategory
-  tags      String[]
-  upvoteCount Int                      @default(0)
-  answerCount  Int                     @default(0)
-  city      String
-  createdAt DateTime                   @default(now())
+  id          String                    @id @default(uuid())
+  authorId    String
+  title       String                    @db.VarChar(300)
+  body        String?
+  category    CommunityQuestionCategory
+  tags        String[]
+  upvoteCount Int                       @default(0)
+  answerCount Int                       @default(0)
+  city        String
+  createdAt   DateTime                  @default(now())
 
-  author   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  answers  CommunityAnswer[]
-  saves    CommunitySave[]
+  author  User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  answers CommunityAnswer[]
+  saves   CommunitySave[]
 }
 
 model CommunityAnswer {
-  id         String   @id @default(uuid())
-  questionId String
-  authorId  String
-  content   String   @db.VarChar(2000)
-  upvoteCount Int    @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  questionId  String
+  authorId    String
+  content     String   @db.VarChar(2000)
+  upvoteCount Int      @default(0)
+  createdAt   DateTime @default(now())
 
   question CommunityQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
   author   User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -987,20 +990,20 @@ model CommunitySave {
 
 /// City-scoped binary “Would you rather” polls for the Explore tab.
 model CommunityPoll {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   city         String
-  category     String   @db.VarChar(32)
-  question     String   @db.VarChar(500)
-  optionAId    String   @default("a") @db.VarChar(8)
-  optionALabel String   @db.VarChar(300)
-  optionBId    String   @default("b") @db.VarChar(8)
-  optionBLabel String   @db.VarChar(300)
-  votesA       Int      @default(0)
-  votesB       Int      @default(0)
-  isActive     Boolean  @default(true)
+  category     String    @db.VarChar(32)
+  question     String    @db.VarChar(500)
+  optionAId    String    @default("a") @db.VarChar(8)
+  optionALabel String    @db.VarChar(300)
+  optionBId    String    @default("b") @db.VarChar(8)
+  optionBLabel String    @db.VarChar(300)
+  votesA       Int       @default(0)
+  votesB       Int       @default(0)
+  isActive     Boolean   @default(true)
   expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   votes CommunityPollVote[]
 
@@ -1038,33 +1041,33 @@ model NeighborhoodMoodVote {
 // ============== MESSAGING ==============
 
 model Conversation {
-  id            String                 @id @default(uuid())
+  id            String                  @id @default(uuid())
   type          ConversationType
   title         String?
   contextType   ConversationContextType @default(GENERAL)
   contextId     String?
   createdById   String
   lastMessageAt DateTime?
-  createdAt     DateTime              @default(now())
+  createdAt     DateTime                @default(now())
 
-  createdBy User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  members   ConversationMember[]
-  messages  Message[]
-  event     Event?
+  createdBy  User                 @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  members    ConversationMember[]
+  messages   Message[]
+  event      Event?
   banRecords BanRecord[] // SPRINT-53: conversation-scoped chat bans referencing this thread
 }
 
 model ConversationMember {
-  id             String                   @id @default(uuid())
-  conversationId String
-  userId         String
-  role           ConversationMemberRole  @default(MEMBER)
-  status         ConversationMemberStatus @default(PENDING)
-  lastReadAt     DateTime?
-  isHidden       Boolean                 @default(false) // SPRINT-27: per-user soft hide from inbox
-  blockProvenance BlockProvenance        @default(NONE) // SPRINT-53: NONE | USER_BLOCK | ADMIN_BAN (replaced blockedByUserBlock)
-  isMuted        Boolean                 @default(false) // SPRINT-45: this member's own mute of this conversation (suppresses push + bell badge only)
-  joinedAt       DateTime                @default(now())
+  id              String                   @id @default(uuid())
+  conversationId  String
+  userId          String
+  role            ConversationMemberRole   @default(MEMBER)
+  status          ConversationMemberStatus @default(PENDING)
+  lastReadAt      DateTime?
+  isHidden        Boolean                  @default(false) // SPRINT-27: per-user soft hide from inbox
+  blockProvenance BlockProvenance          @default(NONE) // SPRINT-53: NONE | USER_BLOCK | ADMIN_BAN (replaced blockedByUserBlock)
+  isMuted         Boolean                  @default(false) // SPRINT-45: this member's own mute of this conversation (suppresses push + bell badge only)
+  joinedAt        DateTime                 @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1073,16 +1076,16 @@ model ConversationMember {
 }
 
 model Message {
-  id             String      @id @default(uuid())
-  conversationId String
-  senderId       String
-  content        String
-  type           MessageType @default(TEXT)
-  imageUrl       String?
-  durationSeconds Int?        // SPRINT-36: store rounded whole-second audio duration beside attachment metadata
-  isEdited       Boolean     @default(false)
-  createdAt      DateTime    @default(now())
-  deletedAt      DateTime?   // plan 09: deleted by its sender; hidden from the chat, kept for moderation
+  id              String      @id @default(uuid())
+  conversationId  String
+  senderId        String
+  content         String
+  type            MessageType @default(TEXT)
+  imageUrl        String?
+  durationSeconds Int? // SPRINT-36: store rounded whole-second audio duration beside attachment metadata
+  isEdited        Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  deletedAt       DateTime? // plan 09: deleted by its sender; hidden from the chat, kept for moderation
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -1094,39 +1097,39 @@ model Message {
 // ============== EVENTS, STORIES & CHALLENGES ==============
 
 model Event {
-  id            String        @id @default(uuid())
-  authorId      String
-  title         String        @db.VarChar(120)
-  description   String        @db.VarChar(2000)
-  category      EventCategory
-  format        EventFormat
-  date          DateTime
-  startTime     String
-  endTime       String?
-  venue         String
-  city          String
-  ticketType    TicketType    @default(FREE)
-  ticketPrice   Decimal?
-  capacity      Int?
-  attendeeCount Int           @default(0)
-  averageRating Decimal       @default(0) // SPRINT-38: Mirror Restaurant.averageRating for reusable rating responses.
-  totalReviews  Int           @default(0) // SPRINT-38: Mirror Restaurant.totalReviews for denormalised review counts.
-  conversationId String?    @unique
-  createdAt     DateTime      @default(now())
+  id             String        @id @default(uuid())
+  authorId       String
+  title          String        @db.VarChar(120)
+  description    String        @db.VarChar(2000)
+  category       EventCategory
+  format         EventFormat
+  date           DateTime
+  startTime      String
+  endTime        String?
+  venue          String
+  city           String
+  ticketType     TicketType    @default(FREE)
+  ticketPrice    Decimal?
+  capacity       Int?
+  attendeeCount  Int           @default(0)
+  averageRating  Decimal       @default(0) // SPRINT-38: Mirror Restaurant.averageRating for reusable rating responses.
+  totalReviews   Int           @default(0) // SPRINT-38: Mirror Restaurant.totalReviews for denormalised review counts.
+  conversationId String?       @unique
+  createdAt      DateTime      @default(now())
 
-  author         User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
-  attendees      EventAttendee[]
-  reviews        EventReview[] // SPRINT-38: Reviews associated with this event.
-  saves          EventSave[]
-  eventImages    EventImage[]
+  author       User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  conversation Conversation?   @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  attendees    EventAttendee[]
+  reviews      EventReview[] // SPRINT-38: Reviews associated with this event.
+  saves        EventSave[]
+  eventImages  EventImage[]
 }
 
 model EventImage {
-  id      String @id @default(uuid())
-  eventId String
-  imageUrl  String?
-  order   Int    @default(0)
+  id       String  @id @default(uuid())
+  eventId  String
+  imageUrl String?
+  order    Int     @default(0)
 
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
@@ -1182,10 +1185,10 @@ model BroadcastNotification {
   audienceUserIds String[]
   recipientCount  Int                   @default(0)
   priority        BroadcastPriority     @default(NORMAL) // SPRINT-57
-  status          BroadcastStatus       @default(SENT)   // SPRINT-57: existing rows are all already-sent broadcasts
-  scheduledFor    DateTime?             // SPRINT-57: null = send immediately
-  sentAt          DateTime?             // SPRINT-57: when dispatch actually happened
-  failureReason   String?               // SPRINT-57: populated when status = FAILED
+  status          BroadcastStatus       @default(SENT) // SPRINT-57: existing rows are all already-sent broadcasts
+  scheduledFor    DateTime? // SPRINT-57: null = send immediately
+  sentAt          DateTime? // SPRINT-57: when dispatch actually happened
+  failureReason   String? // SPRINT-57: populated when status = FAILED
   createdAt       DateTime              @default(now())
 
   sentBy User @relation(fields: [sentById], references: [id], onDelete: Cascade)
@@ -1216,12 +1219,12 @@ model SupportTicket {
 }
 
 model AdminPoll {
-  id          String            @id @default(uuid())
-  question    String            @db.VarChar(300)
+  id          String   @id @default(uuid())
+  question    String   @db.VarChar(300)
   createdById String
-  isActive    Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   createdBy User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
   options   AdminPollOption[]
@@ -1231,11 +1234,11 @@ model AdminPoll {
 }
 
 model AdminPollOption {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   pollId     String
-  text       String   @db.VarChar(200)
-  votesCount Int      @default(0)
-  order      Int      @default(0)
+  text       String @db.VarChar(200)
+  votesCount Int    @default(0)
+  order      Int    @default(0)
 
   poll  AdminPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
   votes AdminPollVote[]
@@ -1365,21 +1368,21 @@ model EventAttendee {
   attendeeName  String?
   attendeeEmail String?
   attendeePhone String?
-  ticketCount     Int     @default(1)
-  status          EventRegistrationStatus @default(ACTIVE) // SPRINT-38: Retain cancellation state without replacing the Sprint 28 ticket UUID.
-  cancelledAt     DateTime? // SPRINT-38: Record when a registration stopped granting admission.
-  checkedInAt     DateTime? // SPRINT-38: Record the first successful ticket redemption.
-  checkedInById   String? // SPRINT-38: Record the organiser who redeemed the ticket.
+  ticketCount   Int                     @default(1)
+  status        EventRegistrationStatus @default(ACTIVE) // SPRINT-38: Retain cancellation state without replacing the Sprint 28 ticket UUID.
+  cancelledAt   DateTime? // SPRINT-38: Record when a registration stopped granting admission.
+  checkedInAt   DateTime? // SPRINT-38: Record the first successful ticket redemption.
+  checkedInById String? // SPRINT-38: Record the organiser who redeemed the ticket.
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event       Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkedInBy User? @relation("EventCheckIns", fields: [checkedInById], references: [id], onDelete: SetNull) // SPRINT-38: Keep check-in time if the organiser account is removed.
 
   @@unique([eventId, userId])
   @@index([eventId, status, checkedInAt]) // SPRINT-38: Support organiser status totals and filtered attendee lists.
 }
 
-model EventReview { // SPRINT-38: Mirror RestaurantReview with Event as the parent.
+model EventReview {
   id        String   @id @default(uuid()) // SPRINT-38: Match the restaurant review identifier.
   eventId   String // SPRINT-38: Parent event identifier.
   userId    String // SPRINT-38: Reviewing attendee identifier.
@@ -1391,7 +1394,8 @@ model EventReview { // SPRINT-38: Mirror RestaurantReview with Event as the pare
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade) // SPRINT-38: Delete reviews with their author.
 
   @@unique([eventId, userId]) // SPRINT-38: Enforce one review per attendee per event under concurrency.
-} // SPRINT-38: End event review model.
+}
+// SPRINT-38: End event review model.
 
 model Story {
   id              String         @id @default(uuid())
@@ -1410,7 +1414,7 @@ model Story {
   expiresAt       DateTime
   createdAt       DateTime       @default(now())
 
-  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author   User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
   saves    StorySave[]
   comments StoryComment[]
   likes    StoryLike[]
@@ -1472,24 +1476,24 @@ model StoryLike {
 }
 
 model Challenge {
-  id               String           @id @default(uuid())
+  id               String            @id @default(uuid())
   authorId         String
-  title            String          @db.VarChar(120)
+  title            String            @db.VarChar(120)
   type             ChallengeType
-  details          String?         @db.VarChar(500)
+  details          String?           @db.VarChar(500)
   duration         ChallengeDuration
   goalCondition    String
   reward           String
   maxParticipants  Int?
   hashtags         String[]
   location         String?
-  participantCount Int            @default(0)
-  status           ChallengeStatus @default(ACTIVE)
+  participantCount Int               @default(0)
+  status           ChallengeStatus   @default(ACTIVE)
   startsAt         DateTime
   endsAt           DateTime
-  createdAt        DateTime        @default(now())
+  createdAt        DateTime          @default(now())
 
-  author       User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author       User                   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   participants ChallengeParticipant[]
 }
 
@@ -1500,7 +1504,7 @@ model ChallengeParticipant {
   joinedAt    DateTime @default(now())
 
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([challengeId, userId])
 }
@@ -1529,30 +1533,30 @@ model BadgeApplication {
   adminNotes        String?
   reviewedBy        String?
   reviewedAt        DateTime?
-  createdAt         DateTime              @default(now())
+  createdAt         DateTime               @default(now())
 
   applicant User            @relation("Applicant", fields: [userId], references: [id], onDelete: Cascade)
-  reviewer  User?            @relation("Reviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewer  User?           @relation("Reviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
   documents BadgeDocument[]
   userBadge UserBadge?
 }
 
 model BadgeDocument {
-  id           String   @id @default(uuid())
+  id            String   @id @default(uuid())
   applicationId String
-  documentKey  String?
-  documentType String
-  createdAt    DateTime @default(now())
+  documentKey   String?
+  documentType  String
+  createdAt     DateTime @default(now())
 
   application BadgeApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model UserBadge {
-  id            String       @id @default(uuid())
+  id            String    @id @default(uuid())
   userId        String
   badgeType     BadgeType
-  applicationId String       @unique
-  grantedAt     DateTime     @default(now())
+  applicationId String    @unique
+  grantedAt     DateTime  @default(now())
 
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   application BadgeApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -1563,15 +1567,15 @@ model UserBadge {
 // ============== NOTIFICATION & SETTINGS ==============
 
 model Notification {
-  id           String           @id @default(uuid())
-  userId       String
-  type         NotificationType
-  title        String
-  body         String
+  id            String           @id @default(uuid())
+  userId        String
+  type          NotificationType
+  title         String
+  body          String
   referenceType String?
   referenceId   String?
-  isRead       Boolean          @default(false)
-  createdAt    DateTime        @default(now())
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1628,23 +1632,23 @@ model NewsArticleSave {
 }
 
 model NotificationPreference {
-  id            String   @id @default(uuid())
-  userId       String   @unique
-  pushEnabled  Boolean  @default(true)
-  emailEnabled Boolean  @default(false)
-  eventsNearby Boolean  @default(true)
-  comments     Boolean  @default(true)
-  likes        Boolean  @default(false)
-  messages     Boolean  @default(true)
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  pushEnabled  Boolean @default(true)
+  emailEnabled Boolean @default(false)
+  eventsNearby Boolean @default(true)
+  comments     Boolean @default(true)
+  likes        Boolean @default(false)
+  messages     Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PrivacySettings {
-  id            String   @id @default(uuid())
-  userId       String   @unique
-  publicProfile Boolean @default(true)
-  showLocation Boolean  @default(true)
+  id             String  @id @default(uuid())
+  userId         String  @unique
+  publicProfile  Boolean @default(true)
+  showLocation   Boolean @default(true)
   activityStatus Boolean @default(false)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1662,28 +1666,43 @@ model BlockedUser {
   @@unique([blockerId, blockedId])
 }
 
+// Plan 14 (TR-029): one person following another. One-way, no approval.
+model UserFollow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Followed", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId, createdAt])
+  @@index([followerId, createdAt])
+}
+
 model PlatformSettings {
   id        String   @id @default(uuid())
   key       String   @unique
-  value     String   // JSON-stringified value
+  value     String // JSON-stringified value
   updatedAt DateTime @updatedAt
 }
 
 // SPRINT-55: compliance log for admin data-export and erasure; survives target user hard-delete
 model PrivacyRequest {
-  id                   String               @id @default(uuid())
-  userId               String? // SPRINT-55: nullified when user is hard-deleted; snapshot remains
-  snapshotUsername     String               @db.VarChar(120)
-  snapshotEmail        String               @db.VarChar(255)
-  type                 PrivacyRequestType
-  status               PrivacyRequestStatus
-  requestedByAdminId   String?
-  reason               String?              @db.VarChar(1000)
-  exportFileKey        String? // SPRINT-55: private storage key or inline marker
-  exportPayload        Json? // SPRINT-55: export body served only via admin-guarded download
-  resolvedAt           DateTime?
-  resolvedByAdminId    String?
-  createdAt            DateTime             @default(now())
+  id                 String               @id @default(uuid())
+  userId             String? // SPRINT-55: nullified when user is hard-deleted; snapshot remains
+  snapshotUsername   String               @db.VarChar(120)
+  snapshotEmail      String               @db.VarChar(255)
+  type               PrivacyRequestType
+  status             PrivacyRequestStatus
+  requestedByAdminId String?
+  reason             String?              @db.VarChar(1000)
+  exportFileKey      String? // SPRINT-55: private storage key or inline marker
+  exportPayload      Json? // SPRINT-55: export body served only via admin-guarded download
+  resolvedAt         DateTime?
+  resolvedByAdminId  String?
+  createdAt          DateTime             @default(now())
 
   user             User? @relation("PrivacyRequestTarget", fields: [userId], references: [id], onDelete: SetNull)
   requestedByAdmin User? @relation("PrivacyRequestRequester", fields: [requestedByAdminId], references: [id], onDelete: SetNull)

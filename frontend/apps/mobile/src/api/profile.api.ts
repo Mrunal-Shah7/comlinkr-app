@@ -57,6 +57,9 @@ export interface UserStats {
   savedCount: number;
   eventsCount: number;
   neighborsCount: number;
+  /** Plan 14: absent from older servers. */
+  followersCount?: number;
+  followingCount?: number;
 }
 
 export interface PublicProfile {
@@ -149,6 +152,8 @@ function normalizePublicProfile(raw: Record<string, unknown>): PublicProfile {
       savedCount: Number(statsRaw.savedCount ?? 0),
       eventsCount: Number(statsRaw.eventsCount ?? 0),
       neighborsCount: Number(statsRaw.neighborsCount ?? 0),
+      ...(statsRaw.followersCount != null ? { followersCount: Number(statsRaw.followersCount) } : {}),
+      ...(statsRaw.followingCount != null ? { followingCount: Number(statsRaw.followingCount) } : {}),
     },
     achievements: Array.isArray(raw.achievements)
       ? (raw.achievements as Achievement[])
@@ -192,18 +197,38 @@ export function toggleFollow(userId: string): Promise<{ following: boolean; foll
   return api.post(`/users/${userId}/follow`);
 }
 
-export function getMyFollowers(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<Follower>> {
+/** Plan 14: your followers, or the people you follow; newest first. The server pages with `limit`. */
+async function getFollows(kind: "followers" | "following", params: { page?: number; pageSize?: number }): Promise<PaginatedResponse<Follower>> {
   const qs = new URLSearchParams(
-    Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
+    Object.entries({ page: params.page, limit: params.pageSize })
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, String(v)])
   ).toString();
-  return api.get<PaginatedResponse<Follower>>(`/users/me/followers${qs ? `?${qs}` : ""}`);
+  const raw = await api.get<any>(`/users/me/${kind}${qs ? `?${qs}` : ""}`);
+  const rows: any[] = Array.isArray(raw?.data) ? raw.data : [];
+  return {
+    data: rows.map((r) => ({
+      id: String(r.id),
+      name: String(r.name ?? r.fullName ?? r.username ?? ""),
+      username: String(r.username ?? ""),
+      avatar: typeof r.avatar === "string" && r.avatar ? r.avatar : undefined,
+      city: typeof r.city === "string" && r.city ? r.city : undefined,
+      verified: Boolean(r.verified),
+      followedByMe: Boolean(r.followedByMe),
+    })),
+    page: Number(raw?.page ?? params.page ?? 1),
+    pageSize: Number(raw?.pageSize ?? params.pageSize ?? 20),
+    total: Number(raw?.total ?? rows.length),
+    hasMore: Boolean(raw?.hasMore),
+  };
+}
+
+export function getMyFollowers(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<Follower>> {
+  return getFollows("followers", params);
 }
 
 export function getMyFollowing(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<Follower>> {
-  const qs = new URLSearchParams(
-    Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
-  ).toString();
-  return api.get<PaginatedResponse<Follower>>(`/users/me/following${qs ? `?${qs}` : ""}`);
+  return getFollows("following", params);
 }
 
 export function blockUser(userId: string): Promise<void> {

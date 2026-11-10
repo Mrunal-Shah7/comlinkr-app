@@ -73,3 +73,15 @@ Walked on the phone; rows C- in the [run log](../device-runs/2026-11-10-full-wal
 - Blocking hides the author's questions and answers at once (C-03).
 - Follow on a public profile is hidden: there is no follow API (S-06, TR-029).
 - Open: C-08, C-15.
+
+## Update 2026-11-10: Follow (TR-029, plan 14, branch `feature/follow`, not merged)
+
+From the [build note](../build/2026-11-10-follow.md).
+- Follow is built: one-way and without approval (`UserFollow`). `POST /users/:id/follow` toggles it, and
+  `GET /users/me/followers` and `GET /users/me/following` list your follows, newest first [code].
+- Profiles show "N followers · M following". On your own profile the line opens Follows, with Followers and
+  Following tabs and "Follow back" **[phone]**.
+- The person followed gets "New follower", at most once a week per follower; tapping it opens the follower's profile
+  **[phone]**.
+- Blocking removes the follows both ways, and a blocked user cannot be followed [code].
+- Following does not change the feed (the owner's call).
