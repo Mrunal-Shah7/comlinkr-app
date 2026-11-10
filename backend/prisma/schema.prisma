@@ -1080,6 +1080,7 @@ model Message {
   durationSeconds Int?        // SPRINT-36: store rounded whole-second audio duration beside attachment metadata
   isEdited       Boolean     @default(false)
   createdAt      DateTime    @default(now())
+  deletedAt      DateTime?   // plan 09: deleted by its sender; hidden from the chat, kept for moderation
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)

@@ -112,6 +112,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [06. Three product changes decided during the walkthrough](plan/06-walkthrough-decisions.md) (TR-028): done.
 - [07. Sheets and dialogs drawn in the app's own window](plan/07-in-window-sheets.md) (TR-041): building.
 - [08. The city comes from the phone's location](plan/08-gps-city.md) (TR-042): building.
+- [09. Deleting your own chat message](plan/09-chat-message-delete.md) (TR-039): built.
 
 ## Reviews (`review/`)
 
@@ -133,6 +134,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Deleting your own chat message](build/2026-11-10-chat-message-delete.md) (TR-039, TR-044): soft
+  delete for the sender, live removal, live messages drawn on the right side.
 - 2026-11-10: [Triage leftovers](build/2026-11-10-triage-leftovers.md) (TR-035, TR-040): requests wait for
   onboarding, the Explore news retry loop, ten small walkthrough findings, randomuser.me removed, backend lint clean.
 - 2026-11-10: [The city comes from the phone's location](build/2026-11-10-gps-city.md) (TR-042, plan 08): GPS sets

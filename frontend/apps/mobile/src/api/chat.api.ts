@@ -128,7 +128,8 @@ export function normalizeGatewayMessage(raw: unknown, currentUserId: string): Ap
       typeof m.durationSeconds === "number" && Number.isFinite(m.durationSeconds) // SPRINT-40:
         ? Math.round(m.durationSeconds) // SPRINT-40:
         : null, // SPRINT-40:
-    isOwn: typeof m.isOwn === "boolean" ? m.isOwn : senderId === currentUserId,
+    // The broadcast is formatted once, for the sender, so its isOwn is true for everyone: decide it here.
+    isOwn: senderId ? senderId === currentUserId : Boolean(m.isOwn),
   };
 }
 
@@ -341,8 +342,9 @@ export function describeAudioUploadError(error: unknown): string { // SPRINT-40:
   return "Voice message upload failed. Check your connection and retry."; // SPRINT-40:
 } // SPRINT-40:
 
-export function deleteMessage(_conversationId: string, _messageId: string): Promise<void> {
-  return Promise.reject(new Error("Delete message is not available on this API version."));
+/** Plan 09: the sender deletes their own message; it disappears for everyone in the chat. */
+export async function deleteMessage(conversationId: string, messageId: string): Promise<void> {
+  await api.delete(`/conversations/${conversationId}/messages/${messageId}`);
 }
 
 export function markConversationRead(id: string): Promise<void> {

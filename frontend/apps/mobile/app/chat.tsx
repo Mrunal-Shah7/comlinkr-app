@@ -41,6 +41,7 @@ import {
   acceptRequest,
   declineRequest,
   deleteConversation,
+  deleteMessage,
   getUnreadCount,
   mapConversationToListRow,
   normalizeGatewayMessage,
@@ -61,6 +62,7 @@ import {
   leaveConversationRoom,
   subscribeMessagingEvent, // SPRINT-39:
   type ConversationUpdatedSocketPayload, // SPRINT-39:
+  type MessageRemovedSocketPayload,
   type NewMessageSocketPayload,
   type TypingIndicatorPayload, // SPRINT-39:
   type TypingStoppedPayload, // SPRINT-39:
@@ -819,7 +821,16 @@ function Thread({
       clearRemoteTypingUser(payload.userId);
     };
 
+    // Plan 09: a message deleted by its sender (or removed by an admin) leaves every open chat.
+    const onMessageRemoved = (raw: unknown) => {
+      const payload = raw as MessageRemovedSocketPayload;
+      if (payload?.conversationId !== id) return;
+      setThreadMsgs((prev) => prev.filter((m) => m.id !== payload.messageId));
+      onInboxRefreshRef.current();
+    };
+
     const unsubMessage = subscribeMessagingEvent("new_message", handler); // SPRINT-39:
+    const unsubRemoved = subscribeMessagingEvent("message_removed", onMessageRemoved);
     const unsubTyping = subscribeMessagingEvent("typing_indicator", onTypingIndicator); // SPRINT-39:
     const unsubTypingStop = subscribeMessagingEvent("typing_stopped", onTypingStopped); // SPRINT-39:
     const unsubConnect = subscribeMessagingEvent("connect", () => {
@@ -838,6 +849,7 @@ function Thread({
       emitTypingStop(); // SPRINT-39: stop on leave
       clearAllRemoteTyping(); // SPRINT-39:
       unsubMessage();
+      unsubRemoved();
       unsubTyping();
       unsubTypingStop();
       unsubConnect();
@@ -964,27 +976,32 @@ function Thread({
     }
   };
 
+  // Plan 09: your own sent message (text, photo, voice) can be deleted for everyone in the chat. Copy stays hidden
+  // until expo-clipboard is installed (needs a new native build); other people's messages offer nothing yet.
   const handleLongPressMsg = (msg: ThreadMsg) => {
-    if (msg.kind !== "text") return;
-    const isMe = msg.isOwn;
-    const options = [
-      // TODO(next build): Copy is hidden for now — it only showed an alert and never wrote to the clipboard.
-      // Re-enable once expo-clipboard is installed (needs a new native build) and use Clipboard.setStringAsync(msg.text).
-      // { text: "Copy", onPress: () => appAlert("Copied", msg.text) },
-      ...(isMe
-        ? [
-            {
-              text: "Delete",
-              style: "destructive" as const,
-              onPress: () => setThreadMsgs((prev) => prev.filter((m) => m.id !== msg.id)),
-            },
-          ]
-        : []),
-      { text: "Cancel", style: "cancel" as const },
-    ];
-    // Show a short preview as the dialog body; a bare "Message" title left the dialog looking empty.
-    const preview = msg.text.length > 120 ? `${msg.text.slice(0, 120)}…` : msg.text;
-    appAlert("Message options", preview, options);
+    if (msg.kind === "system" || !msg.isOwn) return;
+    if (msg.kind === "audio" && msg.deliveryState !== "sent") return; // not on the server yet
+    const preview =
+      msg.kind === "text"
+        ? msg.text.length > 120 ? `${msg.text.slice(0, 120)}…` : msg.text
+        : msg.kind === "image" ? "Photo" : "Voice message";
+    appAlert("Delete message?", `${preview}\n\nIt will be removed for everyone in this chat.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteMessage(id, msg.id);
+            setThreadMsgs((prev) => prev.filter((m) => m.id !== msg.id));
+            onInboxRefreshRef.current();
+          } catch (e) {
+            const why = e instanceof ApiError ? e.message : "Check your connection and try again.";
+            appAlert("Could not delete", why);
+          }
+        },
+      },
+    ]);
   };
 
   const handleDecline = async () => {
@@ -1169,8 +1186,9 @@ function Thread({
             const isMe = msg.isOwn;
             const isHost = msg.isHost;
             return (
-              <View
+              <Pressable
                 key={msg.id}
+                onLongPress={() => handleLongPressMsg(msg)}
                 style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}
               >
                 {!isMe ? <Avatar name={msg.senderName} size={28} /> : null}
@@ -1202,7 +1220,7 @@ function Thread({
                     <MessageTick isOwn={isMe} />
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           }
 
@@ -1210,7 +1228,7 @@ function Thread({
             const isMe = msg.isOwn;
             const isHost = msg.isHost;
             return (
-              <View key={msg.id} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}>
+              <Pressable key={msg.id} onLongPress={() => handleLongPressMsg(msg)} style={{ flexDirection: isMe ? "row-reverse" : "row", alignItems: "flex-end", gap: rs(8) }}>
                 {!isMe && <Avatar name={msg.senderName} size={28} />}
                 <View style={{ maxWidth: "74%", gap: rs(3) }}>
                   {isGroupChat && !isMe && (
@@ -1240,7 +1258,7 @@ function Thread({
                     <MessageTick isOwn={isMe} read={(msg as any).read} />
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           }
 
@@ -1741,6 +1759,11 @@ export default function ChatScreen() {
 
       const prev = conversationsRef.current;
       const idx = prev.findIndex((c) => c.id === payload.conversationId);
+      if (payload.removed) {
+        // Plan 09: a deleted message changes the preview and order; reload rather than move the row to the top.
+        void loadConversations();
+        return;
+      }
       if (idx < 0) {
         // Brand-new conversation not in list — refetch rather than invent a partial row
         void loadConversations(); // SPRINT-39:

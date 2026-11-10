@@ -36,6 +36,7 @@ export interface ConversationUpdatedPayload {
   messagePreview: string; // SPRINT-36: provide the latest-message summary
   unreadCount: number; // SPRINT-36: provide the recipient's current unread count
   updatedAt: string; // SPRINT-36: provide the ordering timestamp
+  removed?: boolean; // plan 09: a message was deleted; the list reloads the row
 } // SPRINT-36: complete conversation update payload
 
 export interface NotificationCreatedPayload {

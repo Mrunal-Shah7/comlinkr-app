@@ -14,6 +14,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `feature/in-window-sheets` (from `fix/triage-sweep`), TR-041, TR-019, TR-020, plan 07: built and checked on the phone (profile menu, Post sheet, filters, keyboard, dialogs, settings modal). Built, walked on the phone, build note written. Left: the owner's review.
 - `feature/gps-city` (from `feature/in-window-sheets`), TR-042, plan 08: built, tested, walked on the phone. Left: the owner's review.
 - `fix/triage-leftovers` (from `feature/gps-city`), TR-035, TR-040, lint: built, build note written. Left: the owner's review.
+- `feature/chat-delete` (from `fix/triage-leftovers`), TR-039, TR-044, plan 09: built, tested, walked on the phone, build note written. Left: the owner's review.
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 

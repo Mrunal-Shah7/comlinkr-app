@@ -95,4 +95,17 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 
 Walked on the phone; rows S- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
 - Chat send (with accents), view profile, delete chat and the empty state work (S-05). Deleting one message is not offered.
+
+## Update 2026-11-10: deleting your own message (plan 09, TR-039, branch `feature/chat-delete`, not merged)
+
+- Long-press on your own sent message (text, photo, voice) asks "Delete message?" and calls
+  `DELETE /conversations/:id/messages/:messageId`; it leaves the thread only when the API agrees. Other people's
+  messages offer nothing on long-press. **[phone]**
+- Soft delete (`Message.deletedAt`): the thread, list preview, unread counts and reporting skip it; the admin
+  transcript still shows it with `deletedAt`, so a report on it can still be acted on. The admin's Remove is still a
+  hard delete. [code, e2e]
+- Live: `message_removed` to the conversation room (open chats drop the message, also for admin removals now) and
+  `conversation_updated` with `removed: true` to each member (lists reload). **[phone]**
+- A message arriving live is drawn as the receiver's, not as their own (TR-044). **[phone]**
+- Open: after Accept on a request, the banner stays until the chat is reopened (TR-043).
 - Saved → News lists saved news articles as well as posts (S-01); My posts deletes quests and stories too (S-03).
