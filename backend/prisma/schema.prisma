@@ -506,8 +506,18 @@ model UserLocation {
   city       String
   latitude   Float?
   longitude  Float?
+  /// Plan 08 (TR-042): where the city came from. GPS: the phone's location; ADMIN: set by an admin; MANUAL: typed
+  /// (before plan 08, or an older app version).
+  source     LocationSource @default(MANUAL)
+  updatedAt  DateTime       @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum LocationSource {
+  GPS
+  ADMIN
+  MANUAL
 }
 
 model Vibe {

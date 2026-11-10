@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { enterApp } from "../../src/features/auth/enterApp";
+import { detectLocation, openLocationSettings } from "../../src/features/location/detectLocation";
 import { useSidebarStore } from "../../src/store/sidebar.store";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,7 +27,6 @@ import { useAuthStore as useApiAuthStore } from "../../src/store/auth/authStore"
 import { profileFromBackendAuthUser } from "../../src/services/http/authService";
 import { submitOnboardingToApi } from "../../src/services/http/onboardingService";
 import { HttpApiError } from "../../src/services/http/apiClient";
-import { COUNTRIES, STATES_BY_COUNTRY, CITIES_BY_STATE } from "../../src/data/locationData";
 import { rs, screenWidth } from "../../src/utils/responsive";
 import { appAlert } from '../../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../../src/theme/themedStyles';
@@ -72,8 +72,6 @@ function OnbProgress({ step, total }: { step: number; total: number }) {
 }
 
 
-/** Sprint 21: enrollment limited to US + UK at onboarding. */
-const ONBOARDING_COUNTRIES = COUNTRIES.filter((c) => c === "United States" || c === "United Kingdom");
 
 
 // ─── Country Flags & Dial Codes ─────────────────────────
@@ -241,110 +239,6 @@ const COMMUNITY_CATEGORY_ICON: Record<string, string> = {
 
 const STEPS = ["Location", "Culture", "Interests", "Community", "Ready"];
 
-// ─── Reusable picker list ───────────────────────────────
-function PickerList({
-  items,
-  selected,
-  onSelect,
-  placeholder,
-  searchValue,
-  onSearchChange,
-  label,
-  showFlags,
-}: {
-  items: string[];
-  selected: string;
-  onSelect: (v: string) => void;
-  placeholder: string;
-  searchValue: string;
-  onSearchChange: (v: string) => void;
-  label: string;
-  showFlags?: boolean;
-}) {
-  const { tc } = useTheme();
-
-  const getFlag = (item: string) => showFlags ? (COUNTRY_INFO[item]?.flag ?? "") : "";
-  const getCode = (item: string) => showFlags ? (COUNTRY_INFO[item]?.code ?? "") : "";
-
-  // When an item is selected, collapse the list — just show the selected badge
-  if (selected) {
-    return (
-      <View style={styles.pickerSection}>
-        <Text style={[styles.pickerLabel, { color: tc.textTertiary }]}>{label}</Text>
-        <View style={styles.selectedBadge}>
-          <Ionicons name="checkmark-circle" size={16} color={Colors.brand.blue} />
-          <Text style={styles.selectedBadgeText}>
-            {showFlags && getFlag(selected) ? `${getFlag(selected)}  ${selected}  ${getCode(selected)}` : selected}
-          </Text>
-          <Pressable
-            onPress={() => { onSelect(""); onSearchChange(""); Haptics.selectionAsync(); }}
-            hitSlop={8}
-            style={styles.changePressable}
-          >
-            <Text style={styles.changeText}>Change</Text>
-          </Pressable>
-        </View>
-      </View>
-    );
-  }
-
-  // Trimmed: keyboard autocorrect commits a word with a trailing space ("California "), which matched nothing.
-  const query = searchValue.trim().toLowerCase();
-  const filtered = query ? items.filter((i) => i.toLowerCase().includes(query)) : items;
-
-  return (
-    <View style={styles.pickerSection}>
-      <Text style={[styles.pickerLabel, { color: tc.textTertiary }]}>{label}</Text>
-
-      <View style={[styles.searchWrap, { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>
-        <Ionicons name="search-outline" size={16} color={tc.textTertiary} />
-        <TextInput
-          style={[styles.searchInput, { color: tc.textPrimary }]}
-          placeholder={placeholder}
-          placeholderTextColor={tc.textTertiary}
-          value={searchValue}
-          onChangeText={onSearchChange}
-          autoCapitalize="none"
-        />
-        {searchValue.length > 0 && (
-          <Pressable onPress={() => onSearchChange("")} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color={tc.textTertiary} />
-          </Pressable>
-        )}
-      </View>
-
-      <View style={[styles.listBox, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-        <ScrollView
-          style={styles.listScroll}
-          nestedScrollEnabled
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {filtered.map((item) => (
-            <Pressable
-              key={item}
-              onPress={() => { onSelect(item); onSearchChange(""); Haptics.selectionAsync(); }}
-              style={[styles.listItem, { borderBottomColor: tc.borderLight }]}
-            >
-              <Text style={[styles.listItemText, { color: tc.textPrimary }]}>
-                {showFlags && getFlag(item) ? `${getFlag(item)}  ${item}` : item}
-              </Text>
-              {showFlags && getCode(item) ? (
-                <Text style={[styles.listItemCode, { color: tc.textTertiary }]}>{getCode(item)}</Text>
-              ) : null}
-            </Pressable>
-          ))}
-          {filtered.length === 0 && (
-            <View style={styles.noResults}>
-              <Ionicons name="search" size={24} color={tc.borderMedium} />
-              <Text style={[styles.noResultsText, { color: tc.textTertiary }]}>No results for "{searchValue}"</Text>
-            </View>
-          )}
-        </ScrollView>
-      </View>
-    </View>
-  );
-}
 
 // ─── Component ─────────────────────────────────────────
 export default function OnboardingScreen() {
@@ -367,9 +261,26 @@ export default function OnboardingScreen() {
   const [country, setCountry] = useState("");
   const [stateProvince, setStateProvince] = useState("");
   const [city, setCity] = useState("");
-  const [countrySearch, setCountrySearch] = useState("");
-  const [stateSearch, setStateSearch] = useState("");
-  const [citySearch, setCitySearch] = useState("");
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number; countryCode: string } | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [locationError, setLocationError] = useState<{ reason: string; message: string } | null>(null);
+  const detectMyLocation = async () => {
+    if (detecting) return;
+    setDetecting(true);
+    setLocationError(null);
+    setRegionError(null);
+    try {
+      const res = await detectLocation();
+      if (!res.ok) { setLocationError(res); return; }
+      const l = res.location;
+      setCountry(l.country); setStateProvince(l.state); setCity(l.city);
+      setCoords({ latitude: l.latitude, longitude: l.longitude, countryCode: l.countryCode });
+      if (!["US", "GB"].includes(l.countryCode)) setRegionError("ComLinkr is currently available in the United States and United Kingdom only.");
+      Haptics.selectionAsync();
+    } finally {
+      setDetecting(false);
+    }
+  };
 
   // Preferences
   const [culture, setCulture] = useState<string[]>([]);
@@ -380,8 +291,6 @@ export default function OnboardingScreen() {
   const [agreed, setAgreed] = useState(false);
   const [regionError, setRegionError] = useState<string | null>(null);
 
-  const availableStates = country ? (STATES_BY_COUNTRY[country] ?? []) : [];
-  const availableCities = stateProvince ? (CITIES_BY_STATE[stateProvince] ?? []) : [];
 
   const goNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -444,6 +353,7 @@ export default function OnboardingScreen() {
         stateProvince,
         city,
         dialCode,
+        ...(coords ?? {}),
         cultureUiIds: culture,
         interestUiIds: interests,
         communityUiIds: communities,
@@ -472,7 +382,7 @@ export default function OnboardingScreen() {
   };
 
   const canProceed = () => {
-    if (step === 0) return country.length > 0 && stateProvince.length > 0 && city.length > 0;
+    if (step === 0) return city.length > 0 && coords != null && !regionError;
     if (step === 1) return culture.length > 0;
     if (step === 2) return interests.length > 0;
     if (step === 3) return true; // communities optional — can skip
@@ -532,71 +442,45 @@ export default function OnboardingScreen() {
               </View>
               <Text style={[styles.stepTitle, { color: tc.textPrimary }]}>Where are you located?</Text>
               <Text style={[styles.stepSub, { color: tc.textSecondary }]}>
-                Select your country, region, and city — we'll personalize
-                your entire ComLinkr experience
+                We use your phone's location to set your city, so what you see
+                and post belongs to where you are
               </Text>
 
-              {/* Country picker */}
-              <PickerList
-                label="Country"
-                items={ONBOARDING_COUNTRIES}
-                selected={country}
-                onSelect={(c) => {
-                  setRegionError(null);
-                  setCountry(c);
-                  setStateProvince("");
-                  setCity("");
-                  setStateSearch("");
-                  setCitySearch("");
-                }}
-                placeholder="Search country..."
-                searchValue={countrySearch}
-                onSearchChange={setCountrySearch}
-                showFlags
-              />
+              {/* Plan 08 (TR-042): the city comes from the phone's location, not a picker. */}
+              <Pressable
+                onPress={() => void detectMyLocation()}
+                disabled={detecting}
+                accessibilityRole="button"
+                accessibilityLabel={city ? "Detect my location again" : "Use my location"}
+                style={({ pressed }) => [styles.locationSummaryCard, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight, opacity: pressed || detecting ? 0.7 : 1 }]}
+              >
+                {detecting ? <ActivityIndicator color={Colors.brand.blue} /> : <Ionicons name="locate" size={20} color={Colors.brand.blue} />}
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.locationSummaryValue, { color: tc.textPrimary }]}>
+                    {detecting ? "Finding your location…" : city ? "Detect again" : "Use my location"}
+                  </Text>
+                  <Text style={[styles.stepSub, { color: tc.textSecondary, marginBottom: 0, textAlign: "left" }]}>
+                    Your city is set from where you are. It can't be typed.
+                  </Text>
+                </View>
+              </Pressable>
+              {locationError ? (
+                <View style={{ marginTop: 8, marginBottom: 8, gap: 8 }}>
+                  <Text style={[styles.stepSub, { color: palette.red600, marginBottom: 0 }]}>{locationError.message}</Text>
+                  {locationError.reason === "blocked" ? (
+                    <Pressable onPress={openLocationSettings} accessibilityRole="button" style={{ alignSelf: "center", padding: 8 }}>
+                      <Text style={{ color: Colors.brand.blue, fontWeight: "700" }}>Open settings</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
 
-              <Text style={[styles.stepSub, { color: tc.textTertiary, marginTop: -4, marginBottom: 8 }]}>
+              <Text style={[styles.stepSub, { color: tc.textTertiary, marginTop: 8, marginBottom: 8 }]}>
                 ComLinkr is currently available in the United States and United Kingdom only.
               </Text>
               {regionError ? (
                 <Text style={[styles.stepSub, { color: palette.red600, marginBottom: 8 }]}>{regionError}</Text>
               ) : null}
-
-              {/* State / Province picker (visible once country is selected) */}
-              {country.length > 0 && (
-                <PickerList
-                  label={
-                    country === "United States" ? "State"
-                    : country === "Canada" ? "Province"
-                    : country === "Australia" ? "State / Territory"
-                    : country === "United Kingdom" ? "Country / Region"
-                    : "State / Province / Region"
-                  }
-                  items={availableStates}
-                  selected={stateProvince}
-                  onSelect={(s) => {
-                    setStateProvince(s);
-                    setCity("");
-                    setCitySearch("");
-                  }}
-                  placeholder="Search state / province..."
-                  searchValue={stateSearch}
-                  onSearchChange={setStateSearch}
-                />
-              )}
-
-              {/* City picker (visible once state is selected) */}
-              {stateProvince.length > 0 && (
-                <PickerList
-                  label="City"
-                  items={availableCities}
-                  selected={city}
-                  onSelect={setCity}
-                  placeholder="Search city..."
-                  searchValue={citySearch}
-                  onSearchChange={setCitySearch}
-                />
-              )}
 
               {locationSummary ? (
                 <View style={[styles.locationSummaryCard, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
@@ -610,7 +494,7 @@ export default function OnboardingScreen() {
 
               <View style={[styles.tipBox, { backgroundColor: tc.sectionBg, borderColor: tc.borderLight }]}>
                 <Text style={[styles.tipText, { color: tc.textSecondary }]}>
-                  💡 You can change your location anytime in Settings
+                  💡 Moved? Update your city from your location in Settings
                 </Text>
               </View>
             </View>

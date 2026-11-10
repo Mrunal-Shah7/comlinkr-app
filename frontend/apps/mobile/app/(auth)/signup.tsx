@@ -9,6 +9,7 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -177,6 +178,7 @@ export default function SignupScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setCodeOk(true);
       await new Promise((r) => setTimeout(r, 520));
+      Keyboard.dismiss(); // the code field keeps focus behind onboarding and reopened the keyboard there
       enterApp(onboardingDone);
     } catch (e: unknown) {
       setError(formatSignupError(e));

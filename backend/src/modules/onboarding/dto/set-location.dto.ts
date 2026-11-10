@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, MaxLength, Length } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, MaxLength, Length, IsOptional, IsLatitude, IsLongitude } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class SetLocationDto {
@@ -37,4 +37,14 @@ export class SetLocationDto {
   @MaxLength(100)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   city: string;
+
+  @ApiPropertyOptional({ description: 'Latitude of the phone when the city was detected (plan 08)', minimum: -90, maximum: 90 })
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @ApiPropertyOptional({ description: 'Longitude of the phone when the city was detected (plan 08)', minimum: -180, maximum: 180 })
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
 }

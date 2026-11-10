@@ -273,7 +273,7 @@ export interface AdminUser {
   role: UserRole | AdminApiRole | string;
   city?: string;
   country?: string;
-  location?: { city: string | null; country: string | null } | null; // SPRINT-41:
+  location?: { city: string | null; country: string | null; state?: string | null; source?: string | null } | null; // SPRINT-41:
   verificationStatus?: string;
   badges?: string[];
   banned?: boolean;
@@ -399,6 +399,13 @@ export function adminUpdateUser( // SPRINT-41:
 export function adminDeleteUser(id: string): Promise<{ message: string }> { // SPRINT-41:
   return api.delete(`/admin/users/${id}`); // SPRINT-41:
 } // SPRINT-41:
+
+/** Plan 08 (TR-042): PATCH /admin/users/:id/location. An admin overrides the city a user's location gave them. */
+export function adminSetUserLocation(id: string, loc: {
+  country: string; countryCode: string; dialCode: string; state: string; city: string;
+}): Promise<{ userId: string; city: string; state: string; country: string; source: string }> {
+  return api.patch(`/admin/users/${id}/location`, loc);
+}
 
 /** // SPRINT-41: POST /admin/users/:id/warn */
 export function adminWarnUser(id: string, message: string): Promise<{ message: string }> { // SPRINT-41:

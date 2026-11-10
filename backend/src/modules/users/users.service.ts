@@ -168,6 +168,7 @@ export class UsersService {
         dialCode: string;
         state: string;
         city: string;
+        source: string;
       } | null;
       vibes: Array<{
         id: string;
@@ -230,6 +231,7 @@ export class UsersService {
             dialCode: user.location.dialCode,
             state: user.location.state,
             city: user.location.city,
+            source: user.location.source, // plan 08: GPS, ADMIN or MANUAL
           }
         : null,
       vibes: user.vibes ?? [],

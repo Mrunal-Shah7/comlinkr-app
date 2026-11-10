@@ -28,6 +28,8 @@ repository, reinstall both: pnpm's links hold absolute paths.
   - Unit tests: `pnpm test:unit` (no database needed).
   - End-to-end tests: `pnpm test:e2e`. They run against `comlinkr_test` (or `TEST_DATABASE_URL` from
     `backend/.env.test`). A guard refuses the databases `comlinkr` and `postgres`; never weaken it.
+    The tests do not migrate that database: after a new migration, apply it there first (`prisma migrate deploy`
+    with `DATABASE_URL` set to `TEST_DATABASE_URL`), or the tests fail with a missing column.
   - Lint: `npx eslint "src/**/*.ts"` to check. `pnpm lint` runs `--fix` and rewrites files.
 - **mobile (`frontend/apps/mobile/`):** `pnpm install`, `pnpm typecheck`. There are no automated mobile tests;
   behaviour is checked on a phone (see "Testing on the phone" below).

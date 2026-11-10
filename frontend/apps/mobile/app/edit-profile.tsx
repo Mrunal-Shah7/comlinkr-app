@@ -40,7 +40,9 @@ import {
   INTEREST_SLUG_TO_UI_ID,
   syncProfileSelectionsToApi,
   VIBE_SLUG_TO_UI_ID,
+  updateCityFromLocation,
 } from "../src/services/http/onboardingService";
+import { detectLocation, openLocationSettings } from "../src/features/location/detectLocation";
 import { COUNTRIES, STATES_BY_COUNTRY, CITIES_BY_STATE, COUNTRY_INFO } from "../src/data/locationData";
 import { validatePhoneNumber, formatPhoneHint, sanitizePhoneInput } from "../src/utils/phoneValidation";
 
@@ -498,23 +500,6 @@ export default function EditProfileScreen() {
     }
 
     // Location — validated by the picker (only valid values selectable)
-    if (!country.trim()) {
-      showToast("Please select your country.", "error");
-      return;
-    }
-    const hasStates = (STATES_BY_COUNTRY[country] ?? []).length > 0;
-    if (hasStates && !stateProvince.trim()) {
-      showToast(
-        `Please select your ${country === "Canada" ? "province" : "state"} within ${country}.`,
-        "error",
-      );
-      return;
-    }
-    const hasCities = (CITIES_BY_STATE[stateProvince] ?? []).length > 0;
-    if (hasCities && !city.trim()) {
-      showToast("Please select your city.", "error");
-      return;
-    }
     setSaving(true);
     try {
       await patchMyProfile({
@@ -525,9 +510,6 @@ export default function EditProfileScreen() {
         ...(phone.trim() ? { phoneNumber: phone.trim() } : {}),
       });
       await syncProfileSelectionsToApi({
-        country: country.trim(),
-        stateProvince: stateProvince.trim(),
-        city: city.trim(),
         cultureUiIds: selectedCulture,
         interestUiIds: selectedInterests,
         communityUiIds: selectedCommunities,
@@ -619,21 +601,42 @@ export default function EditProfileScreen() {
   // Location and the chips save a moment after they change, once they are complete.
   useEffect(() => {
     if (!prefsReady.current) return;
-    const hasStates = (STATES_BY_COUNTRY[country] ?? []).length > 0;
-    const hasCities = (CITIES_BY_STATE[stateProvince] ?? []).length > 0;
-    if (!country.trim() || (hasStates && !stateProvince.trim()) || (hasCities && !city.trim())) return;
     if (selectedInterests.length === 0 && hadInterestsAtLoad.current) return;
     const t = setTimeout(() => {
-      mark("place", "saving"); mark("prefs", "saving");
+      mark("prefs", "saving");
       void syncProfileSelectionsToApi({
-        country: country.trim(), stateProvince: stateProvince.trim(), city: city.trim(),
         cultureUiIds: selectedCulture, interestUiIds: selectedInterests, communityUiIds: selectedCommunities,
-      }).then(refreshUser).then(() => { mark("place", "ok"); mark("prefs", "ok"); })
-        .catch((ex) => { mark("place", "err"); mark("prefs", "err"); showToast(apiErrorMessage(ex, "Could not save."), "error"); });
+      }).then(refreshUser).then(() => { mark("prefs", "ok"); })
+        .catch((ex) => { mark("prefs", "err"); showToast(apiErrorMessage(ex, "Could not save."), "error"); });
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshUser and mark only use stable setters
-  }, [country, stateProvince, city, selectedCulture, selectedInterests, selectedCommunities]);
+  }, [selectedCulture, selectedInterests, selectedCommunities]);
+  // Plan 08 (TR-042): the city comes from the phone's location; it is never typed.
+  const [locating, setLocating] = useState(false);
+  const updateFromLocation = async () => {
+    if (locating) return;
+    setLocating(true);
+    mark("place", "saving");
+    try {
+      const res = await detectLocation();
+      if (!res.ok) {
+        mark("place", "err");
+        if (res.reason === "blocked") appAlert("Location is off", res.message, [{ text: "Cancel", style: "cancel" }, { text: "Open settings", onPress: openLocationSettings }]);
+        else showToast(res.message, "error");
+        return;
+      }
+      await updateCityFromLocation(res.location);
+      setCountry(res.location.country); setStateProvince(res.location.state); setCity(res.location.city);
+      await refreshUser();
+      mark("place", "ok");
+    } catch (ex) {
+      mark("place", "err");
+      showToast(apiErrorMessage(ex, "Could not update your city."), "error");
+    } finally {
+      setLocating(false);
+    }
+  };
   // A new photo uploads right away; removing it removes it.
   const lastPhoto = useRef<string | null | undefined>(undefined);
   useEffect(() => {
@@ -747,14 +750,16 @@ export default function EditProfileScreen() {
 
           <Reveal i={2}>
             {group("Where you live", "place")}
-            {field("Country", <LocationPickerField label="Country" value={country} items={COUNTRIES} onSelect={(v) => { setCountry(v); setStateProvince(""); setCity(""); }} placeholder="Choose a country" showFlags tc={tc} />)}
-            {country.length > 0 && availableStates.length > 0
-              ? field(country === "United States" ? "State" : country === "Canada" ? "Province" : country === "United Kingdom" ? "Region" : "State or province",
-                <LocationPickerField label={country === "United States" ? "State" : country === "Canada" ? "Province" : "State or province"} value={stateProvince} items={availableStates} onSelect={(v) => { setStateProvince(v); setCity(""); }} placeholder="Choose one" tc={tc} />)
-              : null}
-            {stateProvince.length > 0 && availableCities.length > 0
-              ? field("City", <LocationPickerField label="City" value={city} items={availableCities} onSelect={setCity} placeholder="Choose a city" tc={tc} />)
-              : null}
+            {field("City", (
+              <View style={[inputBox, { flexDirection: "row", alignItems: "center", gap: 10, opacity: 0.85 }]}>
+                <Ionicons name="location-outline" size={18} color={tc.textSecondary} />
+                <Text style={[inputText, { flex: 1 }]} numberOfLines={1}>{[city, stateProvince, country].filter(Boolean).join(", ") || "Not set"}</Text>
+              </View>
+            ), "Set from your phone's location. It can't be typed.")}
+            <Pressable onPress={() => void updateFromLocation()} disabled={locating} accessibilityRole="button" style={({ pressed }) => [{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 10, opacity: pressed || locating ? 0.6 : 1 }]}>
+              {locating ? <ActivityIndicator size="small" color={tc.accentText} /> : <Ionicons name="locate" size={18} color={tc.accentText} />}
+              <Text style={{ color: tc.accentText, fontWeight: "700" }}>{locating ? "Finding your location…" : "Update from my location"}</Text>
+            </Pressable>
           </Reveal>
 
           <Reveal i={3}>

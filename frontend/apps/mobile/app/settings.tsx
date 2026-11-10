@@ -55,6 +55,8 @@ import { getMyListings, listingImageUrlList, subscribeToListingUpdates, type Hou
 import { getMyRestaurants, type Restaurant } from "../src/api/food.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
+import { apiErrorMessage } from '../src/utils/apiErrorMessage';
+import { openLocationSettings, refreshCityFromLocation } from '../src/features/location/detectLocation';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { useThemeStore } from "../src/store/theme.store";
 import { TYPE } from "../src/theme/d";
@@ -316,6 +318,22 @@ export default function SettingsScreen() {
   const [privacyModal, setPrivacyModal] = useState(false);
   const [blockedModal, setBlockedModal] = useState(false);
   const [cityModal, setCityModal] = useState(false);
+  // Plan 08 (TR-042): the city comes from the phone's location.
+  const [locating, setLocating] = useState(false);
+  const updateCity = async () => {
+    if (locating) return;
+    setLocating(true);
+    try {
+      const failed = await refreshCityFromLocation();
+      if (!failed) { showToast("City updated from your location.", "success"); setCityModal(false); return; }
+      if (failed.reason === "blocked") appAlert("Location is off", failed.message, [{ text: "Cancel", style: "cancel" }, { text: "Open settings", onPress: openLocationSettings }]);
+      else showToast(failed.message, "error");
+    } catch (e) {
+      showToast(apiErrorMessage(e, "Could not update your city."), "error");
+    } finally {
+      setLocating(false);
+    }
+  };
   const [interestsModal, setInterestsModal] = useState(false);
   const [notifsModal, setNotifsModal] = useState(false);
 
@@ -1048,7 +1066,10 @@ export default function SettingsScreen() {
           <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18) }}>
             Your city determines the local content you see across Explore, Listings, Food and Community.
           </Text>
-          <GradientButton block label={user?.city ? "Change city" : "Set your city"} onPress={() => { setCityModal(false); router.push("/edit-profile" as any); }} style={{ marginTop: 20 }} />
+          <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18), marginTop: rs(8) }}>
+            It is set from your phone's location and can't be typed.
+          </Text>
+          <GradientButton block label={locating ? "Finding your location…" : "Update from my location"} disabled={locating} onPress={() => void updateCity()} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 

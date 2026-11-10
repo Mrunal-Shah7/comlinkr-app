@@ -14,6 +14,7 @@ import type { UpdatePrivacyDto } from './dto/update-privacy.dto';
 import type { BlockUserDto } from './dto/block-user.dto';
 import type { UpdateCityDto } from './dto/update-city.dto';
 import type { UpdateCultureDto } from './dto/update-culture.dto';
+import { locationProvenance } from '../../common/utils/location-provenance';
 import { AuthService } from '../auth/auth.service'; // SPRINT-34: revoke Apple authorization before deleting provider data
 
 const PRIVACY_DEFAULTS = {
@@ -283,23 +284,11 @@ export class SettingsService {
   }
 
   async updateCity(userId: string, dto: UpdateCityDto) {
+    const fields = { country: dto.country, countryCode: dto.countryCode, dialCode: dto.dialCode, state: dto.state, city: dto.city, ...locationProvenance(dto) };
     await this.prisma.userLocation.upsert({
       where: { userId },
-      create: {
-        userId,
-        country: dto.country,
-        countryCode: dto.countryCode,
-        dialCode: dto.dialCode,
-        state: dto.state,
-        city: dto.city,
-      },
-      update: {
-        country: dto.country,
-        countryCode: dto.countryCode,
-        dialCode: dto.dialCode,
-        state: dto.state,
-        city: dto.city,
-      },
+      create: { userId, ...fields },
+      update: fields,
     });
     return { message: 'City updated' };
   }

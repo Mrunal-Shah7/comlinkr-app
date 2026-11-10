@@ -111,6 +111,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [05. Back returns to the previous state](plan/05-back-history.md) (TR-023): built.
 - [06. Three product changes decided during the walkthrough](plan/06-walkthrough-decisions.md) (TR-028): done.
 - [07. Sheets and dialogs drawn in the app's own window](plan/07-in-window-sheets.md) (TR-041): building.
+- [08. The city comes from the phone's location](plan/08-gps-city.md) (TR-042): building.
 
 ## Reviews (`review/`)
 
@@ -132,6 +133,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [The city comes from the phone's location](build/2026-11-10-gps-city.md) (TR-042, plan 08): GPS sets
+  the city in onboarding, Settings and Edit profile; admins can override it.
 - 2026-11-10: [Sheets and dialogs in the app's window](build/2026-11-10-in-window-sheets.md) (TR-041, TR-019, TR-020,
   plan 07): the Android navigation bar stays hidden while a sheet, dialog or modal is open.
 - 2026-11-10: [First triage sweep](build/2026-11-10-triage-sweep.md) (TR-003, 007, 009, 030, 033, 035): Explore

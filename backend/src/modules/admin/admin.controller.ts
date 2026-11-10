@@ -20,6 +20,7 @@ import { AdminService } from './admin.service';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import { UpdateUserAdminDto } from './dto/update-user-admin.dto';
 import { WarnUserDto } from './dto/warn-user.dto';
+import { SetUserLocationDto } from './dto/set-user-location.dto';
 import { GrantUserBadgeDto } from './dto/grant-user-badge.dto';
 import { AdminContentQueryDto } from './dto/admin-content-query.dto';
 import { ModerateContentDto } from './dto/moderate-content.dto';
@@ -624,6 +625,16 @@ export class AdminController {
   ) {
     // SPRINT-35: complete defended user-update handler
     return this.adminService.updateUser(adminUserId, id, dto); // SPRINT-35: authorize before changing the user
+  }
+
+  // Plan 08 (TR-042): override the city a user's location gave them.
+  @Patch('users/:id/location')
+  setUserLocation(
+    @CurrentUser('id') adminUserId: string,
+    @Param('id') id: string,
+    @Body() dto: SetUserLocationDto,
+  ) {
+    return this.adminService.setUserLocation(adminUserId, id, dto);
   }
 
   @Post('users/:id/warn')
