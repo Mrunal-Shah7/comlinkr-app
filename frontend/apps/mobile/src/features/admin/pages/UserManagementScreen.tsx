@@ -3,9 +3,18 @@
 import { palette } from "../../../theme/palette";
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, RefreshControl, Modal,
-  TextInput, Pressable, Alert, KeyboardAvoidingView, ActivityIndicator,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  RefreshControl,
+  TextInput,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+  ActivityIndicator,
 } from 'react-native';
+import { InWindowModal } from '../../../shared/d/InWindowModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -128,7 +137,7 @@ function UserProfileModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={pm.overlay}>
         <ScrollView keyboardShouldPersistTaps="handled" style={pm.sheet} contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
           <View style={pm.handle} />
@@ -388,7 +397,7 @@ function UserProfileModal({
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </InWindowModal>
   );
 }
 
@@ -409,7 +418,7 @@ function DeleteConfirmModal({ // SPRINT-41:
     typed.toLowerCase() === user.email.toLowerCase() || // SPRINT-41:
     typed.toLowerCase() === user.username.toLowerCase(); // SPRINT-41:
   return ( // SPRINT-41:
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={dcm.overlay}>
           <View style={dcm.card}>
@@ -441,7 +450,7 @@ function DeleteConfirmModal({ // SPRINT-41:
           </View>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   ); // SPRINT-41:
 } // SPRINT-41:
 
@@ -465,7 +474,7 @@ function WarnModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={wm.overlay}>
           <ScrollView style={wm.sheet} contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
@@ -522,7 +531,7 @@ function WarnModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   );
 }
 
@@ -531,7 +540,7 @@ function GrantBadgeModal({
   onClose, onGrant,
 }: { visible: boolean; userId: string | null; onClose: () => void; onGrant: (badgeType: string) => void }) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={gbm.overlay}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={gbm.card}>
@@ -558,7 +567,7 @@ function GrantBadgeModal({
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </InWindowModal>
   );
 }
 

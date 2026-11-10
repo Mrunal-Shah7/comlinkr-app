@@ -173,7 +173,10 @@ none is in `docs/production-lessons.md`.
   (B6).
 - Hide an empty state while its list is still loading (B3).
 - List every value a `useMemo` or `useEffect` reads in its dependencies (B8).
-- Inside the native `@expo/ui` bottom sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
+- Never open a native window on Android for a sheet or dialog (`Modal`, an `@expo/ui` sheet): it shows the hidden
+  navigation bar. Use `DSheet`, `InWindowModal` or `appAlert`, which draw in the app's window (plan 07, TR-041).
+  Sheet content renders under the root through a portal: no screen-scoped navigation hooks inside it.
+- On iOS, inside the native `@expo/ui` sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
   not rely on gesture-handler gestures (they never fire); use `Pressable` or the React Native responder props
   ([native navigation](docs/build/2026-11-09-native-navigation.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`

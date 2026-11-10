@@ -13,12 +13,12 @@ import {
   StyleSheet,
   useWindowDimensions,
   ActivityIndicator,
-  Modal,
   FlatList,
   TextInput,
   KeyboardAvoidingView,
   Alert,
 } from "react-native";
+import { InWindowModal } from "../src/shared/d/InWindowModal";
 import { StatusBar } from "expo-status-bar";
 import { createDTypeStyles } from "../src/theme/themedStyles";
 import { Image } from "expo-image"; // SPRINT-31:
@@ -798,7 +798,7 @@ export default function StoryViewerScreen() {
       </View>
 
       {/* ── Comments sheet ── */}
-      <Modal
+      <InWindowModal
         visible={commentsOpen}
         animationType="slide"
         transparent
@@ -954,7 +954,7 @@ export default function StoryViewerScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </InWindowModal>
     </Reanimated.View>
     </GestureDetector>
   );

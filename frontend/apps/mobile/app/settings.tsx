@@ -12,11 +12,11 @@ import {
   StyleSheet,
   Alert,
   TextInput,
-  Modal,
   ActivityIndicator,
   KeyboardAvoidingView,
   Keyboard,
 } from "react-native";
+import { InWindowModal } from "../src/shared/d/InWindowModal";
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: use the shared renderer for every settings image.
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -250,7 +250,7 @@ function SettingsModal({
     return () => { a.remove(); b.remove(); };
   }, []);
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent>
+    <InWindowModal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent transparent>
       {/* "padding" lifts the whole sheet above the keyboard; "height" shrank the overlay and let the keyboard cover inputs. */}
       <KeyboardAvoidingView
         style={s.overlay}
@@ -274,7 +274,7 @@ function SettingsModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   );
 }
 

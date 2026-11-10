@@ -14,10 +14,10 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  Modal,
   FlatList,
   KeyboardAvoidingView,
 } from "react-native";
+import { InWindowModal } from "../src/shared/d/InWindowModal";
 import { Image } from "expo-image"; // SPRINT-31:
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect } from "expo-router";
@@ -277,7 +277,7 @@ function LocationPickerField({
         )}
       </Pressable>
 
-      <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
+      <InWindowModal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setOpen(false)}>
         <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: rs(16), paddingVertical: rs(14), borderBottomWidth: 1, borderBottomColor: tc.borderLight, gap: rs(10) }}>
             <Text style={{ flex: 1, fontSize: rs(17), fontWeight: "800", color: tc.textPrimary }}>{label}</Text>
@@ -322,7 +322,7 @@ function LocationPickerField({
             }
           />
         </View>
-      </Modal>
+      </InWindowModal>
     </>
   );
 }

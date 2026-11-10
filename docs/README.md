@@ -110,6 +110,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [04. Hide the Android navigation bar](plan/04-immersive-navigation-bar.md) (TR-021): built.
 - [05. Back returns to the previous state](plan/05-back-history.md) (TR-023): built.
 - [06. Three product changes decided during the walkthrough](plan/06-walkthrough-decisions.md) (TR-028): done.
+- [07. Sheets and dialogs drawn in the app's own window](plan/07-in-window-sheets.md) (TR-041): building.
 
 ## Reviews (`review/`)
 

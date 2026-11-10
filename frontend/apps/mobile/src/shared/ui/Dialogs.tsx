@@ -4,7 +4,7 @@
 //   const reason = await actionSheet({ title, options: [{ label, value }] });
 // <DialogHost /> must be mounted once at the root.
 import { palette } from "../../theme/palette";
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import {
   BackHandler,
   Modal,
@@ -17,9 +17,22 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { create } from 'zustand';
 import { useTheme } from '../../theme/useTheme';
-import Animated, { SlideInDown, ZoomIn, useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeIn, SlideInDown, ZoomIn, useReducedMotion } from 'react-native-reanimated';
 import { TYPE, display } from '../../theme/d';
 import { GradientFill } from '../d';
+
+/**
+ * The dialog's layer. On Android it is drawn in the app's own window, like the sheets (plan 07, TR-041): a Modal
+ * opens its own window, which shows the navigation bar the app hides. DialogHost is mounted after the sheet portal,
+ * so a dialog sits above an open sheet. On iOS the native sheets are presented above React Native, so a Modal is
+ * still needed there to show a dialog over a sheet. Back is handled by DialogHost's own listener.
+ */
+function DialogLayer({ onRequestClose, children }: { onRequestClose: () => void; children: ReactNode }) {
+  if (process.env.EXPO_OS === 'android') {
+    return <Animated.View entering={FadeIn.duration(160)} style={StyleSheet.absoluteFill}>{children}</Animated.View>;
+  }
+  return <Modal visible transparent animationType="fade" onRequestClose={onRequestClose} statusBarTranslucent>{children}</Modal>;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -158,7 +171,7 @@ export function DialogHost() {
     };
     if (buttons.length <= 2) {
       return (
-        <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
+        <DialogLayer onRequestClose={dismiss}>
           <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
             <AnimatedPressable
               entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
@@ -197,11 +210,11 @@ export function DialogHost() {
               </View>
             </AnimatedPressable>
           </Pressable>
-        </Modal>
+        </DialogLayer>
       );
     }
     return (
-      <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
+      <DialogLayer onRequestClose={dismiss}>
         <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
           <AnimatedPressable
             entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
@@ -243,14 +256,14 @@ export function DialogHost() {
             </Pressable>
           </AnimatedPressable>
         </Pressable>
-      </Modal>
+      </DialogLayer>
     );
   }
 
   if (current.kind === 'confirm') {
     const { title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', destructive } = current.opts;
     return (
-      <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
+      <DialogLayer onRequestClose={dismiss}>
         <Pressable style={[s.backdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
           <AnimatedPressable
             entering={reduce ? undefined : ZoomIn.springify().damping(22).stiffness(320).mass(1).withInitialValues({ transform: [{ scale: 0.86 }] })}
@@ -288,13 +301,13 @@ export function DialogHost() {
             </View>
           </AnimatedPressable>
         </Pressable>
-      </Modal>
+      </DialogLayer>
     );
   }
 
   const { title, message, options, cancelLabel = 'Cancel' } = current.opts;
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={dismiss} statusBarTranslucent>
+    <DialogLayer onRequestClose={dismiss}>
       <Pressable style={[s.sheetBackdrop, { backgroundColor: tc.overlay }]} onPress={dismiss} accessible={false}>
         <AnimatedPressable
           entering={reduce ? undefined : SlideInDown.springify().damping(24).stiffness(260).mass(1)}
@@ -334,7 +347,7 @@ export function DialogHost() {
           </Pressable>
         </AnimatedPressable>
       </Pressable>
-    </Modal>
+    </DialogLayer>
   );
 }
 

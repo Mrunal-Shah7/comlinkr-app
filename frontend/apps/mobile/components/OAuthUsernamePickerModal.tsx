@@ -3,13 +3,13 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { InWindowModal } from "../src/shared/d/InWindowModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { SessionCookieHeader, UserProfile } from "@shared/types/api";
 import authService from "../src/services/http/authService";
@@ -84,7 +84,7 @@ export default function OAuthUsernamePickerModal({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={() => { if (!loading) onCancel(); }}>
+    <InWindowModal visible={visible} animationType="slide" transparent statusBarTranslucent onRequestClose={() => { if (!loading) onCancel(); }}>
       <KeyboardAvoidingView style={[styles.backdrop, { backgroundColor: tc.overlay }]} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
         <Pressable style={StyleSheet.absoluteFill} onPress={() => { if (!loading) onCancel(); }} accessibilityRole="button" accessibilityLabel="Dismiss" />
         <View
@@ -151,7 +151,7 @@ export default function OAuthUsernamePickerModal({
           </Pressable>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   );
 }
 
