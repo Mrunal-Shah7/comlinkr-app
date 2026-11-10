@@ -94,7 +94,7 @@ Each gets a plan in `plan/` when it is picked up.
 
 | Task | What | Why |
 |---|---|---|
-| T-001 | Move the backend deploy workflow to `.github/workflows/` at the root, run only for `backend/**`, run the unit tests first; switch the VPS from the old backend clone to this repository | The workflow does not run from here, and today it deploys and migrates with no tests |
+| T-001 | Move the backend deploy workflow to `.github/workflows/` at the root, run only for `backend/**`, run the unit tests first, and point it at the VPS clone of this repository. ~~Switch the VPS from the old backend clone~~ done by the owner on 2026-11-11 | The workflow does not run from here, and today it deploys and migrates with no tests |
 | T-002 | A local build path that cannot reach production: an EAS `local` profile or a documented `expo run:android`, and a native build workaround that works at this path | Every EAS profile points at production; the old workaround was left in `code/` |
 | T-003 | A seed for every module (events, stories, quests, polls, applications, badges, admin data, restaurant hours, conversations) with `.test` emails, and a reset script that uses the test-database guard | Most modules cannot be walked with today's data; the smoke run could not check open or closed (S-09) or read ticks (S-11) |
 | T-004 | ~~Set up phone testing and run the smoke checklist~~ Done 2026-11-04 through MCPier's `android` server. Still open: read the scrcpy-mcp source behind it | It has a shell on the phone |

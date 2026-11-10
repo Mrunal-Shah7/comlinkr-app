@@ -3,6 +3,15 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-09 - back history (TR-023, PR 20)
+
+- Merged into `main` as PR 20 (`0ec3a44`): tab history and in-screen undo on Android Back
+  ([build note](build/2026-11-09-back-history.md)).
+- Edge swipe not confirmed: injected swipes (adb and scrcpy) do not trigger the system gesture. Try it by hand.
+- Not walked: admin screens, chat, events, help, landlord dashboard, my posts, my listings, notifications, check-in.
+- Found: TR-024, the Listings Pets filter returns 400.
+- Phone back on three-button navigation. Backend and Metro still running at the time of writing.
+
 ## 2026-11-09 (earlier) - the three open Expo-skill points (TR-017)
 
 - All three merged into `main`:

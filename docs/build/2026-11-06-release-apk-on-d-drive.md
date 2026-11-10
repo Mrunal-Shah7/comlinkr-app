@@ -37,7 +37,7 @@ this repository on 2026-11-04, so there was no working way to build a standalone
   `autolinking.json` there before any hook runs.
 
 ## Commit or pull request
-Not committed (owner's instruction).
+The scripts: commit `3f8ba27`, merged with PR 1. The 2026-11-11 notes below: PR 43 (merge `9749957`).
 
 ## How it was checked
 - The build completed: `BUILD SUCCESSFUL in 7m 16s` on the last run. The first full run, including
