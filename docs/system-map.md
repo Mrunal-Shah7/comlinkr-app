@@ -131,11 +131,24 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
 
 ## How it deploys
 
-- **Backend.** `backend/.github/workflows/deploy.yml`: on a push to `main`, SSH to the VPS, `git pull origin main`
-  in `/var/www/comlinkr_backend`, `pnpm install`, `pnpm migrate:deploy`, `pnpm generate`, `pnpm build`,
-  `pm2 restart comlinkr-api`. No tests run first. **In this repository the workflow does not run:** GitHub only
-  reads `.github/workflows/` at the repository root, and the VPS folder is a clone of the old backend repository.
-  Switching production to this repository is planned work (see the index, "Later work").
+- **Backend.** Production runs this repository's `backend/` since 2026-11-11: the owner moved the pm2 process
+  `comlinkr-api` (`pnpm start:prod`, port 4000) from the old `comlinkr_backend` clone to a clone of this
+  repository, and ran the nine new migrations against the production database. nginx was unchanged: it proxies
+  `api.comlinkr.com` to `127.0.0.1:4000`, WebSockets included, and serves `/.well-known` from
+  `/var/www/well-known/comlinkr`. Checked from outside on 2026-11-11: `/api/health` answers 200, the Socket.IO
+  handshake answers 200, and `/api/users/me/follow-requests` (only in this code) answers 401 rather than 404.
+  The server itself was not seen from here; the switch guide used `/var/www/comlinkr-app`, with the `.env` copied
+  from the old clone.
+  - **Deploys are manual for now.** On the VPS: `git pull origin main` in the clone, then in `backend/`
+    `npx pnpm@9.15.0 install --frozen-lockfile`, `npx prisma migrate status`, `npx pnpm@9.15.0 migrate:deploy`,
+    `npx pnpm@9.15.0 generate`, `npx pnpm@9.15.0 build`, `pm2 restart comlinkr-api`. A database backup
+    (`pg_dump`) comes before any new migration.
+  - `backend/.github/workflows/deploy.yml` does not run: GitHub only reads `.github/workflows/` at the repository
+    root, and it still names `/var/www/comlinkr_backend`. Moving it is T-001 in the index, "Later work".
+  - The old repository's own deploy workflow still targets the old clone. Disable it there (or archive the
+    repository) so a push to it cannot redeploy old code.
+  - Rollback: start pm2 from the old clone again. The new migrations only add columns, tables and types, so the
+    old code runs on the new schema.
 - **Mobile.** EAS from `frontend/apps/mobile/`. Profiles: `development` (development client), `staging` (APK,
   channel `staging`), `production` (app bundle, channel `production`, submitted to the stores). Every profile sets
   `EXPO_PUBLIC_API_BASE_URL` to production. JavaScript-only changes ship as OTA updates
@@ -171,7 +184,7 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
 
 ## What is missing
 
-- A root `.github/workflows/` deploy with a test step, and the VPS switched to this repository.
+- A root `.github/workflows/` deploy with a test step (the VPS already runs this repository).
 - A local build profile (or a documented `expo run:android` path) that cannot point at production.
 - A working Windows native build path for this repository's location.
 - A seed for events, quests, polls, stories, applications, badges and admin data, all with `.test` emails.
