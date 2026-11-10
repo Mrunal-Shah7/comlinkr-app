@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { OptionalAuth } from '../../common/decorators/optional-auth.decorator';
@@ -60,5 +68,16 @@ export class ChallengesController {
     @Param('id') id: string,
   ) {
     return this.challengesService.joinChallenge(userId, id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete your own challenge' })
+  @ApiResponse({ status: 200, description: 'Challenge deleted' })
+  @ApiResponse({ status: 403, description: 'Not the author' })
+  async deleteChallenge(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.challengesService.deleteChallenge(userId, id);
   }
 }

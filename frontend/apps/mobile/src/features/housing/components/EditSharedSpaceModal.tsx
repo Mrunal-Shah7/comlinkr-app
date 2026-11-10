@@ -35,7 +35,8 @@ export function EditSharedSpaceModal({
   // Fill the form each time a room is opened for editing.
   useEffect(() => {
     if (!room) return;
-    setEditRoomDesc(room.apartmentDesc || "");
+    // The description, not apartmentDesc (that is the title): saving must not overwrite one with the other.
+    setEditRoomDesc(room.api?.description ?? "");
     setEditRoomPrice(String(room.rentPerMonth ?? ""));
     setEditRoomDeposit(String(room.deposit ?? ""));
     setEditRoomSpots(String(room.availableRooms ?? ""));

@@ -65,3 +65,11 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 
 - Upvotes bounce and the count rolls; answers are sorted with the most-upvoted first and tagged "Best answer" when there is more than one.
 - Ask sheet: the topic is guessed from the words and can be changed with a chip; your pick wins. Not walked.
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows C- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Authors can delete their own question and answer (new `DELETE` routes; upvotes removed, count lowered); the ··· menu on your own question offers Share and Delete, not report or block (C-04, C-05).
+- Blocking hides the author's questions and answers at once (C-03).
+- Follow on a public profile is hidden: there is no follow API (S-06, TR-029).
+- Open: C-08, C-15.

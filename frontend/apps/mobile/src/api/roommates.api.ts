@@ -249,6 +249,11 @@ export function declineRoommateConnection(requesterId: string): Promise<{ status
   return api.post(`/roommates/${requesterId}/decline`);
 }
 
+/** The sender withdraws their own pending request (decline is the recipient's answer to one). */
+export function cancelRoommateConnection(recipientId: string): Promise<{ status: string }> {
+  return api.post(`/roommates/${recipientId}/cancel`);
+}
+
 export function toggleRoommateSave(id: string): Promise<{ saved: boolean }> {
   return api.post<{ saved: boolean }>(`/roommates/${id}/save`);
 }

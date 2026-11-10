@@ -1,4 +1,5 @@
 import { palette } from "../../../src/theme/palette";
+import { cityTimezone } from "../../../src/utils/cityTimezone";
 import { rs } from "../../../src/utils/responsive";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet, RefreshControl, TextInput, ActivityIndicator, Share, FlatList } from "react-native";
@@ -92,7 +93,10 @@ export default function FeedScreen() {
   const { requireAuth } = useRequireAuth();
   const userPosts = usePostsStore((s) => s.userPosts);
   const blockUser = useBlockStore((s) => s.blockUser);
-  const isBlocked = useBlockStore((s) => s.isBlocked);
+  // Subscribe to the list itself: the store's isBlocked function never changes, so selecting it alone never
+  // re-rendered the screen after a block, and the blocked author stayed on screen.
+  const blockedUsers = useBlockStore((s) => s.blockedUsers);
+  const isBlocked = (id: string) => blockedUsers.some((u) => u.id === id);
   const [refreshing, setRefreshing] = useState(false);
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [saved, setSaved] = useState<Set<string>>(new Set());
@@ -266,7 +270,7 @@ export default function FeedScreen() {
       id: String(p?.id ?? ""),
       author: authorName,
       avatar: avatarUrl,
-      time: p?.createdAt ? new Date(p.createdAt).toLocaleString() : "",
+      time: p?.createdAt ? newsTimeAgo(String(p.createdAt)) : "",
       title: String(p?.title ?? ""),
       content: String(p?.content ?? ""),
       image: mediaUrl || "",
@@ -387,7 +391,15 @@ export default function FeedScreen() {
         const fullArticles = Array.isArray(fullRes?.data) && fullRes.data.length > 0 ? fullRes.data : existingPrimary;
         const firstPage = fullArticles.slice(0, LIVE_NEWS_PAGE_SIZE);
         if (firstPage.length > 0) {
-          setNewsArticles(firstPage);
+          // Keep the cards already on screen where they are (a tap must open the card under the finger),
+          // taking the fuller copy of each, then add the new ones below. Load more dedupes by id.
+          const fullById = new Map(firstPage.map((a) => [a.id, a]));
+          const shown = existingPrimary === FALLBACK_NEWS ? [] : existingPrimary; // placeholders always give way
+          const shownIds = new Set(shown.map((a) => a.id));
+          setNewsArticles([
+            ...shown.map((a) => fullById.get(a.id) ?? a),
+            ...firstPage.filter((a) => !shownIds.has(a.id)),
+          ]);
         }
         const t = fullRes.cachedAt ? new Date(fullRes.cachedAt).getTime() : NaN;
         setNewsLastFetched(Number.isNaN(t) ? Date.now() : t);
@@ -864,6 +876,16 @@ export default function FeedScreen() {
       };
     }, [loadExploreEvents, loadStories]),
   );
+
+  // A story published or deleted elsewhere (composer, viewer) invalidates the story cache, but Explore may
+  // never lose focus (the viewer sits on top of it), so reload the rings when that happens.
+  useEffect(() => {
+    return queryClient.getQueryCache().subscribe((event) => {
+      if (event.type !== "updated" || event.action.type !== "invalidate") return;
+      const [root, kind] = event.query.queryKey as unknown[];
+      if (root === "feed" && kind === "stories") void loadStories({ silent: true });
+    });
+  }, [loadStories]);
 
   // City changes while Feed is already focused/mounted don't trigger the
   // useFocusEffect above — refetch explicitly so switching city refreshes
@@ -1469,36 +1491,7 @@ export default function FeedScreen() {
     };
   }, [feedCommentPostId]);
 
-  const CITY_TZ: Record<string, string> = {
-    "New York": "America/New_York", "New York City": "America/New_York",
-    "Los Angeles": "America/Los_Angeles", "Chicago": "America/Chicago",
-    "Houston": "America/Chicago", "Phoenix": "America/Phoenix",
-    "Philadelphia": "America/New_York", "San Antonio": "America/Chicago",
-    "San Diego": "America/Los_Angeles", "Dallas": "America/Chicago",
-    "San Jose": "America/Los_Angeles", "Austin": "America/Chicago",
-    "Miami": "America/New_York", "Atlanta": "America/New_York",
-    "Seattle": "America/Los_Angeles", "Denver": "America/Denver",
-    "Boston": "America/New_York", "Nashville": "America/Chicago",
-    "London": "Europe/London", "Manchester": "Europe/London",
-    "Birmingham": "Europe/London", "Leeds": "Europe/London",
-    "Glasgow": "Europe/London", "Bristol": "Europe/London",
-    "Toronto": "America/Toronto", "Vancouver": "America/Vancouver",
-    "Montreal": "America/Toronto", "Calgary": "America/Edmonton",
-    "Dubai": "Asia/Dubai", "Abu Dhabi": "Asia/Dubai",
-    "Sydney": "Australia/Sydney", "Melbourne": "Australia/Melbourne",
-    "Brisbane": "Australia/Brisbane", "Perth": "Australia/Perth",
-    "Paris": "Europe/Paris", "Berlin": "Europe/Berlin",
-    "Amsterdam": "Europe/Amsterdam", "Madrid": "Europe/Madrid",
-    "Rome": "Europe/Rome", "Lagos": "Africa/Lagos",
-    "Nairobi": "Africa/Nairobi", "Accra": "Africa/Accra",
-    "Mumbai": "Asia/Kolkata", "Delhi": "Asia/Kolkata",
-    "Bangalore": "Asia/Kolkata", "Singapore": "Asia/Singapore",
-    "Kuala Lumpur": "Asia/Kuala_Lumpur", "Jakarta": "Asia/Jakarta",
-    "Tokyo": "Asia/Tokyo", "Seoul": "Asia/Seoul",
-    "Hong Kong": "Asia/Hong_Kong", "Shanghai": "Asia/Shanghai",
-    "Beijing": "Asia/Shanghai",
-  };
-  const cityTz = CITY_TZ[city] ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const cityTz = cityTimezone(city) ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
   const cityHour = parseInt(new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: cityTz }).format(new Date()), 10);
   const greeting = cityHour < 12 ? "Good morning" : cityHour < 18 ? "Good afternoon" : "Good evening";
   const cityDay = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: cityTz }).format(new Date()).replace(/,/g, "");
@@ -1796,7 +1789,7 @@ export default function FeedScreen() {
                 onQuest={() => setFeedTab("Quests")}
                 poll={wyrPolls[0]}
                 onPoll={() => setFeedTab("Polls")}
-                onQuestion={() => router.push("/(tabs)/community" as any)}
+                onQuestion={(q) => router.push({ pathname: "/(tabs)/community", params: { openQuestion: q.id } } as never)}
               />
             ) : null}
             <Segmented

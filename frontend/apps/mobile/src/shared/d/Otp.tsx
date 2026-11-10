@@ -78,8 +78,10 @@ export const OtpBoxes = forwardRef<OtpHandle, {
 });
 
 const s = StyleSheet.create({
-  row: { flexDirection: "row", gap: 8, justifyContent: "center" },
-  box: { width: 48, height: 58, borderRadius: 16, borderCurve: "continuous", borderWidth: 1.5, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  // The boxes share the row's width (at most 48 each): six fixed 48s and the gaps needed 328 dp, wider than a
+  // 360 dp phone's content area, and the last box was cut off (walkthrough).
+  row: { flexDirection: "row", gap: 8, justifyContent: "center", alignSelf: "stretch" },
+  box: { flex: 1, maxWidth: 48, height: 58, borderRadius: 16, borderCurve: "continuous", borderWidth: 1.5, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   hidden: { position: "absolute", opacity: 0, width: 1, height: 1 },
 });
 

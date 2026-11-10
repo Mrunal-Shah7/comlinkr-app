@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { enterApp } from "../../src/features/auth/enterApp";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -286,9 +287,9 @@ function PickerList({
     );
   }
 
-  const filtered = searchValue.trim()
-    ? items.filter((i) => i.toLowerCase().includes(searchValue.toLowerCase()))
-    : items;
+  // Trimmed: keyboard autocorrect commits a word with a trailing space ("California "), which matched nothing.
+  const query = searchValue.trim().toLowerCase();
+  const filtered = query ? items.filter((i) => i.toLowerCase().includes(query)) : items;
 
   return (
     <View style={styles.pickerSection}>
@@ -453,7 +454,7 @@ export default function OnboardingScreen() {
       }
       await syncFromApiLogin(profile, sessionCookie);
       await updateOnboarding({ country, stateProvince, city, culture, interests, communities });
-      router.replace("/(tabs)/feed");
+      enterApp(true);
     } catch (e) {
       if (e instanceof HttpApiError && e.code === "REGION_NOT_SUPPORTED") {
         setRegionError(

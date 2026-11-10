@@ -22,6 +22,27 @@ export const LISTING_IMAGE_MAX = 6; // SPRINT-37: share one maximum between cont
 const LISTING_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
 const LISTING_IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
+/**
+ * The pet policy is free text typed by the lister ("Pets allowed", "No pets", "Cats only"…). A policy that starts
+ * with "no" or says "not allowed" refuses pets; any other stated policy allows some. An empty policy is unknown and
+ * matches neither filter.
+ */
+export function petPolicyWhere(
+  allowed: boolean,
+): Prisma.HousingListingWhereInput {
+  const refuses: Prisma.HousingListingWhereInput[] = [
+    { petPolicy: { startsWith: 'no', mode: 'insensitive' } },
+    { petPolicy: { contains: 'not allowed', mode: 'insensitive' } },
+  ];
+  const stated: Prisma.HousingListingWhereInput = {
+    petPolicy: { not: null },
+    NOT: { petPolicy: '' },
+  };
+  return allowed
+    ? { AND: [stated, { NOT: { OR: refuses } }] }
+    : { AND: [stated, { OR: refuses }] };
+}
+
 @Injectable()
 export class HousingService {
   private readonly logger = new Logger(HousingService.name); // SPRINT-37: retain storage cleanup failures without failing owner requests
@@ -159,6 +180,7 @@ export class HousingService {
       if (query.maxPrice != null) (where.price as any).lte = query.maxPrice;
     }
     if (query.beds != null) where.bedrooms = { gte: query.beds };
+    if (query.pets != null) where.AND = [petPolicyWhere(query.pets)];
     if (query.search) {
       where.OR = [
         { title: { contains: query.search, mode: 'insensitive' } },

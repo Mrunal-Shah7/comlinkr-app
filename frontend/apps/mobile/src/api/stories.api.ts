@@ -3,6 +3,12 @@
  */
 
 import { api, postFormData } from "./client";
+import { queryClient } from "../services/cache/queryClient";
+
+/** Explore caches the story rings for minutes: a story added or removed must show at once. */
+function storiesChanged(): void {
+  void queryClient.invalidateQueries({ queryKey: ["feed", "stories"] });
+}
 
 export type StoryMediaTypeApi = "REEL" | "PHOTO" | "VIDEO";
 export type StoryCategoryApi = "EVENTS" | "FOOD" | "HOUSING" | "CULTURE" | "LOCAL_NEWS" | "GENERAL";
@@ -131,7 +137,9 @@ export async function createStory(payload: CreateStoryPayload): Promise<CreatedS
       guessMime(payload.media.uri, payload.mediaType === "PHOTO" ? "image/jpeg" : "video/mp4");
     fd.append("media", { uri: payload.media.uri, name, type } as any);
   }
-  return postFormData<CreatedStory>("/stories", fd);
+  const created = await postFormData<CreatedStory>("/stories", fd);
+  storiesChanged();
+  return created;
 }
 
 export interface StoryComment {
@@ -195,6 +203,8 @@ export function getStoryLikeStatus(storyId: string): Promise<StoryLikeStatus> {
 }
 
 /** Delete your own story (removed for everyone; media deleted on server). */
-export function deleteStory(storyId: string): Promise<{ deleted: boolean }> {
-  return api.delete<{ deleted: boolean }>(`/stories/${storyId}`);
+export async function deleteStory(storyId: string): Promise<{ deleted: boolean }> {
+  const res = await api.delete<{ deleted: boolean }>(`/stories/${storyId}`);
+  storiesChanged();
+  return res;
 }

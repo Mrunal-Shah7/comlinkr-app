@@ -90,3 +90,9 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - A conversation pins the home or event it is about under the bar; new messages pop in from their own side (not the ones already there). **[phone]**
 - Toasts are a glass pill from the top; deletes in My posts and conversations offer Undo instead of a confirm dialog.
 - Saved, Interested (homes) and Favourites (restaurants) are tabs of one screen; `/interested` and `/favorites` open those tabs. **[phone]**
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows S- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Chat send (with accents), view profile, delete chat and the empty state work (S-05). Deleting one message is not offered.
+- Saved → News lists saved news articles as well as posts (S-01); My posts deletes quests and stories too (S-03).

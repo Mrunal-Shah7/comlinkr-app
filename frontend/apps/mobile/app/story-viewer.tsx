@@ -207,7 +207,9 @@ export default function StoryViewerScreen() {
   const guestCity = useGuestLocationStore((s) => s.city);
   const city = (user?.city && user.city.trim()) || guestCity || undefined;
 
-  const params = useLocalSearchParams<{ authorIndex?: string; storyIndex?: string }>();
+  const params = useLocalSearchParams<{ authorIndex?: string; storyIndex?: string; storyId?: string }>();
+  // A story id (from the composer's "View") wins over the indices, which only Explore's rings know.
+  const startStoryId = typeof params.storyId === "string" ? params.storyId : "";
   const startAuthor = Math.max(0, parseInt(String(params.authorIndex ?? "0"), 10) || 0);
   const startStory  = Math.max(0, parseInt(String(params.storyIndex  ?? "0"), 10) || 0);
 
@@ -275,9 +277,16 @@ export default function StoryViewerScreen() {
       const normalized = list.map((s) => normalizeStoryFromApi(s));
       const g = buildStoryAuthorGroups(normalized, uid);
       setGroups(g);
-      const safeAuthor = Math.min(startAuthor, Math.max(0, g.length - 1));
+      let safeAuthor = Math.min(startAuthor, Math.max(0, g.length - 1));
       const sg = g[safeAuthor];
-      const safeStory = sg ? Math.min(startStory, Math.max(0, sg.stories.length - 1)) : 0;
+      let safeStory = sg ? Math.min(startStory, Math.max(0, sg.stories.length - 1)) : 0;
+      if (startStoryId) {
+        const ai = g.findIndex((group) => group.stories.some((st) => st.id === startStoryId));
+        if (ai >= 0) {
+          safeAuthor = ai;
+          safeStory = g[ai]!.stories.findIndex((st) => st.id === startStoryId);
+        }
+      }
       setCurrentAuthorIndex(safeAuthor);
       setCurrentStoryIndex(safeStory);
     } catch {
@@ -285,7 +294,7 @@ export default function StoryViewerScreen() {
     } finally {
       setLoading(false);
     }
-  }, [city, startAuthor, startStory, uid]);
+  }, [city, startAuthor, startStory, startStoryId, uid]);
 
   useEffect(() => { void load(); }, [load]);
 

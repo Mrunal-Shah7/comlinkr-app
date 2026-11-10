@@ -19,8 +19,8 @@ export function DSheet({ visible, onClose, title, children, full, style }: {
   const { isDark, tc } = useTheme();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  // On Android, Material's sheet already ends above the navigation bar, and gives up the keyboard's height itself
-  // (SheetFrame.android.tsx), so only iOS adds either here.
+  // On Android, SheetFrame.android.tsx lifts the card above the navigation bar and the keyboard itself, so only iOS
+  // adds either here.
   const android = process.env.EXPO_OS === 'android';
   // On iOS the native sheet does not move React Native content above the keyboard; growing the content by the
   // keyboard's height lifts the fields into view.
@@ -31,10 +31,13 @@ export function DSheet({ visible, onClose, title, children, full, style }: {
     const hide = Keyboard.addListener('keyboardDidHide', () => setKb(0));
     return () => { show.remove(); hide.remove(); setKb(0); };
   }, [visible]);
+  // On Android the sheet loses the keyboard's height, but a full sheet's fixed height would not shrink with it and
+  // its footer (a comment field) would sit under the keyboard: take the keyboard off that height.
+  const room = height * (full ? 0.94 : 0.88) - (android ? kb : 0);
   return (
     <SheetFrame visible={visible} onClose={onClose} full={full || kb > 0} containerColor={tc.sheetBg} colorScheme={isDark ? 'dark' : 'light'}>
       <View
-        style={[{ width, backgroundColor: tc.sheetBg, paddingBottom: (android ? 0 : kb || insets.bottom) + 16, maxHeight: height * (full ? 0.94 : 0.88), flexShrink: 1 }, full && { height: height * 0.94 }, style]}
+        style={[{ width, backgroundColor: tc.sheetBg, paddingBottom: (android ? 0 : kb || insets.bottom) + 16, maxHeight: room, flexShrink: 1 }, full && { height: room }, style]}
       >
         {title ? (
           <View style={s.head}>

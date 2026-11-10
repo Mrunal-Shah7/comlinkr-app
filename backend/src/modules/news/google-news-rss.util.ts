@@ -306,6 +306,19 @@ function extractRichDescription(itemXml: string, title: string): string {
   return '';
 }
 
+/** Google News search can return years-old items (a 2019 Super Bowl story as Los Angeles "Local" news). */
+export const NEWS_MAX_AGE_DAYS = 30;
+
+/** True when an RSS item's date is known and older than {@link NEWS_MAX_AGE_DAYS}. */
+export function isStaleNewsItem(
+  publishedAt: string,
+  now: number = Date.now(),
+): boolean {
+  const t = new Date(publishedAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return now - t > NEWS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+}
+
 export async function fetchGoogleNewsRSS(
   query: string,
   gl: string = 'US',
@@ -331,7 +344,7 @@ export async function fetchGoogleNewsRSS(
     if (!xml.includes('<item>') && !xml.includes('<entry>')) return [];
     const items = xmlItems(xml);
     const qKey = hash32(query + gl).slice(0, 8);
-    return items.slice(0, 12).map((item, i) => {
+    const articles = items.slice(0, 12).map((item, i) => {
       const rawTitle = stripHtml(xmlTag(item, 'title'));
       const cleanTitle = rawTitle.split(' - ')[0]?.trim() || rawTitle;
       const link = xmlTag(item, 'link');
@@ -358,6 +371,7 @@ export async function fetchGoogleNewsRSS(
         category,
       };
     });
+    return articles.filter((a) => !isStaleNewsItem(a.publishedAt));
   } catch {
     return [];
   }
@@ -424,7 +438,13 @@ function isPublicIp(ip: string): boolean {
     const v = ip.toLowerCase();
     if (v === '::' || v === '::1') return false;
     if (v.startsWith('fc') || v.startsWith('fd')) return false;
-    if (v.startsWith('fe8') || v.startsWith('fe9') || v.startsWith('fea') || v.startsWith('feb')) return false;
+    if (
+      v.startsWith('fe8') ||
+      v.startsWith('fe9') ||
+      v.startsWith('fea') ||
+      v.startsWith('feb')
+    )
+      return false;
     const mapped = v.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
     if (mapped) return isPublicIp(mapped[1]);
     return true;
@@ -444,7 +464,10 @@ async function assertPublicHttpUrl(raw: string): Promise<URL> {
   const addresses = isIP(host)
     ? [{ address: host }]
     : await lookup(host, { all: true });
-  if (addresses.length === 0 || !addresses.every((a) => isPublicIp(a.address))) {
+  if (
+    addresses.length === 0 ||
+    !addresses.every((a) => isPublicIp(a.address))
+  ) {
     throw new Error('non-public destination');
   }
   return url;

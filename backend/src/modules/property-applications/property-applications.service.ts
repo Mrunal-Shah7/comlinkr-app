@@ -57,6 +57,11 @@ type ApplicationRecord = Prisma.PropertyApplicationGetPayload<{
 }>;
 
 /** Statuses that block a new application for the same listing. */
+const WITHDRAWABLE_STATUSES: Status[] = [
+  Status.DRAFT,
+  Status.SUBMITTED,
+  Status.UNDER_REVIEW,
+];
 const ACTIVE_STATUSES: Status[] = [
   Status.DRAFT,
   Status.SUBMITTED,
@@ -434,20 +439,30 @@ export class PropertyApplicationsService {
     if (application.status === Status.WITHDRAWN) {
       return this.toResponse(application);
     }
-    if (application.status !== Status.DRAFT) {
-      throw invalidStatus(
-        'Only applications that have not been submitted can be withdrawn',
-      );
+    // The tenant may withdraw until the landlord approves (the landlord's signature): a draft, or one sent and
+    // possibly signed by the tenant. The status guard in the update makes a race with the landlord's decision safe.
+    const message =
+      'This application can no longer be withdrawn: the landlord has already decided';
+    if (!WITHDRAWABLE_STATUSES.includes(application.status)) {
+      throw invalidStatus(message);
     }
     const { count } = await this.prisma.propertyApplication.updateMany({
-      where: { id, status: Status.DRAFT },
+      where: { id, status: { in: WITHDRAWABLE_STATUSES } },
       data: { status: Status.WITHDRAWN, withdrawnAt: new Date() },
     });
     const updated = await this.findOrThrow(id);
     if (count === 0 && updated.status !== Status.WITHDRAWN) {
-      throw invalidStatus(
-        'Only applications that have not been submitted can be withdrawn',
-      );
+      throw invalidStatus(message);
+    }
+    // A landlord who saw the application is told; a draft was never sent to them.
+    if (count > 0 && application.status !== Status.DRAFT) {
+      await this.notify({
+        userId: application.landlordId,
+        actorId: userId,
+        title: 'Application withdrawn',
+        body: `${this.tenantName(updated)} withdrew their application for ${updated.listing.title}`,
+        applicationId: id,
+      });
     }
     return this.toResponse(updated);
   }

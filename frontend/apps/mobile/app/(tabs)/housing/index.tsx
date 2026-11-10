@@ -28,7 +28,7 @@ import { SkeletonCard } from "../../../src/shared/ui/Skeleton";
 import { ApiError } from "../../../src/api/client";
 import { rs } from "../../../src/utils/responsive";
 import { getListings, getMyListings, toggleListingSave, listingImageUrlList, subscribeToListingUpdates, type HousingListing, type HousingListingImageRef } from "../../../src/api/housing.api";
-import { connectWithRoommate, declineRoommateConnection, getRoommates, getRoommateMatches, getRoommatePreferences, getSharedSpaces, toggleRoommateSave, updateRoommatePreferences, type RoommateListing } from "../../../src/api/roommates.api";
+import { cancelRoommateConnection, connectWithRoommate, getRoommates, getRoommateMatches, getRoommatePreferences, getSharedSpaces, toggleRoommateSave, updateRoommatePreferences, type RoommateListing } from "../../../src/api/roommates.api";
 import { DatePickerField } from "../../../components/DateTimePickerField";
 import { roommatePrefsFromGetEndpoint, roommatePrefsToPatchBody } from "../../../src/utils/roommatePrefsMap";
 import { queryKeys } from "../../../src/services/cache/queryKeys";
@@ -102,6 +102,17 @@ export default function HousingScreen() {
   const [bedsFilter, setBedsFilter] = useBackState<number | null>(null);
   const [petsFilter, setPetsFilter] = useBackState<boolean | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
+  // An empty list with filters on means "nothing matches", not "no listings in this city".
+  const listingFiltersOn =
+    propertyTypeFilter !== "All" || !!minPriceFilter || !!maxPriceFilter || bedsFilter != null || petsFilter != null || !!debouncedSearch;
+  const clearListingFilters = () => {
+    setPropertyTypeFilter("All");
+    setMinPriceFilter("");
+    setMaxPriceFilter("");
+    setBedsFilter(null);
+    setPetsFilter(null);
+    setSearch("");
+  };
   // Everything changed in the filter sheet is one Back step (plan 05).
   const filterBatch = useBackBatch();
   useEffect(() => {
@@ -431,7 +442,7 @@ export default function HousingScreen() {
 
   const handleCancelRequest = async (rm: Roommate) => {
     try {
-      await declineRoommateConnection(rm.id);
+      await cancelRoommateConnection(rm.id);
       const patch = (x: Roommate): Roommate =>
         x.id === rm.id ? { ...x, connectionStatus: null, conversationId: null } : x;
       setRoommates((prev) => prev.map(patch));
@@ -895,11 +906,22 @@ export default function HousingScreen() {
                       <Ionicons name="home-outline" size={26} color={tc.textTertiary} />
                     </View>
                     <Text style={{ fontSize: 15, fontWeight: "800", color: tc.textPrimary, textAlign: "center" }}>
-                      No listings in {userCity || "this area"} yet
+                      {listingFiltersOn ? "No listings match your filters" : `No listings in ${userCity || "this area"} yet`}
                     </Text>
                     <Text style={{ fontSize: 13, color: tc.textSecondary, textAlign: "center", marginTop: 4 }}>
-                      Try a different city, or check back soon as new listings are posted.
+                      {listingFiltersOn
+                        ? "Try a wider price range or fewer filters."
+                        : "Try a different city, or check back soon as new listings are posted."}
                     </Text>
+                    {listingFiltersOn ? (
+                      <Pressable
+                        onPress={clearListingFilters}
+                        accessibilityRole="button"
+                        style={{ marginTop: 14, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, backgroundColor: tc.inputBg, borderWidth: 1, borderColor: tc.borderLight }}
+                      >
+                        <Text style={{ fontSize: 14, fontFamily: "Manrope_800ExtraBold", color: tc.textPrimary }}>Clear filters</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 )}
               </>

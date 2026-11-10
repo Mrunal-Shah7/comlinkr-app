@@ -95,14 +95,20 @@ export default function LandlordDashboard() {
   const [tab, setTab] = useBackState<Tab>("applications");
   const dash = useScreenQuery({
     queryKey: queryKeys.landlordDashboard(),
-    initial: { applications: [] as PropertyApplication[], listings: [] as HousingListing[] },
+    initial: { needsBadge: false, applications: [] as PropertyApplication[], listings: [] as HousingListing[] },
     refetchOnFocus: false,
     queryFn: async () => {
+      // 403 means no Landlord badge yet: say so instead of "No applications yet".
+      let needsBadge = false;
       const [apps, listingsRes] = await Promise.all([
-        getReceivedApplications().catch(() => [] as PropertyApplication[]),
+        getReceivedApplications().catch((e) => {
+          if (e instanceof ApiError && e.status === 403) needsBadge = true;
+          return [] as PropertyApplication[];
+        }),
         getMyListings({ page: 1, pageSize: 50 }).catch(() => ({ data: [] as HousingListing[] })),
       ]);
       return {
+        needsBadge,
         applications: apps,
         listings: (Array.isArray((listingsRes as any)?.data) ? (listingsRes as any).data : []) as HousingListing[],
       };
@@ -213,7 +219,9 @@ export default function LandlordDashboard() {
       ) : error ? (
         <EmptyState icon="alert-circle-outline" title="Could not load" sub={error} actionLabel="Try again" onAction={() => { void dash.refetch(); }} />
       ) : tab === "applications" ? (
-        sortedApps.length === 0 ? (
+        sortedApps.length === 0 && dash.data.needsBadge ? (
+          <EmptyState icon="shield-checkmark-outline" title="Verified hosts only" sub="Applications reach you once you have the verified host badge." actionLabel="Get the badge" onAction={() => router.push("/apply-badge" as never)} />
+        ) : sortedApps.length === 0 ? (
           <EmptyState icon="document-text-outline" title="No applications yet" sub="When someone applies for one of your homes, it shows up here." />
         ) : sortedApps.map((a, i) => {
           const meta = statusMeta(a.status);

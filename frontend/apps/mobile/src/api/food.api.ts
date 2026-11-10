@@ -43,6 +43,8 @@ export interface Restaurant {
   verified: boolean;
   tags: string[];
   openNow: boolean;
+  /** The owner's "Temporarily closed" switch (`isOpen: false`); a missing field is not closed. */
+  temporarilyClosed: boolean;
   closingTime?: string;
   openingTime?: string | null;
   /** IANA timezone of the business, when the owner/admin provided one. */
@@ -248,6 +250,7 @@ function normalizeRestaurant(raw: any): Restaurant {
         : null,
     distance: dist,
     openNow: Boolean(raw?.openNow ?? raw?.isOpen),
+    temporarilyClosed: raw?.isOpen === false,
     verified: Boolean(raw?.verified ?? raw?.isVerified),
     phone: phoneFromApi,
     phoneNumber: phoneNumberField,
@@ -289,16 +292,18 @@ export function getRestaurants(params: RestaurantQueryParams = {}): Promise<Pagi
   }));
 }
 
+/** Both lists are paginated on the server ({ data, meta }); reading them as a bare array always gave []. */
+function listRows(res: unknown): Restaurant[] {
+  const rows = Array.isArray(res) ? res : Array.isArray((res as { data?: unknown })?.data) ? (res as { data: unknown[] }).data : [];
+  return rows.map(normalizeRestaurant);
+}
+
 export function getMyRestaurants(): Promise<Restaurant[]> {
-  return api
-    .get<Restaurant[]>("/restaurants/my-restaurants")
-    .then((rows) => (Array.isArray(rows) ? rows.map(normalizeRestaurant) : []));
+  return api.get<unknown>("/restaurants/my-restaurants").then(listRows);
 }
 
 export function getFavoriteRestaurants(): Promise<Restaurant[]> {
-  return api
-    .get<Restaurant[]>("/restaurants/favorites")
-    .then((rows) => (Array.isArray(rows) ? rows.map(normalizeRestaurant) : []));
+  return api.get<unknown>("/restaurants/favorites").then(listRows);
 }
 
 export function getRestaurant(id: string): Promise<Restaurant> {
@@ -309,7 +314,7 @@ export function createRestaurant(payload: CreateRestaurantPayload): Promise<Rest
   return api.post<Restaurant>("/restaurants", payload).then(normalizeRestaurant);
 }
 
-export function updateRestaurant(id: string, payload: Partial<CreateRestaurantPayload>): Promise<Restaurant> {
+export function updateRestaurant(id: string, payload: Partial<CreateRestaurantPayload> & { isOpen?: boolean }): Promise<Restaurant> {
   return api.patch<Restaurant>(`/restaurants/${id}`, payload).then(normalizeRestaurant);
 }
 

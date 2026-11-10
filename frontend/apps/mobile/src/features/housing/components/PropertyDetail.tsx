@@ -78,6 +78,8 @@ export function PropertyDetail({
 
   // Sync initialJourneyStep whenever a different listing is opened
   useEffect(() => { setJourneyStep(initialJourneyStep); }, [listing?.id]);
+  // A step changed elsewhere (sending or withdrawing an application) shows when the detail is back in front.
+  useEffect(() => { setJourneyStep(initialJourneyStep); }, [initialJourneyStep]);
 
   const advanceJourneyStep = (step: number) => {
     if (step > journeyStep) {

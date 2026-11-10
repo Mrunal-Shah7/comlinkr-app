@@ -10,7 +10,7 @@ import {
 } from "react-native";
 // import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 // New:
-import DateTimePicker, { DateTimePickerAndroid, DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -143,7 +143,7 @@ export function DatePickerField({
 //       if (selected) onChange(formatDate(selected, dateFormat));
 //     };
 //
-//     const onIOS = (_: DateTimePickerEvent, selected?: Date) => {
+//     const onIOS = (_: unknown, selected?: Date) => {
 //       if (selected) setPending(selected);
 //     };
 //
@@ -187,7 +187,7 @@ export function DatePickerField({
 //               value={pending}
 //               mode="date"
 //               display="spinner"
-//               onChange={onIOS}
+//               onValueChange={onIOS}
 //               minimumDate={minimumDate}
 //               themeVariant={isDark ? "dark" : "light"}
 //               style={{ width: "100%" }}
@@ -208,7 +208,7 @@ export function DatePickerField({
 //     );
 //   }
   // New:
-  const onIOS = (_: DateTimePickerEvent, selected?: Date) => {
+  const onIOS = (_: unknown, selected?: Date) => {
       if (selected) setPending(selected);
     };
 
@@ -227,9 +227,8 @@ export function DatePickerField({
         mode: "date",
         display: "default",
         ...(minimumDate ? { minimumDate } : {}),
-        onChange: (event: DateTimePickerEvent, selected?: Date) => {
-          if (event.type === "set" && selected) onChange(formatDate(selected, dateFormat));
-        },
+        // onValueChange fires only for a picked value (onChange is deprecated in datetimepicker 9).
+        onValueChange: (_event: unknown, selected: Date) => onChange(formatDate(selected, dateFormat)),
       });
     };
 
@@ -277,7 +276,7 @@ export function DatePickerField({
               value={pending}
               mode="date"
               display="spinner"
-              onChange={onIOS}
+              onValueChange={onIOS}
               minimumDate={minimumDate}
               themeVariant={isDark ? "dark" : "light"}
               style={{ width: "100%" }}
@@ -315,7 +314,7 @@ export function TimePickerField({
 //       if (selected) onChange(formatTime(selected));
 //     };
 //
-//     const onIOS = (_: DateTimePickerEvent, selected?: Date) => {
+//     const onIOS = (_: unknown, selected?: Date) => {
 //       if (selected) setPending(selected);
 //     };
 //
@@ -352,7 +351,7 @@ export function TimePickerField({
 //               value={pending}
 //               mode="time"
 //               display="spinner"
-//               onChange={onIOS}
+//               onValueChange={onIOS}
 //               is24Hour={false}
 //               themeVariant={isDark ? "dark" : "light"}
 //               style={{ width: "100%" }}
@@ -373,7 +372,7 @@ export function TimePickerField({
 //     );
 //   }
   // New:
-  const onIOS = (_: DateTimePickerEvent, selected?: Date) => {
+  const onIOS = (_: unknown, selected?: Date) => {
       if (selected) setPending(selected);
     };
 
@@ -388,9 +387,8 @@ export function TimePickerField({
         mode: "time",
         display: "default",
         is24Hour: false,
-        onChange: (event: DateTimePickerEvent, selected?: Date) => {
-          if (event.type === "set" && selected) onChange(formatTime(selected));
-        },
+        // onValueChange fires only for a picked value (onChange is deprecated in datetimepicker 9).
+        onValueChange: (_event: unknown, selected: Date) => onChange(formatTime(selected)),
       });
     };
 
@@ -430,7 +428,7 @@ export function TimePickerField({
               value={pending}
               mode="time"
               display="spinner"
-              onChange={onIOS}
+              onValueChange={onIOS}
               is24Hour={false}
               themeVariant={isDark ? "dark" : "light"}
               style={{ width: "100%" }}

@@ -76,6 +76,9 @@ function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: n
 
 type PostLike = { id: string; title: string; content: string; createdAt: string; likesCount: number; commentsCount: number };
 
+/** The backend has no follow endpoint yet; turn this on when it does. */
+const FOLLOW_ENABLED = false;
+
 export default function PublicProfileScreen() {
   const { isDark, tc } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
@@ -222,7 +225,11 @@ export default function PublicProfileScreen() {
             {!isOwnProfile ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
                 <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color={palette.white} />} onPress={handleMessage} />
-                <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
+                {/* Follow is hidden until the backend has it: POST /users/:id/follow does not exist and every tap showed
+                    "Cannot POST" (walkthrough S-06, TR-029). */}
+                {FOLLOW_ENABLED ? (
+                  <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
+                ) : null}
               </View>
             ) : null}
           </Reveal>

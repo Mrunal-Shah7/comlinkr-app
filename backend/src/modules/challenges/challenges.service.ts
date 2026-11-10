@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -310,5 +311,24 @@ export class ChallengesService {
       return updated.participantCount;
     });
     return { joined: true, participantCount: newCount };
+  }
+
+  /** The author deletes their own challenge; its participants go with it (cascade). */
+  async deleteChallenge(userId: string, challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { id: true, authorId: true },
+    });
+    if (!challenge) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Challenge not found',
+      });
+    }
+    if (challenge.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own challenge.');
+    }
+    await this.prisma.challenge.delete({ where: { id: challengeId } });
+    return { message: 'Challenge deleted' };
   }
 }

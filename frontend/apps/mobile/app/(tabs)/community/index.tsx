@@ -13,6 +13,8 @@ import {
   StyleSheet,
   Modal,
   KeyboardAvoidingView,
+  Keyboard,
+  Dimensions,
   Alert,
   Share,
   ActivityIndicator,
@@ -45,7 +47,8 @@ import {
   getAnswers,
   getQuestions,
   getQuestion,
-  reportAnswer,
+  deleteAnswer,
+  deleteQuestion,
   reportQuestion,
   submitAnswer,
   voteAnswer,
@@ -446,9 +449,23 @@ type UIQuestion = {
   tags: string[];
   votes: number;
   answerCount: number;
-  answers: { id: string; author: string; avatar: string; text: string; time: string; votes: number }[];
+  answers: UIAnswer[];
   time: string;
 };
+/** authorId decides whose answer it is (delete) and hides blocked authors; the display name cannot. */
+type UIAnswer = { id: string; authorId: string; author: string; avatar: string; text: string; time: string; votes: number };
+
+function toUiAnswer(a: Answer | any): UIAnswer {
+  return {
+    id: String(a.id),
+    authorId: a.author?.id != null ? String(a.author.id) : "",
+    author: a.author?.name || a.author?.username || "User",
+    avatar: a.author?.avatar || a.author?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
+    text: a.text || a.content || "",
+    time: relativeTime(a.createdAt),
+    votes: a.votes ?? a.upvoteCount ?? 0,
+  };
+}
 
 function isQuestionHiddenByBlock(q: UIQuestion, isBlocked: (blockedKey: string) => boolean): boolean {
   if (q.authorId) return isBlocked(q.authorId);
@@ -468,14 +485,7 @@ function toUiQuestion(q: Question): UIQuestion {
     tags: Array.isArray(tagsAny) ? tagsAny.map(String) : [],
     votes: (q as any).votes ?? (q as any).upvoteCount ?? 0,
     answerCount: (q as any).answerCount ?? (q as any).answersCount ?? (Array.isArray(answersAny) ? answersAny.length : 0),
-    answers: (Array.isArray(answersAny) ? answersAny : []).map((a: Answer | any) => ({
-      id: a.id,
-      author: a.author?.name || a.author?.username || "User",
-      avatar: a.author?.avatar || a.author?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
-      text: a.text || a.content || "",
-      time: relativeTime(a.createdAt),
-      votes: a.votes ?? a.upvoteCount ?? 0,
-    })),
+    answers: (Array.isArray(answersAny) ? answersAny : []).map(toUiAnswer),
     time: relativeTime(q.createdAt),
   };
 }
@@ -512,8 +522,38 @@ export default function CommunityScreen() {
   // Design D (plan 01): the header title fades in as the large title scrolls away.
   const communityScrollY = useSharedValue(0);
   const onCommunityScroll = useAnimatedScrollHandler((e) => { communityScrollY.set(e.contentOffset.y); });
+  // The answer composer's Cancel and Post sit under the field; the scroll view only keeps the field itself above
+  // the keyboard, so the buttons stayed hidden. When the keyboard opens, scroll the whole composer into view.
+  // Both are measured in the window: the keyboard event's screenY is in screen coordinates, which on Android sit
+  // a status bar away from the window's, so comparing against it never scrolled.
+  const answerComposerRef = useRef<View>(null);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const sub = Keyboard.addListener("keyboardDidShow", (e) => {
+      // Wait for the layout to settle around the keyboard before measuring.
+      timer = setTimeout(() => {
+        const composer = answerComposerRef.current;
+        const scroller = communityScrollRef.current as unknown as View | null;
+        if (!composer || !scroller) return;
+        scroller.measureInWindow((_sx, sy, _sw, sh) => {
+          composer.measureInWindow((_x, y, _w, h) => {
+            // The scroll view may not shrink for the keyboard; then the keyboard's top is the visible bottom.
+            const visibleBottom = Math.min(sy + sh, Dimensions.get("window").height - e.endCoordinates.height);
+            const overflow = y + h + 12 - visibleBottom;
+            if (overflow > 0) {
+              communityScrollRef.current?.scrollTo({ y: communityScrollY.get() + overflow, animated: true });
+            }
+          });
+        });
+      }, 120);
+    });
+    return () => { sub.remove(); if (timer) clearTimeout(timer); };
+  }, [communityScrollY]);
   const blockUser = useBlockStore((s) => s.blockUser);
-  const isBlocked = useBlockStore((s) => s.isBlocked);
+  // Subscribe to the list itself: the store's isBlocked function never changes, so selecting it alone never
+  // re-rendered the screen after a block, and the blocked author stayed on screen.
+  const blockedUsers = useBlockStore((s) => s.blockedUsers);
+  const isBlocked = (id: string) => blockedUsers.some((u) => u.id === id);
   const [filter, setFilter] = useBackState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [showAsk, setShowAsk] = useState(false);
@@ -597,7 +637,10 @@ export default function CommunityScreen() {
       try {
         const q = await queryClient.fetchQuery({ queryKey: ["community", "question", id], queryFn: () => getQuestion(id), staleTime: 0 });
         const ui = toUiQuestion(q);
-        setQuestions((prev) => (prev.some((x) => x.id === ui.id) ? prev : [ui, ...prev]));
+        // Shown first and scrolled to, whether or not it was already in the loaded page (Explore's hot question,
+        // Saved): expanded somewhere down the list, it looked as if nothing had opened.
+        setQuestions((prev) => [ui, ...prev.filter((x) => x.id !== ui.id)]);
+        communityScrollRef.current?.scrollTo({ y: 0, animated: true });
         if ((q as { isSaved?: boolean }).isSaved === true) {
           setBookmarkedIds((p) => {
             const n = new Set(p);
@@ -750,14 +793,7 @@ export default function CommunityScreen() {
                 ? {
                     ...q,
                     answerCount: Math.max(q.answerCount, remote.length),
-                    answers: remote.map((a: Answer) => ({
-                      id: a.id,
-                      author: a.author?.name || a.author?.username || "User",
-                      avatar: a.author?.avatar || "https://randomuser.me/api/portraits/lego/1.jpg",
-                      text: a.text,
-                      time: relativeTime(a.createdAt),
-                      votes: a.votes,
-                    })),
+                    answers: remote.map(toUiAnswer),
                   }
                 : q
             )
@@ -774,16 +810,45 @@ export default function CommunityScreen() {
     });
   };
 
+  // Deletes on the server first: the old version only removed the answer from the screen, and it came back on
+  // the next refresh.
   const handleDeleteAnswer = (answerId: string, questionId: string) => {
-    appAlert("Delete Answer", "Remove your answer?", [
+    appAlert("Delete answer?", "Your answer will be removed for everyone.", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Delete", style: "destructive", onPress: () => {
+        text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await deleteAnswer(questionId, answerId);
+          } catch (e) {
+            showToast(e instanceof ApiError ? e.message : "Could not delete your answer. Please try again.", "error");
+            return;
+          }
           setQuestions((prev) =>
             prev.map((q) =>
-              q.id === questionId ? { ...q, answers: q.answers.filter((a) => a.id !== answerId) } : q
+              q.id === questionId
+                ? { ...q, answerCount: Math.max(0, q.answerCount - 1), answers: q.answers.filter((a) => a.id !== answerId) }
+                : q
             )
           );
+          showToast("Answer deleted", "success");
+        }
+      },
+    ]);
+  };
+
+  const handleDeleteQuestion = (questionId: string) => {
+    appAlert("Delete question?", "Your question and its answers will be removed for everyone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete", style: "destructive", onPress: async () => {
+          try {
+            await deleteQuestion(questionId);
+          } catch (e) {
+            showToast(e instanceof ApiError ? e.message : "Could not delete your question. Please try again.", "error");
+            return;
+          }
+          setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+          showToast("Question deleted", "success");
         }
       },
     ]);
@@ -874,14 +939,7 @@ export default function CommunityScreen() {
     if (!requireAuth(undefined, "Sign in to answer and help your neighbors.")) return;
     try {
       const created = await submitAnswer(questionId, { content: answerText.trim() });
-      const newAnswer = {
-        id: created.id,
-        author: created.author?.name || created.author?.username || "You",
-        avatar: created.author?.avatar || "https://randomuser.me/api/portraits/lego/1.jpg",
-        text: created.text || (created as any).content || "",
-        time: relativeTime(created.createdAt),
-        votes: created.votes ?? (created as any).upvoteCount ?? 0,
-      };
+      const newAnswer = toUiAnswer(created);
 
       if ((created as any).isUpvoted === true) {
         setAnswerVotedIds((p) => {
@@ -1030,8 +1088,16 @@ export default function CommunityScreen() {
             const saved = bookmarkedIds.has(q.id);
             const open = expandedIds.has(q.id);
             const total = answerTotal(q);
+            // Answers from people you blocked are hidden like their questions; most upvoted first.
+            const shownAnswers = q.answers.filter((a) => !a.authorId || !isBlocked(a.authorId)).sort((x, y) => y.votes - x.votes);
             const tags = Array.from(new Set(q.tags.map((t) => normalizeQuestionTagToUiTag(String(t))).filter((t): t is QuestionCategoryUi => !!t && QUESTION_CATEGORY_SET.has(t))));
-            const more = () => appAlert(q.author, "What would you like to do?", [
+            // Your own question: share or delete it (reporting or blocking yourself only failed).
+            const mine = !!user?.id && q.authorId === user.id;
+            const more = () => mine ? appAlert("Your question", "What would you like to do?", [
+              { text: "Share", onPress: () => handleShareQuestion(q) },
+              { text: "Delete question", style: "destructive", onPress: () => handleDeleteQuestion(q.id) },
+              { text: "Cancel", style: "cancel" },
+            ]) : appAlert(q.author, "What would you like to do?", [
               { text: "Share", onPress: () => handleShareQuestion(q) },
               { text: "Report post", onPress: () => handleReportQuestion(q) },
               { text: "Report " + q.author, onPress: () => handleReportPerson(q) },
@@ -1081,7 +1147,7 @@ export default function CommunityScreen() {
                   </View>
 
                   {answeringId === q.id ? (
-                    <View style={{ marginTop: 10, padding: 10, borderRadius: 16, backgroundColor: tc.inputBg }}>
+                    <View ref={answerComposerRef} collapsable={false} style={{ marginTop: 10, padding: 10, borderRadius: 16, backgroundColor: tc.inputBg }}>
                       <TextInput
                         style={[TYPE.body, { color: tc.textPrimary, minHeight: 60, textAlignVertical: "top" }]}
                         placeholder="Write your answer…"
@@ -1098,9 +1164,9 @@ export default function CommunityScreen() {
                     </View>
                   ) : null}
 
-                  {open && q.answers.length > 0 ? (
+                  {open && shownAnswers.length > 0 ? (
                     <View style={{ marginTop: 10, gap: 8 }}>
-                      {[...q.answers].sort((x, y) => y.votes - x.votes).map((a, ai) => (
+                      {shownAnswers.map((a, ai) => (
                         <Reveal key={a.id} i={ai}>
                           <View style={{ padding: 12, borderRadius: 16, backgroundColor: tc.inputBg }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -1109,13 +1175,13 @@ export default function CommunityScreen() {
                                 <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{a.author}</Text> · {a.time}
                               </Text>
                               <VoteButton small on={answerVotedIds.has(a.id)} count={a.votes} onPress={() => handleAnswerVote(a.id, q.id)} />
-                              {a.author === "You" ? (
+                              {!!user?.id && a.authorId === user.id ? (
                                 <Pressable onPress={() => handleDeleteAnswer(a.id, q.id)} hitSlop={8} accessibilityLabel="Delete answer">
                                   <Ionicons name="trash-outline" size={15} color={tc.dangerText} />
                                 </Pressable>
                               ) : null}
                             </View>
-                            {ai === 0 && a.votes > 0 && q.answers.length > 1 ? <Tag label="Best answer" ok icon="checkmark" style={{ marginTop: 6 }} /> : null}
+                            {ai === 0 && a.votes > 0 && shownAnswers.length > 1 ? <Tag label="Best answer" ok icon="checkmark" style={{ marginTop: 6 }} /> : null}
                             <LinkifiedText text={a.text} style={[TYPE.body, { color: tc.textPrimary, marginTop: 6 }]} />
                           </View>
                         </Reveal>

@@ -25,6 +25,7 @@ import { useAuthStore } from "../src/store/auth.store";
 import { usePermissions } from "../src/shared/hooks/usePermissions";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
+import { getAvailability } from "../src/features/food/foodShared";
 import { getMyRestaurants, deleteRestaurant, updateRestaurant, type Restaurant, type CreateRestaurantPayload } from "../src/api/food.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
@@ -69,6 +70,11 @@ function RestaurantCard({
 }) {
   const verifCfg = restaurant.verified ? VERIF_CONFIG.verified : VERIF_CONFIG.unverified;
   const { isDark, tc } = useTheme();
+  // What customers see (the hours, or the owner's "Temporarily closed"); no tag when the hours are not usable.
+  const availability = getAvailability(restaurant);
+  const status = availability.state === "open" ? { label: "Open now", ok: true }
+    : availability.state === "closed" ? { label: availability.label.startsWith("Temporarily") ? "Temporarily closed" : "Closed", ok: false }
+    : null;
   const listedDate = restaurant.createdAt
     ? new Date(restaurant.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     : "";
@@ -83,7 +89,7 @@ function RestaurantCard({
   const [editPhone, setEditPhone] = useState(restaurant.phone ?? restaurant.phoneNumber ?? "");
   const [editOpeningTime, setEditOpeningTime] = useState(restaurant.openingTime ?? "");
   const [editClosingTime, setEditClosingTime] = useState(restaurant.closingTime ?? "");
-  const [editOpenNow, setEditOpenNow] = useState(restaurant.openNow);
+  const [editTempClosed, setEditTempClosed] = useState(restaurant.temporarilyClosed);
   const [editWebsite, setEditWebsite] = useState(restaurant.website ?? "");
 
   const openManage = () => {
@@ -93,7 +99,7 @@ function RestaurantCard({
     setEditPhone(restaurant.phone ?? restaurant.phoneNumber ?? "");
     setEditOpeningTime(restaurant.openingTime ?? "");
     setEditClosingTime(restaurant.closingTime ?? "");
-    setEditOpenNow(restaurant.openNow);
+    setEditTempClosed(restaurant.temporarilyClosed);
     setEditWebsite(restaurant.website ?? "");
     setEditMode(false);
     setManageOpen(true);
@@ -103,16 +109,16 @@ function RestaurantCard({
     if (!editName.trim()) { showToast("Please enter a restaurant name.", "error"); return; }
     setSaving(true);
     try {
-      const payload: Partial<CreateRestaurantPayload> = {
+      const payload: Partial<CreateRestaurantPayload> & { isOpen?: boolean } = {
         name: editName.trim(),
         description: editDescription.trim() || undefined,
         address: editAddress.trim() || undefined,
         phoneNumber: editPhone.trim() || undefined,
         openingTime: editOpeningTime.trim() || undefined,
         closingTime: editClosingTime.trim() || undefined,
-        city: restaurant.city ?? "",
-        country: restaurant.country ?? "US",
-        priceRange: (restaurant.price?.toUpperCase() ?? "MODERATE") as CreateRestaurantPayload["priceRange"],
+        // Only what this form edits: the price came back as "$$" and went out upper-cased ("$$"), which the API
+        // rejects, so every save failed; city and country are not on this form.
+        isOpen: !editTempClosed,
       };
       const updated = await updateRestaurant(restaurant.id, payload);
       onUpdate(updated);
@@ -146,7 +152,7 @@ function RestaurantCard({
         <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{restaurant.name}</Text>
         <Text style={[TYPE.small, { color: tc.textSecondary }]} numberOfLines={1}>{[restaurant.reviews > 0 ? `★ ${restaurant.rating} (${restaurant.reviews})` : "", restaurant.cuisine, restaurant.city, listedDate ? `listed ${listedDate}` : ""].filter(Boolean).join(" · ")}</Text>
         <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
-          {restaurant.openNow ? tagV("Open now", "ok") : tagV("Closed", "plain")}
+          {status ? tagV(status.label, status.ok ? "ok" : "plain") : null}
           {restaurant.verified ? tagV("Verified", "ok") : tagV(verifCfg.label, "warn")}
         </View>
         {stats.length ? (
@@ -179,7 +185,7 @@ function RestaurantCard({
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <Text style={[TYPE.small, { color: tc.textSecondary }]}>{[restaurant.cuisine, restaurant.city].filter(Boolean).join(" · ")}</Text>
               <View style={{ flex: 1 }} />
-              <Tag label={restaurant.openNow ? "Open now" : "Closed"} ok={restaurant.openNow} />
+              {status ? <Tag label={status.label} ok={status.ok} /> : null}
               <Tag label={verifCfg.label} ok={verifCfg.label === "Verified"} />
             </View>
 
@@ -224,8 +230,11 @@ function RestaurantCard({
                     style={[TYPE.body, { minHeight: 100, borderRadius: 16, padding: 14, backgroundColor: tc.inputBg, color: tc.textPrimary, textAlignVertical: "top" }]} />
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 4 }}>
-                  <Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Open now</Text>
-                  <Switch value={editOpenNow} onValueChange={setEditOpenNow} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[TYPE.body, { color: tc.textPrimary }]}>Temporarily closed</Text>
+                    <Text style={[TYPE.small, { color: tc.textTertiary }]}>Shows as closed whatever your hours say</Text>
+                  </View>
+                  <Switch value={editTempClosed} onValueChange={setEditTempClosed} />
                 </View>
                 <View style={{ flexDirection: "row", gap: 10 }}>
                   <SoftButton block ghost label="Cancel" outerStyle={{ flex: 1 }} disabled={saving} onPress={() => setEditMode(false)} />

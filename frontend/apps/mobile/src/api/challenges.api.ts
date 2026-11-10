@@ -96,3 +96,8 @@ export function getChallenges(
 export function joinChallenge(id: string): Promise<{ joined: boolean }> {
   return api.post<{ joined: boolean }>(`/challenges/${id}/join`, {});
 }
+
+/** The author deletes their own challenge (My posts). */
+export function deleteChallenge(id: string): Promise<void> {
+  return api.delete(`/challenges/${id}`);
+}

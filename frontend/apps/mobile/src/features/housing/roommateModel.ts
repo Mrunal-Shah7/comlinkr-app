@@ -469,13 +469,15 @@ export function toUiAvailableRoom(r: SharedSpaceListing): AvailableRoom {
     hostColor: Colors.brand.blue,
     hostVerified: !!(r.host?.verified ?? r.verified),
     hostOccupation: "Host",
-    hostBio: "Shared space host",
+    // No bio is collected for a host: show none rather than filler text.
+    hostBio: "",
     roomType: (r as any).roomType || "Private Room",
     apartmentDesc: r.title || "Shared Space",
     api: r,
     availableRooms: r.availableSpots ?? 1,
     totalRooms: r.rooms ?? 1,
-    currentResidents: r.currentOccupants ?? 0,
+    // "People living there" in the form is totalOccupants; currentOccupants is never raised above 0.
+    currentResidents: Math.max(r.totalOccupants ?? 0, r.currentOccupants ?? 0),
     rentPerMonth: r.price ?? 0,
     deposit: r.deposit ?? 0,
     location: [r.city, r.state].filter(Boolean).join(", ") || r.city || "Unknown",

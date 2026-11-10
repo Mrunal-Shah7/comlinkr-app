@@ -151,3 +151,11 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - New listing: one question per screen (7), photos first and required; extras as chips; the draft is kept on the phone. Editing a listing keeps the full form. Screen 1 walked.
 - Room composer: steppers for rooms, baths, people, spots; currency from the country.
 - Gallery: "1 of n", swipe down to close (Food uses the same viewer).
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows L- and S-14 in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- The Pets filter works: `pets=true|false` matches the free-text pet policy (L-01, TR-024).
+- A tenant can withdraw an application until the landlord approves; the landlord is notified (L-23, owner's decision). Applying again reopens your application (L-22).
+- Cancel request on a roommate calls `/cancel` (L-16); editing a room keeps its description (L-12).
+- Open: L-05, L-06, L-14, L-17, L-18, L-20. The landlord dashboard now tells a non-landlord that the badge is needed (S-14, TR-031).

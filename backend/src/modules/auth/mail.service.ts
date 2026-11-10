@@ -60,21 +60,32 @@ export class MailService {
 </body>
 </html>`;
 
+    // The Resend SDK (v6) does not throw when the API refuses an email: it returns { data: null, error }.
+    // Network failures still throw. Both are logged; neither is thrown, because the OTP is saved and the
+    // user can ask for a new one.
+    let failure: unknown = null;
     try {
-      await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: `"ComLinkr" <${fromEmail}>`,
         to,
         subject,
         html,
       });
+      if (error) failure = error;
+      else
+        console.log(
+          `[MAIL] ${type} OTP email accepted by Resend (id ${data?.id ?? 'unknown'})`,
+        );
     } catch (err) {
-      console.error('Failed to send OTP email:', err);
+      failure = err;
+    }
+    if (failure) {
+      console.error(`[MAIL] ${type} OTP email was NOT sent:`, failure);
       if (isDev) {
         console.log(
           `[DEV] OTP (use this if email failed): ${to} (${type}): ${code}`,
         );
       }
-      // Do not throw — OTP is saved; user can request a new one.
     }
   }
 }

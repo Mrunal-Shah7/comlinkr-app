@@ -133,3 +133,10 @@ and warm start); iOS gestures (no device); a release build's performance.
   and Reanimated; a pull-down also closes on a flick [observed]. `SignPad` still uses `PanResponder` [code].
 - **Removed:** about 45 unused files (`src/_app_legacy/`, the Expo template components, the unused query persister,
   legacy HTTP services) [code].
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Rows E-07, E-23, F-05, F-06 and F-14 in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Uploads go through `postFormData`, which reads each file for `expo/fetch` (E-07).
+- Sheets lift above the keyboard (E-23) and above a three-button navigation bar (F-05).
+- Composers ask "Discard your changes?" when leaving with something typed (F-14, owner's decision).
