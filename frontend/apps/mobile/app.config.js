@@ -91,7 +91,7 @@ module.exports = ({ config }) => ({
     'expo-web-browser',
     // Plan 08: the city comes from the phone's location, read once while the app is open.
     ['expo-location', {
-      locationWhenInUsePermission: 'Comlinkr uses your location to set your city, so what you see and post belongs to where you are.',
+      locationWhenInUsePermission: 'ComLinkr uses your location to set your city, so what you see and post belongs to where you are.',
       locationAlwaysAndWhenInUsePermission: false,
       isAndroidBackgroundLocationEnabled: false,
     }],

@@ -319,7 +319,7 @@ export default function FoodScreen() {
       return;
     }
     if (pos.reason === "blocked") {
-      appAlert("Location is off for Comlinkr", "Allow location in settings to see restaurants near you.", [
+      appAlert("Location is off for ComLinkr", "Allow location in settings to see restaurants near you.", [
         { text: "Not now", style: "cancel" },
         { text: "Open settings", onPress: openLocationSettings },
       ]);

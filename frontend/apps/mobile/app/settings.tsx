@@ -353,6 +353,7 @@ export default function SettingsScreen() {
   const [notiComments, setNotiComments] = useState(true);
   const [notiLikes, setNotiLikes] = useState(false);
   const [notiMessages, setNotiMessages] = useState(true);
+  const [notiFollowers, setNotiFollowers] = useState(true); // plan 16 (TR-049)
   const [notifPrefsSaving, setNotifPrefsSaving] = useState(false);
 
   type DisplayBlockedUser = BlockedUserEntry & { localOnly?: boolean };
@@ -420,6 +421,7 @@ export default function SettingsScreen() {
       setNotiComments(notif.comments);
       setNotiLikes(notif.likes);
       setNotiMessages(notif.messages);
+      setNotiFollowers(notif.followers !== false); // absent on older servers: on
       setProfilePublic(privacy.publicProfile);
       setShowLocation(privacy.showLocation);
       setShowActivity(privacy.activityStatus);
@@ -497,6 +499,7 @@ export default function SettingsScreen() {
       setNotiComments(next.comments);
       setNotiLikes(next.likes);
       setNotiMessages(next.messages);
+      setNotiFollowers(next.followers !== false);
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Update failed.";
       showToast(msg, "error");
@@ -624,6 +627,7 @@ export default function SettingsScreen() {
         comments: notiComments,
         likes: notiLikes,
         messages: notiMessages,
+        followers: notiFollowers,
       });
       setNotifsModal(false);
       showToast("Notification preferences updated.", "success");
@@ -879,7 +883,7 @@ export default function SettingsScreen() {
         <Group label="About" i={6}>
           <SettingsRow icon="help-circle-outline" title="Help" onPress={() => router.push("/help-support" as any)} />
           <SettingsRow icon="document-text-outline" title="Terms and privacy" onPress={() => router.push("/privacy-policy" as any)} />
-          <SettingsRow icon="information-circle-outline" title="Comlinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
+          <SettingsRow icon="information-circle-outline" title="ComLinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
         </Group>
 
         {isAdmin ? (
@@ -1134,6 +1138,15 @@ export default function SettingsScreen() {
             desc="Direct messages"
             enabled={notiMessages}
             onToggle={() => setNotiMessages((p) => !p)}
+            disabled={notifPrefsSaving}
+          />
+          <ToggleRow
+            icon="person-add-outline"
+            iconColors={[Colors.brand.green, Colors.brand.blue]}
+            title="New followers"
+            desc="New followers and follow requests"
+            enabled={notiFollowers}
+            onToggle={() => setNotiFollowers((p) => !p)}
             disabled={notifPrefsSaving}
           />
           </View>

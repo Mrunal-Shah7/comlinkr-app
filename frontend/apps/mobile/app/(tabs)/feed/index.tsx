@@ -7,7 +7,7 @@ import { DSheet } from "../../../src/shared/d/Sheet";
 import Reanimated, { cancelAnimation, useAnimatedScrollHandler, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ExploreBento } from "../../../src/features/explore/components/ExploreBento";
-import { Chip, EmptyState, Segmented, SoftButton } from "../../../src/shared/d";
+import { Chip, EmptyState, ScrollTabs, SoftButton } from "../../../src/shared/d";
 import { TYPE } from "../../../src/theme/d";
 import { revealIn } from "../../../src/shared/motion/presets";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
@@ -46,6 +46,8 @@ import { showToast } from "../../../src/shared/ui/Toast";
 import { appAlert } from "../../../src/shared/ui/Dialogs";
 import { ListState } from "../../../src/shared/ui/ListState";
 import { type FeedTab, type CommunityStory, HERO_MOOD_OPTIONS, type StoryCategory, FEED_TABS, STORY_CATEGORIES } from "../../../src/features/explore/constants";
+import { FollowingFeed, FOLLOWING_FEED_KEY } from "../../../src/features/explore/components/FollowingFeed";
+import { useQueryClient } from "@tanstack/react-query";
 import { type ExploreEventRow, type HeroTickerRow, apiEventToExploreRow, buildHeroTickerRows, normalizeApiStoryForFeed, mapApiStoryToCommunityStory, apiStoryIsSaved, getFeedPostShareUrl, pollToWyrCardModel, myVoteToSide } from "../../../src/features/explore/models";
 import { type NewsArticle, LIVE_NEWS_SESSION_CACHE, type NewsCategory, COUNTRY_NEWS_MAP, BASE_NEWS_CATEGORIES, LIVE_NEWS_PAGE_SIZE, FALLBACK_NEWS, fetchArticleMeta, newsTimeAgo, isSameContent } from "../../../src/features/explore/news";
 import { WYRCard } from "../../../src/features/explore/components/WYRCard";
@@ -90,6 +92,7 @@ const feedNewsRowPad = { paddingHorizontal: rs(16) };
 export default function FeedScreen() {
   const { isDark, tc } = useTheme();
   const user = useAuthStore((s) => s.user);
+  const followingQc = useQueryClient(); // plan 16: refreshes the Following tab
   const { requireAuth } = useRequireAuth();
   const userPosts = usePostsStore((s) => s.userPosts);
   const blockUser = useBlockStore((s) => s.blockUser);
@@ -1182,6 +1185,8 @@ export default function FeedScreen() {
       Promise.allSettled([heroSync, loadQuests(true)]).finally(() => setRefreshing(false));
     } else if (feedTab === "Polls") {
       Promise.allSettled([heroSync, loadPollFeed(true), loadWyrPolls(true)]).finally(() => setRefreshing(false));
+    } else if (feedTab === "Following") {
+      Promise.allSettled([heroSync, followingQc.resetQueries({ queryKey: [...FOLLOWING_FEED_KEY] })]).finally(() => setRefreshing(false));
     } else {
       heroSync.finally(() => setRefreshing(false));
     }
@@ -1602,6 +1607,7 @@ export default function FeedScreen() {
     }
     else if (feedTab === "Quests") feedRows = questsList.map((quest) => ({ kind: "quest", quest }));
     else if (feedTab === "Polls") feedRows = pollQuestionPosts.map((post) => ({ kind: "poll", post }));
+    else if (feedTab === "Following") feedRows = []; // plan 16: FollowingFeed draws its own rows above
     else if (newsSubTab === "community") feedRows = visibleCommunityPosts.map((post) => ({ kind: "post", post }));
     else feedRows = filteredNews.map((article, index) => ({ kind: "news", article, index }));
   }
@@ -1810,6 +1816,7 @@ export default function FeedScreen() {
                 nextEvent={exploreEvents[0]}
                 onEvent={(e) => openEvent(e.id)}
                 homesCount={heroListingsTotal}
+                heroLoading={exploreEventsLoading}
                 onHomes={() => router.push("/(tabs)/housing" as any)}
                 stories={storyAuthorGroups}
                 onAddStory={() => {
@@ -1824,14 +1831,25 @@ export default function FeedScreen() {
                 onQuestion={(q) => router.push({ pathname: "/(tabs)/community", params: { openQuestion: q.id } } as never)}
               />
             ) : null}
-            <Segmented
-              style={{ marginHorizontal: 16, marginBottom: 12 }}
+            {/* Plan 16: six tabs no longer fit the segmented control; this row scrolls. */}
+            <ScrollTabs
+              style={{ marginBottom: 12 }}
               items={FEED_TABS.map((t) => ({ key: t, label: t }))}
               value={feedTab}
               onChange={(k) => setFeedTab(k as typeof feedTab)}
             />
 
-            {!hasChosenCity ? (
+            {/* Plan 16 (TR-050): the people you follow, from any city, so no city is needed. */}
+            {feedTab === "Following" ? (
+              <FollowingFeed
+                signedIn={!!user}
+                onSignIn={() => router.push("/(auth)/login" as any)}
+                // Opens the post over the Following tab; a route param would not reopen the same post twice.
+                onOpenPost={(id) => { setFeedCommentPostId(id); setFeedCommentTitle("Post"); }}
+              />
+            ) : null}
+
+            {!hasChosenCity && feedTab !== "Following" ? (
               <ListState
                 kind="needs-city"
                 message="Pick your city to see local news, events, stories, quests and polls."

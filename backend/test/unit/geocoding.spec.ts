@@ -46,7 +46,7 @@ describe('GeocodingService', () => {
     expect(calls[0].url).toContain(
       'q=211%20Olympic%20Blvd%2C%20Los%20Angeles%2C%20United%20States',
     );
-    expect(calls[0].ua).toBe('Comlinkr/1.0 (+https://comlinkr.com)');
+    expect(calls[0].ua).toBe('ComLinkr/1.0 (+https://comlinkr.com)');
     expect(calls[1].at - calls[0].at).toBeGreaterThanOrEqual(1000);
     // Same address again: from the cache.
     await svc.geocode({
