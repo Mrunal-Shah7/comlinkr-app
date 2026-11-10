@@ -788,9 +788,15 @@ export default function HousingScreen() {
                         <Chip key={f} label={f} on={rmFilter === f} onPress={() => setRmFilter(f)} />
                       ))}
                     </GHScrollView>
-                    <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginBottom: 10 }]}>
-                      {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · matched on communities, vibes, interests and lifestyle
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 18, marginBottom: 10 }}>
+                      <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]}>
+                        {sortedRoommates.length} {sortedRoommates.length !== 1 ? "people" : "person"} in {user?.city || "your city"} · matched on communities, vibes, interests and lifestyle
+                      </Text>
+                      {/* L-18: preferences open from here too, not only from the empty state or Profile. */}
+                      <Pressable onPress={() => openRmPrefsModal()} hitSlop={10} accessibilityRole="button" accessibilityLabel="Edit your roommate preferences">
+                        <Text style={[TYPE.small, { color: tc.accentText, fontFamily: "Manrope_700Bold" }]}>Your preferences</Text>
+                      </Pressable>
+                    </View>
 
                     {roommatesLoading ? (
                       <View accessibilityLabel="Loading roommate matches">

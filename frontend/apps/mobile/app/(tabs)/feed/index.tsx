@@ -1816,6 +1816,7 @@ export default function FeedScreen() {
                 nextEvent={exploreEvents[0]}
                 onEvent={(e) => openEvent(e.id)}
                 homesCount={heroListingsTotal}
+                heroLoading={exploreEventsLoading}
                 onHomes={() => router.push("/(tabs)/housing" as any)}
                 stories={storyAuthorGroups}
                 onAddStory={() => {
