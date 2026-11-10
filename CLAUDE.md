@@ -82,6 +82,11 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   - In sheets, swipe slowly (600 ms or more); a fast swipe closes the sheet. Expo Go's floating gear sits over the
     top right of every screen: tap around it.
   - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.
+  - Start Metro with `GOOGLE_SERVICE_INFO_PLIST` pointing at a placeholder plist outside the repository (command in
+    `docs/device-testing.md`). Without it, every cold start of the app fails in Expo Go ("Failed to download remote
+    update"); a warm reload hides it.
+  - `uiautomator dump` fails on Explore ("could not get idle state": the greeting tile's glow never settles). Use
+    screenshots there; the dump works again on other screens.
 - **Database (shell):** timestamps read through `pg` from Node print 5 h 30 early (naive timestamps read as
   local time); compare with `now()` in the same query.
 - **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe

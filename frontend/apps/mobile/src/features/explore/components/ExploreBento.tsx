@@ -155,7 +155,7 @@ export function ExploreBento(p: Props) {
               <BentoTile onPress={p.onQuest} accessibilityLabel={`Quest: ${p.quest.title}`}>
                 <TileLabel>QUEST{p.quest.isJoined ? " · JOINED" : ""}</TileLabel>
                 <Text style={[display(700), { color: tc.textPrimary, fontSize: 15, lineHeight: 18, marginTop: 4 }]} numberOfLines={3}>{p.quest.title}</Text>
-                {(p.quest.participantsCount ?? 0) > 0 ? <TileLabel style={{ marginTop: "auto" }}>{p.quest.participantsCount} joined</TileLabel> : null}
+                {(p.quest.participantCount ?? 0) > 0 ? <TileLabel style={{ marginTop: "auto" }}>{p.quest.participantCount} joined</TileLabel> : null}
               </BentoTile>
             </TileIn>
           ) : null}

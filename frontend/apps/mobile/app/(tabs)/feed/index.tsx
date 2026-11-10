@@ -853,6 +853,15 @@ export default function FeedScreen() {
     void loadQuests();
   }, [feedTab, loadQuests]);
 
+  // Plan 10: joining or leaving on a quest's page marks the quest cache stale; coming back picks it up (a fresh
+  // cache entry is no request).
+  useFocusEffect(
+    useCallback(() => {
+      if (feedTab !== "Quests" && feedTab !== "News") return;
+      void loadQuests();
+    }, [feedTab, loadQuests]),
+  );
+
   useEffect(() => {
     // Design D: the Explore bento shows a poll, so News loads polls too.
     if (feedTab !== "Polls" && feedTab !== "News") return;
@@ -1615,15 +1624,19 @@ export default function FeedScreen() {
   const onToggleStoryLikeRow = useStableCallback(onToggleStoryLikeFromFeed);
   const onJoinQuest = useStableCallback(async (quest: ApiChallenge) => {
     if (joinedQuestIds.has(quest.id)) return;
-    if (!requireAuth(undefined, "Sign in to join this challenge.")) return;
+    if (!requireAuth(undefined, "Sign in to join this quest.")) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await joinChallenge(quest.id);
       setJoinedQuestIds((p) => new Set([...p, quest.id]));
-      setQuestsList((prev) => prev.map((q) => q.id === quest.id ? { ...q, isJoined: true, participantsCount: (q.participantsCount ?? 0) + 1 } : q));
+      setQuestsList((prev) => prev.map((q) => q.id === quest.id ? { ...q, isJoined: true, participantCount: (q.participantCount ?? 0) + 1 } : q));
+      void queryClient.invalidateQueries({ queryKey: ["feed", "quests"] });
     } catch {
       showToast("Could not join quest. Please try again.", "error");
     }
+  });
+  const onOpenQuestRow = useStableCallback((quest: ApiChallenge) => {
+    router.push(`/quest/${encodeURIComponent(quest.id)}` as never);
   });
   const onOpenArticleRow = useStableCallback((article: NewsArticle) => {
     setReadArticles((p) => { const n = new Set(p); n.add(article.id); return n; });
@@ -1673,7 +1686,7 @@ export default function FeedScreen() {
       case "quest":
         return (
           <View style={[feedSectionRowPad, index > 0 && { marginTop: rs(14) }]}>
-            <QuestCard quest={item.quest} isJoined={joinedQuestIds.has(item.quest.id)} city={city} onJoin={onJoinQuest} />
+            <QuestCard quest={item.quest} isJoined={joinedQuestIds.has(item.quest.id)} city={city} onJoin={onJoinQuest} onOpen={onOpenQuestRow} />
           </View>
         );
       case "post": {
@@ -1887,17 +1900,17 @@ export default function FeedScreen() {
             {/* ── QUESTS ── */}
             {hasChosenCity && feedTab === "Quests" && (
               <>
-                {/* ── Design D: start-a-quest button above the quests ── */}
-                <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                {/* ── Design D: start-a-quest button above the quests; the empty state has its own (plan 10) ── */}
+                {questsList.length > 0 ? <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
                   <SoftButton
                     block
                     label="Start a quest"
                     onPress={() => {
-                      if (!requireAuth(undefined, "Sign in to start a community challenge.")) return;
+                      if (!requireAuth(undefined, "Sign in to start a quest.")) return;
                       router.push({ pathname: "/create-post", params: { type: "challenge" } } as any);
                     }}
                   />
-                </View>
+                </View> : null}
 
                 {questsLoading && questsList.length === 0 ? (
                   <View style={{ paddingVertical: rs(32), alignItems: "center" }}>
@@ -2048,7 +2061,7 @@ export default function FeedScreen() {
                   <EmptyState
                     icon="trophy-outline"
                     title="No quests yet"
-                    sub="Start one and challenge your neighbours."
+                    sub="Start one for your neighbours to join."
                     actionLabel="Start a quest"
                     onAction={() => {
                       if (!requireAuth(undefined, "Sign in to create the first community quest.")) return;

@@ -18,12 +18,15 @@ export const QuestCard = memo(function QuestCard({
   quest,
   isJoined,
   onJoin,
+  onOpen,
 }: {
   quest: ApiChallenge;
   isJoined: boolean;
   city: string;
   /** Called only while not joined yet; the screen handles auth + the API call. Must be stable. */
   onJoin: (quest: ApiChallenge) => void;
+  /** Opens the quest's own page (plan 10). Must be stable. */
+  onOpen?: (quest: ApiChallenge) => void;
 }) {
   const { tc } = useTheme();
   const endsAt = quest.endsAt ? new Date(quest.endsAt) : null;
@@ -34,13 +37,13 @@ export const QuestCard = memo(function QuestCard({
     if (diff >= 86400000) return `${Math.ceil(diff / 86400000)}D LEFT`;
     return `${Math.ceil(diff / 3600000)}H LEFT`;
   })() : null;
-  const participants = quest.participantsCount ?? 0;
+  const participants = quest.participantCount ?? 0;
   const maxP = quest.maxParticipants ?? 0;
   const pct = maxP > 0 ? Math.min(100, Math.round((participants / maxP) * 100)) : 0;
   const share = () => void Share.share({ message: `${quest.title}${quest.details ? ` — ${quest.details}` : ""}\n\nJoin this quest on ComLinkr!` });
 
   return (
-    <BentoTile style={{ minHeight: 0 }}>
+    <BentoTile style={{ minHeight: 0 }} onPress={onOpen ? () => onOpen(quest) : undefined} accessibilityLabel={`Quest: ${quest.title}`}>
       <View style={s.head}>
         <GradientFill style={s.icon}><Ionicons name={TYPE_ICON[quest.type] ?? "trophy-outline"} size={20} color={palette.white} /></GradientFill>
         <View style={{ flex: 1 }}>

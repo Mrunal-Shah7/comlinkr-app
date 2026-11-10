@@ -9,13 +9,14 @@
 // Apple does not follow redirects when fetching the AASA file, so the apex cannot verify.
 // The /app prefix must stay in step with the AASA `paths` and the Android `pathPrefix`.
 
-export type ShareContentType = "listing" | "restaurant" | "post" | "event" | "story" | "question";
+export type ShareContentType = "listing" | "restaurant" | "post" | "event" | "story" | "question" | "quest";
 
 const TAB_FOR_TYPE: Record<ShareContentType, string> = {
   listing: "housing",
   restaurant: "food",
   post: "feed",
   event: "feed",
+  quest: "feed",
   story: "feed",
   question: "community",
 };
@@ -25,6 +26,7 @@ const PARAM_FOR_TYPE: Record<ShareContentType, string> = {
   restaurant: "openRestaurant",
   post: "openPost",
   event: "openEvent",
+  quest: "openQuest",
   story: "openStory",
   question: "openQuestion",
 };

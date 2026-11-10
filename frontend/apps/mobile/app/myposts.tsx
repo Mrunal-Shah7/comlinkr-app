@@ -79,7 +79,7 @@ function metaNum(m: Record<string, unknown> | undefined | null, key: string): nu
   return typeof v === "number" && !Number.isNaN(v) ? v : 0;
 }
 
-const FILTER_TABS = ["All", "News", "Community", "Events", "Stories", "Challenges"] as const;
+const FILTER_TABS = ["All", "News", "Community", "Events", "Stories", "Quests"] as const;
 type FilterTab = (typeof FILTER_TABS)[number];
 
 const TYPE_META: Record<string, { label: string; bg: string; color: string; icon: React.ComponentProps<typeof Ionicons>["name"] }> = {
@@ -91,7 +91,7 @@ const TYPE_META: Record<string, { label: string; bg: string; color: string; icon
   POLL:         { label: "Poll",         bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "bar-chart-outline"     },
   EVENT:        { label: "Event",        bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "calendar-outline"      },
   STORY:        { label: "Story",        bg: Colors.brand.greenLight,  color: Colors.brand.green,  icon: "images-outline"        },
-  CHALLENGE:    { label: "Challenge",    bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "trophy-outline"        },
+  CHALLENGE:    { label: "Quest",        bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "trophy-outline"        },
   LISTING:      { label: "Listing",      bg: palette.rose50,                color: palette.rose600,           icon: "home-outline"          },
   HOUSING:      { label: "Listing",      bg: palette.rose50,                color: palette.rose600,           icon: "home-outline"          },
   FOOD:         { label: "Restaurant",   bg: Colors.brand.orangeLight, color: Colors.brand.orange, icon: "restaurant-outline"    },
@@ -109,7 +109,7 @@ function filterMatches(tab: FilterTab, t: string): boolean {
   if (tab === "Community") return ["COMMUNITY", "QUESTION", "POLL"].includes(t);
   if (tab === "Events") return t === "EVENT";
   if (tab === "Stories") return t === "STORY";
-  if (tab === "Challenges") return t === "CHALLENGE";
+  if (tab === "Quests") return t === "CHALLENGE";
   return true;
 }
 
@@ -118,7 +118,7 @@ function tabIcon(tab: FilterTab): React.ComponentProps<typeof Ionicons>["name"] 
   if (tab === "Community") return "people-outline";
   if (tab === "Events") return "calendar-outline";
   if (tab === "Stories") return "images-outline";
-  if (tab === "Challenges") return "trophy-outline";
+  if (tab === "Quests") return "trophy-outline";
   return "layers-outline";
 }
 

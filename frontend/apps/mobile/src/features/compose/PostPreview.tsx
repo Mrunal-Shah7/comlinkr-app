@@ -279,7 +279,7 @@ export function PostPreview({
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <View style={pv.challengeTypePill}>
             <Ionicons name="trophy" size={11} color={palette.brandTeal} />
-            <Text style={pv.challengeTypeText}>{challengeType || "CHALLENGE"}</Text>
+            <Text style={pv.challengeTypeText}>{challengeType || "QUEST"}</Text>
           </View>
           {challengeDuration ? (
             <View style={pv.challengeDurPill}>
@@ -288,7 +288,7 @@ export function PostPreview({
             </View>
           ) : null}
         </View>
-        <Text style={pv.challengeTitle} numberOfLines={2}>{title || "Your challenge title..."}</Text>
+        <Text style={pv.challengeTitle} numberOfLines={2}>{title || "Your quest title..."}</Text>
         {location ? (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
             <Ionicons name="location" size={12} color="rgba(255,255,255,0.7)" />
@@ -312,7 +312,7 @@ export function PostPreview({
             <Text style={{ fontSize: 10, fontWeight: "700", color: palette.green700 }}>Active</Text>
           </View>
         </View>
-        <Text style={[pv.challengeDesc, { color: tc.textSecondary }]} numberOfLines={3}>{body || "Challenge details will appear here..."}</Text>
+        <Text style={[pv.challengeDesc, { color: tc.textSecondary }]} numberOfLines={3}>{body || "Quest details will appear here..."}</Text>
 
         {/* Info chips */}
         <View style={pv.challengeInfoGrid}>
@@ -363,7 +363,7 @@ export function PostPreview({
           <View style={{ flex: 1, borderRadius: 14, overflow: "hidden" }}>
             <LinearGradient colors={type.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={pv.challengeJoinBtn}>
               <Ionicons name="flash" size={15} color={palette.white} />
-              <Text style={pv.challengeJoinText}>Join Challenge</Text>
+              <Text style={pv.challengeJoinText}>Join quest</Text>
             </LinearGradient>
           </View>
           <Pressable style={[pv.challengeShareBtn, { backgroundColor: isDark ? tc.inputBg : palette.gray100, borderColor: tc.borderLight }]}>

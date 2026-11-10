@@ -70,6 +70,22 @@ export class ChallengesController {
     return this.challengesService.joinChallenge(userId, id);
   }
 
+  // Plan 10 (TR-038)
+  @Delete(':id/join')
+  @ApiOperation({ summary: 'Leave a challenge you joined' })
+  @ApiResponse({ status: 200, description: 'Left (or was not a member)' })
+  @ApiResponse({
+    status: 400,
+    description: 'The author, or the challenge ended',
+  })
+  @ApiResponse({ status: 404, description: 'Challenge not found' })
+  async leaveChallenge(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.challengesService.leaveChallenge(userId, id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete your own challenge' })
   @ApiResponse({ status: 200, description: 'Challenge deleted' })

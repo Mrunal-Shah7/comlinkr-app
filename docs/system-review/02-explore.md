@@ -109,6 +109,20 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Quest composer: Start from templates fill the title, goal, reward and length.
 - News composer: tags as chips; your city as a location chip.
 
+## Update 2026-11-10: a quest's own page (plan 10, TR-038, branch `feature/quest-detail`, not merged)
+
+- Tapping a quest card opens `/quest/[id]` (also `comlinkr://quest/:id` and `/app/feed?openQuest=<id>`): type, who
+  started it, details, goal, reward, time left, place, tags, the first ten people with the count. Join; Leave
+  (confirmed); "This quest is full", "This quest has ended", or "You started this quest" for the host. **[phone]**
+- `DELETE /challenges/:id/join` leaves; the count moves only when a membership is removed; refused to the author
+  and on an ended quest; leaving a full quest frees the place. [e2e]
+- Explore's quest list refetches when you return after joining or leaving on the page. **[phone]**
+- The cards read the API's `participantCount` (they read `participantsCount`, which the API never sent, so the count
+  and bar showed only after joining). **[phone]**
+- The app says "quest" everywhere a user reads it; the code and API keep `challenge`. The empty Quests tab shows
+  one "Start a quest". **[phone]**
+- Progress per person (check-ins, completion) does not exist; the page shows time left and how many joined.
+
 ## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
 
 Walked on the phone; rows E- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).

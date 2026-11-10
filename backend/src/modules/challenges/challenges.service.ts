@@ -313,6 +313,53 @@ export class ChallengesService {
     return { joined: true, participantCount: newCount };
   }
 
+  /**
+   * Plan 10 (TR-038): a member leaves a quest. The count goes down only when a membership row was removed, so a
+   * second tap or a non-member changes nothing. The author cannot leave (they delete it), nor can anyone leave an
+   * ended quest (the record of who took part stays).
+   */
+  async leaveChallenge(userId: string, challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { authorId: true, status: true, endsAt: true },
+    });
+    if (!challenge) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Challenge not found',
+      });
+    }
+    if (challenge.authorId === userId) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'You started this quest. Delete it from My posts instead.',
+      });
+    }
+    if (challenge.status !== 'ACTIVE' || challenge.endsAt < new Date()) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'This quest has ended.',
+      });
+    }
+    const participantCount = await this.prisma.$transaction(async (tx) => {
+      const removed = await tx.challengeParticipant.deleteMany({
+        where: { challengeId, userId },
+      });
+      if (removed.count === 1) {
+        await tx.challenge.updateMany({
+          where: { id: challengeId, participantCount: { gt: 0 } },
+          data: { participantCount: { decrement: 1 } },
+        });
+      }
+      const updated = await tx.challenge.findUniqueOrThrow({
+        where: { id: challengeId },
+        select: { participantCount: true },
+      });
+      return updated.participantCount;
+    });
+    return { joined: false, participantCount };
+  }
+
   /** The author deletes their own challenge; its participants go with it (cascade). */
   async deleteChallenge(userId: string, challengeId: string) {
     const challenge = await this.prisma.challenge.findUnique({

@@ -63,8 +63,17 @@ export interface ApiChallenge {
   status: string;
   endsAt: string;
   createdAt: string;
-  participantsCount?: number;
+  /** How many joined, the author included (the API's name; the app used to read `participantsCount`). */
+  participantCount?: number;
   isJoined?: boolean;
+  isFull?: boolean;
+  author?: { id: string; username: string; name: string; avatarUrl: string | null };
+}
+
+/** `GET /challenges/:id`: the quest with the first ten people who joined (plan 10). */
+export interface ApiChallengeDetail extends ApiChallenge {
+  participants: { id: string; username: string; name: string; avatarUrl: string | null; joinedAt: string }[];
+  totalParticipants: number;
 }
 
 export interface PaginatedChallenges {
@@ -95,6 +104,15 @@ export function getChallenges(
 
 export function joinChallenge(id: string): Promise<{ joined: boolean }> {
   return api.post<{ joined: boolean }>(`/challenges/${id}/join`, {});
+}
+
+export function getChallenge(id: string): Promise<ApiChallengeDetail> {
+  return api.get<ApiChallengeDetail>(`/challenges/${encodeURIComponent(id)}`);
+}
+
+/** Plan 10: leave a quest you joined (not the author's own, not an ended one). */
+export function leaveChallenge(id: string): Promise<{ joined: boolean; participantCount: number }> {
+  return api.delete<{ joined: boolean; participantCount: number }>(`/challenges/${encodeURIComponent(id)}/join`);
 }
 
 /** The author deletes their own challenge (My posts). */
