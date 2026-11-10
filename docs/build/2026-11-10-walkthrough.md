@@ -1,6 +1,6 @@
 # 2026-11-10: fixes from the full walkthrough (TR-028, TR-024)
 
-Branch `fix/walkthrough`, from `main` at `24c6878`. Not committed yet (the owner commits).
+Branch `fix/walkthrough`, from `main` at `24c6878`. Merged as pull request 22 (commit `df3e344`, merge `38b5c39`).
 
 ## Problem
 

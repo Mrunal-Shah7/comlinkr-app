@@ -9,7 +9,7 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-- `fix/walkthrough`, TR-028 and TR-024: walk done, fixes built, [build note](build/2026-11-10-walkthrough.md) written. Left: the owner's review, commit and pull request; S-10 (OTP boxes) to see on the phone.
+(none)
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 
