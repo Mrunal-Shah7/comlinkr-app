@@ -1,6 +1,6 @@
 # 2026-11-10: Marking a quest done (TR-052, plan 17)
 
-Branch `feature/quest-progress`, from `feature/follow-requests`. Not merged.
+Branch `feature/quest-progress`, from `feature/follow-requests`. Merged as pull request 40 (merge `f9c777e`), reaching `main` with PR 24.
 
 ## Problem
 

@@ -1,6 +1,6 @@
 # 2026-11-10: A quest's own page (TR-038, plan 10)
 
-Branch `feature/quest-detail`, from `feature/chat-delete`. Not merged.
+Branch `feature/quest-detail`, from `feature/chat-delete`. Merged as pull request 30 (merge `73f31ec`), reaching `main` with PR 24.
 
 ## Problem
 

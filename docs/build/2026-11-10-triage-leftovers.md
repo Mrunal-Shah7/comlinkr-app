@@ -1,6 +1,6 @@
 # 2026-11-10: Triage leftovers (TR-035, TR-040, backend lint)
 
-Branch `fix/triage-leftovers`, from `feature/gps-city`. Not merged.
+Branch `fix/triage-leftovers`, from `feature/gps-city`. Merged as pull request 28 (merge `1d99f02`), reaching `main` with PR 24.
 
 ## Changes
 

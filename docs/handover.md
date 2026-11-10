@@ -9,25 +9,7 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-- `chore/docs-cleanup`: the animate-expo skill, plan 06 (the walkthrough's decided changes), stale triage rows (TR-002, TR-006, TR-018). Left: the owner's merge.
-- `fix/triage-sweep` (from `chore/docs-cleanup`), the open triage bugs: TR-003, 007, 009, 030, 033 (migration), 035 (part) done, build note written. Left: the owner's review; the rest of the open rows go on a later branch.
-- `feature/in-window-sheets` (from `fix/triage-sweep`), TR-041, TR-019, TR-020, plan 07: built and checked on the phone (profile menu, Post sheet, filters, keyboard, dialogs, settings modal). Built, walked on the phone, build note written. Left: the owner's review.
-- `feature/gps-city` (from `feature/in-window-sheets`), TR-042, plan 08: built, tested, walked on the phone. Left: the owner's review.
-- `fix/triage-leftovers` (from `feature/gps-city`), TR-035, TR-040, lint: built, build note written. Left: the owner's review.
-- `feature/chat-delete` (from `fix/triage-leftovers`), TR-039, TR-044, plan 09: built, tested, walked on the phone, build note written. Left: the owner's review.
-- `feature/quest-detail` (from `feature/chat-delete`), TR-038, plan 10: quest page, leave, wording; built, tested, walked, build note written. Left: the owner's review.
-- `feature/event-edit` (from `feature/quest-detail`), TR-037, plan 11: event edit and cancel, the city's day; built, tested, walked, build note written. Left: the owner's review.
-- `feature/move-in-rules` (from `feature/event-edit`), TR-036, plan 12: move-in not before the home is available; the offer after the landlord approves; built, tested, walked, build note written. Left: the owner's review.
-- `feature/nearby` (from `feature/move-in-rules`), TR-032, plan 13: restaurant addresses geocoded on the server; Nearby asks for the phone's position and measures on the phone; built, tested, walked, build note written. Left: the owner's review.
-- `feature/follow` (from `feature/nearby`), TR-029, plan 14: follow and unfollow, counts, the Follows screen, a notification; built, tested, walked, build note written. Left: the owner's review.
-- `fix/chat-request-accept` (from `feature/follow`), TR-043: Accept ends the request in the open thread; built, walked, build note written. Left: the owner's review. TR-045 (composer under the keyboard) found, open.
-- `chore/brand-comlinkr` (from `fix/chat-request-accept`), TR-046: "ComLinkr" everywhere a user reads it; build note written. PR 36. Left: the owner's review.
-- `fix/sign-after-approval` (from `chore/brand-comlinkr`), TR-048: the server refuses a signature before approval; build note written. PR 37. Left: the owner's review.
-- `feature/event-cancelled` (from `fix/sign-after-approval`), TR-047, plan 15: a cancelled event is kept, marked Cancelled; built, tested, walked, build note written. PR 38. Left: the owner's review.
-- `feature/follow-requests` (from `feature/event-cancelled`), TR-049, 050, 051, 053, plan 16: follow requests, the Following tab, the switch, the settings reset bug. Built, tested, walked, build note written. PR 39. Left: the owner's review.
-- `feature/quest-progress` (from `feature/follow-requests`), TR-052, plan 17: marking a quest done. Built, tested, walked, build note written. PR 40. Left: the owner's review.
-- `fix/chat-keyboard` (from `feature/quest-progress`), TR-045: the chat composer above the Android keyboard. Built, walked, build note written. PR 41. Left: the owner's review.
-- `fix/walk-leftovers` (from `fix/chat-keyboard`), TR-040 (E-14, L-18): a steady bento, preferences from the roommate list. Built, walked, build note written. PR 42. Left: the owner's review.
+Nothing in progress: PRs 24 to 42 were merged into `main` on 2026-11-10.
 
 ## 2026-11-10 - the owner's eight answers, and the rest of the pending list (TR-045 to TR-053)
 

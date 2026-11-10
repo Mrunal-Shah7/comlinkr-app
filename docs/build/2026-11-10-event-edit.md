@@ -1,6 +1,6 @@
 # 2026-11-10: Editing and cancelling an event; event days in the city's time (TR-037, plan 11)
 
-Branch `feature/event-edit`, from `feature/quest-detail`. Not merged.
+Branch `feature/event-edit`, from `feature/quest-detail`. Merged as pull request 31 (merge `6f2fdc5`), reaching `main` with PR 24.
 
 ## Problem
 

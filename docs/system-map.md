@@ -141,6 +141,21 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
   `EXPO_PUBLIC_API_BASE_URL` to production. JavaScript-only changes ship as OTA updates
   (`eas update --branch production`) and reach every user at once. Native changes need a store build. Full guide:
   `frontend/apps/mobile/docs/BUILD_AND_DEPLOY.md`.
+- **Release APK (sideloading, built on this machine).** `scripts\build-release-apk.cmd --no-pause` from the
+  repository root. It refuses any `EXPO_PUBLIC_API_BASE_URL` in `frontend/apps/mobile/.env` other than
+  `https://api.comlinkr.com/api`, uses the JDK, SDK and Gradle cache on D:, builds arm64 only into `D:\cl`, and
+  copies the APK to `D:\ComLinkr\builds\ComLinkr-arm64.apk` (about 18 minutes; install with
+  `adb install -r`). Signed with the debug keystore: fine for sideloading, not for the Play Store. OTA updates
+  are off in it (`APP_ENV=development`).
+  - `android/` is generated and git-ignored. When `app.config.js` or a native dependency changed since the last
+    build, regenerate it first, keeping the keystore, or the APK silently lacks the new permissions and plugin
+    settings:
+    copy `android/app/debug.keystore` out, run `APP_ENV=development npx expo prebuild --platform android --clean --no-install`
+    in `frontend/apps/mobile/`, then put the keystore back.
+  - Afterwards check the APK: its `assets/index.android.bundle` holds `https://api.comlinkr.com/api` and no
+    local backend address; `aapt2 dump badging` shows the version and permissions.
+  - Known failures and their fixes (a Gradle plugin class "not found", `Address already in use`) are in the
+    [release APK build note](build/2026-11-06-release-apk-on-d-drive.md), "Notes for the next build".
 
 ## Risk areas
 

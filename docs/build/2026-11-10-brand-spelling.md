@@ -1,6 +1,6 @@
 # 2026-11-10: The brand is spelled "ComLinkr" (TR-046)
 
-Branch `chore/brand-comlinkr`, from `fix/chat-request-accept`. Not merged.
+Branch `chore/brand-comlinkr`, from `fix/chat-request-accept`. Merged as pull request 36 (merge `5f75ac5`), reaching `main` with PR 24.
 
 ## Problem
 

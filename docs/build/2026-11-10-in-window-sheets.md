@@ -1,6 +1,6 @@
 # 2026-11-10: Sheets and dialogs drawn in the app's window on Android (TR-041, TR-019, TR-020, plan 07)
 
-Branch `feature/in-window-sheets`, from `fix/triage-sweep`. Not merged.
+Branch `feature/in-window-sheets`, from `fix/triage-sweep`. Merged as pull request 26 (merge `3d8d855`), reaching `main` with PR 24.
 
 ## Problem
 

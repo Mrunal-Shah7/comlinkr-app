@@ -52,6 +52,15 @@ Not committed (owner's instruction).
 - If a build fails with `Address already in use: bind`, stop the leftover `java.exe` Gradle and Kotlin daemons.
 - If a plugin class is "not found" after changing where build folders go, delete that plugin's stale `build`
   folder in `node_modules`. Gradle had kept "up to date" records pointing at the old location.
+- 2026-11-11: `Could not find implementation class 'expo.modules.updates.ExpoUpdatesPlugin'` after
+  `expo prebuild --clean`. The plugin's `build` folder in `node_modules/.pnpm/expo-updates@…/expo-updates/`
+  `expo-updates-gradle-plugin/` had lost its `classes` folder, but Gradle still called `compileKotlin` up to date
+  and packed a 640-byte jar. `--rerun-tasks` on that one jar did not hold. Deleting the folder fixed it; it is
+  too deep for `Remove-Item`, so use `cmd /c 'rmdir /s /q "\\?\<full path>"'`.
+- Run `npx expo prebuild --platform android --clean` (with `APP_ENV=development`) when `app.config.js` or the
+  native dependencies change: `android/` is git-ignored, and an old one silently leaves out new permissions and
+  plugin settings. Copy `android/app/debug.keystore` out first and put it back after, so the APK still installs
+  over the previous one.
 - The release is signed with the debug keystore (`android/app/build.gradle`). That is fine for sideloading,
   not for the Play Store.
 
