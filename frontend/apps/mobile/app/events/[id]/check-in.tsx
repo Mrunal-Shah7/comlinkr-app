@@ -252,6 +252,15 @@ export default function EventCheckInScreen() {
             checkedInAt: formatCheckedInAt(result.checkedInAt),
           });
           break;
+        case "EVENT_CANCELLED":
+          showOutcome({
+            kind: "EVENT_CANCELLED",
+            title: "EVENT CANCELLED",
+            subtitle: result.message || "This event was cancelled.",
+            color: palette.red600,
+            name,
+          });
+          break;
         case "REGISTRATION_CANCELLED":
           showOutcome({
             kind: "REGISTRATION_CANCELLED",

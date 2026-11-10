@@ -101,6 +101,7 @@ export function Chip({ label, on, onPress, icon, style }: { label: string; on?: 
 /* ---------- segmented control ---------- */
 // Plan 02: the platform's own segmented control from @expo/ui (Segmented.ios.tsx / Segmented.android.tsx).
 export { Segmented } from './Segmented';
+export { ScrollTabs } from './ScrollTabs';
 
 /* ---------- entrance animations ---------- */
 /** Wrap list rows: rise and fade in, 35 ms apart. */

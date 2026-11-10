@@ -26,6 +26,7 @@ import { useTheme } from "../src/theme/useTheme";
 import { ApiError } from "../src/api/client";
 import { getMyPosts, getPost, deletePost, updatePost, subscribeToPostUpdates, getLatestPostUpdate, type UnifiedMyPost, type UnifiedMyPostType } from "../src/api/feed.api"; // SPRINT-42: detail GET supplies isEdited; list endpoint omits it.
 import { deleteEvent, getMyEvents } from "../src/api/events.api";
+import { eventDayDate } from "../src/utils/eventDay";
 import { RatingSummary } from "../components/events"; // SPRINT-42:
 import { deleteStory, getMyStories } from "../src/api/stories.api";
 import { getQuestions, deleteQuestion } from "../src/api/community-qa.api";
@@ -62,15 +63,12 @@ function formatRelativeTime(iso: string): string {
   }
 }
 
+/** The event's calendar day as stored (rule B10: never through the phone's zone; the time is not in `date`). */
 function formatEventDate(iso: unknown): string {
   if (!iso) return "Date TBD";
-  try {
-    const d = new Date(String(iso));
-    if (isNaN(d.getTime())) return String(iso);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
-  } catch {
-    return String(iso);
-  }
+  const d = eventDayDate(String(iso));
+  if (!d) return String(iso);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function metaNum(m: Record<string, unknown> | undefined | null, key: string): number {
@@ -166,7 +164,7 @@ export default function MyPostsScreen() {
               title: e.title,
               content: e.description ?? "",
               category: e.category ?? "Event",
-              status: null,
+              status: e.cancelled ? "CANCELLED" : null, // plan 15
               createdAt: e.createdAt ?? new Date().toISOString(),
               metadata: {
                 date: e.date,
@@ -283,7 +281,29 @@ export default function MyPostsScreen() {
     pendingDeletes.current.forEach(({ post, timer }) => { clearTimeout(timer); void commitDelete(post); });
   }, [commitDelete]);
 
+  // Plan 15: an event is cancelled, not deleted. It stays in the list, marked Cancelled.
+  const cancelMyEvent = (post: UnifiedMyPost) => {
+    if (post.status === "CANCELLED") return;
+    appAlert("Cancel this event?", "It stays on ComLinkr marked Cancelled, and everyone registered is told. This can't be undone.", [
+      { text: "Keep it", style: "cancel" },
+      {
+        text: "Cancel event",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteEvent(post.id);
+            setItems((prev) => prev.map((x) => (x.id === post.id && x.type === "EVENT" ? { ...x, status: "CANCELLED" } : x)));
+            showToast("Event cancelled.", "success");
+          } catch (e) {
+            showToast(e instanceof ApiError ? e.message : "Could not cancel the event. Please try again.", "error");
+          }
+        },
+      },
+    ]);
+  };
+
   const handleDelete = (post: UnifiedMyPost) => {
+    if (post.type === "EVENT") { cancelMyEvent(post); return; }
     const supported = ["NEWS", "ANNOUNCEMENT", "JOBS", "EVENT", "QUESTION", "COMMUNITY", "CHALLENGE", "STORY"].includes(post.type);
     if (!supported) {
       showToast("This kind of post cannot be deleted here yet.", "info");
@@ -383,11 +403,16 @@ export default function MyPostsScreen() {
     LISTING: "home-outline", HOUSING: "home-outline", FOOD: "restaurant-outline", CHALLENGE: "trophy-outline",
   };
   const subLine = items.length === 0 ? undefined : `${items.length} post${items.length === 1 ? "" : "s"}${totalLikes > 0 ? ` · ${totalLikes} likes` : ""}${totalComments > 0 ? ` · ${totalComments} comments` : ""}`;
-  const postMenu = (post: UnifiedMyPost) => appAlert(post.title || "Post", undefined, [
-    { text: "Edit", onPress: () => handleEdit(post) },
-    { text: "Delete", style: "destructive", onPress: () => handleDelete(post) },
-    { text: "Cancel", style: "cancel" },
-  ]);
+  const postMenu = (post: UnifiedMyPost) => {
+    const isEvent = post.type === "EVENT";
+    // Plan 15: nothing can be changed on a cancelled event.
+    if (isEvent && post.status === "CANCELLED") { openDetail(post); return; }
+    appAlert(post.title || "Post", undefined, [
+      { text: "Edit", onPress: () => handleEdit(post) },
+      { text: isEvent ? "Cancel event" : "Delete", style: "destructive", onPress: () => handleDelete(post) },
+      { text: isEvent ? "Close" : "Cancel", style: "cancel" },
+    ]);
+  };
 
   return (
     <>
@@ -424,7 +449,7 @@ export default function MyPostsScreen() {
         const likes = metaNum(post.metadata, "likesCount");
         const comments = metaNum(post.metadata, "commentsCount") || metaNum(post.metadata, "answersCount");
         const bits = [likes > 0 ? `♥ ${likes}` : "", comments > 0 ? `${comments} ${post.type === "QUESTION" ? "answers" : "comments"}` : "", formatRelativeTime(post.createdAt)].filter(Boolean);
-        const extra = post.type === "EVENT" ? formatEventDate(post.metadata.date) : post.type === "STORY" && post.status === "EXPIRED" ? "Expired" : "";
+        const extra = post.type === "EVENT" ? [post.status === "CANCELLED" ? "Cancelled" : "", formatEventDate(post.metadata.date)].filter(Boolean).join(" · ") : post.type === "STORY" && post.status === "EXPIRED" ? "Expired" : "";
         return (
           <Reveal key={`${post.type}-${post.id}`} i={i} style={{ marginHorizontal: 16, marginBottom: 10 }}>
             <PressableScale onPress={() => openDetail(post)} accessibilityRole="button" accessibilityLabel={post.title}
@@ -534,10 +559,10 @@ export default function MyPostsScreen() {
                   </View>
 
                   {/* Actions */}
-                  <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
+                  {detailPost.type === "EVENT" && detailPost.status === "CANCELLED" ? null : <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>
                     <SoftButton block label="Edit" outerStyle={{ flex: 1 }} icon={<Ionicons name="create-outline" size={17} color={tc.accentText} />} onPress={() => { setDetailPost(null); handleEdit(detailPost); }} />
-                    <SoftButton block ghost label="Delete" outerStyle={{ flex: 1 }} icon={<Ionicons name="trash-outline" size={17} color={tc.dangerText} />} onPress={() => { setDetailPost(null); handleDelete(detailPost); }} />
-                  </View>
+                    <SoftButton block ghost label={detailPost.type === "EVENT" ? "Cancel event" : "Delete"} outerStyle={{ flex: 1 }} icon={<Ionicons name={detailPost.type === "EVENT" ? "close-circle-outline" : "trash-outline"} size={17} color={tc.dangerText} />} onPress={() => { setDetailPost(null); handleDelete(detailPost); }} />
+                  </View>}
                   <View style={{ height: 12 }} />
                 </ScrollView>
               </View>

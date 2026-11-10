@@ -72,6 +72,9 @@ export default function PublicProfileScreen() {
       return { profile: prof, posts: rawPosts as PostLike[], postsFailed: !postsRes.ok };
     },
     enabled: !!userId,
+    // Plan 16: a follow request can be accepted elsewhere (the "accepted" notice opens this screen), so a cached
+    // profile would still say private and "Follow". Show the cache at once, then read it again.
+    refetchOnMount: "always",
   });
   const profile: PublicProfile | null = query.data?.profile ?? null;
   const posts: PostLike[] = query.data?.posts ?? [];
@@ -82,26 +85,31 @@ export default function PublicProfileScreen() {
     : query.error
       ? (query.error instanceof ApiError ? query.error.message : "Could not load profile.")
       : null;
-  // Follow is toggled optimistically on screen; the server's answer replaces it.
-  const [followOverride, setFollowing] = useState<boolean | null>(null);
-  const following = followOverride ?? profile?.followedByMe ?? false;
+  // Follow is toggled optimistically on screen; the server's answer replaces it. Plan 16: a private account's first
+  // tap sends a request ("Requested"); tapping again cancels it.
+  type FollowState = "none" | "requested" | "following";
+  const [followOverride, setFollowState] = useState<FollowState | null>(null);
+  const followState: FollowState = followOverride ?? (profile?.followedByMe ? "following" : profile?.followRequested ? "requested" : "none");
   const [followLoading, setFollowLoading] = useState(false);
   // Plan 14: the server's follower count after a tap; the counts line shows only when the profile carries them.
   const [followersOverride, setFollowersOverride] = useState<number | null>(null);
   const followersCount = followersOverride ?? profile?.stats.followersCount;
   const followingCount = profile?.stats.followingCount;
+  const isPrivate = !!profile?.isPrivate;
 
   const handleFollow = async () => {
     if (!profile) return;
     setFollowLoading(true);
-    const prev = following;
-    setFollowing(!prev);
+    const prev = followState;
+    setFollowState(prev === "none" ? (isPrivate ? "requested" : "following") : "none");
     try {
       const res = await toggleFollow(profile.id);
-      setFollowing(res.following);
+      const next: FollowState = res.following ? "following" : res.requested ? "requested" : "none";
+      setFollowState(next);
       if (typeof res.followersCount === "number") setFollowersOverride(res.followersCount);
+      if (next === "requested") showToast("Request sent. They'll see it in their follow requests.", "info");
     } catch (e) {
-      setFollowing(prev);
+      setFollowState(prev);
       appAlert("Error", e instanceof ApiError ? e.message : "Could not update follow.");
     } finally {
       setFollowLoading(false);
@@ -219,13 +227,32 @@ export default function PublicProfileScreen() {
             {!isOwnProfile ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
                 <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color={palette.white} />} onPress={handleMessage} />
-                {/* Plan 14 (TR-029): tapping "Following" unfollows. */}
-                <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
+                {/* Plan 14 (TR-029): tapping "Following" unfollows. Plan 16: "Requested" cancels the request. */}
+                <SoftButton
+                  small
+                  label={followState === "following" ? "Following" : followState === "requested" ? "Requested" : "Follow"}
+                  icon={followState === "following" ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : followState === "requested" ? <Ionicons name="time-outline" size={15} color={tc.accentText} /> : undefined}
+                  disabled={followLoading}
+                  onPress={handleFollow}
+                />
               </View>
             ) : null}
           </Reveal>
 
-          <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginHorizontal: 16, marginTop: 20 }}>
+          {/* Plan 16: a private account shows its details to accepted followers only. */}
+          {isPrivate && !isOwnProfile ? (
+            <View style={[card, { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 20, padding: 16, borderRadius: 18 }]}>
+              <Ionicons name="lock-closed-outline" size={22} color={tc.textSecondary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>This account is private</Text>
+                <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>
+                  {followState === "requested" ? "Your request is waiting for their approval." : "Follow to ask to see their posts and details."}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          {isPrivate && !isOwnProfile ? null : <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginHorizontal: 16, marginTop: 20 }}>
             {[
               { label: "Posts", value: profile.stats.postsCount },
               { label: "Saved", value: profile.stats.savedCount },
@@ -237,7 +264,7 @@ export default function PublicProfileScreen() {
                 <Text style={[TYPE.small, { color: tc.textTertiary }]}>{s.label}</Text>
               </View>
             ))}
-          </Reveal>
+          </Reveal>}
 
           {profile.achievements.filter((a) => a.earned).length > 0 ? (
             <>
@@ -256,8 +283,8 @@ export default function PublicProfileScreen() {
             </>
           ) : null}
 
-          {h2("Posts")}
-          {posts.length > 0 ? posts.map((p, i) => (
+          {isPrivate && !isOwnProfile ? null : h2("Posts")}
+          {isPrivate && !isOwnProfile ? null : posts.length > 0 ? posts.map((p, i) => (
             <Reveal key={p.id} i={i + 2} style={[card, { marginHorizontal: 16, marginBottom: 10, padding: 14 }]}>
               {p.title ? <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{p.title}</Text> : null}
               {p.content?.trim() ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: p.title ? 4 : 0 }]} numberOfLines={3}>{p.content}</Text> : null}

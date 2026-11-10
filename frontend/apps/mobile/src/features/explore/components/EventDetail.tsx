@@ -176,6 +176,8 @@ export function EventDetail({
   ] as [string, string][]).filter(([, v]) => !!v);
   const hasChat = !!(displayEvent.canAccessChat && displayEvent.conversationId);
   const owner = detailApiEvent?.isOwner ?? displayEvent.isOwner;
+  // Plan 15: a cancelled event is kept for reference; nothing new can happen on it.
+  const cancelled = !!(detailApiEvent?.cancelled ?? displayEvent.cancelled);
   const openChat = () => router.push({ pathname: "/chat", params: { conversationId: displayEvent.conversationId! } } as any);
   const messageHost = () => {
     if (onMessageHost) { onMessageHost(); return; }
@@ -214,6 +216,12 @@ export function EventDetail({
               <Text style={[TYPE.label, { color: tc.accentText }]}>{displayEvent.category}</Text>
             </View>
             <Text style={[TYPE.pageTitle, { fontSize: 26, lineHeight: 30, color: tc.textPrimary, marginTop: 10 }]}>{displayEvent.title}</Text>
+            {cancelled ? (
+              <View accessibilityRole="text" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10, padding: 12, borderRadius: 14, borderWidth: 1, borderColor: tc.dangerText, backgroundColor: tc.cardBg }}>
+                <Ionicons name="close-circle" size={18} color={tc.dangerText} />
+                <Text style={[TYPE.bodyStrong, { flex: 1, color: tc.textPrimary }]}>{owner ? "You cancelled this event." : "The host cancelled this event."}</Text>
+              </View>
+            ) : null}
             <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 4 }]}>Hosted by <Text style={{ color: tc.textPrimary, fontFamily: "Manrope_700Bold" }}>{displayEvent.host}</Text></Text>
             <RatingSummary averageRating={displayEvent.averageRating} totalReviews={displayEvent.totalReviews} size="sm" textColor={tc.textPrimary} mutedColor={tc.textTertiary} style={{ marginTop: 6 }} />
           </Reveal>
@@ -230,12 +238,12 @@ export function EventDetail({
           <Reveal i={2} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
             <SoftButton small ghost label="Directions" icon={<Ionicons name="navigate-outline" size={16} color={tc.textPrimary} />} onPress={handleDirections} />
             {hasChat ? <SoftButton small ghost label="Event chat" icon={<Ionicons name="chatbubbles-outline" size={16} color={tc.textPrimary} />} onPress={openChat} /> : null}
-            {owner ? (
+            {owner && !cancelled ? (
               <SoftButton small ghost label="Door check-in" icon={<Ionicons name="qr-code-outline" size={16} color={tc.textPrimary} />}
                 onPress={() => router.push({ pathname: "/events/[id]/check-in", params: { id: displayEvent.id, title: displayEvent.title } } as any)} />
             ) : null}
-            {owner && onEdit ? <SoftButton small ghost label="Edit" icon={<Ionicons name="create-outline" size={16} color={tc.textPrimary} />} onPress={onEdit} /> : null}
-            {owner && onCancelEvent ? <SoftButton small ghost label="Cancel event" icon={<Ionicons name="close-circle-outline" size={16} color={tc.textPrimary} />} onPress={onCancelEvent} /> : null}
+            {owner && onEdit && !cancelled ? <SoftButton small ghost label="Edit" icon={<Ionicons name="create-outline" size={16} color={tc.textPrimary} />} onPress={onEdit} /> : null}
+            {owner && onCancelEvent && !cancelled ? <SoftButton small ghost label="Cancel event" icon={<Ionicons name="close-circle-outline" size={16} color={tc.textPrimary} />} onPress={onCancelEvent} /> : null}
           </Reveal>
 
           {displayEvent.desc ? (
@@ -286,13 +294,13 @@ export function EventDetail({
             </View>
           ) : null}
 
-          <View style={{ marginTop: 8 }}>
+          {cancelled ? null : <View style={{ marginTop: 8 }}>
             <EventReviewsSection
               eventId={displayEvent.id}
               detailEvent={detailApiEvent ? { ...detailApiEvent, registeredByMe: event.registeredByMe || detailApiEvent.registeredByMe, isAttending: event.registeredByMe || detailApiEvent.isAttending, isOwner: event.isOwner || detailApiEvent.isOwner } : null}
               onDetailRefreshed={(fresh) => { setDetailApiEvent(fresh); setDetailFromApi(apiEventToExploreRow(fresh)); }}
             />
-          </View>
+          </View>}
         </ScrollView>
 
         {/* Glass bar: the price and the next step */}
@@ -301,7 +309,9 @@ export function EventDetail({
             <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{displayEvent.price}</Text>
             <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[displayEvent.date, displayEvent.time].filter(Boolean).join(" · ")}</Text>
           </View>
-          {isRegistered ? (
+          {cancelled ? (
+            <Text style={[TYPE.bodyStrong, { color: tc.textSecondary }]}>Cancelled</Text>
+          ) : isRegistered ? (
             <SoftButton ghost label="Cancel RSVP" onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onToggleGoing(); }} />
           ) : owner ? (
             // The host cannot RSVP to their own event (the server refuses it), so say so instead of offering a button that fails.

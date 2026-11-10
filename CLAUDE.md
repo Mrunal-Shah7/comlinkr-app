@@ -191,6 +191,10 @@ none is in `docs/production-lessons.md`.
   ([native navigation](docs/build/2026-11-09-native-navigation.md)).
 - A loader that a focus effect depends on must not depend on state it sets; read that state through a ref.
   Otherwise every failure re-runs it without pause ([triage leftovers](docs/build/2026-11-10-triage-leftovers.md)).
+- On Android, a field at the bottom edge is lifted with `useAnimatedKeyboard({ isNavigationBarTranslucentAndroid: true })`.
+  `KeyboardAvoidingView` and the hook without the flag take the hidden navigation bar's height off the keyboard's,
+  so the field stays partly under it. Check after a full restart: a fast refresh keeps the old keyboard listener
+  ([chat keyboard](docs/build/2026-11-10-chat-keyboard.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`
   ([performance note](docs/build/2026-10-29-ui-performance-tab-jank.md)).
 

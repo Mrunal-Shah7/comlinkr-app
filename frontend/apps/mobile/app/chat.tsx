@@ -1,6 +1,6 @@
 import { palette } from "../src/theme/palette";
 import { rs } from "../src/utils/responsive";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   View,
@@ -10,6 +10,8 @@ import {
   TextInput,
   FlatList,
   KeyboardAvoidingView,
+  type StyleProp,
+  type ViewStyle,
   StyleSheet,
   BackHandler,
   Pressable,
@@ -82,7 +84,7 @@ import Svg, { Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 
 import { useMuteStore } from "../src/store/mute.store";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { showToast } from '../src/shared/ui/Toast';
-import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Reanimated, { FadeInDown, Keyframe, ZoomIn, useAnimatedKeyboard, useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { SPRING } from '../src/shared/motion/presets';
 import { DSheet } from '../src/shared/d/Sheet';
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
@@ -1020,7 +1022,7 @@ function Thread({
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
+    <KeyboardFrame style={{ flex: 1, backgroundColor: tc.pageBg }}>
       {/* Bar (design D): back, the person, ··· */}
       <View style={{ paddingTop: insets.top, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
         <View style={{ height: 58, flexDirection: "row", alignItems: "center", paddingHorizontal: 8, gap: 8 }}>
@@ -1546,8 +1548,28 @@ function Thread({
             ))}
           </View>
       </DSheet>
-    </KeyboardAvoidingView>
+    </KeyboardFrame>
   );
+}
+
+/**
+ * TR-045: keeps the composer above the keyboard. iOS uses KeyboardAvoidingView. On Android it lifted the thread by
+ * the keyboard event's height, about 130 px short (the hidden navigation bar's height), so the composer sat half under
+ * the keyboard. Android uses Reanimated's keyboard height instead, as the in-window sheets do (plan 07).
+ */
+function KeyboardFrame({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
+  if (process.env.EXPO_OS === "ios") {
+    return <KeyboardAvoidingView style={style} behavior="padding">{children}</KeyboardAvoidingView>;
+  }
+  return <AndroidKeyboardFrame style={style}>{children}</AndroidKeyboardFrame>;
+}
+
+function AndroidKeyboardFrame({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
+  // The navigation bar is hidden (app/_layout.tsx) but comes back over the bottom while the keyboard is up. Without
+  // this flag Reanimated takes the bar's height off the keyboard's, which leaves the composer that much too low.
+  const keyboard = useAnimatedKeyboard({ isNavigationBarTranslucentAndroid: true });
+  const lift = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.get() }));
+  return <Reanimated.View style={[style, lift]}>{children}</Reanimated.View>;
 }
 
 const th = createThemedStyles({
