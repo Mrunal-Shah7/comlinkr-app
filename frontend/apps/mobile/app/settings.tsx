@@ -879,7 +879,7 @@ export default function SettingsScreen() {
         <Group label="About" i={6}>
           <SettingsRow icon="help-circle-outline" title="Help" onPress={() => router.push("/help-support" as any)} />
           <SettingsRow icon="document-text-outline" title="Terms and privacy" onPress={() => router.push("/privacy-policy" as any)} />
-          <SettingsRow icon="information-circle-outline" title="Comlinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
+          <SettingsRow icon="information-circle-outline" title="ComLinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
         </Group>
 
         {isAdmin ? (

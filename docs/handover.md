@@ -21,6 +21,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `feature/nearby` (from `feature/move-in-rules`), TR-032, plan 13: restaurant addresses geocoded on the server; Nearby asks for the phone's position and measures on the phone; built, tested, walked, build note written. Left: the owner's review.
 - `feature/follow` (from `feature/nearby`), TR-029, plan 14: follow and unfollow, counts, the Follows screen, a notification; built, tested, walked, build note written. Left: the owner's review.
 - `fix/chat-request-accept` (from `feature/follow`), TR-043: Accept ends the request in the open thread; built, walked, build note written. Left: the owner's review. TR-045 (composer under the keyboard) found, open.
+- `chore/brand-comlinkr` (from `fix/chat-request-accept`), TR-046: "ComLinkr" everywhere a user reads it; build note written. Left: the owner's review.
 
 ## 2026-11-10 - the open triage rows, one stacked PR each (TR-036, 037, 032, 029, 043)
 
