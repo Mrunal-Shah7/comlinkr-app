@@ -328,6 +328,8 @@ export class SavesService {
       capacity: event.capacity,
       attendeeCount,
       averageRating: Number(event.averageRating ?? 0), // SPRINT-38: Keep the duplicate saved-event formatter aligned with event responses.
+      cancelled: !!event.cancelledAt, // plan 15
+      cancelledAt: event.cancelledAt ?? null,
       totalReviews: event.totalReviews ?? 0, // SPRINT-38: Expose event review count in unified saves.
       createdAt: event.createdAt,
       images,
