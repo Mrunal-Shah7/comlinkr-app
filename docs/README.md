@@ -139,6 +139,7 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-10: [Full walkthrough](device-runs/2026-11-10-full-walkthrough.md), OnePlus (Android 16), Expo Go, local
   backend with the Resend key: every section, shared screens and admin. Found TR-029 to TR-040; fixes in the build
   note below.
+- 2026-11-10: [Loose ends](device-runs/2026-11-10-loose-ends.md): the walkthrough's fixes not walked again, declining a message request, blocking while following.
 
 ## Build notes (`build/`)
 
