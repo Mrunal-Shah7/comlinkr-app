@@ -24,6 +24,7 @@ type Row = Record<string, any>;
 
 function matches(row: Row, where: Row): boolean {
   return Object.entries(where).every(([key, condition]) => {
+    if (key === 'OR') return (condition as Row[]).some((w) => matches(row, w));
     const value = row[key];
     if (
       condition &&
@@ -718,9 +719,28 @@ describe('PropertyApplicationsService', () => {
       );
     });
 
-    it('rejects withdrawing once the landlord has approved', async () => {
+    it('declines an approved offer the tenant has not signed (plan 12)', async () => {
       const id = await submitted();
       await service.decide(LANDLORD, id, { decision: 'approved' });
+      notifications.createNotification.mockClear();
+      const result = await service.withdraw(TENANT, id);
+      expect(result.status).toBe('withdrawn');
+      expect(notifications.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: LANDLORD,
+          title: 'Application withdrawn',
+        }),
+      );
+    });
+
+    it('rejects withdrawing once the agreement is made', async () => {
+      const id = await submitted();
+      await service.decide(LANDLORD, id, { decision: 'approved' });
+      await service.sign(TENANT, id, {
+        signature: 'Tina Tenant',
+        signatureType: 'typed',
+        signedAt: new Date().toISOString(),
+      } as never);
       await expect(service.withdraw(TENANT, id)).rejects.toBeInstanceOf(
         ConflictException,
       );

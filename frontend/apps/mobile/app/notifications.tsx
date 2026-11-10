@@ -15,6 +15,8 @@ import {
 } from "../src/api/notifications.api";
 import { useSidebarStore } from "../src/store/sidebar.store";
 import { useAuthStore } from "../src/store/auth.store";
+import { getApplication } from "../src/api/property-agreement.api";
+import { showToast } from "../src/shared/ui/Toast";
 import Reanimated, { ZoomOut } from "react-native-reanimated";
 import { TYPE } from "../src/theme/d";
 import { EmptyState, PressableScale, Reveal, Segmented } from "../src/shared/d";
@@ -41,6 +43,7 @@ function formatRelativeTime(iso: string): string {
 export default function NotificationsScreen() {
   const { tc } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
+  const userId = useAuthStore((s) => s.user?.id);
   const [filter, setFilter] = useBackState<"all" | "unread">("all");
   const queryClient = useQueryClient();
   const [markingAll, setMarkingAll] = useState(false);
@@ -112,8 +115,18 @@ export default function NotificationsScreen() {
       else router.push("/chat" as any);
     } else if (n.type === "badge") {
       router.push("/verification-status" as any);
+    } else if (n.targetType === "PROPERTY_APPLICATION" && n.targetId) {
+      // Plan 12: the applicant opens their application (the offer, once approved); the landlord the dashboard.
+      try {
+        const a = await getApplication(n.targetId);
+        if (a.applicantId !== userId) router.push("/landlord-dashboard" as any);
+        else if (a.status === "withdrawn" || a.status === "rejected") router.push(`/listing/${encodeURIComponent(a.listingId)}` as never);
+        else router.push({ pathname: "/property-agreement", params: { applicationId: a.id } } as any);
+      } catch {
+        showToast("This application is no longer available.", "info");
+      }
     }
-  }, [setItems]);
+  }, [setItems, userId]);
 
   if (!isAuthed) {
     return <Redirect href="/(auth)/login" />;
