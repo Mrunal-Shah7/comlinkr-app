@@ -205,6 +205,7 @@ enum EventRegistrationStatus {
   ACTIVE // SPRINT-38: The registration currently grants admission.
   CANCELLED // SPRINT-38: The attendee cancelled and the persisted ticket must be rejected explicitly.
 }
+
 // SPRINT-38: End event registration lifecycle states.
 
 enum StoryMediaType {
@@ -1397,6 +1398,7 @@ model EventReview {
 
   @@unique([eventId, userId]) // SPRINT-38: Enforce one review per attendee per event under concurrency.
 }
+
 // SPRINT-38: End event review model.
 
 model Story {
@@ -1504,6 +1506,8 @@ model ChallengeParticipant {
   challengeId String
   userId      String
   joinedAt    DateTime @default(now())
+  /// Plan 17 (TR-052): when the member said they finished the quest; null while not done.
+  completedAt DateTime?
 
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1642,6 +1646,8 @@ model NotificationPreference {
   comments     Boolean @default(true)
   likes        Boolean @default(false)
   messages     Boolean @default(true)
+  /// Plan 16 (TR-049): "New follower", "Follow request" and "accepted your follow request".
+  followers    Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -1668,12 +1674,19 @@ model BlockedUser {
   @@unique([blockerId, blockedId])
 }
 
-// Plan 14 (TR-029): one person following another. One-way, no approval.
+// Plan 14 (TR-029): one person following another. Plan 16 (TR-051): following a private account is a request
+// (PENDING) until they accept it.
+enum FollowStatus {
+  PENDING
+  ACCEPTED
+}
+
 model UserFollow {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   followerId  String
   followingId String
-  createdAt   DateTime @default(now())
+  status      FollowStatus @default(ACCEPTED)
+  createdAt   DateTime     @default(now())
 
   follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
   following User @relation("Followed", fields: [followingId], references: [id], onDelete: Cascade)

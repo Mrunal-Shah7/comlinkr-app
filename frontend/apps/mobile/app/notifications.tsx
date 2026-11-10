@@ -118,6 +118,9 @@ export default function NotificationsScreen() {
     } else if (n.targetType === "EVENT" && n.targetId) {
       // Plan 15: event notices (changed, cancelled, nearby) open the event; a cancelled one shows marked Cancelled.
       router.push(`/events/${encodeURIComponent(n.targetId)}` as never);
+    } else if (n.targetType === "FOLLOW_REQUEST") {
+      // Plan 16: a request to follow your private account waits in Follows, on Requests.
+      router.push({ pathname: "/follows", params: { tab: "requests" } } as any);
     } else if (n.targetType === "USER" && n.targetId) {
       // Plan 14: "New follower" opens the follower's profile.
       router.push({ pathname: "/public-profile", params: { userId: n.targetId } } as any);

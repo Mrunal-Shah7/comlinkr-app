@@ -86,6 +86,33 @@ export class ChallengesController {
     return this.challengesService.leaveChallenge(userId, id);
   }
 
+  // Plan 17 (TR-052): a member marks the quest done, or takes it back.
+  @Post(':id/complete')
+  @ApiOperation({ summary: 'Mark a quest you joined as done' })
+  @ApiResponse({ status: 200, description: 'Marked done (or already was)' })
+  @ApiResponse({ status: 400, description: 'The quest ended' })
+  @ApiResponse({ status: 403, description: 'Not a member' })
+  @ApiResponse({ status: 404, description: 'Challenge not found' })
+  async completeChallenge(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.challengesService.setCompleted(userId, id, true);
+  }
+
+  @Delete(':id/complete')
+  @ApiOperation({ summary: 'Undo marking a quest done' })
+  @ApiResponse({ status: 200, description: 'Not done (or already was not)' })
+  @ApiResponse({ status: 400, description: 'The quest ended' })
+  @ApiResponse({ status: 403, description: 'Not a member' })
+  @ApiResponse({ status: 404, description: 'Challenge not found' })
+  async uncompleteChallenge(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.challengesService.setCompleted(userId, id, false);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete your own challenge' })
   @ApiResponse({ status: 200, description: 'Challenge deleted' })
