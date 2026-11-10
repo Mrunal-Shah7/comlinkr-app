@@ -108,3 +108,11 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Stories can be posted without a title or a category (server: empty title, category `GENERAL`, shown as General / Story). The story composer is a black screen, media first. **[phone]** (not posted)
 - Quest composer: Start from templates fill the title, goal, reward and length.
 - News composer: tags as chips; your city as a location chip.
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows E- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Uploads work again (E-07, `expo/fetch` FormData); a failed photo upload no longer leaves the post (E-21), and a deleted post's photos leave Cloudinary (E-22).
+- New stories, posts, events and quests show at once (E-08, E-11); "View" after publishing opens the new item (E-09, E-29).
+- News older than 30 days is dropped (E-16); cards keep their place when the full list arrives (E-17).
+- Open: E-12, E-13, E-14, E-18, E-19, E-25 to E-27, E-31 to E-33, E-36, E-37.

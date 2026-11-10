@@ -1,10 +1,12 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
+import { cityTimezone } from "../../utils/cityTimezone";
 import { queryClient } from "../../services/cache/queryClient";
+import { queryKeys } from "../../services/cache/queryKeys";
 import { palette } from "../../theme/palette";
 import { Switch } from "../../shared/ui/Switch";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, ActivityIndicator, ActionSheetIOS } from "react-native";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -43,6 +45,16 @@ import { s } from "./styles";
 import { AttachedMedia, FEED_TO_NEWS_LABEL } from "./types";
 
 // ── Full form for a selected post type ────────────────────────────────────────
+
+/** Cache keys to mark stale after a publish, per composer type (housing listings and stories invalidate in their api modules). */
+const PUBLISH_INVALIDATES: Record<string, readonly (readonly unknown[])[]> = {
+  news: [["feed"]],
+  challenge: [["feed"]],
+  event: [["feed"], ["events"]],
+  restaurant: [["food"], queryKeys.myRestaurants()],
+  shared_space: [["housing"], queryKeys.myListings()],
+};
+
 export function PostForm({ type, onBack, initialMode, editId }: { type: PostType; onBack: () => void; initialMode?: string; editId?: string }) {
   const insetsTop = 0; // the screen's SafeAreaView already clears the status bar // SPRINT-42: accept the entity id selected by owner-only edit actions.
   const { isDark, tc } = useTheme();
@@ -217,7 +229,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
   const [instagram, setInstagram] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [priceRange, setPriceRange] = useState(type.id === "restaurant" ? "$ Mid-range" : "");
+  const [priceRange, setPriceRange] = useState(type.id === "restaurant" ? "$$ Mid-range" : "");
   const [avgPricePerPerson, setAvgPricePerPerson] = useState("");
   const [phone, setPhone] = useState("");
   const [openTime, setOpenTime] = useState("");
@@ -442,6 +454,53 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
 
   const canSubmit = canPost && !submitting;
 
+  // ── Leaving with unsaved input asks first (F-14, owner's decision) ──
+  // Everything the user can type or pick; derived defaults that effects fill in after mount (the currencies) are
+  // left out so they never count as a change.
+  const formSnapshot = JSON.stringify([
+    title, body, location, attachedFiles.map((f) => f.uri), sourceLabel,
+    propType, price, deposit, beds, baths, sqft, floor, available, petPolicy, parking, laundry, heating, cooling,
+    utilities, leaseTerm, neighborhood, furnished, amenities, listingCity, listingState, listingCountry, yearBuiltStr,
+    transitInfoStr, walkScoreStr, utilitiesText, listingFurnishedSwitch, listingImages.map((f) => f.uri), listingStatus,
+    restName, ownerName, businessEmail, website, instagram, cuisine, businessType, priceRange, avgPricePerPerson,
+    phone, openTime, closeTime, features, restTags, restCity, restState, restCountry, restWaitTime,
+    reviewTarget?.id ?? null, reviewN,
+    eventCategory, eventFormat, eventDate, eventTime, eventEndTime, ticketType, ticketPrice, maxAttendees,
+    newsCategory, newsTags, storyCatPick, storyTagsInput,
+    challengeType, questTemplate, challengeDuration, challengeGoal, challengeReward, challengeMaxParticipants,
+    challengeHashtags,
+    sharedSpacePrice, sharedSpaceDeposit, sharedSpaceRooms, sharedSpaceBaths, sharedSpaceTotalOccupants,
+    sharedSpaceAvailableSpots, sharedSpaceCity, sharedSpaceState, sharedSpaceCountry, sharedSpacePetPolicy,
+    sharedSpaceSmoking, sharedSpaceHouseRules, sharedSpaceAmenities,
+  ]);
+  // The form as it opened (or as an edit loaded); null until then.
+  const baselineRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!editLoading && baselineRef.current === null) baselineRef.current = formSnapshot;
+  }, [editLoading, formSnapshot]);
+  // Refs, not state: the form navigates straight after a save, before a re-render could switch a state guard off.
+  const dirtyRef = useRef(false);
+  dirtyRef.current = baselineRef.current !== null && formSnapshot !== baselineRef.current;
+  /** Set when a submit starts (its own navigation must not ask) and cleared when it fails. */
+  const leavingRef = useRef(false);
+  const confirmDiscard = useCallback((discard: () => void) => {
+    appAlert("Discard your changes?", "What you entered here will be lost.", [
+      { text: "Keep editing", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: () => { leavingRef.current = true; discard(); } },
+    ]);
+  }, []);
+  const navigation = useNavigation();
+  useEffect(() => navigation.addListener("beforeRemove", (e) => {
+    if (leavingRef.current || !dirtyRef.current) return;
+    e.preventDefault();
+    confirmDiscard(() => navigation.dispatch(e.data.action));
+  }), [navigation, confirmDiscard]);
+  // The header's back arrow: in the type chooser it only swaps the form out, which removes no screen.
+  const leaveForm = () => {
+    if (!leavingRef.current && dirtyRef.current) confirmDiscard(onBack);
+    else onBack();
+  };
+
   const isStoryForm = type.id === "story";
   const mediaBtnTitle = isStoryForm
     ? attachedFiles.length > 0
@@ -651,6 +710,31 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     };
     const targetRoute = routeMap[type.id] || "/(tabs)/feed";
     let createdListingId: string | undefined;
+    let createdStoryId: string | undefined;
+    let createdEventId: string | undefined;
+    let createdSpaceId: string | undefined;
+    let createdRestaurantId: string | undefined;
+    let photosFailed = false;
+    const viewAfterPublish = () => {
+      if (type.id === "event" && createdEventId) {
+        router.replace(`/events/${encodeURIComponent(createdEventId)}` as never);
+        return;
+      }
+      if (type.id === "shared_space" && createdSpaceId) {
+        router.replace(`/room/${encodeURIComponent(createdSpaceId)}` as never);
+        return;
+      }
+      if (type.id === "restaurant" && createdRestaurantId) {
+        router.replace(`/restaurant/${encodeURIComponent(createdRestaurantId)}` as never);
+        return;
+      }
+      // "View" opens what was just shared; the composer is replaced so closing it returns to where it started.
+      if (type.id === "story" && createdStoryId) {
+        router.replace({ pathname: "/story-viewer", params: { storyId: createdStoryId } } as never);
+        return;
+      }
+      goAfterPublish();
+    };
     const goAfterPublish = () => {
       if (type.id === "story") {
         router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Stories" } } as any);
@@ -662,6 +746,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     };
 
     setSubmitting(true);
+    leavingRef.current = true;
     try {
       switch (type.id) {
         case "news": {
@@ -716,15 +801,22 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               return Number.isNaN(n) ? undefined : n;
             })(),
           });
+          createdEventId = createdEvent?.id;
           const eventPhotos = attachedFiles.filter((f) => f.mediaType === "photo");
           if (eventPhotos.length > 0 && createdEvent?.id) {
-            await uploadEventImages(
-              createdEvent.id,
-              eventPhotos.map((f, i) => ({
-                uri: f.uri,
-                name: f.name || `event_${i + 1}.jpg`,
-              })),
-            );
+            // The event exists now: a failed photo upload must not read as a failed publish (a retry would
+            // create it twice).
+            try {
+              await uploadEventImages(
+                createdEvent.id,
+                eventPhotos.map((f, i) => ({
+                  uri: f.uri,
+                  name: f.name || `event_${i + 1}.jpg`,
+                })),
+              );
+            } catch {
+              photosFailed = true;
+            }
           }
           break;
         }
@@ -759,16 +851,23 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             amenities: sharedSpaceAmenities.length ? sharedSpaceAmenities : undefined,
             houseRules: sharedSpaceHouseRules.trim() ? [sharedSpaceHouseRules.trim()] : [],
           });
+          createdSpaceId = space.id;
           const photoFiles = attachedFiles.filter((f) => f.mediaType === "photo");
           if (photoFiles.length > 0) {
-            await uploadSharedSpaceImages(
-              space.id,
-              photoFiles.map((f, i) => ({
-                uri: f.uri,
-                name: f.name || `space_${i + 1}.jpg`,
-                type: mimeForListingImage(f.uri),
-              })),
-            );
+            // The space exists now: a failed photo upload must not read as a failed publish (a retry would
+            // list it twice).
+            try {
+              await uploadSharedSpaceImages(
+                space.id,
+                photoFiles.map((f, i) => ({
+                  uri: f.uri,
+                  name: f.name || `space_${i + 1}.jpg`,
+                  type: mimeForListingImage(f.uri),
+                })),
+              );
+            } catch {
+              photosFailed = true;
+            }
           }
           break;
         }
@@ -878,6 +977,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
           if (restaurantPostMode === "review") {
             if (!reviewTarget || !reviewN) return;
             await submitReview(reviewTarget.id, { rating: reviewN, content: body.trim() || undefined });
+            createdRestaurantId = reviewTarget.id; // "View" opens the restaurant that was reviewed
           } else {
             const services = features.length > 0 ? features : ["Dine-in"];
             const tags = [businessType, cuisine].filter((x) => (x || "").trim().length > 0) as string[];
@@ -903,19 +1003,27 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               ...(waitOk ? { waitTimeMinutes: waitParsed } : {}),
               ...(avgPriceOk ? { avgPricePerPerson: avgPriceParsed } : {}),
               // FOD-02: business timezone/currency so every viewer sees the business's own hours and prices.
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || undefined,
+              // The restaurant's city, not the phone's zone: an owner abroad set Los Angeles places to Asia/Kolkata.
+              timezone: cityTimezone(restCity.trim()),
               ...(getBusinessCurrency(null, restCountry) ? { currency: getBusinessCurrency(null, restCountry)!.code } : {}),
             });
+            createdRestaurantId = restaurant.id;
             const photoFiles = attachedFiles.filter((f) => f.mediaType === "photo");
             if (photoFiles.length > 0) {
-              await uploadRestaurantImages(
-                restaurant.id,
-                photoFiles.map((f, i) => ({
-                  uri: f.uri,
-                  name: f.name || `restaurant_${i + 1}.jpg`,
-                  type: mimeForListingImage(f.uri),
-                })),
-              );
+              // Same as the event and the shared space: the restaurant exists, so a failed upload is reported,
+              // not treated as a failed publish.
+              try {
+                await uploadRestaurantImages(
+                  restaurant.id,
+                  photoFiles.map((f, i) => ({
+                    uri: f.uri,
+                    name: f.name || `restaurant_${i + 1}.jpg`,
+                    type: mimeForListingImage(f.uri),
+                  })),
+                );
+              } catch {
+                photosFailed = true;
+              }
             }
           }
           break;
@@ -932,7 +1040,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
           const storyHashTagsParsed = storyTagsInput
             ? storyTagsInput.split(",").map((t) => t.trim().replace(/^#/, "")).filter(Boolean)
             : undefined;
-          await createStory({
+          const story = await createStory({
             title: title.trim() || undefined,
             mediaType: mapStoryMediaUi(isPhoto ? "photo" : "video"),
             category: storyCatPick ? mapStoryCategoryLabel(storyCatPick) : undefined,
@@ -942,6 +1050,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             durationSeconds,
             media: { uri: mediaFile.uri, name: mediaFile.name },
           });
+          createdStoryId = story?.id;
           break;
         }
         case "challenge": {
@@ -967,13 +1076,16 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
           break;
       }
 
+      // The lists that show what was just published are cached for minutes: mark them stale so the new item appears.
+      for (const queryKey of PUBLISH_INVALIDATES[type.id] ?? []) void queryClient.invalidateQueries({ queryKey });
       if (isEditing) { router.back(); return; } // SPRINT-42: return to the subscribed visible surface immediately after a successful PATCH.
       void useSidebarStore.getState().fetchSidebarData();
-      appAlert(labels[type.id] ?? "Published! 🎉", "Your content was submitted.", [
-        { text: "View", onPress: goAfterPublish },
+      appAlert(labels[type.id] ?? "Published! 🎉", photosFailed ? "It is live, but its photos could not be uploaded." : "Your content was submitted.", [
+        { text: "View", onPress: viewAfterPublish },
         { text: "Done", onPress: goAfterPublish },
       ]);
     } catch (e) {
+      leavingRef.current = false; // nothing was saved: leaving asks again
       const msg = e instanceof ApiError ? e.message : "Something went wrong. Try again.";
       appAlert("Could not publish", msg);
     } finally {
@@ -1065,9 +1177,22 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
 
   if (editLoading) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: tc.pageBg }}><ActivityIndicator color={type.color} /><Text style={{ color: tc.textSecondary, marginTop: 10 }}>Loading editor…</Text></View>; // SPRINT-42: prevent editing stale defaults while detail data loads.
 
+  // The Android media picker (a sheet with Library / Camera). It must be rendered by every branch below that can
+  // pick media: the story and listing composers return early, and without it there "Pick a photo" did nothing,
+  // so no story and no new listing could be posted (TR-028).
+  const mediaPickerSheet = process.env.EXPO_OS === "android" ? (
+    <MediaPickerSheet
+      visible={pickerSheetVisible}
+      onClose={() => setPickerSheetVisible(false)}
+      onLibrary={() => { setPickerSheetVisible(false); pickerResolveRef.current?.onLibrary(); }}
+      onCamera={() => { setPickerSheetVisible(false); pickerResolveRef.current?.onCamera(); }}
+    />
+  ) : null;
+
   if (type.id === "story" && !isEditing) {
     const m = attachedFiles[0];
     return (
+      <>
       <StoryComposer
         media={m ? { uri: m.uri, mediaType: m.mediaType === "video" ? "video" : "photo" } : null}
         onPick={handleAttachFile}
@@ -1075,14 +1200,17 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
         topics={STORY_CATEGORY_OPTIONS} topic={storyCatPick} onTopic={setStoryCatPick}
         onShare={() => void handlePost()}
         submitting={submitting}
-        onClose={onBack}
+        onClose={leaveForm}
       />
+      {mediaPickerSheet}
+      </>
     );
   }
 
   if (type.id === "listing" && !isEditing) {
     const place = [listingCityEff, listingState.trim() || user?.stateProvince?.trim(), listingCountryEff].filter(Boolean).join(", ");
     return (
+      <>
       <ListingQuestions
         images={listingImages}
         onAddPhotos={handleListingPickImages}
@@ -1101,8 +1229,10 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
         validateAddress={() => validateListingStep(3)}
         onPost={() => { setListingStep(4); setListingPostReq((n) => n + 1); }}
         submitting={submitting}
-        onClose={onBack}
+        onClose={leaveForm}
       />
+      {mediaPickerSheet}
+      </>
     );
   }
 
@@ -1148,13 +1278,13 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
       {/* ── Bar (design D) ── */}
       <View style={{ paddingTop: insetsTop, backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }}>
         <View style={{ height: 56, flexDirection: "row", alignItems: "center", paddingHorizontal: 8 }}>
-          <Pressable onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
+          <Pressable onPress={leaveForm} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
             style={({ pressed }) => [{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }, pressed && { backgroundColor: tc.inputBg }]}>
             <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
           </Pressable>
           <View style={{ position: "absolute", left: 64, right: 64, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }} pointerEvents="none">
             <Ionicons name={type.icon} size={17} color={tc.accentText} />
-            <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>{type.label}</Text>
+            <Text style={[TYPE.bar, { color: tc.textPrimary }]} numberOfLines={1}>{type.id === "restaurant" && restaurantPostMode === "review" ? "A review" : type.label}</Text>
           </View>
         </View>
       </View>
@@ -2061,7 +2191,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                   bg={type.bg}
                 />
 
-                <SectionLabel label="TELL YOUR STORY" color={type.color} />
+                <SectionLabel label="TELL YOUR STORY *" color={type.color} />
                 <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                   <TextInput
                     style={[{ textAlignVertical: "top" }, s.bodyInput, { color: tc.textPrimary }]}
@@ -2785,6 +2915,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                       : type.id === "story" ? "Share Story"
                       : type.id === "challenge" ? "Launch Challenge"
                       : type.id === "shared_space" ? "Publish Space"
+                      : isEditing ? "Save changes"
                       : "Publish Post"}
                   </Text>
                 </>
@@ -2795,15 +2926,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
       </View>
 
 
-      {/* ── Native media picker sheet (Android) ── */}
-      {process.env.EXPO_OS === "android" && (
-        <MediaPickerSheet
-          visible={pickerSheetVisible}
-          onClose={() => setPickerSheetVisible(false)}
-          onLibrary={() => { setPickerSheetVisible(false); pickerResolveRef.current?.onLibrary(); }}
-          onCamera={() => { setPickerSheetVisible(false); pickerResolveRef.current?.onCamera(); }}
-        />
-      )}
+      {mediaPickerSheet}
     </>
   );
 }

@@ -6,6 +6,7 @@ import {
   getRoommate,
   connectWithRoommate,
   acceptRoommateConnection,
+  cancelRoommateConnection,
   declineRoommateConnection,
   toggleRoommateSave,
 } from "../../src/api/roommates.api";
@@ -58,9 +59,10 @@ export default function RoommateDetailScreen() {
       showToast(e instanceof ApiError ? e.message : "Could not accept. Try again.", "error");
     }
   };
-  const decline = async (failure: string) => {
+  // Declining answers someone else's request; cancelling withdraws your own. They are different endpoints.
+  const decline = async (failure: string, mine = false) => {
     try {
-      await declineRoommateConnection(id);
+      await (mine ? cancelRoommateConnection(id) : declineRoommateConnection(id));
       patch((r) => ({ ...r, connectionStatus: null, conversationId: null }));
     } catch (e) {
       showToast(e instanceof ApiError ? e.message : failure, "error");
@@ -113,7 +115,7 @@ export default function RoommateDetailScreen() {
       onConnect={() => void connect()}
       onAccept={() => void accept()}
       onDecline={() => void decline("Could not decline. Try again.")}
-      onCancelRequest={() => void decline("Could not cancel. Try again.")}
+      onCancelRequest={() => void decline("Could not cancel. Try again.", true)}
     />
   );
 }

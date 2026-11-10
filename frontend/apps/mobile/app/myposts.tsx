@@ -27,8 +27,9 @@ import { ApiError } from "../src/api/client";
 import { getMyPosts, getPost, deletePost, updatePost, subscribeToPostUpdates, getLatestPostUpdate, type UnifiedMyPost, type UnifiedMyPostType } from "../src/api/feed.api"; // SPRINT-42: detail GET supplies isEdited; list endpoint omits it.
 import { deleteEvent, getMyEvents } from "../src/api/events.api";
 import { RatingSummary } from "../components/events"; // SPRINT-42:
-import { getMyStories } from "../src/api/stories.api";
+import { deleteStory, getMyStories } from "../src/api/stories.api";
 import { getQuestions, deleteQuestion } from "../src/api/community-qa.api";
+import { deleteChallenge } from "../src/api/challenges.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
@@ -206,9 +207,10 @@ export default function MyPostsScreen() {
               status: null,
               createdAt: q.createdAt ?? new Date().toISOString(),
               metadata: {
-                answersCount: q.answersCount ?? 0,
-                likesCount: q.votes ?? 0,
-                commentsCount: q.answersCount ?? 0,
+                // The list endpoint returns answerCount and upvoteCount; the old keys always read 0.
+                answersCount: q.answerCount ?? q.answersCount ?? 0,
+                likesCount: q.upvoteCount ?? q.votes ?? 0,
+                commentsCount: q.answerCount ?? q.answersCount ?? 0,
                 tags: q.tags ?? [],
               },
             }))
@@ -269,6 +271,8 @@ export default function MyPostsScreen() {
       if (post.type === "NEWS" || post.type === "ANNOUNCEMENT" || post.type === "JOBS") await deletePost(post.id);
       else if (post.type === "EVENT") await deleteEvent(post.id);
       else if (post.type === "QUESTION" || post.type === "COMMUNITY") await deleteQuestion(post.id);
+      else if (post.type === "CHALLENGE") await deleteChallenge(post.id);
+      else if (post.type === "STORY") await deleteStory(post.id);
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : e instanceof Error ? e.message : "Delete failed.";
       showToast(msg, "error");
@@ -280,9 +284,9 @@ export default function MyPostsScreen() {
   }, [commitDelete]);
 
   const handleDelete = (post: UnifiedMyPost) => {
-    const supported = ["NEWS", "ANNOUNCEMENT", "JOBS", "EVENT", "QUESTION", "COMMUNITY"].includes(post.type);
+    const supported = ["NEWS", "ANNOUNCEMENT", "JOBS", "EVENT", "QUESTION", "COMMUNITY", "CHALLENGE", "STORY"].includes(post.type);
     if (!supported) {
-      showToast("Deleting stories and challenges from the app is not supported yet.", "info");
+      showToast("This kind of post cannot be deleted here yet.", "info");
       return;
     }
     let index = -1;

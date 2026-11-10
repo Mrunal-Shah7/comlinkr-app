@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -344,6 +346,22 @@ export class FeedService {
       });
     }
 
+    // Check every file before anything is written, so a bad file leaves no post behind.
+    for (const file of files ?? []) {
+      if (file.size > FEED_MEDIA_MAX_SIZE) {
+        throw new BadRequestException({
+          code: 'FILE_TOO_LARGE',
+          message: 'Media file must be under 5MB',
+        });
+      }
+      if (!FEED_MEDIA_MIME_TYPES.includes(file.mimetype)) {
+        throw new BadRequestException({
+          code: 'FILE_INVALID_TYPE',
+          message: 'Media file must be JPEG, PNG, or WebP',
+        });
+      }
+    }
+
     const post = await this.prisma.feedPost.create({
       data: {
         authorId: userId,
@@ -361,41 +379,39 @@ export class FeedService {
     });
 
     if (files && files.length > 0) {
-      const mediaCreates = [];
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        if (file.size > FEED_MEDIA_MAX_SIZE) {
-          throw new BadRequestException({
-            code: 'FILE_TOO_LARGE',
-            message: 'Media file must be under 5MB',
-          });
+      const uploaded: string[] = [];
+      try {
+        for (const file of files) {
+          uploaded.push(
+            await this.storageService.uploadPublicFile(
+              file.buffer,
+              file.mimetype,
+              `feed/${post.id}`,
+              randomUUID(),
+              StorageService.extensionFromMime(file.mimetype),
+            ),
+          );
         }
-        if (!FEED_MEDIA_MIME_TYPES.includes(file.mimetype)) {
-          throw new BadRequestException({
-            code: 'FILE_INVALID_TYPE',
-            message: 'Media file must be JPEG, PNG, or WebP',
-          });
+        await this.prisma.feedPostMedia.createMany({
+          data: uploaded.map((imageUrl, order) => ({
+            feedPostId: post.id,
+            imageUrl,
+            order,
+          })),
+        });
+      } catch (error) {
+        // The app is told the post failed, so it must not exist: remove the post and what was uploaded.
+        await this.prisma.feedPost
+          .delete({ where: { id: post.id } })
+          .catch(() => undefined);
+        for (const url of uploaded) {
+          await this.storageService.deleteFile(url).catch(() => undefined);
         }
-        const extension = StorageService.extensionFromMime(file.mimetype);
-        const imageUrl = await this.storageService.uploadPublicFile(
-          file.buffer,
-          file.mimetype,
-          `feed/${post.id}`,
-          randomUUID(),
-          extension,
-        );
-        mediaCreates.push(
-          this.prisma.feedPostMedia.create({
-            data: {
-              feedPostId: post.id,
-              imageUrl,
-              order: index,
-            },
-          }),
-        );
-      }
-      if (mediaCreates.length > 0) {
-        await this.prisma.$transaction(mediaCreates);
+        if (error instanceof HttpException) throw error;
+        throw new ServiceUnavailableException({
+          code: 'UPLOAD_FAILED',
+          message: 'Could not upload your photos. Please try again.',
+        });
       }
     }
 
@@ -493,7 +509,12 @@ export class FeedService {
       await tx.feedPost.delete({ where: { id: postId } });
     });
 
-    // optionally delete files for media (not strictly required for now)
+    // A deleted post's photos must not stay public at their URLs (stories already do this).
+    for (const media of existing.media) {
+      await this.storageService
+        .deleteFile(media.imageUrl)
+        .catch(() => undefined);
+    }
 
     return { message: 'Post deleted' };
   }

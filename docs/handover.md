@@ -9,7 +9,29 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-(none)
+- `fix/walkthrough`, TR-028 and TR-024: walk done, fixes built, [build note](build/2026-11-10-walkthrough.md) written. Left: the owner's review, commit and pull request; S-10 (OTP boxes) to see on the phone.
+
+## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
+
+- Walked every section (Explore, Listings, Food, Community), the shared screens and admin on the OnePlus against
+  the local backend; 60 bugs fixed (Follow hidden, not fixed), findings recorded. Everything is in [the run log](device-runs/2026-11-10-full-walkthrough.md)
+  and [the build note](build/2026-11-10-walkthrough.md). New triage: TR-029 to TR-040. Nothing committed.
+- Resend works locally with the key set: sign-up and reset emails were delivered. The old "not working" was the
+  documented empty `RESEND_API_KEY`, plus a real bug: SDK errors were never logged (R-03).
+- Decided without the owner (they asked for autopilot): Follow hidden instead of built (TR-029); quest and story
+  delete added to My posts; event photos deleted with the event; Saved news lists article saves; the owner's local
+  account kept (role back to USER, password reset to the same value); admin walk read-only on other people's
+  content.
+- L-23, F-13 and F-14 change what the product does; the owner decided them in chat, with no plan file.
+- Checks: backend tsc, unit 103, e2e 47 pass; lint has 27 errors, all already in the committed code; mobile tsc
+  passes; `check-docs` passes.
+- Still running: backend on port 4003 (email off, `RESEND_API_KEY=` empty) and Metro on 8085, both from this
+  session. The walk's earlier backend (4000) and Metro (8084) were stopped. Not from this walk and left alone: Metro
+  on 8083 and three `nest start --watch` from 9 Nov. `adb reverse tcp:4000` points at 4003. No phone setting was
+  changed.
+- Slowed down by: the login screen closing on a Back sent with the keyboard already down, a mistyped password after
+  the field jump, `uiautomator dump /dev/tty` printing nothing, MCPier's 25-call limit, and Metro dying with its
+  parent task. All are now rules in `CLAUDE.md` (Tools).
 
 ## 2026-11-09 - docs checks and tooling rules (TR-025, PR 21)
 
@@ -54,30 +76,3 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - E2e `sprint54/stories-listing-reason` was out of date against SEC-04; updated on `chore/e2e-listing-visibility`
   (TR-016, [build note](build/2026-11-09-e2e-listing-visibility.md)). The backend e2e suite now passes 45/45.
 - `ui_tester` back to USER; servers stopped.
-
-## 2026-11-09 (earlier) - React Query on the rest, keyboard taps (TR-014)
-
-- PRs 7-12 (TR-013) merged into `main`. Then `chore/react-query-rest`: the 22 admin pages, edit profile, Settings,
-  event, story and one-off loads on React Query; the last four keyboard-tap screens.
-  [Build note](build/2026-11-09-react-query-rest.md).
-- Follow-ups found (older bugs): admin dashboard sends `status` to `/admin/reports` (400); admin Data privacy crashes
-  on `req.user.username` (backend sends `snapshotUsername`).
-- Still partial from the audit: iOS previews only on some cards, the news article modal, palette colours not
-  dark-aware.
-- `ui_tester` set back to USER. Servers stopped at the end.
-
-## 2026-11-09 (earlier) - the nine Expo conventions (TR-013)
-
-- All nine points done, one stacked pull request per group, each on the one before:
-  `chore/expo-conventions` (keyboard taps, window size, `EXPO_OS`, onboarding dots, axios dropped) →
-  `chore/react-query` → `chore/split-compose` → `chore/detail-routes` ([plan 03](plan/03-detail-routes.md)) →
-  `chore/ios-conventions` → `chore/color-tokens`. Build notes dated 2026-11-09 in `build/`, run logs in `device-runs/`.
-- Merge them in order; each later PR shows only its own commits once the one below is merged.
-- **Not checked on iOS** (no iPhone here): the link previews and context menus (`DetailLink`), continuous corners,
-  the iOS edge swipe on the detail routes. Walk them on an iPhone before a release.
-- Not checked on Android: shared space detail (none in the seed), roommate connect / accept, review and reservation
-  end to end, every admin screen after the colour codemod.
-- Follow-ups: move screens from `palette` onto the dark-mode-aware theme (`tc`) one screen at a time; the news
-  article stays a modal until there is an article by-id endpoint.
-- Servers: Metro and the backend stopped at the end. Test saves made in the walks removed; dark mode switched back
-  off for `ui_tester`.

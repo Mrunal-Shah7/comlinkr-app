@@ -18,7 +18,11 @@ export function Segmented({ items, value, onChange, style }: SegmentedProps & { 
             selected={it.key === value}
             onClick={() => { if (it.key !== value) { void Haptics.selectionAsync(); onChange(it.key); } }}
           >
-            <SegmentedButton.Label><Text maxLines={1}>{it.label}</Text></SegmentedButton.Label>
+            <SegmentedButton.Label>
+              {/* Five buttons (Explore) get about 75 dp each on a narrow phone, and the selected one also draws a
+                  check mark: at the default label size "Stories" and "Quests" were cut. */}
+              <Text maxLines={1} style={items.length >= 5 ? { typography: 'labelMedium' } : undefined}>{it.label}</Text>
+            </SegmentedButton.Label>
           </SegmentedButton>
         ))}
       </SingleChoiceSegmentedButtonRow>

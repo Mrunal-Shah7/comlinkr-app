@@ -7,6 +7,7 @@
 
 import * as SecureStore from "expo-secure-store";
 import { router } from "expo-router"; // SPRINT-27
+import { File } from "expo-file-system";
 
 const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api").replace(/\/$/, "");
 const DEBUG_API =
@@ -249,6 +250,39 @@ export const api = {
 };
 
 /** POST multipart (e.g. avatar). Do not set Content-Type — boundary is set automatically. */
+type UriPart = { uri: string; name?: string; type?: string };
+
+function isUriPart(value: unknown): value is UriPart {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as UriPart).uri === "string" &&
+    !("bytes" in value)
+  );
+}
+
+/**
+ * `expo/fetch` (the global fetch since SDK 57) only sends parts that are strings, Blobs or objects with
+ * `bytes()`. The API modules append React Native's `{ uri, name, type }` file parts, which it rejects with
+ * "Unsupported FormDataPart implementation". Give each such part a `bytes()` that reads the file.
+ */
+function toFetchableFormData(formData: FormData): FormData {
+  const entries = (formData as unknown as { entries?: () => Iterable<[string, unknown]> }).entries;
+  if (typeof entries !== "function") return formData;
+  const out = new FormData();
+  for (const [key, value] of entries.call(formData)) {
+    if (isUriPart(value)) {
+      const file = new File(value.uri);
+      const name = value.name ?? file.name;
+      const type = value.type || file.type || "application/octet-stream";
+      out.append(key, { name, type, bytes: () => file.bytes() } as never);
+    } else {
+      out.append(key, value as never);
+    }
+  }
+  return out;
+}
+
 export async function postFormData<T = unknown>(path: string, formData: FormData): Promise<T> {
   const cookie = await getSessionCookie();
   const url = path.startsWith("http")
@@ -258,7 +292,7 @@ export async function postFormData<T = unknown>(path: string, formData: FormData
   if (cookie) headers["Cookie"] = cookie;
   const res = await fetchWithTimeout(
     url,
-    { method: "POST", headers, body: formData, credentials: "include" },
+    { method: "POST", headers, body: toFetchableFormData(formData), credentials: "include" },
     UPLOAD_TIMEOUT_MS,
   );
   return parseResponse<T>(res, false);

@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
+import { palette } from "../src/theme/palette";
 import { useTheme } from "../src/theme/useTheme";
 import { useRequireAuth } from "../src/shared/hooks/useRequireAuth";
 import { TYPE } from "../src/theme/d";
@@ -51,8 +52,11 @@ export default function CreatePostScreen() {
   }
 
   if (selectedType) {
+    // The new-story composer is black edge to edge; with the page colour behind the status bar its light icons
+    // were unreadable on a light strip.
+    const blackComposer = selectedType.id === "story" && !(params.mode === "edit" && params.id);
     return (
-      <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top", "bottom"]}>
+      <SafeAreaView style={[s.safe, { backgroundColor: blackComposer ? palette.black : tc.pageBg }]} edges={["top", "bottom"]}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
           <PostForm type={selectedType} onBack={params.type ? () => router.back() : () => setSelectedType(null)} initialMode={params.mode} editId={params.id} />
             {/* SPRINT-42: deep-linked type (from Listings/Food/etc.) returns to the originating screen; in-app chooser selection returns to the chooser. */}

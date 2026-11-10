@@ -364,19 +364,29 @@ export class SavesService {
     const limit = query.limit ?? 20;
 
     if (!query.type) {
-      const [news, events, listings, food, community, stories, roommates] =
-        await Promise.all([
-          this.prisma.newsArticleSave.count({ where: { userId } }), // SPRINT-30: live news article saves
-          this.prisma.eventSave.count({ where: { userId } }),
-          this.prisma.housingSave.count({ where: { userId } }),
-          this.prisma.restaurantSave.count({ where: { userId } }),
-          this.prisma.communitySave.count({ where: { userId } }),
-          this.prisma.storySave.count({ where: { userId } }),
-          this.prisma.roommateSave.count({ where: { userId } }),
-        ]);
+      const [
+        newsArticles,
+        newsPosts,
+        events,
+        listings,
+        food,
+        community,
+        stories,
+        roommates,
+      ] = await Promise.all([
+        // The News tab lists both saved articles and saved posts, so it counts both.
+        this.prisma.newsArticleSave.count({ where: { userId } }),
+        this.prisma.feedSave.count({ where: { userId } }),
+        this.prisma.eventSave.count({ where: { userId } }),
+        this.prisma.housingSave.count({ where: { userId } }),
+        this.prisma.restaurantSave.count({ where: { userId } }),
+        this.prisma.communitySave.count({ where: { userId } }),
+        this.prisma.storySave.count({ where: { userId } }),
+        this.prisma.roommateSave.count({ where: { userId } }),
+      ]);
       return {
         counts: {
-          news,
+          news: newsArticles + newsPosts,
           events,
           listings,
           food,
@@ -389,31 +399,61 @@ export class SavesService {
 
     switch (query.type) {
       case 'news': {
-        const [rows, total] = await this.prisma.$transaction([
-          this.prisma.feedSave.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            skip: (page - 1) * limit,
-            take: limit,
-            include: {
-              feedPost: {
-                include: {
-                  author: true,
-                  media: true,
-                  likes: { where: { userId }, select: { id: true } },
-                  saves: { where: { userId }, select: { id: true } },
+        // Saved community news posts (FeedSave) and saved live news articles (NewsArticleSave) are one News tab.
+        // The count above counted only articles and this list read only posts, so a saved article was counted
+        // but never shown. Both are read up to this page's end, merged newest first, and the page cut from that.
+        const upTo = page * limit;
+        const [rows, total, articleRows, articleTotal] =
+          await this.prisma.$transaction([
+            this.prisma.feedSave.findMany({
+              where: { userId },
+              orderBy: { createdAt: 'desc' },
+              take: upTo,
+              include: {
+                feedPost: {
+                  include: {
+                    author: true,
+                    media: true,
+                    likes: { where: { userId }, select: { id: true } },
+                    saves: { where: { userId }, select: { id: true } },
+                  },
                 },
               },
-            },
-          }),
-          this.prisma.feedSave.count({ where: { userId } }),
-        ]);
-        const data = rows.map((r) => ({
+            }),
+            this.prisma.feedSave.count({ where: { userId } }),
+            this.prisma.newsArticleSave.findMany({
+              where: { userId },
+              orderBy: { createdAt: 'desc' },
+              take: upTo,
+            }),
+            this.prisma.newsArticleSave.count({ where: { userId } }),
+          ]);
+        const posts = rows.map((r) => ({
           savedItemType: 'news' as const,
           savedAt: r.createdAt,
           ...this.formatFeedPost(r.feedPost as any, userId),
         }));
-        return { data, meta: createPaginationMeta(page, limit, total) };
+        const articles = articleRows.map((a) => ({
+          savedItemType: 'article' as const,
+          savedAt: a.createdAt,
+          id: a.articleId,
+          articleId: a.articleId,
+          title: a.title,
+          url: a.url,
+          imageUrl: a.imageUrl,
+          source: a.source,
+          publishedAt: a.publishedAt ? a.publishedAt.toISOString() : null,
+        }));
+        const data = [...posts, ...articles]
+          .sort(
+            (x, y) =>
+              new Date(y.savedAt).getTime() - new Date(x.savedAt).getTime(),
+          )
+          .slice((page - 1) * limit, upTo);
+        return {
+          data,
+          meta: createPaginationMeta(page, limit, total + articleTotal),
+        };
       }
       case 'events': {
         const [rows, total] = await this.prisma.$transaction([

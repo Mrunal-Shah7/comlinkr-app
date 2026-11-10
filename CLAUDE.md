@@ -53,11 +53,35 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
 
 ## Tools
 
-- **Phone:** drive the phone through MCPier's `android` server (scrcpy-mcp): `list_servers` must show it ready, then
-  `call_tool` for single steps. `execute` scripts have no `setTimeout`, so waits go between `call_tool` calls.
-  Screenshots taken during a scrcpy session lag one step behind; check with `adb exec-out screencap -p` instead.
-  If MCPier is down, use adb directly (`D:\AppData\AndroidStudio\Sdk\platform-tools\adb.exe`): `input tap`,
-  `input keyevent`, `screencap`. Details in [docs/device-testing.md](docs/device-testing.md).
+- **Phone:** input goes through MCPier's `android` server (scrcpy-mcp), the rest through adb
+  (`D:\AppData\AndroidStudio\Sdk\platform-tools\adb.exe`). Details in [docs/device-testing.md](docs/device-testing.md).
+  - **Input (MCPier):** every tap, swipe, typed text and key. `list_servers` must show `android` ready; start a session
+    with `start_session` (native 1080x2412 coordinates, matching the UI dump). Use `call_tool` for one step and
+    `execute` to send several inputs that need no wait between them (tap a field, then type) in one call. `execute`
+    has no `setTimeout`, so waits go between calls. `key_event` has no repeat: send the key several times.
+  - **Looking (adb):** screenshots with `adb exec-out screencap -p` (scrcpy screenshots lag one step behind), and
+    buttons found with `uiautomator dump` filtered by text in the shell, which prints a few lines instead of the
+    whole tree (`ui_dump` returns all of it). A screencap can still be stale: when it disagrees with the dump, trust
+    the dump.
+  - **Logs (shell):** check the Metro and backend logs in the same shell call as the screenshot; most bugs show
+    there first (a 500, a missing request).
+  - Find a button's centre from the dump before tapping: while the keyboard is up, taps near the bottom edge
+    open Recents. Hide the keyboard with Escape (keycode 111); Back (4) also undoes in-screen state in this app.
+  - `adb shell input text` cannot type accents; MCPier `input_text` can ("Café" works), but it can drop a character
+    (an "Ł" after a space was lost), so read the field back from the dump after typing. Only if MCPier is down, use
+    adb for input too (`input tap`, `input keyevent`).
+  - `execute` stops after 25 tool calls per script: split long key sequences (clearing a field) across calls.
+  - Before Back or a swipe, check `dumpsys input_method | grep mInputShown`: with the keyboard already closed, Back
+    leaves the screen (it closed the login screen twice). On login, type the email, press Enter (66) to move to the
+    password, type it, and Enter again to sign in; the first password typed after that jump was wrong twice, so on a
+    401 clear the field and type it again.
+  - `uiautomator dump /dev/tty` sometimes prints nothing (during start-up or an animation): dump to
+    `/sdcard/u.xml` and `cat` it, under `timeout 30`.
+  - In sheets, swipe slowly (600 ms or more); a fast swipe closes the sheet. Expo Go's floating gear sits over the
+    top right of every screen: tap around it.
+  - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.
+- **Database (shell):** timestamps read through `pg` from Node print 5 h 30 early (naive timestamps read as
+  local time); compare with `now()` in the same query.
 - **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe
   Back. Check gestures by hand.
 - **Browser and GitHub:** the `gh` CLI is not installed. Use Claude in Chrome for anything in a browser, including

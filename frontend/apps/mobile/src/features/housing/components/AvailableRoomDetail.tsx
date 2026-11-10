@@ -147,10 +147,13 @@ export function AvailableRoomDetail({
               <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{room.hostName}</Text>
               {has(room.hostOccupation) ? <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{room.hostOccupation}</Text> : null}
             </View>
-            <View style={{ alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: tc.mintSoft }}>
-              <Text style={[TYPE.cardTitle, { color: tc.successText }]}>{compat}%</Text>
-              <Text style={[TYPE.label, { color: tc.successText, fontSize: 10.5 }]}>match</Text>
-            </View>
+            {/* A match against yourself means nothing: the owner sees no score. */}
+            {isOwner ? null : (
+              <View style={{ alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14, backgroundColor: tc.mintSoft }}>
+                <Text style={[TYPE.cardTitle, { color: tc.successText }]}>{compat}%</Text>
+                <Text style={[TYPE.label, { color: tc.successText, fontSize: 10.5 }]}>match</Text>
+              </View>
+            )}
           </Reveal>
           {has(room.hostBio) ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 10 }]}>{room.hostBio}</Text> : null}
 

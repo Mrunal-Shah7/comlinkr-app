@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNumber,
@@ -7,7 +8,7 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { PropertyType } from '@prisma/client';
 
@@ -46,4 +47,17 @@ export class HousingQueryDto extends PaginationDto {
   @IsString()
   @MaxLength(200)
   search?: string;
+
+  /** true: listings whose stated pet policy allows pets; false: those that say no. Unstated policies match neither. */
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === 'true' || value === true
+      ? true
+      : value === 'false' || value === false
+        ? false
+        : value,
+  )
+  @IsBoolean()
+  pets?: boolean;
 }

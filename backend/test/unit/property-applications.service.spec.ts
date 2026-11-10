@@ -705,8 +705,22 @@ describe('PropertyApplicationsService', () => {
       expect(fake.applications[app.id]).toBeDefined();
     });
 
-    it('rejects withdrawing after submit', async () => {
+    it('withdraws a submitted application and tells the landlord', async () => {
       const id = await submitted();
+      notifications.createNotification.mockClear();
+      const result = await service.withdraw(TENANT, id);
+      expect(result.status).toBe('withdrawn');
+      expect(notifications.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: LANDLORD,
+          title: 'Application withdrawn',
+        }),
+      );
+    });
+
+    it('rejects withdrawing once the landlord has approved', async () => {
+      const id = await submitted();
+      await service.decide(LANDLORD, id, { decision: 'approved' });
       await expect(service.withdraw(TENANT, id)).rejects.toBeInstanceOf(
         ConflictException,
       );

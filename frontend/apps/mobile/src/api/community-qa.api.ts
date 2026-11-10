@@ -255,7 +255,7 @@ export function getBookmarkedQuestions(params: { page?: number; pageSize?: numbe
   const qs = new URLSearchParams(
     Object.entries(backendParams).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])
   ).toString();
-  return api.get<PaginatedResponse<Question>>(`/community/bookmarks${qs ? `?${qs}` : ""}`);
+  return api.get<PaginatedResponse<Question>>(`/community/questions/saved${qs ? `?${qs}` : ""}`);
 }
 
 export function getTopics(): Promise<{ id: CommunityTopic; label: string; count: number }[]> {

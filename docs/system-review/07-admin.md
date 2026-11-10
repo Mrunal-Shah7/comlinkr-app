@@ -74,3 +74,9 @@ Checklist: none yet. Needs `pnpm seed:admin` and seeded reports, badge applicati
 
 Every screen. The 2026-10-29 audit spot-checked a few backend ownership rules (food reservations, notifications,
 story comments, messaging member status) and found them correct; the admin routes were not part of it.
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone with the owner's local account made ADMIN for the walk (then put back); row S-11 and S-12 in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- The dashboard and all 20 admin screens load with no failed request. No moderation action was taken on other people's content, so actions are still unchecked.
+- Users hides its count while the list loads (S-12).

@@ -30,8 +30,9 @@ export const QuestCard = memo(function QuestCard({
   const timeLeft = endsAt ? (() => {
     const diff = endsAt.getTime() - Date.now();
     if (diff <= 0) return "ENDED";
-    const days = Math.floor(diff / 86400000);
-    return days >= 1 ? `${days}D LEFT` : `${Math.floor(diff / 3600000)}H LEFT`;
+    // Round up: a one-week quest created a minute ago has 7 days left, not 6.
+    if (diff >= 86400000) return `${Math.ceil(diff / 86400000)}D LEFT`;
+    return `${Math.ceil(diff / 3600000)}H LEFT`;
   })() : null;
   const participants = quest.participantsCount ?? 0;
   const maxP = quest.maxParticipants ?? 0;

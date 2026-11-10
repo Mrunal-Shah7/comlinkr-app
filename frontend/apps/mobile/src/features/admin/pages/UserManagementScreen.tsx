@@ -703,10 +703,13 @@ export default function UserManagementScreen() {
             <View style={{ flex: 1 }}>
               <Text style={s.headerSub}>Admin Module</Text>
               <Text style={s.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>User Management</Text>
-              <View style={[s.countPill, { alignSelf: 'flex-start', marginTop: 6 }]}>
-                <Text style={s.countText}>{totalLabel}</Text>
-                <Text style={s.countLabel}> users</Text>
-              </View>
+              {/* Hide the count until the first page arrives, so loading never reads as "0 users". */}
+              {!(isLoading && users.length === 0) && (
+                <View style={[s.countPill, { alignSelf: 'flex-start', marginTop: 6 }]}>
+                  <Text style={s.countText}>{totalLabel}</Text>
+                  <Text style={s.countLabel}> users</Text>
+                </View>
+              )}
             </View>
           </View>
 

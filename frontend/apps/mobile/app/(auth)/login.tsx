@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { enterApp } from "../../src/features/auth/enterApp";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import MaskedView from "@react-native-masked-view/masked-view";
@@ -113,7 +114,7 @@ export default function LoginScreen() {
       const { onboardingDone } = await syncFromApiLogin(profile, sessionCookie);
       void useSidebarStore.getState().fetchSidebarData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
+      enterApp(onboardingDone);
     } catch (e: unknown) {
       setFieldError("password");
       setError(formatLoginError(e));
@@ -162,7 +163,7 @@ export default function LoginScreen() {
         const { onboardingDone } = await syncFromApiLogin(profile, sessionCookie);
         void useSidebarStore.getState().fetchSidebarData();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
+        enterApp(onboardingDone);
       } catch (e: unknown) {
         setError(formatLoginError(e));
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -197,7 +198,7 @@ export default function LoginScreen() {
         const { onboardingDone } = await syncFromApiLogin(profile, sessionCookie);
         void useSidebarStore.getState().fetchSidebarData();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
+        enterApp(onboardingDone);
       } catch (e: unknown) {
         const code =
           e && typeof e === "object" && "code" in e ? String((e as { code: unknown }).code) : "";
@@ -238,7 +239,7 @@ export default function LoginScreen() {
           setUsernamePickerVisible(false);
           setOauthTempToken("");
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace((onboardingDone ? "/(tabs)/feed" : "/(auth)/onboarding") as any);
+          enterApp(onboardingDone);
         }}
         onCancel={() => {
           setUsernamePickerVisible(false);

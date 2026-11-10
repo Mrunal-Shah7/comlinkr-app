@@ -88,3 +88,11 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Review composer: pick the restaurant from a search list of your city; the fields that were never sent (cuisine, price, visit, dishes) are gone.
 - Restaurant composer: $$ and Dine-in chosen by default; one line about badges.
 - My restaurants: manage sheet in D; views, likes and reservations (not in the data) are no longer shown as 0.
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows F- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Opening hours are read in both stored formats and in the restaurant's (or its city's) time zone, so Open now works (F-01, F-02). Older production rows may hold a phone's zone (TR-033).
+- My restaurants and Favourites list their rows (F-03); restaurant edit saves (F-04).
+- The owner's switch is now "Temporarily closed", which customers see whatever the hours say (F-13, owner's decision).
+- Nearby is hidden until restaurants have coordinates (F-11, TR-032). The review composer is titled "A review" (F-15). Open: F-16.

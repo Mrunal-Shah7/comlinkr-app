@@ -124,8 +124,16 @@ Each gets a plan in `plan/` when it is picked up.
   in the seed), 1 partial (S-09, no restaurant hours in the seed). Found TR-001 to TR-004 and the unrendered Food
   chips.
 
+- 2026-11-10: [Full walkthrough](device-runs/2026-11-10-full-walkthrough.md), OnePlus (Android 16), Expo Go, local
+  backend with the Resend key: every section, shared screens and admin. Found TR-029 to TR-040; fixes in the build
+  note below.
+
 ## Build notes (`build/`)
 
+- 2026-11-10: [Fixes from the full walkthrough](build/2026-11-10-walkthrough.md) (TR-028, TR-024): uploads work again
+  under `expo/fetch`, failed uploads no longer leave half-made posts, Resend errors are logged, missing API routes
+  (pets filter, question, answer and quest deletes, withdraw, saved news), and 60 fixes in all across the four sections,
+  shared screens and admin (Follow hidden).
 - 2026-11-09: [Colour palette](build/2026-11-09-color-tokens.md) (TR-013, point 6): about 3,000 hex literals in
   123 files read from a named `src/theme/palette.ts`; values unchanged. Walked on Android, light and dark.
 - 2026-11-09: [iOS conventions](build/2026-11-09-ios-conventions.md) (TR-013, point 8): `Link.Preview` and

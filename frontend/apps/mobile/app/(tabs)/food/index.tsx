@@ -61,7 +61,7 @@ import { useInfiniteScreenQuery } from "../../../src/hooks/useInfiniteScreenQuer
 import { showToast } from "../../../src/shared/ui/Toast";
 import { actionSheet, appAlert } from '../../../src/shared/ui/Dialogs';
 
-import { safeList, distanceMiles, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
+import { safeList, distanceMiles, hasDistance, restaurantIsOpen, getDisplayPrice, SortOption, EMPTY_RESTAURANTS, restaurantId, s } from "../../../src/features/food/foodShared";
 import { useBackState } from '../../../src/hooks/useBackState';
 
 export default function FoodScreen() {
@@ -285,6 +285,12 @@ export default function FoodScreen() {
 
 
 
+  // The Nearby chip hides when no restaurant has a distance (e.g. after a city change); leave its empty filter too.
+  const anyDistance = restaurants.some(hasDistance);
+  useEffect(() => {
+    if (activeTab === "nearby" && !anyDistance && !loading) setActiveTabSilently("all");
+  }, [activeTab, anyDistance, loading, setActiveTabSilently]);
+
   const filtered = useMemo(() => {
     const list = restaurants.filter((r) => {
       if (search && search.trim() === debouncedSearch) {
@@ -376,7 +382,8 @@ export default function FoodScreen() {
         ) : null}
 
         {/* ── Design D: bento, filter chips, two-column tiles ── */}
-        {hasCity && filtered.length > 0 ? (() => {
+        {/* The bento summarises the city; while searching, `restaurants` holds only the matches, so it would crown a search hit "pick of the week". */}
+        {hasCity && filtered.length > 0 && !debouncedSearch ? (() => {
           const pick = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
           const openCount = restaurants.filter((r) => restaurantIsOpen(r)).length;
           const topCount = restaurants.filter((r) => r.rating >= 4.5).length;
@@ -419,7 +426,8 @@ export default function FoodScreen() {
 
         {hasCity ? (
           <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
-            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].map(([k, label]) => (
+            {/* Nearby only when distances are known: no listing has coordinates yet, and an always-empty filter looks broken. */}
+            {[["all", "All"], ["open", "Open now"], ["top", "Top rated"], ["nearby", "Nearby"], ["favorites", "Favourites"]].filter(([k]) => k !== "nearby" || anyDistance).map(([k, label]) => (
               <Chip key={k} label={label} on={activeTab === k} onPress={() => setActiveTab(k)} />
             ))}
           </GHScrollView>
@@ -488,13 +496,13 @@ export default function FoodScreen() {
             />
             <Text style={[s.emptyTitle, { color: tc.textSecondary }]}>
               {activeTab === "open" ? "No restaurants open now"
-                : activeTab === "favorites" ? "No saved restaurants yet"
+                : activeTab === "favorites" ? "No favourites yet"
                 : search ? `No results for "${search}"`
                 : "No restaurants found"}
             </Text>
             <Text style={[s.emptyDesc, { color: tc.textTertiary }]}>
               {activeTab === "open" ? "Check back later or try a different cuisine"
-                : activeTab === "favorites" ? "Tap the heart on any restaurant to save it here"
+                : activeTab === "favorites" ? "Double-tap a photo, or press and hold a restaurant, to add it here"
                 : search ? "Try a different search term or cuisine filter"
                 : "Try adjusting your filters or pull to refresh"}
             </Text>

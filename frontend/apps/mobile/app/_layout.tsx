@@ -43,6 +43,7 @@ export default function RootLayout() {
   const isDark       = useThemeStore((s) => s.isDark);
   const themeHydrated = useThemeStore((s) => s._hydrated);
   const isAuthed = useAuthStore((s) => s.isAuthed);
+  const authLoading = useAuthStore((s) => s.isLoading);
   const setPushToken = useAuthStore((s) => s.setPushToken);
   const wasAuthedRef = useRef(false);
   const pushRegisteredRef = useRef(false);
@@ -99,7 +100,9 @@ export default function RootLayout() {
 
   // UI-10: wait for the persisted theme so the app never flashes the wrong palette on start.
   // A font that fails to load falls back to the system font rather than blocking the app.
-  if (!themeHydrated || (!fontsLoaded && !fontError)) return null;
+  // Also wait for the stored session: a deep link (a notification, a shared link) straight into a signed-in
+  // screen rendered before hydrate() and redirected a signed-in user to the login screen.
+  if (!themeHydrated || authLoading || (!fontsLoaded && !fontError)) return null;
   const pageBg = isDark ? DARK_THEME.pageBg : LIGHT_THEME.pageBg;
 
   return (

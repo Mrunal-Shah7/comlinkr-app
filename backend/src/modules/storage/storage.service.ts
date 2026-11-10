@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import type { UploadApiResponse } from 'cloudinary';
@@ -169,6 +174,7 @@ function detectMimeFromMagic(buffer: Buffer): string | null {
 
 @Injectable()
 export class StorageService {
+  private readonly logger = new Logger(StorageService.name);
   private readonly cloudName: string;
 
   constructor(private readonly configService: ConfigService) {
@@ -305,13 +311,24 @@ export class StorageService {
       // Cloudinary API errors carry an HTTP code and would fail again. Errors
       // without one are dropped connections (seen on cold starts): retry once.
       if ((error as { httpCode?: number }).httpCode) throw error;
-      return this.uploadBufferOnce(
-        buffer,
-        mimeType,
-        publicId,
-        extension,
-        deliveryType,
-      );
+      try {
+        return await this.uploadBufferOnce(
+          buffer,
+          mimeType,
+          publicId,
+          extension,
+          deliveryType,
+        );
+      } catch (retryError) {
+        // Twice dropped: say so plainly (503) instead of a bare 500, and keep Cloudinary's own reason in the log.
+        this.logger.error(
+          `Cloudinary upload of ${publicId} failed twice: ${(retryError as Error).message}`,
+        );
+        throw new ServiceUnavailableException({
+          code: 'UPLOAD_FAILED',
+          message: 'Could not upload your photos. Please try again.',
+        });
+      }
     }
   }
 
@@ -334,10 +351,10 @@ export class StorageService {
         },
         (error, result) => {
           if (error) {
+            // Cloudinary passes a plain { message, http_code } object, not an Error.
             const message =
-              error instanceof Error
-                ? error.message
-                : 'Cloudinary upload failed';
+              (error as { message?: string }).message ||
+              'Cloudinary upload failed';
             reject(
               Object.assign(new Error(message), { httpCode: error.http_code }),
             );

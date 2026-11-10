@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -142,6 +150,27 @@ export class CommunityController {
     @Body() dto: CreateAnswerDto,
   ) {
     return this.communityService.createAnswer(userId, id, dto);
+  }
+
+  @Delete('questions/:id')
+  @ApiOperation({ summary: 'Delete your own question' })
+  @ApiResponse({ status: 200, description: 'Question deleted' })
+  async deleteQuestion(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.communityService.deleteQuestion(userId, id);
+  }
+
+  @Delete('questions/:questionId/answers/:answerId')
+  @ApiOperation({ summary: 'Delete your own answer' })
+  @ApiResponse({ status: 200, description: 'Answer deleted' })
+  async deleteAnswer(
+    @CurrentUser('id') userId: string,
+    @Param('questionId') questionId: string,
+    @Param('answerId') answerId: string,
+  ) {
+    return this.communityService.deleteAnswer(userId, questionId, answerId);
   }
 
   // SPRINT-51: POST /community/questions/:id/report

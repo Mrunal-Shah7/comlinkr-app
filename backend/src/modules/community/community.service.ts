@@ -300,6 +300,65 @@ export class CommunityService {
     return this.formatAnswer(answer, userId, upvotedIds);
   }
 
+  /** The author deletes their own question; its answers and saves go with it (cascade), and so do the upvotes. */
+  async deleteQuestion(userId: string, questionId: string) {
+    const question = await this.prisma.communityQuestion.findUnique({
+      where: { id: questionId },
+      select: { id: true, authorId: true, answers: { select: { id: true } } },
+    });
+    if (!question) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Question not found',
+      });
+    }
+    if (question.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own question.');
+    }
+    const answerIds = question.answers.map((a) => a.id);
+    await this.prisma.$transaction([
+      // Upvotes point at their target by id only, without a foreign key, so they are removed by hand.
+      this.prisma.communityUpvote.deleteMany({
+        where: {
+          OR: [
+            { targetType: 'QUESTION', targetId: questionId },
+            { targetType: 'ANSWER', targetId: { in: answerIds } },
+          ],
+        },
+      }),
+      this.prisma.communityQuestion.delete({ where: { id: questionId } }),
+    ]);
+    return { message: 'Question deleted' };
+  }
+
+  /** The author deletes their own answer; the question's answer count goes down with it. */
+  async deleteAnswer(userId: string, questionId: string, answerId: string) {
+    const answer = await this.prisma.communityAnswer.findUnique({
+      where: { id: answerId },
+      select: { id: true, authorId: true, questionId: true },
+    });
+    if (!answer || answer.questionId !== questionId) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Answer not found',
+      });
+    }
+    if (answer.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own answer.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.communityUpvote.deleteMany({
+        where: { targetType: 'ANSWER', targetId: answerId },
+      }),
+      this.prisma.communityAnswer.delete({ where: { id: answerId } }),
+      this.prisma.communityQuestion.updateMany({
+        where: { id: questionId, answerCount: { gt: 0 } },
+        data: { answerCount: { decrement: 1 } },
+      }),
+    ]);
+    return { message: 'Answer deleted' };
+  }
+
   async toggleQuestionUpvote(userId: string, questionId: string) {
     const question = await this.prisma.communityQuestion.findUnique({
       where: { id: questionId },

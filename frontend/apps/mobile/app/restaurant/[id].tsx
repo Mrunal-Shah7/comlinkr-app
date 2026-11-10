@@ -66,6 +66,7 @@ import { appAlert } from '../../src/shared/ui/Dialogs';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { closeDetail, findCachedRow, useIdParam } from "../../src/hooks/useDetailRoute";
 import { restaurantIsMine, safeList, itemLabel, getAvailability, getDisplayPrice, hasDistance, hasReservations, toApiTime, toApiDate, SortOption, REPORT_REASONS, ImageCarousel, restaurantId, s, rdm } from "../../src/features/food/foodShared";
+import { newsTimeAgo } from "../../src/features/explore/news";
 
 export default function RestaurantDetailScreen() {
   const id = useIdParam();
@@ -653,7 +654,7 @@ export default function RestaurantDetailScreen() {
                             {"★".repeat(full)}
                             {"☆".repeat(5 - full)}
                           </Text>
-                          <Text style={[rdm.reviewTime, { color: tc.textTertiary }]}>{new Date(rev.createdAt).toLocaleString()}</Text>
+                          <Text style={[rdm.reviewTime, { color: tc.textTertiary }]}>{newsTimeAgo(String(rev.createdAt))}</Text>
                         </View>
                         <Text style={[rdm.reviewText, { color: tc.textSecondary }]}>{rev.text}</Text>
                       </View>

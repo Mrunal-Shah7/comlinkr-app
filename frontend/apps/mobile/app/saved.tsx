@@ -34,6 +34,7 @@ import { bookmarkQuestion } from "../src/api/community-qa.api";
 import { toggleStorySave } from "../src/api/stories.api";
 import { toggleRoommateSave } from "../src/api/roommates.api";
 import { resolveApiAssetUrl } from "../src/api/feed.api";
+import { saveNewsArticle } from "../src/api/news.api";
 import { ApiError } from "../src/api/client";
 import { appAlert } from '../src/shared/ui/Dialogs';
 import { createThemedStyles } from '../src/theme/themedStyles';
@@ -65,7 +66,11 @@ function pickId(item: Row, tab: SaveTypeQuery): string {
   return "";
 }
 
+/** A saved live news article (from Google News), listed in the News tab beside saved community posts. */
+const isArticle = (item: Row) => item.savedItemType === "article";
+
 function thumbUri(item: Row, tab: SaveTypeQuery): string | undefined {
+  if (tab === "news" && isArticle(item)) return typeof item.imageUrl === "string" && item.imageUrl ? item.imageUrl : undefined;
   if (tab === "news") {
     const m = item.media as { url?: string }[] | undefined;
     const u = Array.isArray(m) && m[0]?.url ? String(m[0].url) : "";
@@ -114,6 +119,7 @@ function titleLine(item: Row, tab: SaveTypeQuery): string {
 }
 
 function subtitleLine(item: Row, tab: SaveTypeQuery): string {
+  if (tab === "news" && isArticle(item)) return String(item.source ?? "");
   if (tab === "news") {
     const a = item.author as { name?: string; username?: string } | undefined;
     return a?.name || a?.username || "";
@@ -218,7 +224,10 @@ export default function SavedScreen() {
       let saved = true;
       switch (t) {
         case "news":
-          ({ saved } = await toggleFeedSave(id));
+          // The save toggle needs the article's title and link; the saved row carries both.
+          ({ saved } = isArticle(item)
+            ? await saveNewsArticle(id, { title: String(item.title ?? ""), url: String(item.url ?? "") })
+            : await toggleFeedSave(id));
           break;
         case "events":
           ({ saved } = await toggleSaveEvent(id));
@@ -259,7 +268,8 @@ export default function SavedScreen() {
     if (!id) return;
     switch (t) {
       case "news":
-        router.push({ pathname: "/(tabs)/feed", params: { openPost: id } } as never);
+        if (isArticle(item)) router.push(`/news/${encodeURIComponent(id)}` as never);
+        else router.push({ pathname: "/(tabs)/feed", params: { openPost: id } } as never);
         return;
       case "events":
         router.push(`/events/${encodeURIComponent(id)}` as never);
@@ -330,7 +340,7 @@ export default function SavedScreen() {
   ) : seg === "int" ? (
     <EmptyState icon="home-outline" title="Nothing here yet" sub="Homes you mark as interested show up here." actionLabel="Browse homes" onAction={() => router.push("/(tabs)/housing" as never)} />
   ) : (
-    <EmptyState icon="heart-outline" title="No favourites yet" sub="Tap the heart on a place to keep it here." actionLabel="Browse food" onAction={() => router.push("/(tabs)/food" as never)} />
+    <EmptyState icon="heart-outline" title="No favourites yet" sub="Double-tap a photo, or press and hold a restaurant, to add it here." actionLabel="Browse food" onAction={() => router.push("/(tabs)/food" as never)} />
   );
 
   if (seg !== "saved") {

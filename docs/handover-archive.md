@@ -3,6 +3,33 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-09 (earlier) - React Query on the rest, keyboard taps (TR-014)
+
+- PRs 7-12 (TR-013) merged into `main`. Then `chore/react-query-rest`: the 22 admin pages, edit profile, Settings,
+  event, story and one-off loads on React Query; the last four keyboard-tap screens.
+  [Build note](build/2026-11-09-react-query-rest.md).
+- Follow-ups found (older bugs): admin dashboard sends `status` to `/admin/reports` (400); admin Data privacy crashes
+  on `req.user.username` (backend sends `snapshotUsername`).
+- Still partial from the audit: iOS previews only on some cards, the news article modal, palette colours not
+  dark-aware.
+- `ui_tester` set back to USER. Servers stopped at the end.
+
+## 2026-11-09 (earlier) - the nine Expo conventions (TR-013)
+
+- All nine points done, one stacked pull request per group, each on the one before:
+  `chore/expo-conventions` (keyboard taps, window size, `EXPO_OS`, onboarding dots, axios dropped) →
+  `chore/react-query` → `chore/split-compose` → `chore/detail-routes` ([plan 03](plan/03-detail-routes.md)) →
+  `chore/ios-conventions` → `chore/color-tokens`. Build notes dated 2026-11-09 in `build/`, run logs in `device-runs/`.
+- Merge them in order; each later PR shows only its own commits once the one below is merged.
+- **Not checked on iOS** (no iPhone here): the link previews and context menus (`DetailLink`), continuous corners,
+  the iOS edge swipe on the detail routes. Walk them on an iPhone before a release.
+- Not checked on Android: shared space detail (none in the seed), roommate connect / accept, review and reservation
+  end to end, every admin screen after the colour codemod.
+- Follow-ups: move screens from `palette` onto the dark-mode-aware theme (`tc`) one screen at a time; the news
+  article stays a modal until there is an article by-id endpoint.
+- Servers: Metro and the backend stopped at the end. Test saves made in the walks removed; dark mode switched back
+  off for `ui_tester`.
+
 ## 2026-11-09 (earlier) - native navigation and controls (TR-012)
 
 - Owner: replace design D's tab pager, floating tab bar, zoom transitions and custom controls with the native ones.

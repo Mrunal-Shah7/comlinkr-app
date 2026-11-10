@@ -113,3 +113,11 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Edit profile saves each field as you go (on leaving the field, or a second after typing stops); no Save button. **[phone]**
 - My profile: roommate preferences edit in a sheet; the hidden promote-listing sheet (toast only) is removed.
 - Apply for a badge: 3 steps (choose; details and documents; send) instead of 5. Same fields and submit. Not walked.
+
+## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
+
+Walked on the phone; rows A-, R- and S- in the [run log](../device-runs/2026-11-10-full-walkthrough.md).
+- Sign-up, onboarding (5 steps), forgot password and sign-out work; sign-up and reset emails are delivered when the backend has the Resend key, and Resend errors are now logged (R-03).
+- Sign-in and onboarding now replace the auth screens (`enterApp`), so Back does not return to them (E-04); a link to a signed-in screen waits for the stored session (F-06).
+- The six code boxes shrink to fit narrow phones (A-06, S-10, not yet seen on the phone).
+- Open: the sidebar's requests answer 403 before onboarding ends (A-05); a role change applies only after the next sign-in (S-13, TR-030).

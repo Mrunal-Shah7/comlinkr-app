@@ -1371,6 +1371,7 @@ export class EventsService {
   async deleteEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
+      include: { eventImages: { select: { imageUrl: true } } },
     });
     if (!event) {
       throw new NotFoundException({
@@ -1401,6 +1402,17 @@ export class EventsService {
       await tx.eventAttendee.deleteMany({ where: { eventId } });
       await tx.event.delete({ where: { id: eventId } });
     });
+    // The images on Cloudinary go too, as for restaurants and listings; they were left behind before.
+    await Promise.all(
+      event.eventImages.map(async (img) => {
+        if (!img.imageUrl) return;
+        try {
+          await this.storageService.deleteFile(img.imageUrl);
+        } catch {
+          // ignore missing objects
+        }
+      }),
+    );
     return { ok: true };
   }
 

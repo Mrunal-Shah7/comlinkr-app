@@ -12,6 +12,7 @@ import { Colors } from "../../theme/colors";
 import { FadeImage } from "../../../components/FadeImage";
 import type { Restaurant } from "../../api/food.api";
 import { rs } from "../../utils/responsive";
+import { cityTimezone } from "../../utils/cityTimezone";
 import { getPriceRangeSymbol, getBusinessCurrency, formatPrice } from "../../utils/currency";
 import { createThemedStyles } from '../../theme/themedStyles';
 
@@ -43,7 +44,10 @@ export function distanceMiles(value: string | null | undefined): number {
   return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
 }
 
+/** "9:00 PM" (the app's time picker) or "21:00" (seeded and older listings); -1 when it is neither. */
 export function parseTimeMins(t: string): number {
+  const h24 = t.trim().match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+  if (h24) return parseInt(h24[1], 10) * 60 + parseInt(h24[2], 10);
   const m = t.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
   if (!m) return -1;
   let h = parseInt(m[1], 10);
@@ -74,12 +78,15 @@ export type Availability = { state: "open" | "closed" | "hours" | "unknown"; lab
  * rather than assumed 24-hour operation.
  */
 export function getAvailability(r: Restaurant): Availability {
+  // The owner's "Temporarily closed" switch wins over the hours (owner's decision, F-13).
+  if (r.temporarilyClosed) return { state: "closed", label: "Temporarily closed" };
   const open = r.openingTime?.trim();
   const close = r.closingTime?.trim();
   const op = open ? parseTimeMins(open) : -1;
   const cl = close ? parseTimeMins(close) : -1;
   if (op === -1 || cl === -1 || op === cl) return { state: "unknown", label: "Hours not provided" };
-  const cur = minutesNowInTimezone(r.timezone);
+  // Owner-given time zone first; otherwise the city's, when the app knows it (seeded and older listings have none).
+  const cur = minutesNowInTimezone(r.timezone || cityTimezone(r.city));
   if (cur === null) return { state: "hours", label: `Hours ${open} – ${close}` };
   const isOpen = cl > op ? cur >= op && cur < cl : cur >= op || cur < cl;
   return isOpen
