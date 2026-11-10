@@ -130,6 +130,12 @@ export class UserStatsDto {
 
   @ApiProperty()
   neighborsCount: number;
+
+  @ApiProperty()
+  followersCount: number;
+
+  @ApiProperty()
+  followingCount: number;
 }
 
 export class AchievementDto {

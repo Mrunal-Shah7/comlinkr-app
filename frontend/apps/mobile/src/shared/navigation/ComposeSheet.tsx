@@ -20,7 +20,7 @@ const ITEMS: Item[] = [
   { icon: 'camera-outline', title: 'A story', sub: 'A photo or video from today', href: { pathname: '/create-post', params: { type: 'story' } }, auth: 'Sign in to add a story.' },
   { icon: 'restaurant-outline', title: 'My restaurant', sub: 'Put your place on the map', href: { pathname: '/create-post', params: { type: 'restaurant' } }, auth: 'Sign in to add a restaurant.' },
   { icon: 'star-outline', title: 'Review a restaurant', sub: 'Pick it, rate it, done', href: { pathname: '/create-post', params: { type: 'restaurant', mode: 'review' } }, auth: 'Sign in to review a restaurant.' },
-  { icon: 'trophy-outline', title: 'A quest', sub: 'A challenge for the city', href: { pathname: '/create-post', params: { type: 'challenge' } }, auth: 'Sign in to start a quest.' },
+  { icon: 'trophy-outline', title: 'A quest', sub: 'Something for the city to do together', href: { pathname: '/create-post', params: { type: 'challenge' } }, auth: 'Sign in to start a quest.' },
   { icon: 'help-circle-outline', title: 'A question', sub: 'Ask the people around you', href: '__ask__', auth: 'Sign in to ask your neighbours a question.' },
 ];
 

@@ -491,7 +491,7 @@ export default function SignupScreen() {
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={[TYPE.body, { color: tc.textSecondary }]}>Already on Comlinkr? </Text>
+              <Text style={[TYPE.body, { color: tc.textSecondary }]}>Already on ComLinkr? </Text>
               <Pressable onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
                 <Text style={[TYPE.bodyStrong, { color: tc.accentText }]}>Sign in</Text>
               </Pressable>

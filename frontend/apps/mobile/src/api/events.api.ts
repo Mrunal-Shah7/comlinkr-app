@@ -83,6 +83,9 @@ export interface ApiEvent {
   canAccessChat?: boolean;
   /** `/api/files/...` paths from Nest; resolve with `resolveApiAssetUrl` in UI */
   images?: string[];
+  /** Plan 15: the host cancelled it; the event is kept. Absent on older servers. */
+  cancelled?: boolean;
+  cancelledAt?: string | null;
 }
 
 export interface EventOrganizer {
@@ -238,7 +241,8 @@ export type EventCheckInReasonCode =
   | "INVALID_TICKET"
   | "WRONG_EVENT"
   | "ALREADY_CHECKED_IN"
-  | "REGISTRATION_CANCELLED"; // SPRINT-42: match Sprint 38 door contract
+  | "REGISTRATION_CANCELLED" // SPRINT-42: match Sprint 38 door contract
+  | "EVENT_CANCELLED"; // plan 15
 
 export interface EventCheckInAttendee {
   id: string;
@@ -345,6 +349,8 @@ export function normalizeApiEvent(raw: Partial<ApiEvent> | null | undefined): Ap
     conversationId: e.conversationId ?? null,
     canAccessChat: !!e.canAccessChat,
     images: Array.isArray(e.images) ? e.images : [],
+    cancelled: e.cancelled === true || !!e.cancelledAt, // plan 15
+    cancelledAt: e.cancelledAt ?? null,
   };
 }
 

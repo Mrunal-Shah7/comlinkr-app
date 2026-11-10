@@ -22,8 +22,8 @@ export type DetectResult =
   | { ok: false; reason: 'denied' | 'blocked' | 'services-off' | 'no-fix' | 'no-city'; message: string };
 
 const MESSAGES = {
-  denied: 'Comlinkr needs your location to set your city. Allow it and try again.',
-  blocked: 'Location is turned off for Comlinkr. Open settings, allow location, then try again.',
+  denied: 'ComLinkr needs your location to set your city. Allow it and try again.',
+  blocked: 'Location is turned off for ComLinkr. Open settings, allow location, then try again.',
   'services-off': 'Your phone\'s location is off. Turn it on and try again.',
   'no-fix': 'Could not find your location. Move somewhere with a clearer signal and try again.',
   'no-city': 'Could not tell which city you are in. Try again in a moment.',
@@ -41,22 +41,34 @@ function devCoordinates(): { latitude: number; longitude: number } | null {
   return Number.isFinite(lat) && Number.isFinite(lng) ? { latitude: lat, longitude: lng } : null;
 }
 
-export async function detectLocation(): Promise<DetectResult> {
-  const perm = await Location.requestForegroundPermissionsAsync();
-  if (perm.status !== 'granted') return fail(perm.canAskAgain === false ? 'blocked' : 'denied');
+export type PositionResult =
+  | { ok: true; latitude: number; longitude: number }
+  | { ok: false; reason: 'denied' | 'blocked' | 'services-off' | 'no-fix' };
 
-  let coords = devCoordinates();
-  if (!coords) {
-    if (!(await Location.hasServicesEnabledAsync())) return fail('services-off');
-    try {
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-    } catch {
-      const last = await Location.getLastKnownPositionAsync().catch(() => null);
-      if (!last) return fail('no-fix');
-      coords = { latitude: last.coords.latitude, longitude: last.coords.longitude };
-    }
+/**
+ * One reading of the phone's position, asking for the "while using the app" permission first. Plan 13 (TR-032) uses
+ * it for Nearby in Food; the position stays on the phone.
+ */
+export async function currentPosition(): Promise<PositionResult> {
+  const perm = await Location.requestForegroundPermissionsAsync();
+  if (perm.status !== 'granted') return { ok: false, reason: perm.canAskAgain === false ? 'blocked' : 'denied' };
+  const dev = devCoordinates();
+  if (dev) return { ok: true, ...dev };
+  if (!(await Location.hasServicesEnabledAsync())) return { ok: false, reason: 'services-off' };
+  try {
+    const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    return { ok: true, latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+  } catch {
+    const last = await Location.getLastKnownPositionAsync().catch(() => null);
+    if (!last) return { ok: false, reason: 'no-fix' };
+    return { ok: true, latitude: last.coords.latitude, longitude: last.coords.longitude };
   }
+}
+
+export async function detectLocation(): Promise<DetectResult> {
+  const pos = await currentPosition();
+  if (!pos.ok) return fail(pos.reason);
+  const coords = { latitude: pos.latitude, longitude: pos.longitude };
 
   const places = await Location.reverseGeocodeAsync(coords).catch(() => []);
   const p = places[0];
