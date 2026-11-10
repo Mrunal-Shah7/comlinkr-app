@@ -17,7 +17,7 @@ Nothing in progress: PRs 24 to 42 were merged into `main` on 2026-11-10, PR 43 o
   `backend/` with `pnpm start:prod`; the nine new migrations ran on the production database; nginx unchanged.
   Checked from outside only (health, Socket.IO, a route only the new code has). Written in `system-map.md`, "How it
   deploys", with the manual deploy steps and the rollback.
-- **Release APK:** `D:\ComLinkruilds\ComLinkr-arm64.apk`, built 2026-11-11 against `https://api.comlinkr.com/api`
+- **Release APK:** `D:\ComLinkr\builds\ComLinkr-arm64.apk`, built 2026-11-11 against `https://api.comlinkr.com/api`
   (1.0.4, arm64, debug key, location permissions present). Not installed on a phone. `android/` was regenerated
   with `expo prebuild --clean` (keystore kept): the one used for the 2026-11-09 APK dated from 2026-10-25.
 - **Docs:** PR 43 recorded PRs 24 to 42 as merged and wrote down the release APK process (CLAUDE.md, system map,
@@ -29,7 +29,7 @@ Nothing in progress: PRs 24 to 42 were merged into `main` on 2026-11-10, PR 43 o
 - **Slowed down by:**
   - A stale `expo-updates-gradle-plugin/build` folder in `node_modules`: Gradle called `compileKotlin` up to date
     with no classes on disk and packed an empty jar. `--rerun-tasks` on the jar did not hold; deleting the folder
-    did, and `Remove-Item` cannot, past the path-length limit (`rmdir /s /q "\?\<path>"` can).
+    did, and `Remove-Item` cannot, past the path-length limit (`rmdir /s /q "\\?\<path>"` can).
   - Not knowing the `android/` folder was out of date: nothing checks it. Both are now in the release APK build
     note, and the prebuild rule is in `CLAUDE.md`, "Building and testing".
 
