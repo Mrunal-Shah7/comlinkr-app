@@ -177,6 +177,8 @@ export interface NotificationPreferenceSettings {
   comments: boolean;
   likes: boolean;
   messages: boolean;
+  /** Plan 16: new follower, follow request, follow request accepted. Absent on older servers (on). */
+  followers?: boolean;
 }
 
 export function getNotificationPreferences(): Promise<NotificationPreferenceSettings> {

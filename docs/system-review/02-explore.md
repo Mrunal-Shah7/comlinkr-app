@@ -109,6 +109,22 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Quest composer: Start from templates fill the title, goal, reward and length.
 - News composer: tags as chips; your city as a location chip.
 
+## Update 2026-11-10: a cancelled event is kept (plan 15, TR-047, branch `feature/event-cancelled`, not merged)
+
+- Cancel (the event's page, or My posts) no longer deletes: `DELETE /events/:id` sets `Event.cancelledAt` and keeps
+  registrations, saves, chat and photos. Everyone registered is told once, and the notice opens the event. A second
+  cancel sends nothing. [e2e] **[phone]**
+- The event's page says "You cancelled this event." or "The host cancelled this event."; Edit, Cancel event, Door
+  check-in, RSVP and reviews are gone, and the bottom bar says Cancelled. **[phone]**
+- A cancelled event leaves Explore's list and the story strip; it stays, marked Cancelled, in My posts (with no Edit
+  or Cancel), the registered list and Saved. [e2e] **[phone]** (My posts)
+- Registering, editing, adding photos, reviewing, saving and the ticket answer 409 `EVENT_CANCELLED`; unsaving and
+  unregistering still work. The door scan answers `EVENT_CANCELLED` (not admitted). [e2e]
+- Event notifications (changed, cancelled, new nearby) now open the event in the app; before, tapping them did
+  nothing. **[phone]**
+- My posts shows an event's date as its calendar day ("Nov 15, 2026"), not converted through the phone's zone
+  ("5:30 AM" in India) (rule B10). **[phone]**
+
 ## Update 2026-11-10: editing and cancelling an event; the city's day (plan 11, TR-037, branch `feature/event-edit`, not merged)
 
 - The host sees **Edit** and **Cancel event** on the event's page. Edit (`/events/[id]/edit`) changes the title,
@@ -118,7 +134,8 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
   the event's city, the capacity may not go below the number registered; a `city` in the body is ignored. [e2e]
 - A change of date, time or place notifies everyone registered ("<title> has changed", what changed); a title-only
   edit tells nobody. Cancel is confirmed, removes the event (as delete in My posts) and notifies everyone registered
-  ("<title> was cancelled", with no link, since the event is gone). **[phone]**
+  ("<title> was cancelled", with no link, since the event is gone). **[phone]** Plan 15 replaces this: the event is
+  kept, marked Cancelled.
 - An event's day is read in its city's zone (`common/utils/city-day.ts`): upcoming means from today in the city, the
   day filter is that calendar day, create refuses a day before today in the city, reviews open after the end time
   in the city. An event dated today stays in Explore all day. [e2e]
@@ -137,7 +154,7 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
   and bar showed only after joining). **[phone]**
 - The app says "quest" everywhere a user reads it; the code and API keep `challenge`. The empty Quests tab shows
   one "Start a quest". **[phone]**
-- Progress per person (check-ins, completion) does not exist; the page shows time left and how many joined.
+- Progress per person (check-ins, completion) does not exist; the page shows time left and how many joined. Changed by plan 17, below.
 
 ## Update 2026-11-10: full walkthrough (TR-028, branch `fix/walkthrough`, not merged)
 
@@ -146,3 +163,25 @@ Walked on the phone; rows E- in the [run log](../device-runs/2026-11-10-full-wal
 - New stories, posts, events and quests show at once (E-08, E-11); "View" after publishing opens the new item (E-09, E-29).
 - News older than 30 days is dropped (E-16); cards keep their place when the full list arrives (E-17).
 - Open: E-12, E-13, E-14, E-18, E-19, E-25 to E-27, E-31 to E-33, E-36, E-37.
+
+## Update 2026-11-10: marking a quest done (TR-052, plan 17, branch `feature/quest-progress`, not merged)
+
+From the [build note](../build/2026-11-10-quest-progress.md).
+- **Members mark a quest done themselves** while it runs (self-reported, no proof), and can undo it. The host
+  counts as a member. **[phone]**, [e2e]
+- **Who can:** non-members get 403. After the end, the record is fixed. [e2e]
+- **The quest page:**
+  - reads "N joined · M done";
+  - marks each person who is done;
+  - its footer offers "Mark as done" or "Done · Undo".
+
+  **[phone]**
+- **Explore's card** adds "· M done", and its button reads Done once you finished. **[phone]**
+- **Leaving** removes the "done" with the membership; the confirm says so. **[phone]**
+- **No notice** goes to the host when someone finishes.
+
+## Update 2026-11-10: a steady bento (TR-040 E-14, branch `fix/walk-leftovers`, not merged)
+
+From the [build note](../build/2026-11-10-walk-leftovers.md).
+- While the hero loads, empty tiles hold the places of the next event and of "Homes in …". The stories card no
+  longer jumps down when they arrive **[phone]**.

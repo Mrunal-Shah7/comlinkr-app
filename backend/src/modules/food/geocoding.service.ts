@@ -13,7 +13,7 @@ export type GeocodeResult =
   | { ok: false; reason: 'not-found' | 'unavailable' };
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
-const USER_AGENT = 'Comlinkr/1.0 (+https://comlinkr.com)';
+const USER_AGENT = 'ComLinkr/1.0 (+https://comlinkr.com)';
 const MIN_GAP_MS = 1100;
 
 @Injectable()

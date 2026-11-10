@@ -31,4 +31,10 @@ export class UpdateNotificationPreferencesDto {
   @IsOptional()
   @IsBoolean()
   messages?: boolean;
+
+  /** Plan 16 (TR-049): new follower, follow request, follow request accepted. */
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  followers?: boolean;
 }

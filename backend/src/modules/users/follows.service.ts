@@ -1,8 +1,11 @@
 // src/modules/users/follows.service.ts
 //
-// Plan 14 (TR-029): one person follows another; one-way, no approval. Following tells the person followed ("New
-// follower", at most once a week per follower) and shows in the profile counts and in your own Follows lists. It does
-// not change the feed. Blocking removes the follows both ways (SettingsService.blockUser).
+// Plan 14 (TR-029): one person follows another, one-way. Following tells the person followed ("New follower", at most
+// once a week per follower) and shows in the profile counts and in your own Follows lists. Blocking removes the
+// follows both ways (SettingsService.blockUser).
+//
+// Plan 16 (TR-051): following a private account ("Public profile" off) is a request (PENDING) until they accept it.
+// Only accepted follows count anywhere: counts, lists, "follows you", the private profile and the Following feed.
 
 import {
   BadRequestException,
@@ -10,7 +13,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { FollowStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { StorageService } from '../storage/storage.service';
@@ -20,6 +23,10 @@ import { createPaginationMeta } from '../../common/dto/pagination.dto';
 const ACTIVE = { isActive: true, deletedAt: null } as const;
 const NOTIFY_GAP_MS = 7 * 24 * 60 * 60 * 1000;
 export const FOLLOW_REFERENCE = 'USER';
+/** Plan 16: a "Follow request" notice; the app opens Follows, on Requests. */
+export const FOLLOW_REQUEST_REFERENCE = 'FOLLOW_REQUEST';
+const ACCEPTED = FollowStatus.ACCEPTED;
+const PENDING = FollowStatus.PENDING;
 
 @Injectable()
 export class FollowsService {
@@ -38,11 +45,18 @@ export class FollowsService {
     });
   }
 
-  /** Follows, or unfollows if already following. */
+  /**
+   * Follows, or unfollows if already following. Plan 16: on a private account the first tap requests, the second
+   * cancels the request.
+   */
   async toggle(
     userId: string,
     targetId: string,
-  ): Promise<{ following: boolean; followersCount: number }> {
+  ): Promise<{
+    following: boolean;
+    requested: boolean;
+    followersCount: number;
+  }> {
     if (userId === targetId) {
       throw new BadRequestException({
         code: 'CANNOT_FOLLOW_SELF',
@@ -51,7 +65,10 @@ export class FollowsService {
     }
     const target = await this.prisma.user.findFirst({
       where: { id: targetId, ...ACTIVE },
-      select: { id: true },
+      select: {
+        id: true,
+        privacySettings: { select: { publicProfile: true } },
+      },
     });
     if (!target) this.notFound();
     const blocked = await this.prisma.blockedUser.findFirst({
@@ -69,10 +86,17 @@ export class FollowsService {
       where: { followerId: userId, followingId: targetId },
     });
     let following = false;
+    let requested = false;
     if (removed.count === 0) {
+      const isPrivate = target.privacySettings?.publicProfile === false;
+      let created = true;
       try {
         await this.prisma.userFollow.create({
-          data: { followerId: userId, followingId: targetId },
+          data: {
+            followerId: userId,
+            followingId: targetId,
+            status: isPrivate ? PENDING : ACCEPTED,
+          },
         });
       } catch (e) {
         // A double tap: the other request created it first.
@@ -81,32 +105,69 @@ export class FollowsService {
           e.code !== 'P2002'
         )
           throw e;
+        created = false;
       }
-      following = true;
-      await this.notifyFollowed(userId, targetId);
+      following = !isPrivate;
+      requested = isPrivate;
+      if (created) {
+        if (isPrivate) await this.notifyRequested(userId, targetId);
+        else await this.notifyFollowed(userId, targetId);
+      }
     }
-    return { following, followersCount: await this.countFollowers(targetId) };
+    return {
+      following,
+      requested,
+      followersCount: await this.countFollowers(targetId),
+    };
   }
 
   countFollowers(userId: string): Promise<number> {
     return this.prisma.userFollow.count({
-      where: { followingId: userId, follower: ACTIVE },
+      where: { followingId: userId, status: ACCEPTED, follower: ACTIVE },
     });
   }
 
   countFollowing(userId: string): Promise<number> {
     return this.prisma.userFollow.count({
-      where: { followerId: userId, following: ACTIVE },
+      where: { followerId: userId, status: ACCEPTED, following: ACTIVE },
     });
   }
 
-  /** Whether the viewer follows the user, and the user the viewer. */
+  /** Plan 16: the people `userId` follows (accepted, active accounts). */
+  async followingIds(userId: string): Promise<string[]> {
+    const rows = await this.prisma.userFollow.findMany({
+      where: { followerId: userId, status: ACCEPTED, following: ACTIVE },
+      select: { followingId: true },
+    });
+    return rows.map((r) => r.followingId);
+  }
+
+  /** Plan 16: whether the viewer may see a private profile's details and posts (themself or an accepted follower). */
+  async canSeePrivate(viewerId: string | undefined, userId: string) {
+    if (!viewerId) return false;
+    if (viewerId === userId) return true;
+    const row = await this.prisma.userFollow.findFirst({
+      where: { followerId: viewerId, followingId: userId, status: ACCEPTED },
+      select: { id: true },
+    });
+    return !!row;
+  }
+
+  /** Whether the viewer follows the user, the user the viewer, and whether the viewer's request is waiting. */
   async relation(
     viewerId: string,
     userId: string,
-  ): Promise<{ followedByMe: boolean; followingMe: boolean }> {
+  ): Promise<{
+    followedByMe: boolean;
+    followingMe: boolean;
+    followRequested: boolean;
+  }> {
     if (!viewerId || viewerId === userId)
-      return { followedByMe: false, followingMe: false };
+      return {
+        followedByMe: false,
+        followingMe: false,
+        followRequested: false,
+      };
     const rows = await this.prisma.userFollow.findMany({
       where: {
         OR: [
@@ -114,27 +175,72 @@ export class FollowsService {
           { followerId: userId, followingId: viewerId },
         ],
       },
-      select: { followerId: true },
+      select: { followerId: true, status: true },
     });
+    const mine = rows.find((r) => r.followerId === viewerId);
     return {
-      followedByMe: rows.some((r) => r.followerId === viewerId),
-      followingMe: rows.some((r) => r.followerId === userId),
+      followedByMe: mine?.status === ACCEPTED,
+      followingMe: rows.some(
+        (r) => r.followerId === userId && r.status === ACCEPTED,
+      ),
+      followRequested: mine?.status === PENDING,
     };
   }
 
-  /** Your followers, or the people you follow; newest first. */
+  /** Plan 16: accept a request; the requester is told. */
+  async accept(userId: string, requesterId: string) {
+    const { count } = await this.prisma.userFollow.updateMany({
+      where: { followerId: requesterId, followingId: userId, status: PENDING },
+      data: { status: ACCEPTED },
+    });
+    if (count === 0) this.noRequest();
+    await this.notifyAccepted(userId, requesterId);
+    return {
+      accepted: true,
+      followersCount: await this.countFollowers(userId),
+    };
+  }
+
+  /** Plan 16: decline a request, silently. */
+  async decline(userId: string, requesterId: string) {
+    const { count } = await this.prisma.userFollow.deleteMany({
+      where: { followerId: requesterId, followingId: userId, status: PENDING },
+    });
+    if (count === 0) this.noRequest();
+    return { declined: true };
+  }
+
+  private noRequest(): never {
+    throw new NotFoundException({
+      code: 'RESOURCE_NOT_FOUND',
+      message: 'No follow request from this person.',
+    });
+  }
+
+  /** Plan 16: going public accepts every pending request, silently. */
+  async acceptAll(userId: string) {
+    await this.prisma.userFollow.updateMany({
+      where: { followingId: userId, status: PENDING },
+      data: { status: ACCEPTED },
+    });
+  }
+
+  /** Your followers, the people you follow, or (plan 16) the requests to follow you; newest first. */
   async list(
     userId: string,
-    kind: 'followers' | 'following',
+    kind: 'followers' | 'following' | 'requests',
     page = 1,
     limit = 20,
   ) {
     const take = Math.min(Math.max(limit, 1), 50);
     const skip = (Math.max(page, 1) - 1) * take;
+    const byFollower = kind !== 'following';
     const where: Prisma.UserFollowWhereInput =
-      kind === 'followers'
-        ? { followingId: userId, follower: ACTIVE }
-        : { followerId: userId, following: ACTIVE };
+      kind === 'requests'
+        ? { followingId: userId, status: PENDING, follower: ACTIVE }
+        : kind === 'followers'
+          ? { followingId: userId, status: ACCEPTED, follower: ACTIVE }
+          : { followerId: userId, status: ACCEPTED, following: ACTIVE };
     const person = {
       select: {
         id: true,
@@ -151,23 +257,23 @@ export class FollowsService {
         orderBy: { createdAt: 'desc' },
         skip,
         take,
-        include:
-          kind === 'followers' ? { follower: person } : { following: person },
+        include: byFollower ? { follower: person } : { following: person },
       }),
       this.prisma.userFollow.count({ where }),
     ]);
     const people = rows.map((r) =>
-      kind === 'followers'
+      byFollower
         ? (r as unknown as { follower: PersonRow }).follower
         : (r as unknown as { following: PersonRow }).following,
     );
-    // For your followers: do you follow them back? (Everyone in "following" is followed by you.)
+    // For your followers and requests: do you follow them back? (Everyone in "following" is followed by you.)
     let back = new Set<string>();
-    if (kind === 'followers' && people.length) {
+    if (byFollower && people.length) {
       const mine = await this.prisma.userFollow.findMany({
         where: {
           followerId: userId,
           followingId: { in: people.map((p) => p.id) },
+          status: ACCEPTED,
         },
         select: { followingId: true },
       });
@@ -194,37 +300,82 @@ export class FollowsService {
     };
   }
 
-  /** "New follower", at most once a week per follower. Never fails the follow. */
-  private async notifyFollowed(followerId: string, userId: string) {
+  private async nameOf(id: string) {
+    const u = await this.prisma.user.findUnique({
+      where: { id },
+      select: { fullName: true, username: true },
+    });
+    return u?.fullName?.trim() || u?.username || 'Someone';
+  }
+
+  /**
+   * One follow notice, at most once a week per person and kind. Never fails the follow. The "New followers" switch
+   * (plan 16) mutes all three kinds in NotificationsService.
+   */
+  private async notifyOnce(
+    userId: string,
+    actorId: string,
+    referenceType: string,
+    title: string,
+    body: (name: string) => string,
+  ) {
     try {
       const recent = await this.prisma.notification.findFirst({
         where: {
           userId,
-          referenceType: FOLLOW_REFERENCE,
-          referenceId: followerId,
+          referenceType,
+          referenceId: actorId,
+          title,
           createdAt: { gte: new Date(Date.now() - NOTIFY_GAP_MS) },
         },
         select: { id: true },
       });
       if (recent) return;
-      const follower = await this.prisma.user.findUnique({
-        where: { id: followerId },
-        select: { fullName: true, username: true },
-      });
-      const name =
-        follower?.fullName?.trim() || follower?.username || 'Someone';
       await this.notifications.createNotification({
         userId,
         type: 'SYSTEM',
-        title: 'New follower',
-        body: `${name} started following you`,
-        referenceType: FOLLOW_REFERENCE,
-        referenceId: followerId,
-        actorId: followerId,
+        title,
+        body: body(await this.nameOf(actorId)),
+        referenceType,
+        referenceId: actorId,
+        actorId,
       });
     } catch (e) {
       this.logger.warn(`Follow notification failed: ${(e as Error).message}`);
     }
+  }
+
+  /** "New follower". */
+  private notifyFollowed(followerId: string, userId: string) {
+    return this.notifyOnce(
+      userId,
+      followerId,
+      FOLLOW_REFERENCE,
+      'New follower',
+      (name) => `${name} started following you`,
+    );
+  }
+
+  /** Plan 16: "Follow request", opening Follows on Requests. */
+  private notifyRequested(followerId: string, userId: string) {
+    return this.notifyOnce(
+      userId,
+      followerId,
+      FOLLOW_REQUEST_REFERENCE,
+      'Follow request',
+      (name) => `${name} asked to follow you`,
+    );
+  }
+
+  /** Plan 16: the requester is told, and the notice opens the profile they can now see. */
+  private notifyAccepted(userId: string, requesterId: string) {
+    return this.notifyOnce(
+      requesterId,
+      userId,
+      FOLLOW_REFERENCE,
+      'Follow request accepted',
+      (name) => `${name} accepted your follow request`,
+    );
   }
 }
 

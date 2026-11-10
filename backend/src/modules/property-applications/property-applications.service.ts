@@ -359,9 +359,9 @@ export class PropertyApplicationsService {
   }
 
   /**
-   * The tenant may sign once the application is submitted. The application only
-   * becomes SIGNED when the landlord has also approved it; until then the
-   * signature is stored and the status stays where it is.
+   * The tenant signs the offer after the landlord approves (TR-048, the owner's decision); signing then makes the
+   * application SIGNED. Before approval it is refused. Applications an older build signed before approval are still
+   * finalised when the landlord approves (`decide`).
    */
   async sign(userId: string, id: string, dto: SignApplicationDto) {
     const application = await this.findOrThrow(id);
@@ -383,6 +383,13 @@ export class PropertyApplicationsService {
       throw invalidStatus(
         `This application was ${application.status.toLowerCase()} and cannot be signed`,
       );
+    }
+    if (application.status !== Status.APPROVED) {
+      throw new ConflictException({
+        code: 'NOT_APPROVED',
+        message:
+          'The landlord has not approved this application yet. You can sign once they do.',
+      });
     }
 
     const signatureType =
@@ -412,7 +419,7 @@ export class PropertyApplicationsService {
       where: {
         id,
         tenantSignedAt: null,
-        status: { in: [...AWAITING_DECISION, Status.APPROVED] },
+        status: Status.APPROVED,
       },
       data: {
         signature:

@@ -22,8 +22,8 @@ export type DetectResult =
   | { ok: false; reason: 'denied' | 'blocked' | 'services-off' | 'no-fix' | 'no-city'; message: string };
 
 const MESSAGES = {
-  denied: 'Comlinkr needs your location to set your city. Allow it and try again.',
-  blocked: 'Location is turned off for Comlinkr. Open settings, allow location, then try again.',
+  denied: 'ComLinkr needs your location to set your city. Allow it and try again.',
+  blocked: 'Location is turned off for ComLinkr. Open settings, allow location, then try again.',
   'services-off': 'Your phone\'s location is off. Turn it on and try again.',
   'no-fix': 'Could not find your location. Move somewhere with a clearer signal and try again.',
   'no-city': 'Could not tell which city you are in. Try again in a moment.',
