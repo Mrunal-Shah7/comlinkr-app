@@ -179,3 +179,9 @@ From the [build note](../build/2026-11-10-quest-progress.md).
 - **Explore's card** adds "· M done", and its button reads Done once you finished. **[phone]**
 - **Leaving** removes the "done" with the membership; the confirm says so. **[phone]**
 - **No notice** goes to the host when someone finishes.
+
+## Update 2026-11-10: a steady bento (TR-040 E-14, branch `fix/walk-leftovers`, not merged)
+
+From the [build note](../build/2026-11-10-walk-leftovers.md).
+- While the hero loads, empty tiles hold the places of the next event and of "Homes in …". The stories card no
+  longer jumps down when they arrive **[phone]**.

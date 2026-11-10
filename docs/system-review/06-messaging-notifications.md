@@ -124,3 +124,9 @@ From the [build note](../build/2026-11-10-follow-requests.md).
   request" **[phone]**. Requests still wait in Follows → Requests.
 - **Saving one switch changes only that switch** **[phone]**, [e2e]. Before, turning push off reset the categories,
   and saving a category turned push back on (TR-053). Privacy settings save the same way.
+
+## Update 2026-11-10: the composer above the keyboard (TR-045, branch `fix/chat-keyboard`, not merged)
+
+From the [build note](../build/2026-11-10-chat-keyboard.md).
+- On Android the chat composer and Send sit right above the keyboard, and go back to the bottom when it closes
+  **[phone]**. Before, the thread was lifted short by the navigation bar's height.

@@ -58,7 +58,9 @@ export default function CreatePostScreen() {
     return (
       <SafeAreaView style={[s.safe, { backgroundColor: blackComposer ? palette.black : tc.pageBg }]} edges={["top", "bottom"]}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}>
-          <PostForm type={selectedType} onBack={params.type ? () => router.back() : () => setSelectedType(null)} initialMode={params.mode} editId={params.id} />
+          {/* A reused route instance gets a new form when the type, mode or id changes: the form reads `initialMode`
+              only when it mounts, so "Review a restaurant" opened in owner mode after another composer. */}
+          <PostForm key={[selectedType.id, params.mode ?? "", params.id ?? ""].join(":")} type={selectedType} onBack={params.type ? () => router.back() : () => setSelectedType(null)} initialMode={params.mode} editId={params.id} />
             {/* SPRINT-42: deep-linked type (from Listings/Food/etc.) returns to the originating screen; in-app chooser selection returns to the chooser. */}
         </KeyboardAvoidingView>
       </SafeAreaView>
