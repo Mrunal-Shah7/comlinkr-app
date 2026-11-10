@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { enterApp } from "../../src/features/auth/enterApp";
+import { useSidebarStore } from "../../src/store/sidebar.store";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -454,6 +455,7 @@ export default function OnboardingScreen() {
       }
       await syncFromApiLogin(profile, sessionCookie);
       await updateOnboarding({ country, stateProvince, city, culture, interests, communities });
+      void useSidebarStore.getState().fetchSidebarData(); // skipped until now (TR-035)
       enterApp(true);
     } catch (e) {
       if (e instanceof HttpApiError && e.code === "REGION_NOT_SUPPORTED") {

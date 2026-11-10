@@ -180,6 +180,8 @@ export default function HousingScreen() {
   }, [user?.roommatePrefs, updateRoommatePrefs]);
 
   // Requested rooms are recorded by the room detail route (plan 03); re-read them whenever the tab is shown.
+  // On leaving the tab (another tab, a deep link), close its sheets: a native sheet left open would stay over the
+  // next screen with nothing able to close it (TR-009).
   useFocusEffect(
     useCallback(() => {
       AsyncStorage.getItem("comlinkr_requested_rooms").then((val) => {
@@ -187,6 +189,10 @@ export default function HousingScreen() {
           try { setRequestedRooms(new Set(JSON.parse(val) as string[])); } catch {}
         }
       });
+      return () => {
+        setShowFilterSheet(false);
+        setRmPrefsModalVisible(false);
+      };
     }, []),
   )
 

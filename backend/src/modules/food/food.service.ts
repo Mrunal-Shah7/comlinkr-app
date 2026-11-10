@@ -22,6 +22,7 @@ import {
 import { MessagingService } from '../messaging/messaging.service';
 import { NotificationsService } from '../notifications/notifications.service'; // SPRINT-29
 import { ReservationStatus } from '@prisma/client'; // SPRINT-29
+import { cityTimezone } from '../../common/utils/city-timezone';
 import { resolveMediaUrl } from '../../common/utils/media-url'; // SPRINT-46: the one shared media URL resolver
 
 const RESTAURANT_IMAGE_MAX = 6;
@@ -366,7 +367,8 @@ export class FoodService {
       waitTimeMinutes: dto.waitTimeMinutes,
       openingTime: dto.openingTime,
       closingTime: dto.closingTime,
-      timezone: dto.timezone,
+      // The city's zone when the city is known, not the zone of the phone that sent it (TR-033).
+      timezone: cityTimezone(dto.city) ?? dto.timezone,
       currency: dto.currency,
       availableServices: dto.availableServices,
       popularDishes: JSON.parse(JSON.stringify(dto.popularDishes ?? [])),
@@ -441,6 +443,9 @@ export class FoodService {
       if (v === undefined) continue;
       (updateData as any)[key] = v;
     }
+    // A known city decides the zone whatever the phone sent (TR-033).
+    const cityTz = cityTimezone(dto.city ?? restaurant.city);
+    if (cityTz) updateData.timezone = cityTz;
     await this.prisma.restaurant.update({
       where: { id: restaurantId },
       data: updateData,

@@ -1,0 +1,63 @@
+-- TR-033: before the F-02 fix the restaurant composer saved the phone's time zone, so a Los Angeles restaurant
+-- created from India was stored as Asia/Kolkata and showed closed during the city's day. Set every restaurant in a
+-- known city to that city's zone (the table in src/common/utils/city-timezone.ts). Restaurants in other cities keep
+-- what they have.
+UPDATE "Restaurant" AS r
+SET "timezone" = m.tz
+FROM (VALUES
+  ('New York', 'America/New_York'),
+  ('New York City', 'America/New_York'),
+  ('Los Angeles', 'America/Los_Angeles'),
+  ('Chicago', 'America/Chicago'),
+  ('Houston', 'America/Chicago'),
+  ('Phoenix', 'America/Phoenix'),
+  ('Philadelphia', 'America/New_York'),
+  ('San Antonio', 'America/Chicago'),
+  ('San Diego', 'America/Los_Angeles'),
+  ('Dallas', 'America/Chicago'),
+  ('San Jose', 'America/Los_Angeles'),
+  ('Austin', 'America/Chicago'),
+  ('Miami', 'America/New_York'),
+  ('Atlanta', 'America/New_York'),
+  ('Seattle', 'America/Los_Angeles'),
+  ('Denver', 'America/Denver'),
+  ('Boston', 'America/New_York'),
+  ('Nashville', 'America/Chicago'),
+  ('London', 'Europe/London'),
+  ('Manchester', 'Europe/London'),
+  ('Birmingham', 'Europe/London'),
+  ('Leeds', 'Europe/London'),
+  ('Glasgow', 'Europe/London'),
+  ('Bristol', 'Europe/London'),
+  ('Toronto', 'America/Toronto'),
+  ('Vancouver', 'America/Vancouver'),
+  ('Montreal', 'America/Toronto'),
+  ('Calgary', 'America/Edmonton'),
+  ('Dubai', 'Asia/Dubai'),
+  ('Abu Dhabi', 'Asia/Dubai'),
+  ('Sydney', 'Australia/Sydney'),
+  ('Melbourne', 'Australia/Melbourne'),
+  ('Brisbane', 'Australia/Brisbane'),
+  ('Perth', 'Australia/Perth'),
+  ('Paris', 'Europe/Paris'),
+  ('Berlin', 'Europe/Berlin'),
+  ('Amsterdam', 'Europe/Amsterdam'),
+  ('Madrid', 'Europe/Madrid'),
+  ('Rome', 'Europe/Rome'),
+  ('Lagos', 'Africa/Lagos'),
+  ('Nairobi', 'Africa/Nairobi'),
+  ('Accra', 'Africa/Accra'),
+  ('Mumbai', 'Asia/Kolkata'),
+  ('Delhi', 'Asia/Kolkata'),
+  ('Bangalore', 'Asia/Kolkata'),
+  ('Singapore', 'Asia/Singapore'),
+  ('Kuala Lumpur', 'Asia/Kuala_Lumpur'),
+  ('Jakarta', 'Asia/Jakarta'),
+  ('Tokyo', 'Asia/Tokyo'),
+  ('Seoul', 'Asia/Seoul'),
+  ('Hong Kong', 'Asia/Hong_Kong'),
+  ('Shanghai', 'Asia/Shanghai'),
+  ('Beijing', 'Asia/Shanghai')
+) AS m(city, tz)
+WHERE r."city" = m.city
+  AND r."timezone" IS DISTINCT FROM m.tz;

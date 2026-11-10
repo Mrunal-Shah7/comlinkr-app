@@ -567,7 +567,15 @@ export default function FeedScreen() {
 
   const loadExploreEvents = useCallback(async (opts?: { silent?: boolean; force?: boolean }) => {
     const silent = opts?.silent === true;
-    if (!city) return;
+    if (!city) {
+      // No city (signed out, none chosen): drop the last city's hero data instead of keeping it (TR-003).
+      setExploreEvents([]);
+      setHeroCommunityStats(null);
+      setHeroEventsTotal(0);
+      setHeroListingsTotal(0);
+      setHeroTickerRows([]);
+      return;
+    }
     if (!silent) setExploreEventsLoading(true);
     try {
       const [stats, moodSummary, res, listingsRes, feedRes, storiesRaw] = await cached(["hero", city], () => Promise.all([

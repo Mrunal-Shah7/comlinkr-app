@@ -256,6 +256,9 @@ export default function SavedScreen() {
         (old) => old && { ...old, pages: old.pages.map((pg) => ({ ...pg, items: pg.items.filter((row) => pickId(row, t) !== id) })) },
       );
       void queryClient.invalidateQueries({ queryKey: [...queryKeys.saved(), "total"] });
+      // The tab that shows this item still holds its saved flag: mark its lists stale so it refetches (TR-007).
+      const tabKey = ({ listings: "housing", food: "food", events: "events", community: "community", news: "feed" } as Partial<Record<SaveTypeQuery, string>>)[t];
+      if (tabKey) void queryClient.invalidateQueries({ queryKey: [tabKey] });
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not update save.";
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

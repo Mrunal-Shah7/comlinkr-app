@@ -10,6 +10,7 @@ Older entries are in [handover-archive.md](handover-archive.md).
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
 - `chore/docs-cleanup`: the animate-expo skill, plan 06 (the walkthrough's decided changes), stale triage rows (TR-002, TR-006, TR-018). Left: the owner's merge.
+- `fix/triage-sweep` (from `chore/docs-cleanup`), the open triage bugs: TR-003, 007, 009, 030, 033 (migration), 035 done; left: TR-001, 004, 008, 019, 020, 022, 034, 040, the phone walk, build note.
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 
