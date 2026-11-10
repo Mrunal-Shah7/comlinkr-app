@@ -178,3 +178,9 @@ Walked on the phone; rows L- and S-14 in the [run log](../device-runs/2026-11-10
 - The server refuses a tenant signature before approval (409 `NOT_APPROVED`, TR-048). A row an older build signed
   early still becomes signed when approved. [test]
 
+## Update 2026-11-10: preferences from the roommate list (TR-040 L-18, branch `fix/walk-leftovers`, not merged)
+
+From the [build note](../build/2026-11-10-walk-leftovers.md).
+- Roommates → the count line has "Your preferences", which opens the preferences sheet. Before, it opened only from
+  the empty state or Profile **[phone]**.
+- A sheet left open does not stay over another tab after a deep link (TR-009, checked again) **[phone]**.

@@ -280,7 +280,17 @@ export default function StoryViewerScreen() {
       const raw = await getActiveStories(city);
       const list = Array.isArray(raw) ? raw : [];
       const normalized = list.map((s) => normalizeStoryFromApi(s));
-      const g = buildStoryAuthorGroups(normalized, uid);
+      let g = buildStoryAuthorGroups(normalized, uid);
+      // Plan 16: a story opened by id (the Following tab) may be from another city: fetch it and show it first,
+      // rather than opening the city's first story.
+      if (startStoryId && !g.some((group) => group.stories.some((st) => st.id === startStoryId))) {
+        try {
+          const one = normalizeStoryFromApi(await getStory(startStoryId));
+          g = [...buildStoryAuthorGroups([one], uid), ...g];
+        } catch {
+          // Gone or expired: fall back to the city's stories.
+        }
+      }
       setGroups(g);
       let safeAuthor = Math.min(startAuthor, Math.max(0, g.length - 1));
       const sg = g[safeAuthor];

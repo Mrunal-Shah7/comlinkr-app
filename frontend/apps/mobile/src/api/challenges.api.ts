@@ -66,13 +66,16 @@ export interface ApiChallenge {
   /** How many joined, the author included (the API's name; the app used to read `participantsCount`). */
   participantCount?: number;
   isJoined?: boolean;
+  /** Plan 17: how many members marked it done, and whether you did. Optional: older servers do not send them. */
+  completedCount?: number;
+  isCompleted?: boolean;
   isFull?: boolean;
   author?: { id: string; username: string; name: string; avatarUrl: string | null };
 }
 
 /** `GET /challenges/:id`: the quest with the first ten people who joined (plan 10). */
 export interface ApiChallengeDetail extends ApiChallenge {
-  participants: { id: string; username: string; name: string; avatarUrl: string | null; joinedAt: string }[];
+  participants: { id: string; username: string; name: string; avatarUrl: string | null; joinedAt: string; completedAt?: string | null }[];
   totalParticipants: number;
 }
 
@@ -113,6 +116,14 @@ export function getChallenge(id: string): Promise<ApiChallengeDetail> {
 /** Plan 10: leave a quest you joined (not the author's own, not an ended one). */
 export function leaveChallenge(id: string): Promise<{ joined: boolean; participantCount: number }> {
   return api.delete<{ joined: boolean; participantCount: number }>(`/challenges/${encodeURIComponent(id)}/join`);
+}
+
+/** Plan 17: mark a quest you joined as done, or take it back (members, while it runs). */
+export function setChallengeCompleted(id: string, done: boolean): Promise<{ completed: boolean; completedCount: number }> {
+  const path = `/challenges/${encodeURIComponent(id)}/complete`;
+  return done
+    ? api.post<{ completed: boolean; completedCount: number }>(path, {})
+    : api.delete<{ completed: boolean; completedCount: number }>(path);
 }
 
 /** The author deletes their own challenge (My posts). */

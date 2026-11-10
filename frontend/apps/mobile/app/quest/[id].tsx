@@ -1,11 +1,12 @@
 // A quest's own page (plan 10, TR-038). Opened from a quest card in Explore › Quests and from links
 // (comlinkr://quest/:id, /app/feed?openQuest=<id>). Join, leave, share; the host sees that they started it.
-import { Fragment } from "react";
+// Plan 17 (TR-052): members mark it done (self-reported) while it runs; the page counts who did.
+import { Fragment, useState } from "react";
 import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { getChallenge, joinChallenge, leaveChallenge, type ApiChallengeDetail } from "../../src/api/challenges.api";
+import { getChallenge, joinChallenge, leaveChallenge, setChallengeCompleted, type ApiChallengeDetail } from "../../src/api/challenges.api";
 import { ApiError } from "../../src/api/client";
 import { DPage } from "../../src/shared/d/Page";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,6 +44,7 @@ export default function QuestDetailScreen() {
   const { tc } = useTheme();
   const insets = useSafeAreaInsets();
   const key = ["quest", id, userId ?? ""];
+  const [busy, setBusy] = useState(false);
 
   const q = useQuery<ApiChallengeDetail>({ queryKey: key, queryFn: () => getChallenge(id), enabled: !!id, staleTime: 0 });
   // Explore reads its quests through the ["feed", "quests", …] cache; mark it stale so it refetches on return.
@@ -71,6 +73,26 @@ export default function QuestDetailScreen() {
   const count = quest.totalParticipants ?? quest.participantCount ?? 0;
   const max = quest.maxParticipants ?? 0;
   const left = timeLeft(quest.endsAt, quest.status);
+  const done = quest.completedCount ?? 0;
+  const isMember = !!quest.isJoined || isHost;
+  const completed = !!quest.isCompleted;
+
+  // Plan 17: mark done, or undo. The page and Explore's list read it again from the server.
+  const markDone = async (next: boolean) => {
+    if (busy) return;
+    setBusy(true);
+    if (next) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await setChallengeCompleted(quest.id, next);
+      await q.refetch();
+      refreshLists();
+      if (next) showToast("Marked as done. Nice work!", "success");
+    } catch (e) {
+      showToast(e instanceof ApiError ? e.message : "Could not update the quest. Please try again.", "error");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const join = async () => {
     if (!requireAuth(undefined, "Sign in to join this quest.")) return;
@@ -85,7 +107,7 @@ export default function QuestDetailScreen() {
   };
 
   const leave = () => {
-    appAlert("Leave this quest?", "You can join again while it is running.", [
+    appAlert("Leave this quest?", completed ? "You marked it done; leaving takes that back. You can join again while it is running." : "You can join again while it is running.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Leave",
@@ -125,12 +147,24 @@ export default function QuestDetailScreen() {
       }
       footer={
         <View style={{ paddingHorizontal: 18, paddingTop: 10, paddingBottom: insets.bottom + 12 }}>
-          {isHost ? (
-            <SoftButton block label="You started this quest" icon={<Ionicons name="trophy-outline" size={16} color={tc.accentText} />} />
-          ) : ended ? (
-            <SoftButton block label="This quest has ended" disabled />
-          ) : quest.isJoined ? (
-            <SoftButton block label="Leave quest" onPress={leave} icon={<Ionicons name="exit-outline" size={16} color={tc.textPrimary} />} />
+          {ended ? (
+            <SoftButton block label={completed ? "You finished this quest" : "This quest has ended"} disabled={!completed}
+              icon={completed ? <Ionicons name="trophy" size={16} color={tc.accentText} /> : undefined} />
+          ) : isMember ? (
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                {completed ? (
+                  <SoftButton block label="Done · Undo" disabled={busy} onPress={() => void markDone(false)}
+                    accessibilityLabel="Done. Tap to undo"
+                    icon={<Ionicons name="checkmark-circle" size={16} color={tc.accentText} />} />
+                ) : (
+                  <GradientButton block label="Mark as done" disabled={busy} onPress={() => void markDone(true)} />
+                )}
+              </View>
+              {isHost ? null : (
+                <SoftButton label="Leave" onPress={leave} icon={<Ionicons name="exit-outline" size={16} color={tc.textPrimary} />} />
+              )}
+            </View>
           ) : quest.isFull ? (
             <SoftButton block label="This quest is full" disabled />
           ) : (
@@ -141,7 +175,7 @@ export default function QuestDetailScreen() {
     >
       <View style={{ paddingHorizontal: 18 }}>
       <Reveal i={0}>
-        <TileLabel>{[TYPE_LABEL[quest.type] ?? quest.type, quest.isJoined && !isHost ? "Joined" : null].filter(Boolean).join(" · ").toUpperCase()}</TileLabel>
+        <TileLabel>{[TYPE_LABEL[quest.type] ?? quest.type, completed ? "Done" : quest.isJoined && !isHost ? "Joined" : null].filter(Boolean).join(" · ").toUpperCase()}</TileLabel>
         {quest.author ? (
           <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 6 }]}>
             Started by <Text style={{ color: tc.textPrimary, fontFamily: "Manrope_700Bold" }}>{isHost ? "you" : quest.author.name}</Text>
@@ -169,7 +203,7 @@ export default function QuestDetailScreen() {
 
       <Reveal i={2} style={{ marginTop: 22 }}>
         <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, fontSize: 16 }]}>
-          {max > 0 ? `${count} of ${max} joined` : `${count} joined`}
+          {(max > 0 ? `${count} of ${max} joined` : `${count} joined`) + (done > 0 ? ` · ${done} done` : "")}
         </Text>
         <View style={{ marginTop: 10, gap: 10 }}>
           {quest.participants.map((p) => (
@@ -182,6 +216,12 @@ export default function QuestDetailScreen() {
                   {p.id === userId ? "You" : p.name || p.username}
                 </Text>
                 {p.id === quest.author?.id ? <Text style={[TYPE.small, { color: tc.textTertiary }]}>Started it</Text> : null}
+                {p.completedAt ? (
+                  <View style={s.done} accessibilityLabel="Done">
+                    <Ionicons name="checkmark-circle" size={15} color={tc.mint} />
+                    <Text style={[TYPE.small, { color: tc.textSecondary }]}>Done</Text>
+                  </View>
+                ) : null}
               </View>
             </Fragment>
           ))}
@@ -200,4 +240,5 @@ const s = StyleSheet.create({
   card: { marginTop: 16, borderRadius: 20, borderWidth: 1, paddingHorizontal: 14 },
   fact: { flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 12 },
   person: { flexDirection: "row", alignItems: "center", gap: 12 },
+  done: { flexDirection: "row", alignItems: "center", gap: 4 },
 });

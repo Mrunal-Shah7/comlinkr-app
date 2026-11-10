@@ -22,7 +22,8 @@ export const POSTS = [
 ];
 
 // ── Feed tabs ──────────────────────────────────────────
-export const FEED_TABS = ["News", "Events", "Stories", "Quests", "Polls"] as const;
+// Plan 16 (TR-050): "Following" shows what the people you follow posted, from any city.
+export const FEED_TABS = ["News", "Following", "Events", "Stories", "Quests", "Polls"] as const;
 export type FeedTab = typeof FEED_TABS[number];
 
 

@@ -50,10 +50,23 @@ export class PostsService {
         message: 'User not found',
       });
     }
-    // Respect the profile-privacy toggle: a private profile exposes no posts to other users.
+    // Respect the profile-privacy toggle: a private profile exposes no posts to other users, except (plan 16) the
+    // people whose follow request it accepted.
+    const acceptedFollower =
+      target.privacySettings?.publicProfile === false &&
+      viewerId !== targetUserId &&
+      !!(await this.prisma.userFollow.findFirst({
+        where: {
+          followerId: viewerId,
+          followingId: targetUserId,
+          status: 'ACCEPTED',
+        },
+        select: { id: true },
+      }));
     if (
       target.privacySettings?.publicProfile === false &&
-      viewerId !== targetUserId
+      viewerId !== targetUserId &&
+      !acceptedFollower
     ) {
       const page = query.page ?? 1;
       const limit = query.limit ?? 20;
@@ -94,6 +107,7 @@ export class PostsService {
           attendeeCount: true,
           averageRating: true, // SPRINT-38: Include event aggregate in the unified posts projection.
           totalReviews: true, // SPRINT-38: Include event review count in the unified posts projection.
+          cancelledAt: true, // plan 15
         },
       }),
       this.prisma.story.findMany({
@@ -145,7 +159,7 @@ export class PostsService {
       type: 'EVENT',
       title: e.title,
       category: e.category,
-      status: null,
+      status: e.cancelledAt ? 'CANCELLED' : null, // plan 15: kept, marked Cancelled
       createdAt: e.createdAt,
       metadata: {
         date: e.date,

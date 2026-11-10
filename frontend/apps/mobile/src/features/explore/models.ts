@@ -80,6 +80,8 @@ export interface ExploreEventRow {
   isAttending: boolean; // SPRINT-42: active registration alias
   hasReviewed?: boolean; // SPRINT-42: detail-only caller state
   myReviewId?: string | null; // SPRINT-42: detail-only caller review id
+  /** Plan 15: the host cancelled it; kept, marked Cancelled. */
+  cancelled?: boolean;
 }
 
 export const EVENT_IMAGE_BY_CATEGORY: Record<string, string> = {
@@ -168,6 +170,7 @@ export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
     startTimeRaw: String(e.startTime ?? ""), // SPRINT-42:
     endTimeRaw: e.endTime ?? null, // SPRINT-42:
     isAttending: !!(e.isAttending || e.registeredByMe), // SPRINT-42:
+    cancelled: e.cancelled === true || !!e.cancelledAt, // plan 15
     hasReviewed: e.hasReviewed === true, // SPRINT-42:
     myReviewId: e.myReviewId ?? null, // SPRINT-42:
   };
