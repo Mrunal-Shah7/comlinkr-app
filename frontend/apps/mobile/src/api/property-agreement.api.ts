@@ -76,8 +76,9 @@ export interface AgreementTermsAcknowledgement {
   leaseTerm: string;
   moveInDate: string;
   depositAmount: number;
-  termsRead: boolean;
-  termsAgreed: boolean;
+  /** Optional since plan 12: the signature on the offer is the acknowledgement. */
+  termsRead?: boolean;
+  termsAgreed?: boolean;
 }
 
 export interface ESignature {
@@ -91,6 +92,13 @@ export interface PropertyApplication {
   id: string;
   listingId: string;
   listingTitle?: string;
+  /** The listing as the application sees it; `availableDate` is a calendar date (plan 12). */
+  listing?: { id: string; title: string; address?: string; city?: string; country?: string; availableDate?: string | null };
+  landlordId?: string;
+  landlordName?: string;
+  rentAmount?: number | null;
+  depositAmount?: number | null;
+  currency?: string;
   applicantId: string;
   status: ApplicationStatus;
   currentStep: 1 | 2 | 3 | 4 | 5;

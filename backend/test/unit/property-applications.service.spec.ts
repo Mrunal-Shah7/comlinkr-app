@@ -24,6 +24,7 @@ type Row = Record<string, any>;
 
 function matches(row: Row, where: Row): boolean {
   return Object.entries(where).every(([key, condition]) => {
+    if (key === 'OR') return (condition as Row[]).some((w) => matches(row, w));
     const value = row[key];
     if (
       condition &&
@@ -512,7 +513,7 @@ describe('PropertyApplicationsService', () => {
     });
   });
 
-  describe('sign (tenant signs after submit, signed after approval)', () => {
+  describe('sign (only after the landlord approves)', () => {
     it('rejects signing a draft', async () => {
       const id = await draftWithStepOne();
       await expect(
@@ -522,27 +523,28 @@ describe('PropertyApplicationsService', () => {
       });
     });
 
-    it('stores the signature but keeps the status while awaiting a decision', async () => {
+    it('refuses signing while awaiting a decision, and stores nothing', async () => {
       const id = await submitted();
-      const result = await service.sign(TENANT, id, typedSignature);
-      expect(result.status).toBe('submitted');
-      expect(result.signature).toMatchObject({
-        signature: 'Tina Tenant',
-        signatureType: 'typed',
+      await expect(
+        service.sign(TENANT, id, typedSignature),
+      ).rejects.toMatchObject({
+        response: { code: 'NOT_APPROVED' },
       });
+      expect(fake.applications[id].tenantSignedAt ?? null).toBeNull();
       expect(storage.uploadPrivateFile).not.toHaveBeenCalled();
     });
 
-    it('matches the app flow: submit then sign immediately', async () => {
-      const id = await draftWithStepOne();
-      await service.submit(TENANT, id);
+    it('refuses signing while under review', async () => {
+      const id = await submitted();
+      await service.getOne(LANDLORD, id);
       await expect(
         service.sign(TENANT, id, typedSignature),
-      ).resolves.toMatchObject({ status: 'submitted' });
+      ).rejects.toBeInstanceOf(ConflictException);
     });
 
     it('is safe to retry', async () => {
       const id = await submitted();
+      await service.decide(LANDLORD, id, { decision: 'approved' });
       await service.sign(TENANT, id, typedSignature);
       await expect(
         service.sign(TENANT, id, typedSignature),
@@ -551,6 +553,7 @@ describe('PropertyApplicationsService', () => {
 
     it('rejects a drawn signature that is not an image', async () => {
       const id = await submitted();
+      await service.decide(LANDLORD, id, { decision: 'approved' });
       await expect(
         service.sign(TENANT, id, {
           ...typedSignature,
@@ -624,8 +627,13 @@ describe('PropertyApplicationsService', () => {
     });
 
     it('approving an already-signed application makes it signed and saves the PDF', async () => {
+      // Older app builds let the tenant sign before the decision. Those rows still finalise on approval.
       const id = await submitted();
-      await service.sign(TENANT, id, typedSignature);
+      Object.assign(fake.applications[id], {
+        signature: 'Tina Tenant',
+        signatureType: 'TYPED',
+        tenantSignedAt: new Date(),
+      });
       const result = await service.decide(LANDLORD, id, {
         decision: 'approved',
         note: 'Welcome!',
@@ -686,11 +694,9 @@ describe('PropertyApplicationsService', () => {
         new Error('cloudinary down'),
       );
       const id = await submitted();
-      await service.sign(TENANT, id, typedSignature);
-      const decided = await service.decide(LANDLORD, id, {
-        decision: 'approved',
-      });
-      expect(decided).toMatchObject({ status: 'signed', documentId: null });
+      await service.decide(LANDLORD, id, { decision: 'approved' });
+      const signed = await service.sign(TENANT, id, typedSignature);
+      expect(signed).toMatchObject({ status: 'signed', documentId: null });
 
       const reread = await service.getOne(TENANT, id);
       expect(reread.documentId).toBeTruthy();
@@ -718,9 +724,28 @@ describe('PropertyApplicationsService', () => {
       );
     });
 
-    it('rejects withdrawing once the landlord has approved', async () => {
+    it('declines an approved offer the tenant has not signed (plan 12)', async () => {
       const id = await submitted();
       await service.decide(LANDLORD, id, { decision: 'approved' });
+      notifications.createNotification.mockClear();
+      const result = await service.withdraw(TENANT, id);
+      expect(result.status).toBe('withdrawn');
+      expect(notifications.createNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: LANDLORD,
+          title: 'Application withdrawn',
+        }),
+      );
+    });
+
+    it('rejects withdrawing once the agreement is made', async () => {
+      const id = await submitted();
+      await service.decide(LANDLORD, id, { decision: 'approved' });
+      await service.sign(TENANT, id, {
+        signature: 'Tina Tenant',
+        signatureType: 'typed',
+        signedAt: new Date().toISOString(),
+      } as never);
       await expect(service.withdraw(TENANT, id)).rejects.toBeInstanceOf(
         ConflictException,
       );

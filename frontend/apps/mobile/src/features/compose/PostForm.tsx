@@ -697,7 +697,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
       event: "Event Created! 🎉",
       news: "Post Published! 📰",
       story: "Story Shared! 📸",
-      challenge: "Challenge Created! 🏆",
+      challenge: "Quest started! 🏆",
     };
     const routeMap: Record<string, string> = {
       news: "/(tabs)/feed",
@@ -740,6 +740,10 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
         router.push({ pathname: "/(tabs)/feed", params: { exploreTab: "Stories" } } as any);
       } else if (type.id === "listing" && createdListingId) {
         router.push(`/listing/${encodeURIComponent(createdListingId)}` as never);
+      } else if (targetRoute === "/(tabs)/feed") {
+        // TR-040 E-27: open the section the post went to (it landed on News › For you).
+        const exploreTab = type.id === "event" ? "Events" : type.id === "challenge" ? "Quests" : "Neighbours";
+        router.push({ pathname: "/(tabs)/feed", params: { exploreTab } } as any);
       } else {
         router.push(targetRoute as any);
       }
@@ -1826,7 +1830,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
                 style={[s.titleInput, { color: tc.textPrimary }]}
-                placeholder="e.g. Sunny room in shared Williamsburg loft"
+                placeholder="e.g. Sunny room in a shared loft"
                 placeholderTextColor={tc.textTertiary}
                 value={title}
                 onChangeText={setTitle}
@@ -2516,7 +2520,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             {/* Challenge Title */}
             <View style={s.sectionLabelRow}>
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
-              <Text style={s.sectionLabel}>CHALLENGE TITLE</Text>
+              <Text style={s.sectionLabel}>QUEST TITLE</Text>
             </View>
             <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
@@ -2533,7 +2537,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             {/* Challenge Type */}
             <View style={s.sectionLabelRow}>
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
-              <Text style={s.sectionLabel}>CHALLENGE TYPE</Text>
+              <Text style={s.sectionLabel}>QUEST TYPE</Text>
             </View>
             <ChipSelect
               options={ALL_CATEGORIES}
@@ -2547,7 +2551,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             {/* Challenge Details */}
             <View style={s.sectionLabelRow}>
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
-              <Text style={s.sectionLabel}>CHALLENGE DETAILS</Text>
+              <Text style={s.sectionLabel}>QUEST DETAILS</Text>
             </View>
             <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
@@ -2565,7 +2569,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             {/* Duration */}
             <View style={s.sectionLabelRow}>
               <View style={[s.sectionDot, { backgroundColor: type.color }]} />
-              <Text style={s.sectionLabel}>CHALLENGE DURATION</Text>
+              <Text style={s.sectionLabel}>QUEST DURATION</Text>
             </View>
             <ChipSelect
               options={["1 Day", "3 Days", "1 Week", "2 Weeks", "1 Month"]}
@@ -2628,7 +2632,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             </View>
             <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
               <TextInput
-                placeholder="#SunsetChallenge, #NYCSunsets, #GoldenHour"
+                placeholder="#GoldenHour, #NYCSunsets, #NeighbourhoodQuest"
                 placeholderTextColor={tc.textTertiary}
                 style={[s.fieldInput, { color: tc.textPrimary }]}
                 value={challengeHashtags}
@@ -2644,7 +2648,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             <View style={[s.locationField, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
               <Ionicons name="location" size={18} color={type.color} />
               <TextInput
-                placeholder="Where does this challenge happen?"
+                placeholder="Where does this quest happen?"
                 placeholderTextColor={tc.textTertiary}
                 style={[s.locationInput, { color: tc.textPrimary }]}
                 value={location}
@@ -2913,7 +2917,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                         : "Add Restaurant"
                       : type.id === "event" ? "Create Event"
                       : type.id === "story" ? "Share Story"
-                      : type.id === "challenge" ? "Launch Challenge"
+                      : type.id === "challenge" ? "Start quest"
                       : type.id === "shared_space" ? "Publish Space"
                       : isEditing ? "Save changes"
                       : "Publish Post"}

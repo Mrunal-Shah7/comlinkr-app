@@ -2,4 +2,7 @@
 import { OmitType } from '@nestjs/swagger';
 import { UpdateCityDto } from '../../settings/dto/update-city.dto';
 
-export class SetUserLocationDto extends OmitType(UpdateCityDto, ['latitude', 'longitude'] as const) {}
+export class SetUserLocationDto extends OmitType(UpdateCityDto, [
+  'latitude',
+  'longitude',
+] as const) {}

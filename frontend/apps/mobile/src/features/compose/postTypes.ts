@@ -63,7 +63,7 @@ export const POST_TYPES = [
     id: "challenge",
     icon: "trophy-outline" as const,
     label: "A quest",
-    desc: "Start an interactive community challenge",
+    desc: "Something for your neighbours to do together",
     color: palette.brandBlue,
     bg: palette.brandBlueLight,
     gradient: [palette.brandBlue, palette.brandGreen] as [string, string],
@@ -74,7 +74,7 @@ export type PostType = typeof POST_TYPES[0];
 
 /** Quest templates (design D `compose-quest`); rewards are things the host gives, not app features. */
 export const QUEST_TEMPLATES: { key: string; icon: "camera-outline" | "location-outline" | "people-outline"; name: string; sub: string; title: string; goal: string; reward: string; kind: string }[] = [
-  { key: "photo", icon: "camera-outline", name: "Photo challenge", sub: "Best shot of a theme wins", title: "Golden hour shot", goal: "Post a photo of golden hour in your neighbourhood.", reward: "A shout-out from the host", kind: "Creative" },
+  { key: "photo", icon: "camera-outline", name: "Photo quest", sub: "Best shot of a theme wins", title: "Golden hour shot", goal: "Post a photo of golden hour in your neighbourhood.", reward: "A shout-out from the host", kind: "Creative" },
   { key: "visit", icon: "location-outline", name: "Visit places", sub: "Check in at a list of places", title: "Taco trail", goal: "Visit 5 taquerias and post one photo at each.", reward: "Bragging rights", kind: "Food" },
   { key: "meet", icon: "people-outline", name: "Meet people", sub: "Small social goals", title: "Say hi week", goal: "Say hi to 3 neighbours this week.", reward: "New friends nearby", kind: "Social" },
 ];

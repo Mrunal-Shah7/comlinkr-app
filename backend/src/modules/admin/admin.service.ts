@@ -555,20 +555,39 @@ export class AdminService {
   }
 
   /** Plan 08 (TR-042): an admin overrides a user's city; recorded as ADMIN, without coordinates. */
-  async setUserLocation(adminUserId: string, userId: string, dto: SetUserLocationDto) {
+  async setUserLocation(
+    adminUserId: string,
+    userId: string,
+    dto: SetUserLocationDto,
+  ) {
     await this.assertActiveAdmin(adminUserId);
-    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
     if (!user) throw new NotFoundException('User not found');
     const fields = {
-      country: dto.country, countryCode: dto.countryCode, dialCode: dto.dialCode, state: dto.state, city: dto.city,
-      source: LocationSource.ADMIN, latitude: null, longitude: null,
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      source: LocationSource.ADMIN,
+      latitude: null,
+      longitude: null,
     };
     const location = await this.prisma.userLocation.upsert({
       where: { userId },
       create: { userId, ...fields },
       update: fields,
     });
-    return { userId, city: location.city, state: location.state, country: location.country, source: location.source };
+    return {
+      userId,
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      source: location.source,
+    };
   }
 
   async updateUser(

@@ -23,7 +23,7 @@ import { StatusBar } from "expo-status-bar";
 import { createDTypeStyles } from "../src/theme/themedStyles";
 import { Image } from "expo-image"; // SPRINT-31:
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -82,7 +82,8 @@ function timeAgoShort(iso: string): string {
   if (Number.isNaN(t)) return "";
   const diff = Date.now() - t;
   const m = Math.floor(diff / 60000);
-  if (m < 60) return `${m || 1}m ago`;
+  if (m < 1) return "Just now"; // TR-040 E-12: seconds-old read "1m ago"
+  if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 48) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
@@ -198,6 +199,10 @@ const styles = createDTypeStyles({
 
 export default function StoryViewerScreen() {
   const insets = useSafeAreaInsets();
+  // TR-040 L-06: the light, hidden status bar stays on the stack while a screen opened from here is on top
+  // (a profile, a chat), and the bar's icons stayed white there. Only claim it while this screen is focused.
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(useCallback(() => { setFocused(true); return () => setFocused(false); }, []));
   const reduceMotion = useReducedMotion();
   const { width: W, height: H } = useWindowDimensions();
   const { tc, isDark } = useTheme();
@@ -275,7 +280,17 @@ export default function StoryViewerScreen() {
       const raw = await getActiveStories(city);
       const list = Array.isArray(raw) ? raw : [];
       const normalized = list.map((s) => normalizeStoryFromApi(s));
-      const g = buildStoryAuthorGroups(normalized, uid);
+      let g = buildStoryAuthorGroups(normalized, uid);
+      // Plan 16: a story opened by id (the Following tab) may be from another city: fetch it and show it first,
+      // rather than opening the city's first story.
+      if (startStoryId && !g.some((group) => group.stories.some((st) => st.id === startStoryId))) {
+        try {
+          const one = normalizeStoryFromApi(await getStory(startStoryId));
+          g = [...buildStoryAuthorGroups([one], uid), ...g];
+        } catch {
+          // Gone or expired: fall back to the city's stories.
+        }
+      }
       setGroups(g);
       let safeAuthor = Math.min(startAuthor, Math.max(0, g.length - 1));
       const sg = g[safeAuthor];
@@ -547,7 +562,7 @@ export default function StoryViewerScreen() {
     return (
       <View style={[st.root, st.center, { width: W, height: H }]}>
         <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
-        <StatusBar style="light" hidden />
+        {focused ? <StatusBar style="light" hidden /> : null}
         <ActivityIndicator color={palette.white} size="large" />
         <Text style={{ color: "rgba(255,255,255,0.6)", marginTop: rs(12), fontSize: rs(13) }}>Loading stories…</Text>
       </View>
@@ -559,7 +574,7 @@ export default function StoryViewerScreen() {
     return (
       <View style={[st.root, st.center, { width: W, height: H }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <StatusBar style="light" hidden />
+        {focused ? <StatusBar style="light" hidden /> : null}
         <Ionicons name="images-outline" size={rs(52)} color="rgba(255,255,255,0.5)" />
         <Text style={st.emptyText}>No stories right now</Text>
         <Pressable style={st.emptyBtn} onPress={closeViewer}>
@@ -582,7 +597,7 @@ export default function StoryViewerScreen() {
     <GestureDetector gesture={pan}>
     <Reanimated.View style={[st.root, { width: W, height: H }, rootSlide]}>
       <Stack.Screen options={{ headerShown: false, animation: "slide_from_bottom" }} />
-      <StatusBar style="light" hidden />
+      {focused ? <StatusBar style="light" hidden /> : null}
 
       {/* ── Media layer ── */}
       {isPhoto && imgUrl ? (
@@ -679,7 +694,7 @@ export default function StoryViewerScreen() {
                 transition={200}
               />
             ) : (
-              <PersonAvatar name={currentStory.author.username || "?"} size={34} />
+              <PersonAvatar name={currentStory.author.name || currentStory.author.username || "?"} size={34} />
             )}
           </View>
           <View style={{ flex: 1 }}>
@@ -859,7 +874,7 @@ export default function StoryViewerScreen() {
                   const isStoryOwner = uid != null && currentStory.author.id === uid;
                   const canDelete    = isOwn || isStoryOwner;
                   const av           = item.author.avatarUrl ? mediaUri(item.author.avatarUrl) : "";
-                  const initials     = (item.author.username || "?").slice(0, 2).toUpperCase();
+                  const initials     = (item.author.name || item.author.username || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase(); // TR-040 E-13: same initials as the avatar elsewhere
                   return (
                     <Pressable
                       onLongPress={() => {

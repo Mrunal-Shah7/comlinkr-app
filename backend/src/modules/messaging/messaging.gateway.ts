@@ -36,6 +36,7 @@ export interface ConversationUpdatedPayload {
   messagePreview: string; // SPRINT-36: provide the latest-message summary
   unreadCount: number; // SPRINT-36: provide the recipient's current unread count
   updatedAt: string; // SPRINT-36: provide the ordering timestamp
+  removed?: boolean; // plan 09: a message was deleted; the list reloads the row
 } // SPRINT-36: complete conversation update payload
 
 export interface NotificationCreatedPayload {
@@ -72,7 +73,9 @@ export class MessagingGateway
   private readonly userSockets = new Map<string, Set<string>>();
   private readonly socketUsers = new Map<string, string>();
   private readonly typingThrottle = new Map<string, number>(); // SPRINT-36: throttle ephemeral typing-start events per socket and conversation
-  private sessionStore?: { get: (sid: string, cb: (err: any, s?: any) => void) => void };
+  private sessionStore?: {
+    get: (sid: string, cb: (err: any, s?: any) => void) => void;
+  };
   private revalidateTimer?: NodeJS.Timeout;
   private sessionMiddleware!: (
     req: any,
@@ -105,17 +108,20 @@ export class MessagingGateway
     if (this.revalidateTimer) clearInterval(this.revalidateTimer);
   }
 
-  private loadSession(sid: string): Promise<any | null> {
+  private loadSession(sid: string): Promise<any> {
     return new Promise((resolve) => {
       if (!this.sessionStore || !sid) return resolve(null);
-      this.sessionStore.get(sid, (err, sess) => resolve(err ? null : (sess ?? null)));
+      this.sessionStore.get(sid, (err, sess) =>
+        resolve(err ? null : (sess ?? null)),
+      );
     });
   }
 
   /** Session still stored, user active, session epoch current. */
   private async isSocketAuthorized(socket: any): Promise<boolean> {
     const sid: string | undefined = socket.request?.sessionID;
-    const userId: string | undefined = socket.userId ?? socket.request?.session?.userId;
+    const userId: string | undefined =
+      socket.userId ?? socket.request?.session?.userId;
     if (!sid || !userId) return false;
     const sess = await this.loadSession(sid);
     if (!sess || sess.userId !== userId) return false;

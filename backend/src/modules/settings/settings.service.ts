@@ -136,16 +136,24 @@ export class SettingsService {
   }
 
   async updatePrivacy(userId: string, dto: UpdatePrivacyDto) {
-    const data: Record<string, boolean> = { ...PRIVACY_DEFAULTS };
+    // TR-053: change only the fields sent; a new row starts from the defaults.
+    const data: Record<string, boolean> = {};
     if (dto.publicProfile !== undefined) data.publicProfile = dto.publicProfile;
     if (dto.showLocation !== undefined) data.showLocation = dto.showLocation;
     if (dto.activityStatus !== undefined)
       data.activityStatus = dto.activityStatus;
     const updated = await this.prisma.privacySettings.upsert({
       where: { userId },
-      create: { userId, ...data },
+      create: { userId, ...PRIVACY_DEFAULTS, ...data },
       update: data,
     });
+    // Plan 16: a public profile has no follow requests; going public accepts the waiting ones, silently.
+    if (updated.publicProfile) {
+      await this.prisma.userFollow.updateMany({
+        where: { followingId: userId, status: 'PENDING' },
+        data: { status: 'ACCEPTED' },
+      });
+    }
     return updated;
   }
 
@@ -187,6 +195,15 @@ export class SettingsService {
     await this.prisma.$transaction(async (tx) => {
       await tx.blockedUser.create({
         data: { blockerId: userId, blockedId: dto.userId },
+      });
+      // Plan 14: blocking ends following, both ways.
+      await tx.userFollow.deleteMany({
+        where: {
+          OR: [
+            { followerId: userId, followingId: dto.userId },
+            { followerId: dto.userId, followingId: userId },
+          ],
+        },
       });
       const blockerMemberships = await tx.conversationMember.findMany({
         where: { userId },
@@ -284,7 +301,14 @@ export class SettingsService {
   }
 
   async updateCity(userId: string, dto: UpdateCityDto) {
-    const fields = { country: dto.country, countryCode: dto.countryCode, dialCode: dto.dialCode, state: dto.state, city: dto.city, ...locationProvenance(dto) };
+    const fields = {
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      ...locationProvenance(dto),
+    };
     await this.prisma.userLocation.upsert({
       where: { userId },
       create: { userId, ...fields },

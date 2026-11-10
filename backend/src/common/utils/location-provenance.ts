@@ -2,12 +2,16 @@
 // from its location (GPS); one sent without them was typed (MANUAL), as older app versions still do.
 import { LocationSource } from '@prisma/client';
 
-export function locationProvenance(dto: { latitude?: number; longitude?: number }): {
+export function locationProvenance(dto: {
+  latitude?: number;
+  longitude?: number;
+}): {
   source: LocationSource;
   latitude: number | null;
   longitude: number | null;
 } {
-  const gps = typeof dto.latitude === 'number' && typeof dto.longitude === 'number';
+  const gps =
+    typeof dto.latitude === 'number' && typeof dto.longitude === 'number';
   return {
     source: gps ? LocationSource.GPS : LocationSource.MANUAL,
     latitude: gps ? dto.latitude! : null,

@@ -1,12 +1,15 @@
 /**
- * Apply and sign (design D `apply` + `agreement`), three parts with a progress bar:
- *   1. Apply — what the owner needs, with name, email, phone and city from your profile (step 1 on the server).
- *   2. Your offer — rent, deposit, start and length; "Change a term" chips that really change the terms sent
- *      (step 4 on the server: leaseTerm, moveInDate, termsRead, termsAgreed); the full agreement in a sheet;
- *      sign with your finger (a drawn PNG) or type your name; Decline withdraws the application.
- *   3. Signed — the deposit rules for your market and the move-in checklist.
+ * Apply and sign (design D `apply` + `agreement`; order from plan 12), four parts with a progress bar:
+ *   1. Apply — what the owner needs, with name, email, phone and city from your profile, the move-in date (not
+ *      before the home is available) and the lease length. Send saves step 1 and step 4 (leaseTerm, moveInDate)
+ *      and submits.
+ *   2. Sent — waiting for the landlord; Withdraw is still possible.
+ *   3. Your offer — once the landlord approves: rent, deposit, start and length as sent; the full agreement in a
+ *      sheet; sign with your finger (a drawn PNG) or type your name. Signing makes the agreement. Decline withdraws.
+ *   4. Signed — the deposit rules for your market and the move-in checklist.
  * Parts slide in from the side they come from. Route params: propertyTitle, propertyAddress, price, deposit,
- * landlordName, listingId, country ("UK" | "US"), dealType ("rent" | "buy").
+ * landlordName, listingId, country ("UK" | "US"), dealType ("rent" | "buy"), availableDay (YYYY-MM-DD), or only
+ * applicationId (from a notification; the rest is read from the application).
  */
 import { palette } from "../src/theme/palette";
 import { Switch } from "../src/shared/ui/Switch";
@@ -20,8 +23,11 @@ import { useAuthStore } from "../src/store/auth.store";
 import { DatePickerField } from "../components/DateTimePickerField";
 import {
   createApplication,
+  getApplication,
   getMyApplications,
   saveStep,
+  type ApplicationStatus,
+  type PropertyApplication,
   submitApplication,
   signApplication,
   withdrawApplication,
@@ -42,7 +48,7 @@ import Input from "../src/shared/ui/Input";
 
 type DealType = "rent" | "buy";
 type Market   = "UK" | "US";
-type Part     = "apply" | "offer" | "done";
+type Part     = "apply" | "waiting" | "offer" | "done";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -62,12 +68,6 @@ const VIEWING = [
 function isoParts(iso: string): [number, number, number] | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
-}
-function addDays(iso: string, days: number): string {
-  const p = isoParts(iso);
-  if (!p) return iso;
-  const d = new Date(Date.UTC(p[0], p[1] - 1, p[2] + days));
-  return d.toISOString().slice(0, 10);
 }
 function niceDate(iso: string): string {
   const p = isoParts(iso);
@@ -325,19 +325,33 @@ export default function PropertyAgreementScreen() {
     landlordId?: string;
     country?: string;
     dealType?: string;
+    availableDay?: string;
+    applicationId?: string;
   }>();
 
   const user = useAuthStore((s) => s.user);
 
-  const propertyTitle   = params.propertyTitle   || "Property";
-  const propertyAddress = params.propertyAddress || "";
+  // Opened from a notification, only the application id comes; the rest is read from the application.
+  const [loaded, setLoaded] = useState<PropertyApplication | null>(null);
+  const money = (n: number | null | undefined, cur?: string) =>
+    n == null || n <= 0 ? "" : `${cur === "GBP" ? "£" : cur === "USD" || !cur ? "$" : `${cur} `}${n.toLocaleString("en-US")}`;
+  const propertyTitle   = params.propertyTitle   || loaded?.listing?.title || "Property";
+  const propertyAddress = params.propertyAddress || loaded?.listing?.address || "";
   // Missing values are hidden, not shown as "N/A" (rule B6); the listing passes "N/A" when it has none.
   const missing = (v?: string) => !v || /^(n\/?a|—|-|\$?0)$/i.test(v.trim());
-  const price           = missing(params.price) ? "" : params.price!;
-  const deposit         = missing(params.deposit) ? "" : params.deposit!;
-  const landlordName    = params.landlordName    || "the owner";
-  const listingId       = params.listingId       || "";
-  const market: Market  = params.country === "US" ? "US" : "UK";
+  const price           = missing(params.price) ? money(loaded?.rentAmount, loaded?.currency) : params.price!;
+  const deposit         = missing(params.deposit) ? money(loaded?.depositAmount, loaded?.currency) : params.deposit!;
+  const landlordName    = params.landlordName    || loaded?.landlordName || "the owner";
+  const listingId       = params.listingId       || loaded?.listingId || "";
+  // From a notification there is no country param: UK when the application's currency or country says so, as the
+  // listing page decides (countries are stored as "US", "United States", ...).
+  const loadedUK = loaded?.currency === "GBP" || /^(uk|gb|united kingdom|england|scotland|wales)$/i.test(loaded?.listing?.country ?? "");
+  const market: Market  = params.country ? (params.country === "US" ? "US" : "UK") : loaded ? (loadedUK ? "UK" : "US") : "UK";
+  // Plan 12: no move-in before the home is available (a calendar date, read by its date part).
+  const availableDay    = /^\d{4}-\d{2}-\d{2}$/.test(params.availableDay ?? "") ? params.availableDay! : (loaded?.listing?.availableDate ?? "");
+  const todayIso        = (() => { const d = new Date(); const p2 = (n: number) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`; })();
+  const earliestMoveIn  = availableDay && availableDay > todayIso ? availableDay : todayIso;
+  const earliestDate    = new Date(Number(earliestMoveIn.slice(0, 4)), Number(earliestMoveIn.slice(5, 7)) - 1, Number(earliestMoveIn.slice(8, 10)));
   const dealType: DealType = params.dealType === "buy" ? "buy" : "rent";
   const depositSchemes  = market === "UK" ? DEPOSIT_SCHEMES_UK : DEPOSIT_SCHEMES_US;
   const currency        = market === "UK" ? "£" : "$";
@@ -366,8 +380,7 @@ export default function PropertyAgreementScreen() {
   const profileComplete = !!(user?.name && user?.email && user?.phone && profileAddress);
   const [editProfile, setEditProfile] = useState(!profileComplete);
 
-  // Part 2 — the offer, its terms and the signature.
-  const [laterStart,   setLaterStart]   = useState(false);
+  // The lease length is sent with the application (plan 12); the offer shows it as sent.
   const [shortLease,   setShortLease]   = useState(false);
   const [agreementRead, setAgreementRead] = useState(false);
   const [readerOpen,   setReaderOpen]   = useState(false);
@@ -377,45 +390,60 @@ export default function PropertyAgreementScreen() {
   const pad = useRef<SignPadHandle>(null);
   const [drawing, setDrawing] = useState(false);
   const scrollRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any -- Animated.ScrollView ref
-  const startDate = laterStart ? addDays(moveInDate, 7) : moveInDate;
+  const startDate = moveInDate;
   const duration  = shortLease ? "6 months" : "12 months";
   const selectedScheme = depositSchemes[0];
 
-  const [applicationId, setApplicationId] = useState<string | null>(null);
-  // The landlord's decision closes withdrawal; set when a sent application is reopened.
-  const [landlordDecided, setLandlordDecided] = useState(false);
+  const [applicationId, setApplicationId] = useState<string | null>(params.applicationId || null);
+  const [appStatus, setAppStatus] = useState<ApplicationStatus | null>(null);
+  // Withdrawal closes once the agreement is made, or once the landlord approved an application an older build
+  // signed before sending.
+  const landlordDecided = appStatus === "signed" || appStatus === "approved";
   const [submitting, setSubmitting] = useState(false);
 
   const userId = user?.id;
-  // Opening Apply again for a home you already applied to shows that application (its offer, or that you signed),
-  // not a blank form that the server would refuse with "already applied".
+  // Opening Apply again for a home you already applied to shows that application where it stands (sent, the offer,
+  // or signed), not a blank form that the server would refuse with "already applied". From a notification the
+  // application id comes alone.
+  const openId = params.applicationId;
+  const openListing = params.listingId;
   useEffect(() => {
-    if (!listingId || !userId) return;
+    if ((!openListing && !openId) || !userId) return;
     let live = true;
-    getMyApplications()
+    const source = openId
+      ? getApplication(openId).then((a) => (a.applicantId === userId ? [a] : []))
+      : getMyApplications();
+    source
       .then((list) => {
         const mine = list
-          .filter((a) => a.listingId === listingId && a.status !== "withdrawn" && a.status !== "rejected")
-          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+          .filter((a) => (openId ? a.id === openId : a.listingId === openListing) && a.status !== "withdrawn" && a.status !== "rejected")
+          .sort((x, y) => y.createdAt.localeCompare(x.createdAt))[0];
         if (!live || !mine) return;
+        setLoaded(mine);
         setApplicationId(mine.id);
+        setAppStatus(mine.status);
         const info = mine.personalInfo as { fullName?: string; moveInDate?: string } | undefined;
         if (info?.fullName) setFullName(info.fullName);
         const start = mine.agreementTerms?.moveInDate ?? info?.moveInDate;
         if (start) setMoveInDate(String(start).slice(0, 10));
+        if (mine.agreementTerms?.leaseTerm) setShortLease(/^6\b/.test(mine.agreementTerms.leaseTerm));
         if (mine.status === "draft") return;
-        setLandlordDecided(mine.status === "approved" || mine.status === "signed");
-        void raiseListingJourneyStep(listingId, 4);
-        setPart(mine.signature ? "done" : "offer");
+        void raiseListingJourneyStep(mine.listingId, 4);
+        // Plan 12: the offer only once the landlord approved. An older build signed before sending: that shows Signed.
+        setPart(mine.signature || mine.status === "signed" ? "done" : mine.status === "approved" ? "offer" : "waiting");
       })
       .catch(() => { /* offline: the form still works, and the server refuses a duplicate */ });
     return () => { live = false; };
-  }, [listingId, userId]);
+  }, [openListing, openId, userId]);
 
   const sendApplication = useCallback(async () => {
     const monthly = Number(income.replace(/[^\d.]/g, ""));
     if (!fullName.trim() || !employment || !monthly || !moveInDate || !phone.trim() || !currentAddress.trim()) {
       appAlert("A few things are missing", "Add your move-in date, monthly income, work and contact details.");
+      return;
+    }
+    if (availableDay && moveInDate < availableDay) {
+      appAlert("Choose a later move-in date", `This home is available from ${niceDate(availableDay)}.`);
       return;
     }
     if (listingId) {
@@ -449,6 +477,11 @@ export default function PropertyAgreementScreen() {
           moveInDate, previousLandlordReference: landlordRef || undefined,
           notes: notes || undefined, viewingStatus: viewingStatus || undefined,
         });
+        // Plan 12: the terms go with the application, and it is sent now; the offer comes once the landlord approves.
+        await saveStep(appId, 4, { leaseTerm: duration, moveInDate });
+        stage = "send";
+        const sent = await submitApplication(appId);
+        setAppStatus(sent.status ?? "submitted");
       } catch (e) {
         setSubmitting(false);
         const status = e instanceof ApiError ? e.status : 0;
@@ -461,14 +494,14 @@ export default function PropertyAgreementScreen() {
             : e.message || `Server error (${status}).`)
           : "We couldn't reach the server. Check your connection and try again.";
         if (__DEV__) console.warn(`[property-agreement] step-1 ${stage} failed`, e);
-        appAlert(stage === "create" ? "Could not start the application" : "Could not save the application", reason);
+        appAlert(stage === "create" ? "Could not start the application" : stage === "send" ? "Could not send the application" : "Could not save the application", reason);
         return;
       }
       setSubmitting(false);
       void raiseListingJourneyStep(listingId, 4);
     }
-    go("offer");
-  }, [income, fullName, employment, moveInDate, phone, currentAddress, listingId, applicationId, user, employer, occupants, hasPets, petDetails, smokes, landlordRef, notes, viewingStatus]);
+    go("waiting");
+  }, [income, fullName, employment, moveInDate, availableDay, duration, phone, currentAddress, listingId, applicationId, user, employer, occupants, hasPets, petDetails, smokes, landlordRef, notes, viewingStatus]);
 
   const signAndAccept = useCallback(async () => {
     const png = typeInstead ? null : pad.current?.toPng() ?? null;
@@ -477,13 +510,13 @@ export default function PropertyAgreementScreen() {
     if (applicationId) {
       try {
         setSubmitting(true);
-        await saveStep(applicationId, 4, { leaseTerm: duration, moveInDate: startDate, termsRead: true, termsAgreed: true });
-        await submitApplication(applicationId);
-        await signApplication(applicationId, {
+        // Plan 12: the landlord approved what was sent; signing makes the agreement.
+        const done = await signApplication(applicationId, {
           signature,
           signatureType: typeInstead ? "typed" : "drawn",
           signedAt: new Date().toISOString(),
         });
+        setAppStatus(done.status ?? "signed");
       } catch (e) {
         setSubmitting(false);
         appAlert("Could not sign", e instanceof ApiError && e.message ? e.message : "We couldn't save your signature. Check your connection and try again. Nothing has been signed yet.");
@@ -492,29 +525,29 @@ export default function PropertyAgreementScreen() {
       setSubmitting(false);
     }
     go("done");
-  }, [typeInstead, typedName, agreementRead, applicationId, duration, startDate]);
+  }, [typeInstead, typedName, agreementRead, applicationId]);
 
-  // Declining the offer and withdrawing after signing do the same thing: the application is withdrawn (allowed
-  // until the landlord approves) and the landlord is told.
-  const decline = useCallback(async (afterSigning = false) => {
+  // Declining the offer and withdrawing a sent application do the same thing: the application is withdrawn
+  // (allowed until the agreement is made) and the landlord is told.
+  const decline = useCallback(async (isOffer = false) => {
     const ok = await confirmDialog({
-      title: afterSigning ? "Withdraw your application?" : "Decline this offer?",
+      title: isOffer ? "Decline this offer?" : "Withdraw your application?",
       message: `Your application is withdrawn and ${landlordName} is told.`,
-      confirmLabel: afterSigning ? "Withdraw" : "Decline",
+      confirmLabel: isOffer ? "Decline" : "Withdraw",
       destructive: true,
     });
     if (!ok) return;
     if (applicationId) {
       try { await withdrawApplication(applicationId); }
-      catch (e) { appAlert(afterSigning ? "Could not withdraw" : "Could not decline", e instanceof ApiError && e.message ? e.message : "Check your connection and try again."); return; }
+      catch (e) { appAlert(isOffer ? "Could not decline" : "Could not withdraw", e instanceof ApiError && e.message ? e.message : "Check your connection and try again."); return; }
     }
     if (listingId) await raiseListingJourneyStep(listingId, 2, true);
     showToast(`We let ${landlordName} know`, "info");
     if (router.canGoBack()) router.back(); else router.replace("/(tabs)/housing" as never);
   }, [applicationId, landlordName, listingId]);
 
+  // The application is sent before the offer, so Back always leaves the screen.
   const onBack = () => {
-    if (part === "offer") return go("apply", -1);
     if (router.canGoBack()) router.back(); else router.replace("/(tabs)/housing" as never);
   };
 
@@ -526,23 +559,29 @@ export default function PropertyAgreementScreen() {
 
   const entering = reduce ? undefined : (dir > 0 ? FadeInRight : FadeInLeft).springify().damping(20).stiffness(200).mass(1);
   const exiting = reduce ? undefined : (dir > 0 ? FadeOutLeft : FadeOutRight).duration(200);
-  const title = part === "apply" ? "Apply" : part === "offer" ? "Your offer" : "Signed";
+  const madeAgreement = appStatus === "signed";
+  const title = part === "apply" ? "Apply" : part === "waiting" ? "Sent" : part === "offer" ? "Your offer" : madeAgreement ? "Signed" : "You signed";
   const canSign = agreementRead && (typeInstead ? typedName.trim().length > 1 : signed);
 
   const footer =
     part === "apply" ? (
       <DStick style={{ flexDirection: "column", alignItems: "stretch", gap: 6 }}>
         <GradientButton label="Send application" block loading={submitting} onPress={() => void sendApplication()} />
-        <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>You can withdraw it until the owner accepts.</Text>
+        <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>You can withdraw it until you sign.</Text>
+      </DStick>
+    ) : part === "waiting" ? (
+      <DStick>
+        <SoftButton label="Withdraw" ghost onPress={() => void decline(false)} />
+        <GradientButton label="Done" outerStyle={{ flex: 1 }} block onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/housing" as never))} />
       </DStick>
     ) : part === "offer" ? (
       <DStick>
-        <SoftButton label="Decline" ghost onPress={() => void decline(false)} />
+        <SoftButton label="Decline" ghost onPress={() => void decline(true)} />
         <GradientButton label="Sign and accept" outerStyle={{ flex: 1 }} block disabled={!canSign} loading={submitting} onPress={() => void signAndAccept()} />
       </DStick>
     ) : (
       <DStick>
-        {landlordDecided ? null : <SoftButton label="Withdraw" ghost onPress={() => void decline(true)} />}
+        {landlordDecided ? null : <SoftButton label="Withdraw" ghost onPress={() => void decline(false)} />}
         <GradientButton label="Done" outerStyle={{ flex: 1 }} block onPress={() => (router.canGoBack() ? router.back() : router.replace("/(tabs)/housing" as never))} />
       </DStick>
     );
@@ -550,7 +589,7 @@ export default function PropertyAgreementScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: tc.pageBg }} behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
       <DPage title={title} sub={propertyTitle} onBack={part === "done" ? undefined : onBack} footer={footer} scrollRef={scrollRef} scrollEnabled={!drawing}>
-        <Progress frac={part === "apply" ? 1 / 3 : part === "offer" ? 2 / 3 : 1} />
+        <Progress frac={part === "apply" ? 1 / 4 : part === "waiting" ? 2 / 4 : part === "offer" ? 3 / 4 : 1} />
         <View style={{ height: 16 }} />
         <Animated.View key={part} entering={entering} exiting={exiting}>
           {part === "apply" ? (
@@ -589,11 +628,23 @@ export default function PropertyAgreementScreen() {
                   placeholder="Choose a date"
                   accentColor={tc.accent}
                   dateFormat="iso"
-                  minimumDate={new Date()}
+                  minimumDate={earliestDate}
                   forceDark={isDark}
                   textStyle={[body(500), { fontSize: 15.5, color: tc.textPrimary }]}
                   style={[st.field, { backgroundColor: tc.inputBg }]}
                 />
+                {availableDay && availableDay > todayIso ? (
+                  <Text style={[TYPE.small, { color: tc.textTertiary, marginTop: 5, marginLeft: 2 }]}>Available from {niceDate(availableDay)}</Text>
+                ) : null}
+                {dealType === "rent" ? (
+                  <View style={{ marginTop: 14 }}>
+                    <FieldLabel>Lease length</FieldLabel>
+                    <View style={st.chips}>
+                      <Chip label="12 months" on={!shortLease} onPress={() => setShortLease(false)} />
+                      <Chip label="6 months" on={shortLease} onPress={() => setShortLease(true)} />
+                    </View>
+                  </View>
+                ) : null}
               </Reveal>
               <Reveal i={3}>
                 <FieldLabel hint="Only the owner sees this">Monthly income</FieldLabel>
@@ -640,6 +691,26 @@ export default function PropertyAgreementScreen() {
                 </Animated.View>
               ) : null}
             </View>
+          ) : part === "waiting" ? (
+            <View>
+              <Reveal i={0}>
+                <View style={[st.doneMark, { backgroundColor: tc.accentSoft }]}>
+                  <Ionicons name="hourglass-outline" size={38} color={tc.accentText} />
+                </View>
+                <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>Sent</Text>
+                <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", paddingHorizontal: 30, marginTop: 6, marginBottom: 22 }]}>
+                  Waiting for {landlordName}. When they accept, you get a notification and your offer opens here to sign.
+                </Text>
+              </Reveal>
+              <Reveal i={1}>
+                <DList rows={[
+                  [dealType === "rent" ? "Rent" : "Price", price ? `${price}${dealType === "rent" ? " /mo" : ""}` : undefined],
+                  ["Deposit", deposit || undefined],
+                  ["Start", startDate ? niceDate(startDate) : undefined],
+                  ["Length", dealType === "rent" ? duration : undefined],
+                ]} />
+              </Reveal>
+            </View>
           ) : part === "offer" ? (
             <View>
               <Reveal i={0}>
@@ -659,15 +730,6 @@ export default function PropertyAgreementScreen() {
                   ["Length", dealType === "rent" ? duration : undefined],
                 ]} />
               </Reveal>
-              {dealType === "rent" ? (
-                <Reveal i={2}>
-                  <H2>Change a term</H2>
-                  <View style={[st.chips, { paddingHorizontal: 16, marginBottom: 8 }]}>
-                    <Chip label="Start a week later" on={laterStart} onPress={() => setLaterStart((v) => !v)} />
-                    <Chip label="6-month lease" on={shortLease} onPress={() => setShortLease((v) => !v)} />
-                  </View>
-                </Reveal>
-              ) : null}
               <Reveal i={3}>
                 <PressableScale onPress={() => setReaderOpen(true)} style={[st.readRow, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0 }]} accessibilityRole="button">
                   <Ionicons name="document-text-outline" size={22} color={tc.accentText} />
@@ -712,9 +774,11 @@ export default function PropertyAgreementScreen() {
               <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14).stiffness(220).mass(1)} style={[st.doneMark, { backgroundColor: tc.mint }]}>
                 <Ionicons name="checkmark" size={42} color={palette.white} />
               </Animated.View>
-              <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>You signed</Text>
+              <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, textAlign: "center", marginTop: 14 }]}>{madeAgreement ? "It's agreed" : "You signed"}</Text>
               <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", paddingHorizontal: 30, marginTop: 6 }]}>
-                We sent the agreement to {landlordName} to sign. You'll hear back in your messages.
+                {madeAgreement
+                  ? `You and ${landlordName} have an agreement. A copy is in My Documents.`
+                  : `${landlordName} decides next. You'll hear back in your notifications.`}
               </Text>
               <View style={{ height: 22 }} />
               <H2>{market === "UK" ? "Your deposit (UK law)" : "Your security deposit"}</H2>

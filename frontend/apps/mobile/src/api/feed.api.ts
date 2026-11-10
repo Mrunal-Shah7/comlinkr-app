@@ -338,3 +338,23 @@ export function getNeighborhoodMood(city?: string): Promise<NeighborhoodMoodSumm
 export function voteNeighborhoodMood(payload: { mood: NeighborhoodMood; city?: string }): Promise<NeighborhoodMoodSummary> {
   return api.post<NeighborhoodMoodSummary>("/feed/mood", payload);
 }
+
+/** Plan 16 (TR-050): one row of the Following tab. */
+export interface FollowingItem {
+  id: string;
+  type: "NEWS" | "EVENT" | "STORY" | "CHALLENGE";
+  title: string;
+  createdAt: string;
+  image: string | null;
+  author: { id: string; name: string; username: string; avatar: string | null };
+  metadata: Record<string, unknown>;
+}
+
+/** Plan 16: what the people you follow posted, newest first. */
+export async function getFollowingFeed(page = 1, limit = 20): Promise<{ items: FollowingItem[]; hasMore: boolean }> {
+  const raw = await api.get<any>(`/feed/following?page=${page}&limit=${limit}`);
+  const items: FollowingItem[] = Array.isArray(raw?.data) ? raw.data : [];
+  const meta = raw?.meta;
+  const hasMore = meta ? Number(meta.page) < Number(meta.totalPages) : Boolean(raw?.hasMore);
+  return { items, hasMore };
+}
