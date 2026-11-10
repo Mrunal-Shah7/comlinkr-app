@@ -14,8 +14,8 @@ the people registered got a notification that opened nothing. Nobody could look 
 - **Model:** `Event.cancelledAt` (nullable). Set means cancelled.
 - **`DELETE /events/:id` cancels.** Installed builds call it from "Cancel event" and My posts, so they get the new
   behaviour without an update. It sets `cancelledAt`, keeps every row, and tells the people registered with a
-  notification that opens the event. A second call changes nothing and sends nothing. A past event can still be
-  cancelled (the host may want to mark it); nobody is told then.
+  notification that opens the event. A second call changes nothing and sends nothing. A past event can be cancelled too, and the people
+  registered are told as for any other.
 - **Where a cancelled event shows:**
   - left out of Explore's events list, the story strip and the "new event nearby" notification, where an older build
     would show it as live;
