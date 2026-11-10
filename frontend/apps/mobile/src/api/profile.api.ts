@@ -79,6 +79,10 @@ export interface PublicProfile {
   achievements: Achievement[];
   followedByMe: boolean;
   followingMe: boolean;
+  /** Plan 16: your request to follow this private account is waiting. */
+  followRequested?: boolean;
+  /** Plan 16: a private account you don't follow; the server sends only its base. */
+  isPrivate?: boolean;
   blockedByMe: boolean;
   joinedAt: string;
 }
@@ -160,6 +164,8 @@ function normalizePublicProfile(raw: Record<string, unknown>): PublicProfile {
       : [],
     followedByMe: Boolean(raw.followedByMe),
     followingMe: Boolean(raw.followingMe),
+    followRequested: raw.followRequested === true,
+    isPrivate: raw.isPrivate === true,
     blockedByMe: Boolean(raw.blockedByMe),
     joinedAt: String(raw.joinedAt ?? raw.createdAt ?? new Date().toISOString()),
   };
@@ -193,12 +199,14 @@ export function getMyStats(): Promise<UserStats> {
   return api.get<UserStats>("/users/me/stats");
 }
 
-export function toggleFollow(userId: string): Promise<{ following: boolean; followersCount: number }> {
+/** Plan 16: `requested` is true when a private account got a request (absent on older servers). */
+export function toggleFollow(userId: string): Promise<{ following: boolean; requested?: boolean; followersCount: number }> {
   return api.post(`/users/${userId}/follow`);
 }
 
-/** Plan 14: your followers, or the people you follow; newest first. The server pages with `limit`. */
-async function getFollows(kind: "followers" | "following", params: { page?: number; pageSize?: number }): Promise<PaginatedResponse<Follower>> {
+/** Plan 14: your followers, or the people you follow; newest first. The server pages with `limit`. Plan 16: and the
+ *  requests to follow you. */
+async function getFollows(kind: "followers" | "following" | "follow-requests", params: { page?: number; pageSize?: number }): Promise<PaginatedResponse<Follower>> {
   const qs = new URLSearchParams(
     Object.entries({ page: params.page, limit: params.pageSize })
       .filter(([, v]) => v !== undefined)
@@ -216,10 +224,12 @@ async function getFollows(kind: "followers" | "following", params: { page?: numb
       verified: Boolean(r.verified),
       followedByMe: Boolean(r.followedByMe),
     })),
-    page: Number(raw?.page ?? params.page ?? 1),
-    pageSize: Number(raw?.pageSize ?? params.pageSize ?? 20),
-    total: Number(raw?.total ?? rows.length),
-    hasMore: Boolean(raw?.hasMore),
+    page: Number(raw?.meta?.page ?? raw?.page ?? params.page ?? 1),
+    pageSize: Number(raw?.meta?.limit ?? raw?.pageSize ?? params.pageSize ?? 20),
+    total: Number(raw?.meta?.total ?? raw?.total ?? rows.length),
+    // The client keeps only `data` and `meta` of a paged answer, so `hasMore` comes from `meta` (plan 16: before,
+    // the list never offered more than the first page).
+    hasMore: raw?.meta ? Number(raw.meta.page) < Number(raw.meta.totalPages) : Boolean(raw?.hasMore),
   };
 }
 
@@ -229,6 +239,19 @@ export function getMyFollowers(params: { page?: number; pageSize?: number } = {}
 
 export function getMyFollowing(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<Follower>> {
   return getFollows("following", params);
+}
+
+/** Plan 16: the requests to follow you (a private account). */
+export function getMyFollowRequests(params: { page?: number; pageSize?: number } = {}): Promise<PaginatedResponse<Follower>> {
+  return getFollows("follow-requests", params);
+}
+
+export function acceptFollowRequest(userId: string): Promise<{ accepted: boolean; followersCount: number }> {
+  return api.post(`/users/me/follow-requests/${userId}/accept`);
+}
+
+export function declineFollowRequest(userId: string): Promise<void> {
+  return api.delete(`/users/me/follow-requests/${userId}`);
 }
 
 export function blockUser(userId: string): Promise<void> {
