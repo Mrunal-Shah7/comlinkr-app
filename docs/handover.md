@@ -10,8 +10,8 @@ Older entries are in [handover-archive.md](handover-archive.md).
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
 - `chore/docs-cleanup`: the animate-expo skill, plan 06 (the walkthrough's decided changes), stale triage rows (TR-002, TR-006, TR-018). Left: the owner's merge.
-- `fix/triage-sweep` (from `chore/docs-cleanup`), the open triage bugs: TR-003, 007, 009, 030, 033 (migration), 035 done; left: TR-001, 004, 008, 019, 020, 022, 034, 040, the phone walk, build note.
-- `feature/in-window-sheets` (from `fix/triage-sweep`), TR-041, TR-019, TR-020, plan 07: built and checked on the phone (profile menu, Post sheet, filters, keyboard, dialogs, settings modal). Left: compose preview, story comments, admin modals on the phone; build note.
+- `fix/triage-sweep` (from `chore/docs-cleanup`), the open triage bugs: TR-003, 007, 009, 030, 033 (migration), 035 (part) done, build note written. Left: the owner's review; the rest of the open rows go on a later branch.
+- `feature/in-window-sheets` (from `fix/triage-sweep`), TR-041, TR-019, TR-020, plan 07: built and checked on the phone (profile menu, Post sheet, filters, keyboard, dialogs, settings modal). Built, walked on the phone, build note written. Left: the owner's review.
 
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 

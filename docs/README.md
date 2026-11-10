@@ -132,6 +132,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Sheets and dialogs in the app's window](build/2026-11-10-in-window-sheets.md) (TR-041, TR-019, TR-020,
+  plan 07): the Android navigation bar stays hidden while a sheet, dialog or modal is open.
 - 2026-11-10: [First triage sweep](build/2026-11-10-triage-sweep.md) (TR-003, 007, 009, 030, 033, 035): Explore
   without a city, Saved, the Listings sheet after a deep link, role changes, restaurant time zones, sidebar 403s.
 - 2026-11-10: [Fixes from the full walkthrough](build/2026-11-10-walkthrough.md) (TR-028, TR-024): uploads work again

@@ -132,6 +132,10 @@ function InWindowLayer({ visible, onClose, animation, children }: {
     return () => sub.remove();
   }, [visible, onClose]);
   const still = reduceMotion || animation === 'none';
+  // A native Modal window resizes for the keyboard; this layer is in the app's window, so it shrinks itself instead
+  // and a centred dialog or a full-screen form keeps its fields and buttons above the keyboard.
+  const keyboard = useAnimatedKeyboard();
+  const lift = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.get() }));
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {visible ? (
@@ -140,7 +144,7 @@ function InWindowLayer({ visible, onClose, animation, children }: {
           exiting={still ? undefined : animation === 'slide' ? SlideOutDown.duration(200) : FadeOut.duration(160)}
           style={StyleSheet.absoluteFill}
         >
-          {children}
+          <Animated.View style={[StyleSheet.absoluteFill, lift]}>{children}</Animated.View>
         </Animated.View>
       ) : null}
     </View>

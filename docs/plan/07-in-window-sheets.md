@@ -41,7 +41,9 @@ hidden bar, so the bar comes back: the profile menu, the "Post something" sheet,
 - The rule in `CLAUDE.md` ("inside `DSheet` never use `GestureHandlerRootView`, gestures never fire") applied to
   the native sheet; on Android it no longer holds and is reworded in this pull request.
 
-## How it will be checked
+## How it was checked
+
+See the [build note](../build/2026-11-10-in-window-sheets.md). Planned:
 
 `pnpm typecheck`. On the phone (Android, Expo Go), with the bar hidden: the profile menu, "Post something", the
 Listings filters, a full-height form sheet with the keyboard up, a confirm dialog, an action sheet; for each, open,
