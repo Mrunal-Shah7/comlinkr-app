@@ -3,6 +3,15 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-09 (earlier) - admin reports filter and Data privacy crash (TR-015)
+
+- `fix/admin-reports-privacy`: `/admin/reports` accepts `status` (default PENDING); `/admin/privacy-requests`
+  filters by `status` / `type`; the Data privacy screen uses the API's snapshot fields and real enums.
+  [Build note](build/2026-11-09-admin-reports-privacy.md).
+- E2e `sprint54/stories-listing-reason` was out of date against SEC-04; updated on `chore/e2e-listing-visibility`
+  (TR-016, [build note](build/2026-11-09-e2e-listing-visibility.md)). The backend e2e suite now passes 45/45.
+- `ui_tester` back to USER; servers stopped.
+
 ## 2026-11-09 (earlier) - React Query on the rest, keyboard taps (TR-014)
 
 - PRs 7-12 (TR-013) merged into `main`. Then `chore/react-query-rest`: the 22 admin pages, edit profile, Settings,

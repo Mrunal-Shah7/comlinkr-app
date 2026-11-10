@@ -82,6 +82,8 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   - In sheets, swipe slowly (600 ms or more); a fast swipe closes the sheet. Expo Go's floating gear sits over the
     top right of every screen: tap around it.
   - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.
+  - Stopping Metro's task can leave its node process holding the port ("Port 8085 is being used"): find the
+    process on the port, check its command line is that Metro, stop it, then start Metro again.
   - Start Metro with `GOOGLE_SERVICE_INFO_PLIST` pointing at a placeholder plist outside the repository (command in
     `docs/device-testing.md`). Without it, every cold start of the app fails in Expo Go ("Failed to download remote
     update"); a warm reload hides it.
@@ -144,7 +146,8 @@ tasks' build notes against their PR numbers, the build-notes list in `docs/READM
 
 Two hooks in `.claude/settings.json` run it without anyone remembering: at session start (it prints "In
 progress", the latest handover entry and any findings) and before `git push`, which it blocks while there are
-errors. Fix the docs rather than skipping the hook. When a check is wrong or no longer useful, change the script
+errors. Fix the docs rather than skipping the hook. The hook also runs before shell commands, so a broken relative link blocks every
+shell call: create a build note (even a stub) before a plan or the README links to it. When a check is wrong or no longer useful, change the script
 in a pull request like any other code.
 
 ## Safety on a local copy

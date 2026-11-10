@@ -22,6 +22,43 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `feature/follow` (from `feature/nearby`), TR-029, plan 14: follow and unfollow, counts, the Follows screen, a notification; built, tested, walked, build note written. Left: the owner's review.
 - `fix/chat-request-accept` (from `feature/follow`), TR-043: Accept ends the request in the open thread; built, walked, build note written. Left: the owner's review. TR-045 (composer under the keyboard) found, open.
 
+## 2026-11-10 - the open triage rows, one stacked PR each (TR-036, 037, 032, 029, 043)
+
+- Five branches, each stacked on the one before, all built, tested and walked on the phone (OnePlus, Expo Go, local
+  backend). Each has a build note. None is merged.
+  - PR 31 `feature/event-edit`: TR-037.
+  - PR 32 `feature/move-in-rules`: TR-036.
+  - PR 33 `feature/nearby`: TR-032, plan 13.
+  - PR 34 `feature/follow`: TR-029, plan 14.
+  - PR 35 `fix/chat-request-accept`: TR-043.
+- **Owner decisions in chat:** refuse an early move-in; show the offer only after approval; geocode restaurant
+  addresses; ask for location only when Nearby is tapped; build Follow.
+- **For the owner** (each PR body says more):
+  - **Nearby:** after deploy the backend geocodes restaurants through Nominatim, four a minute. To stop it, set
+    `GEOCODING_ENABLED=false` and restart.
+  - **Follow:** it does not change the feed; there are no private accounts; "New follower" has no setting.
+  - **Events:** a CANCELLED state (PR 31) is your call.
+  - **Agreements:** enforcing sign-after-approval on the server (PR 32) is your call.
+- **New triage:** TR-045, the Android chat composer half under the keyboard. Two attempts were reverted.
+- **Still open from the walkthrough:**
+  - fixes not walked again: S-04, E-26, F-15;
+  - findings: E-27, L-06 and the rest of TR-040;
+  - checks never done: notification preferences, badge submission, door check-in, story comments, 403 gating after
+    a real sign-up.
+- **Checks:** backend unit 123, e2e 67; mobile tsc; `check-docs` passes.
+- **Still running:** backend on 4003 (email off) and Metro on 8085, with the development location in Los Angeles.
+  Both outlived their task ids after the session restart. Not mine and left alone: Metro on 8083.
+  `adb reverse tcp:4000` points at 4003.
+- **Phone:** no settings changed. Expo Go keeps the location permission from plan 08.
+- **Test data:** the walk's follows, applications, temporary restaurants, the test chat and their notifications were
+  deleted. The restaurants now have coordinates, which is intended.
+- **Slowed down by:**
+  - a plan linking a build note that did not exist yet: the docs hook then refused every shell call;
+  - a stopped Metro task whose node process kept port 8085;
+  - `/api` written twice in an e2e URL;
+  - the scratchpad API helper cutting responses at 600 characters (now `AS_MAX`).
+  - The first two are now rules in `CLAUDE.md` (Tools).
+
 ## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
 
 - Walked every section (Explore, Listings, Food, Community), the shared screens and admin on the OnePlus against
@@ -78,12 +115,3 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - Not walked: iOS for all three; the login, sign-up and forgot-password screens in dark mode (the `ui_tester`
   password is not in the repository); pinch zoom in the gallery.
 - `ui_tester` is USER and in light mode. Metro and the backend stopped at the end.
-
-## 2026-11-09 (earlier) - admin reports filter and Data privacy crash (TR-015)
-
-- `fix/admin-reports-privacy`: `/admin/reports` accepts `status` (default PENDING); `/admin/privacy-requests`
-  filters by `status` / `type`; the Data privacy screen uses the API's snapshot fields and real enums.
-  [Build note](build/2026-11-09-admin-reports-privacy.md).
-- E2e `sprint54/stories-listing-reason` was out of date against SEC-04; updated on `chore/e2e-listing-visibility`
-  (TR-016, [build note](build/2026-11-09-e2e-listing-visibility.md)). The backend e2e suite now passes 45/45.
-- `ui_tester` back to USER; servers stopped.
