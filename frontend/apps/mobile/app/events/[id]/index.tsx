@@ -4,7 +4,7 @@ import { useState } from "react";
 import { View, Text, ActivityIndicator, Pressable } from "react-native";
 import { router } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getEvent, registerForEvent, unregisterFromEvent, toggleSaveEvent, type ApiEvent } from "../../../src/api/events.api";
+import { deleteEvent, getEvent, registerForEvent, unregisterFromEvent, toggleSaveEvent, type ApiEvent } from "../../../src/api/events.api";
 import { ApiError } from "../../../src/api/client";
 import { type ExploreEventRow, apiEventToExploreRow } from "../../../src/features/explore/models";
 import { EventDetail } from "../../../src/features/explore/components/EventDetail";
@@ -14,6 +14,7 @@ import { useAuthStore } from "../../../src/store/auth.store";
 import { useSidebarStore } from "../../../src/store/sidebar.store";
 import { useNotificationStore } from "../../../src/store/notifications.store";
 import { showToast } from "../../../src/shared/ui/Toast";
+import { appAlert } from "../../../src/shared/ui/Dialogs";
 import { useTheme } from "../../../src/theme/useTheme";
 import { queryKeys } from "../../../src/services/cache/queryKeys";
 import { closeDetail, useIdParam } from "../../../src/hooks/useDetailRoute";
@@ -100,6 +101,36 @@ export default function EventDetailScreen() {
     }
   };
 
+  // Plan 11: the host cancels from the page. Everyone registered is told by the server before the event goes.
+  const cancelEvent = (r: ExploreEventRow) => {
+    const going = r.interested;
+    appAlert(
+      "Cancel this event?",
+      going > 0
+        ? `It will be removed, and the ${going === 1 ? "person" : `${going} people`} registered will be told.`
+        : "It will be removed.",
+      [
+        { text: "Keep it", style: "cancel" },
+        {
+          text: "Cancel event",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteEvent(r.id);
+              refreshLists();
+              void qc.invalidateQueries({ queryKey: ["me"] });
+              qc.removeQueries({ queryKey: queryKeys.event(r.id) });
+              showToast("Event cancelled.", "success");
+              closeDetail();
+            } catch (e) {
+              showToast(e instanceof ApiError ? e.message : "Could not cancel the event. Please try again.", "error");
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const row = q.data?.row ?? null;
   if (!row) {
     return (
@@ -137,6 +168,8 @@ export default function EventDetailScreen() {
           if (!requireAuth(undefined, "Sign in to message the host.")) return;
           router.push({ pathname: "/chat", params: { recipientId: row.authorId, recipientName: row.host, recipientType: "dm" } } as never);
         }}
+        onEdit={() => router.push({ pathname: "/events/[id]/edit", params: { id: row.id } } as never)}
+        onCancelEvent={() => cancelEvent(row)}
       />
       <EventRegistrationModal
         visible={regOpen}

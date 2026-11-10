@@ -472,6 +472,7 @@ describe('EventsService.deleteEvent removes the images from storage', () => {
           ],
         }),
       },
+      eventAttendee: { findMany: jest.fn().mockResolvedValue([]) },
       $transaction: (fn: (t: any) => Promise<unknown>) => fn(tx),
     };
     const deleteFile = jest.fn().mockRejectedValueOnce(new Error('gone'));

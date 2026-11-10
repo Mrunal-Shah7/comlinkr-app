@@ -109,6 +109,22 @@ From [the full-match build note](../build/2026-11-06-design-d-full-match.md); **
 - Quest composer: Start from templates fill the title, goal, reward and length.
 - News composer: tags as chips; your city as a location chip.
 
+## Update 2026-11-10: editing and cancelling an event; the city's day (plan 11, TR-037, branch `feature/event-edit`, not merged)
+
+- The host sees **Edit** and **Cancel event** on the event's page. Edit (`/events/[id]/edit`) changes the title,
+  description, date, start and end time, venue, capacity and price; the city, category, format and photos are fixed.
+  Back with changes asks before discarding. **[phone]**
+- `PATCH /events/:id` makes create's checks: a paid event needs a price above 0, the date may not be before today in
+  the event's city, the capacity may not go below the number registered; a `city` in the body is ignored. [e2e]
+- A change of date, time or place notifies everyone registered ("<title> has changed", what changed); a title-only
+  edit tells nobody. Cancel is confirmed, removes the event (as delete in My posts) and notifies everyone registered
+  ("<title> was cancelled", with no link, since the event is gone). **[phone]**
+- An event's day is read in its city's zone (`common/utils/city-day.ts`): upcoming means from today in the city, the
+  day filter is that calendar day, create refuses a day before today in the city, reviews open after the end time
+  in the city. An event dated today stays in Explore all day. [e2e]
+- The app shows an event's date from its date part (`utils/eventDay.ts`), not through the phone's zone, which showed
+  the day before west of UTC (rule B10). **[phone]**
+
 ## Update 2026-11-10: a quest's own page (plan 10, TR-038, branch `feature/quest-detail`, not merged)
 
 - Tapping a quest card opens `/quest/[id]` (also `comlinkr://quest/:id` and `/app/feed?openQuest=<id>`): type, who

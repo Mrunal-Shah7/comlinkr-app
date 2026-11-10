@@ -34,6 +34,8 @@ export function EventDetail({
   onToggleGoing,
   onRegister,
   onMessageHost,
+  onEdit,
+  onCancelEvent,
 }: {
   event: ExploreEventRow | null;
   /** The by-id response the route already fetched; the detail then skips its own request. */
@@ -45,6 +47,9 @@ export function EventDetail({
   onToggleGoing: () => void;
   onRegister?: () => void;
   onMessageHost?: () => void;
+  /** Plan 11: the host's Edit and Cancel event. */
+  onEdit?: () => void;
+  onCancelEvent?: () => void;
 }) {
   const [showRegForm, setShowRegForm] = useState(false);
   const [regName, setRegName] = useState("");
@@ -229,6 +234,8 @@ export function EventDetail({
               <SoftButton small ghost label="Door check-in" icon={<Ionicons name="qr-code-outline" size={16} color={tc.textPrimary} />}
                 onPress={() => router.push({ pathname: "/events/[id]/check-in", params: { id: displayEvent.id, title: displayEvent.title } } as any)} />
             ) : null}
+            {owner && onEdit ? <SoftButton small ghost label="Edit" icon={<Ionicons name="create-outline" size={16} color={tc.textPrimary} />} onPress={onEdit} /> : null}
+            {owner && onCancelEvent ? <SoftButton small ghost label="Cancel event" icon={<Ionicons name="close-circle-outline" size={16} color={tc.textPrimary} />} onPress={onCancelEvent} /> : null}
           </Reveal>
 
           {displayEvent.desc ? (

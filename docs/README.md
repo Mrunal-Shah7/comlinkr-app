@@ -114,6 +114,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [08. The city comes from the phone's location](plan/08-gps-city.md) (TR-042): building.
 - [09. Deleting your own chat message](plan/09-chat-message-delete.md) (TR-039): built.
 - [10. A quest's own page](plan/10-quest-detail.md) (TR-038): built.
+- [11. Editing and cancelling an event; event days in the city's time](plan/11-event-edit-and-city-time.md) (TR-037): built.
 
 ## Reviews (`review/`)
 
@@ -135,6 +136,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [Editing and cancelling an event](build/2026-11-10-event-edit.md) (TR-037): edit and cancel from
+  the page, the people registered told, event days in the city's time.
 - 2026-11-10: [A quest's own page](build/2026-11-10-quest-detail.md) (TR-038): page, leaving, the real count,
   one word for quests.
 - 2026-11-10: [Deleting your own chat message](build/2026-11-10-chat-message-delete.md) (TR-039, TR-044): soft

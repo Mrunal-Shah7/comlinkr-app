@@ -27,6 +27,13 @@ import {
   EventCheckInStatusDto,
 } from './dto/event-checkin-status.dto'; // SPRINT-38: Type organiser status filtering and pagination.
 import { resolveMediaUrl } from '../../common/utils/media-url'; // SPRINT-46: the one shared media URL resolver
+import {
+  cityInstant,
+  cityToday,
+  datePart,
+  dayStart,
+  parseClock,
+} from '../../common/utils/city-day';
 
 const EVENT_IMAGE_MAX = 6;
 const EVENT_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
@@ -148,22 +155,23 @@ export class EventsService {
     if (query.category) where.category = query.category;
     if (query.format) where.format = query.format;
     let dateCondition: Prisma.DateTimeFilter | undefined;
+    // Plan 11: event dates are calendar days in the city; compare them with the city's day, not the instant now
+    // (an event dated today dropped out once the UTC day began) nor the server's day.
     if (query.date) {
-      const d = new Date(query.date);
-      const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const start = dayStart(datePart(query.date));
       const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
       dateCondition = { gte: start, lt: end };
     }
     if (query.upcoming !== 'false') {
-      const now = new Date();
+      const today = dayStart(cityToday(city));
       if (dateCondition && 'gte' in dateCondition) {
         const start = dateCondition.gte as Date;
         dateCondition = {
-          gte: start > now ? start : now,
+          gte: start > today ? start : today,
           ...('lt' in dateCondition && { lt: dateCondition.lt }),
         };
       } else {
-        dateCondition = { gte: now };
+        dateCondition = { gte: today };
       }
     }
     if (dateCondition) where.date = dateCondition;
@@ -286,25 +294,21 @@ export class EventsService {
     }; // SPRINT-38: End review response.
   } // SPRINT-38: End event review formatter.
 
+  /** Plan 11: reviews open once the end time (or the start time) has passed in the event city's zone. */
   private eventHasEnded(event: {
-    // SPRINT-38: Interpret existing date/time fields without adding incompatible event fields.
-    date: Date; // SPRINT-38: Existing date-only event value.
-    startTime: string; // SPRINT-38: Required fallback time.
-    endTime: string | null; // SPRINT-38: Preferred event completion time.
+    date: Date;
+    startTime: string;
+    endTime: string | null;
+    city: string;
   }): boolean {
-    // SPRINT-38: Return whether review eligibility has begun.
-    const endedAt = new Date(event.date); // SPRINT-38: Start from the persisted event date.
-    const value = (event.endTime ?? event.startTime).trim(); // SPRINT-38: Prefer end time and fall back to start time.
-    const match = value.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i); // SPRINT-38: Support the app's documented 12-hour strings and 24-hour values.
-    if (!match) return endedAt.getTime() < Date.now(); // SPRINT-38: Conservatively use the persisted date when legacy time text is unparsable.
-    let hour = Number(match[1]); // SPRINT-38: Parse the supplied hour.
-    const minute = Number(match[2] ?? 0); // SPRINT-38: Default an omitted minute to zero.
-    const meridiem = match[3]?.toUpperCase(); // SPRINT-38: Normalize AM/PM.
-    if (meridiem === 'AM' && hour === 12) hour = 0; // SPRINT-38: Convert midnight to 24-hour time.
-    if (meridiem === 'PM' && hour < 12) hour += 12; // SPRINT-38: Convert afternoon values to 24-hour time.
-    if (hour > 23 || minute > 59) return endedAt.getTime() < Date.now(); // SPRINT-38: Fall back for invalid legacy clock values.
-    endedAt.setHours(hour, minute, 0, 0); // SPRINT-38: Follow the service's existing server-local date semantics.
-    return endedAt.getTime() < Date.now(); // SPRINT-38: Permit reviews only after the interpreted end instant.
+    const day = datePart(event.date);
+    const minutes = parseClock(event.endTime) ?? parseClock(event.startTime);
+    // Unparsable legacy time text: the event has ended once its day is over in the city.
+    const endedAt =
+      minutes == null
+        ? cityInstant(day, 24 * 60, event.city)
+        : cityInstant(day, minutes, event.city);
+    return endedAt.getTime() < Date.now();
   } // SPRINT-38: End event completion helper.
 
   private async runEventReviewTransaction<T>( // SPRINT-38: Serialize review mutations so concurrent aggregate recalculations cannot overwrite each other.
@@ -370,6 +374,7 @@ export class EventsService {
         date: true, // SPRINT-38: Determine whether the event occurred.
         startTime: true, // SPRINT-38: Fallback completion time.
         endTime: true, // SPRINT-38: Preferred completion time.
+        city: true, // plan 11: the time is read in the city's zone
         attendees: {
           // SPRINT-38: Verify active registration.
           where: { userId, status: EventRegistrationStatus.ACTIVE }, // SPRINT-38: Cancelled registrations are not attendees.
@@ -598,19 +603,18 @@ export class EventsService {
         });
       }
     }
-    const eventDate = new Date(dto.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
-    if (eventDate.getTime() < today.getTime()) {
+    let city = dto.city;
+    if (!city) {
+      city = (await this.getUserCity(userId)) ?? '';
+    }
+    // Plan 11: a calendar day, compared with today in the event's city.
+    const day = datePart(dto.date);
+    const eventDate = dayStart(day);
+    if (day < cityToday(city)) {
       throw new BadRequestException({
         code: 'BAD_REQUEST',
         message: 'Event date must be in the future.',
       });
-    }
-    let city = dto.city;
-    if (!city) {
-      city = (await this.getUserCity(userId)) ?? '';
     }
     const created = await this.prisma.event.create({
       data: {
@@ -1134,7 +1138,7 @@ export class EventsService {
     let cityFilter = city ?? null;
     if (!cityFilter) cityFilter = await this.getUserCity(userId);
     const where: Prisma.EventWhereInput = {
-      date: { gte: new Date() },
+      date: { gte: dayStart(cityToday(cityFilter)) }, // plan 11: from today in the city
       ...(cityFilter
         ? { city: { contains: cityFilter, mode: 'insensitive' } }
         : {}),
@@ -1331,19 +1335,66 @@ export class EventsService {
         message: 'Only the host can update this event.',
       });
     }
+    // Plan 11: the checks create makes. The city stays the one the event was created in (plan 08): a `city` in
+    // the body is ignored.
+    const ticketType = dto.ticketType ?? event.ticketType;
+    const ticketPrice =
+      dto.ticketPrice !== undefined
+        ? dto.ticketPrice
+        : event.ticketPrice != null
+          ? Number(event.ticketPrice)
+          : null;
+    if (
+      ticketType === TicketType.PAID &&
+      (ticketPrice == null || ticketPrice <= 0)
+    ) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'Ticket price is required for paid events.',
+      });
+    }
+    if (dto.capacity != null && dto.capacity < event.attendeeCount) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: `${event.attendeeCount} people are registered; the capacity cannot be lower.`,
+      });
+    }
+    let newDay: string | undefined;
+    if (dto.date !== undefined) {
+      newDay = datePart(dto.date);
+      if (newDay !== datePart(event.date) && newDay < cityToday(event.city)) {
+        throw new BadRequestException({
+          code: 'BAD_REQUEST',
+          message: 'Event date must be in the future.',
+        });
+      }
+    }
     const data: Prisma.EventUpdateInput = {};
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.description !== undefined) data.description = dto.description;
     if (dto.category !== undefined) data.category = dto.category;
     if (dto.format !== undefined) data.format = dto.format;
-    if (dto.date !== undefined) data.date = new Date(dto.date);
+    if (newDay !== undefined) data.date = dayStart(newDay);
     if (dto.startTime !== undefined) data.startTime = dto.startTime;
     if (dto.endTime !== undefined) data.endTime = dto.endTime;
     if (dto.venue !== undefined) data.venue = dto.venue;
-    if (dto.city !== undefined) data.city = dto.city;
     if (dto.ticketType !== undefined) data.ticketType = dto.ticketType;
     if (dto.ticketPrice !== undefined) data.ticketPrice = dto.ticketPrice;
     if (dto.capacity !== undefined) data.capacity = dto.capacity;
+
+    // What the people registered need to hear about.
+    const changed: string[] = [];
+    if (newDay !== undefined && newDay !== datePart(event.date))
+      changed.push('date');
+    if (
+      (dto.startTime !== undefined &&
+        dto.startTime.trim() !== event.startTime.trim()) ||
+      (dto.endTime !== undefined &&
+        (dto.endTime ?? '').trim() !== (event.endTime ?? '').trim())
+    )
+      changed.push('time');
+    if (dto.venue !== undefined && dto.venue.trim() !== event.venue.trim())
+      changed.push('place');
 
     const updated = await this.prisma.event.update({
       where: { id: eventId },
@@ -1365,7 +1416,53 @@ export class EventsService {
         eventImages: { orderBy: { order: 'asc' } },
       },
     });
+    if (changed.length > 0) {
+      const what =
+        changed.length === 1
+          ? changed[0]
+          : `${changed.slice(0, -1).join(', ')} and ${changed[changed.length - 1]}`;
+      await this.notifyRegistered(eventId, userId, {
+        title: `"${updated.title}" has changed`,
+        body: `The host changed the ${what}. Check the event for the details.`,
+      });
+    }
     return await this.formatEvent(updated, userId);
+  }
+
+  /** Plan 11: tell everyone registered (not the host). Never fails the change that triggered it. */
+  private async notifyRegistered(
+    eventId: string,
+    hostId: string,
+    message: { title: string; body: string },
+    userIds?: string[],
+  ) {
+    // A cancelled event is gone: its notification links nowhere rather than to "Event not found".
+    const linked = userIds == null;
+    const ids =
+      userIds ??
+      (
+        await this.prisma.eventAttendee.findMany({
+          where: { eventId, status: EventRegistrationStatus.ACTIVE },
+          select: { userId: true },
+        })
+      ).map((a) => a.userId);
+    await Promise.all(
+      ids
+        .filter((id) => id !== hostId)
+        .map((id) =>
+          this.notificationsService
+            .createNotification({
+              userId: id,
+              type: 'SYSTEM',
+              title: message.title,
+              body: message.body,
+              referenceType: linked ? 'EVENT' : undefined,
+              referenceId: linked ? eventId : undefined,
+              actorId: hostId,
+            })
+            .catch(() => null),
+        ),
+    );
   }
 
   async deleteEvent(userId: string, eventId: string) {
@@ -1385,6 +1482,13 @@ export class EventsService {
         message: 'Only the host can delete this event.',
       });
     }
+    // Plan 11: the people registered are told after the event is gone (collected first: the rows go with it).
+    const registered = (
+      await this.prisma.eventAttendee.findMany({
+        where: { eventId, status: EventRegistrationStatus.ACTIVE },
+        select: { userId: true },
+      })
+    ).map((a) => a.userId);
     await this.prisma.$transaction(async (tx) => {
       const ev = await tx.event.findUnique({
         where: { id: eventId },
@@ -1412,6 +1516,15 @@ export class EventsService {
           // ignore missing objects
         }
       }),
+    );
+    await this.notifyRegistered(
+      eventId,
+      userId,
+      {
+        title: `"${event.title}" was cancelled`,
+        body: 'The host cancelled this event.',
+      },
+      registered,
     );
     return { ok: true };
   }
