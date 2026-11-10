@@ -26,6 +26,7 @@ _One line per open branch: branch, task, what is left. Removed when the branch m
 - `feature/event-cancelled` (from `fix/sign-after-approval`), TR-047, plan 15: a cancelled event is kept, marked Cancelled; built, tested, walked, build note written. Left: the owner's review.
 - `feature/follow-requests` (from `feature/event-cancelled`), TR-049, 050, 051, 053, plan 16: follow requests, the Following tab, the switch, the settings reset bug. Built, tested, walked, build note written. Left: the owner's review.
 - `feature/quest-progress` (from `feature/follow-requests`), TR-052, plan 17: marking a quest done. Built, tested, walked, build note written. Left: the owner's review.
+- `fix/chat-keyboard` (from `feature/quest-progress`), TR-045: the chat composer above the Android keyboard. Built, walked, build note written. Left: the owner's review.
 
 ## 2026-11-10 - the open triage rows, one stacked PR each (TR-036, 037, 032, 029, 043)
 

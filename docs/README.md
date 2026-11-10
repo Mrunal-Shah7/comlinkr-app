@@ -147,6 +147,7 @@ Each gets a plan in `plan/` when it is picked up.
 - 2026-11-10: [A cancelled event is kept, marked Cancelled](build/2026-11-10-event-cancelled.md) (TR-047, plan 15).
 - 2026-11-10: [Follow requests, the Following tab, the "New followers" switch](build/2026-11-10-follow-requests.md) (TR-049, TR-050, TR-051, TR-053, plan 16).
 - 2026-11-10: [Marking a quest done](build/2026-11-10-quest-progress.md) (TR-052, plan 17).
+- 2026-11-10: [The chat composer above the Android keyboard](build/2026-11-10-chat-keyboard.md) (TR-045).
 - 2026-11-10: [Accepting a message request](build/2026-11-10-chat-request-accept.md) (TR-043): the banner and the
   disabled composer go at once.
 - 2026-11-10: [Follow](build/2026-11-10-follow.md) (TR-029): follow and unfollow, counts, the Follows screen, a
