@@ -406,7 +406,7 @@ export function toUiRoommate(r: RoommateListing): Roommate {
       ? resolveApiAssetUrl(r.avatarUrl)
       : r.avatar && r.avatar.length > 0
         ? resolveApiAssetUrl(r.avatar)
-        : "https://randomuser.me/api/portraits/lego/2.jpg";
+        : "";
 
   return {
     id: r.id,
@@ -464,7 +464,7 @@ export function toUiAvailableRoom(r: SharedSpaceListing): AvailableRoom {
     id: r.id,
     hostName,
     hostId: r.host?.id ?? r.owner?.id ?? "",
-    hostAvatar: rawHostAvatar || "https://randomuser.me/api/portraits/lego/3.jpg",
+    hostAvatar: rawHostAvatar || "",
     hostInitials: hostInitials || "HS",
     hostColor: Colors.brand.blue,
     hostVerified: !!(r.host?.verified ?? r.verified),

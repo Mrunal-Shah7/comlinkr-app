@@ -1,5 +1,6 @@
 // SPRINT-42: shared event-review helpers (eligibility + display) independent of restaurant food UI.
 import type { ApiEvent } from "../../src/api/events.api";
+import { eventDayDate } from "../../src/utils/eventDay";
 
 /** True when averageRating/totalReviews represent an unrated event — never show “0 stars”. */
 export function hasEventRatings(averageRating: number | undefined | null, totalReviews: number | undefined | null): boolean {
@@ -19,18 +20,21 @@ export function eventHasEnded(event: {
   endTime?: string | null;
 }): boolean {
   // SPRINT-42:
-  const endedAt = new Date(event.date);
-  if (Number.isNaN(endedAt.getTime())) return false;
+  // Plan 11: the wall clock on the event's calendar day. The phone is in the event's city (plan 08), so its zone
+  // stands in for the city's; the server makes the real check.
+  const endedAt = eventDayDate(event.date);
+  if (!endedAt) return false;
+  endedAt.setHours(23, 59, 0, 0);
   const value = String(event.endTime ?? event.startTime ?? "").trim();
   const match = value.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
-  if (!match) return endedAt.getTime() < Date.now();
-  let hour = Number(match[1]);
-  const minute = Number(match[2] ?? 0);
-  const meridiem = match[3]?.toUpperCase();
-  if (meridiem === "AM" && hour === 12) hour = 0;
-  if (meridiem === "PM" && hour < 12) hour += 12;
-  if (hour > 23 || minute > 59) return endedAt.getTime() < Date.now();
-  endedAt.setHours(hour, minute, 0, 0);
+  if (match) {
+    let hour = Number(match[1]);
+    const minute = Number(match[2] ?? 0);
+    const meridiem = match[3]?.toUpperCase();
+    if (meridiem === "AM" && hour === 12) hour = 0;
+    if (meridiem === "PM" && hour < 12) hour += 12;
+    if (hour <= 23 && minute <= 59) endedAt.setHours(hour, minute, 0, 0);
+  }
   return endedAt.getTime() < Date.now();
 }
 

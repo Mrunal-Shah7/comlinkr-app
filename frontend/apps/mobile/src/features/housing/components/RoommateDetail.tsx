@@ -135,7 +135,7 @@ export function RoommateDetail({
           <Reveal i={0} style={{ alignItems: "center", paddingTop: 4 }}>
             <GradientFill colors={[tc.mint, tc.accent] as const} style={{ width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center" }}>
               <View style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden" }}>
-                <FadeImage uri={roommate.avatar} style={{ width: "100%", height: "100%" }} />
+                <FadeImage fallbackIcon="person" uri={roommate.avatar} style={{ width: "100%", height: "100%" }} />
               </View>
             </GradientFill>
             <Text style={[TYPE.pageTitle, { fontSize: 25, color: tc.textPrimary, marginTop: 10, textAlign: "center" }]}>{roommate.name}{roommate.age > 0 ? `, ${roommate.age}` : ""}</Text>

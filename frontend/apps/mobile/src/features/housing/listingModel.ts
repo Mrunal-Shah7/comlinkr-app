@@ -22,6 +22,8 @@ export interface Listing {
   location: string;
   address: string;
   available: string;
+  /** Plan 12: the available day as a calendar date (YYYY-MM-DD), for the move-in picker's minimum. */
+  availableDay?: string;
   petPolicy: string;
   parking: string;
   laundry: string;
@@ -180,6 +182,7 @@ export function toUiListing(l: HousingListing, _currentUserId?: string | null): 
     location: l.location || l.neighborhood || "Unknown",
     address: l.address || l.location || "Unknown",
     available: formatAvailability(l.availableDate || l.available), // SPRINT-42: prefer the canonical availability field.
+    availableDay: /^\d{4}-\d{2}-\d{2}/.test(String(l.availableDate ?? "")) ? String(l.availableDate).slice(0, 10) : undefined,
     petPolicy: l.petPolicy || "N/A",
     parking: l.parking || "N/A",
     laundry: l.laundry || "N/A",

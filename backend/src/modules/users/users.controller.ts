@@ -24,6 +24,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
+import { FollowsService } from './follows.service';
 import { PostsService } from '../posts/posts.service';
 import { SettingsService } from '../settings/settings.service'; // SPRINT-27
 import { FoodService } from '../food/food.service'; // SPRINT-29
@@ -43,6 +44,7 @@ export class UsersController {
     private readonly postsService: PostsService,
     private readonly settingsService: SettingsService, // SPRINT-27
     private readonly foodService: FoodService, // SPRINT-29
+    private readonly followsService: FollowsService,
   ) {}
 
   @Get('me')
@@ -141,6 +143,69 @@ export class UsersController {
     return this.postsService.getMyPosts(userId, query);
   }
 
+  // Plan 14 (TR-029): your followers and the people you follow (before GET :id).
+  @Get('me/followers')
+  @ApiOperation({ summary: 'People who follow the current user' })
+  async getMyFollowers(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.followsService.list(
+      userId,
+      'followers',
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+  }
+
+  @Get('me/following')
+  @ApiOperation({ summary: 'People the current user follows' })
+  async getMyFollowing(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.followsService.list(
+      userId,
+      'following',
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+  }
+
+  // Plan 16 (TR-051): the requests to follow you (a private account), accept and decline.
+  @Get('me/follow-requests')
+  @ApiOperation({ summary: 'Requests to follow the current user' })
+  async getMyFollowRequests(
+    @CurrentUser('id') userId: string,
+    @Query() query: PaginationDto,
+  ) {
+    return this.followsService.list(
+      userId,
+      'requests',
+      Number(query.page ?? 1),
+      Number(query.limit ?? 20),
+    );
+  }
+
+  @Post('me/follow-requests/:userId/accept')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept a request to follow the current user' })
+  async acceptFollowRequest(
+    @CurrentUser('id') userId: string,
+    @Param('userId') requesterId: string,
+  ) {
+    return this.followsService.accept(userId, requesterId);
+  }
+
+  @Delete('me/follow-requests/:userId')
+  @ApiOperation({ summary: 'Decline a request to follow the current user' })
+  async declineFollowRequest(
+    @CurrentUser('id') userId: string,
+    @Param('userId') requesterId: string,
+  ) {
+    return this.followsService.decline(userId, requesterId);
+  }
+
   @Post('push-token')
   async registerPushToken(
     @CurrentUser('id') userId: string,
@@ -181,6 +246,17 @@ export class UsersController {
     @Param('username') username: string,
   ) {
     return this.usersService.getUserByUsername(requestingUserId, username);
+  }
+
+  // Plan 14 (TR-029): follow, or unfollow if already following.
+  @Post(':id/follow')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Follow or unfollow a user' })
+  async toggleFollow(
+    @CurrentUser('id') currentUserId: string,
+    @Param('id') targetUserId: string,
+  ) {
+    return this.followsService.toggle(currentUserId, targetUserId);
   }
 
   // SPRINT-27: RESTful block/unblock — placed before GET :id (same :id segment, distinct method + suffix)

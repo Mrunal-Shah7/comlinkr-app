@@ -28,7 +28,8 @@ to gestures) always takes a strip at the bottom of the screen.
 - **Back is one step further away on phones set to buttons:** swipe up, then tap Back. Every pushed screen keeps its
   own ← button, so this matters mostly for closing sheets and dialogs.
 - **The bar shows while a sheet or dialog is open.** The native sheet and React Native `Modal` open in their own
-  Android window, which shows the bar. It hides again when they close.
+  Android window, which shows the bar. It hides again when they close. Fixed by [plan 07](07-in-window-sheets.md), which draws sheets and
+  dialogs in the app's window.
 
 ## How it will be checked
 

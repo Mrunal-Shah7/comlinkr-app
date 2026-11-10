@@ -4,8 +4,17 @@
 import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, RefreshControl, Modal,
-  TextInput, Pressable, Alert, KeyboardAvoidingView, } from 'react-native';
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  RefreshControl,
+  TextInput,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+} from 'react-native';
+import { InWindowModal } from '../../../shared/d/InWindowModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,7 +110,7 @@ function ReplyModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={mo.overlay}>
           <ScrollView
@@ -206,7 +215,7 @@ function ReplyModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   );
 }
 

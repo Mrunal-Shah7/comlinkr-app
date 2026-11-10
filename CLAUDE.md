@@ -28,6 +28,8 @@ repository, reinstall both: pnpm's links hold absolute paths.
   - Unit tests: `pnpm test:unit` (no database needed).
   - End-to-end tests: `pnpm test:e2e`. They run against `comlinkr_test` (or `TEST_DATABASE_URL` from
     `backend/.env.test`). A guard refuses the databases `comlinkr` and `postgres`; never weaken it.
+    The tests do not migrate that database: after a new migration, apply it there first (`prisma migrate deploy`
+    with `DATABASE_URL` set to `TEST_DATABASE_URL`), or the tests fail with a missing column.
   - Lint: `npx eslint "src/**/*.ts"` to check. `pnpm lint` runs `--fix` and rewrites files.
 - **mobile (`frontend/apps/mobile/`):** `pnpm install`, `pnpm typecheck`. There are no automated mobile tests;
   behaviour is checked on a phone (see "Testing on the phone" below).
@@ -80,6 +82,13 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   - In sheets, swipe slowly (600 ms or more); a fast swipe closes the sheet. Expo Go's floating gear sits over the
     top right of every screen: tap around it.
   - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.
+  - Stopping Metro's task can leave its node process holding the port ("Port 8085 is being used"): find the
+    process on the port, check its command line is that Metro, stop it, then start Metro again.
+  - Start Metro with `GOOGLE_SERVICE_INFO_PLIST` pointing at a placeholder plist outside the repository (command in
+    `docs/device-testing.md`). Without it, every cold start of the app fails in Expo Go ("Failed to download remote
+    update"); a warm reload hides it.
+  - `uiautomator dump` fails on Explore ("could not get idle state": the greeting tile's glow never settles). Use
+    screenshots there; the dump works again on other screens.
 - **Database (shell):** timestamps read through `pg` from Node print 5 h 30 early (naive timestamps read as
   local time); compare with `now()` in the same query.
 - **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe
@@ -137,7 +146,8 @@ tasks' build notes against their PR numbers, the build-notes list in `docs/READM
 
 Two hooks in `.claude/settings.json` run it without anyone remembering: at session start (it prints "In
 progress", the latest handover entry and any findings) and before `git push`, which it blocks while there are
-errors. Fix the docs rather than skipping the hook. When a check is wrong or no longer useful, change the script
+errors. Fix the docs rather than skipping the hook. The hook also runs before shell commands, so a broken relative link blocks every
+shell call: create a build note (even a stub) before a plan or the README links to it. When a check is wrong or no longer useful, change the script
 in a pull request like any other code.
 
 ## Safety on a local copy
@@ -173,9 +183,18 @@ none is in `docs/production-lessons.md`.
   (B6).
 - Hide an empty state while its list is still loading (B3).
 - List every value a `useMemo` or `useEffect` reads in its dependencies (B8).
-- Inside the native `@expo/ui` bottom sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
+- Never open a native window on Android for a sheet or dialog (`Modal`, an `@expo/ui` sheet): it shows the hidden
+  navigation bar. Use `DSheet`, `InWindowModal` or `appAlert`, which draw in the app's window (plan 07, TR-041).
+  Sheet content renders under the root through a portal: no screen-scoped navigation hooks inside it.
+- On iOS, inside the native `@expo/ui` sheet (`DSheet`), never use `GestureHandlerRootView` (it crashes) and do
   not rely on gesture-handler gestures (they never fire); use `Pressable` or the React Native responder props
   ([native navigation](docs/build/2026-11-09-native-navigation.md)).
+- A loader that a focus effect depends on must not depend on state it sets; read that state through a ref.
+  Otherwise every failure re-runs it without pause ([triage leftovers](docs/build/2026-11-10-triage-leftovers.md)).
+- On Android, a field at the bottom edge is lifted with `useAnimatedKeyboard({ isNavigationBarTranslucentAndroid: true })`.
+  `KeyboardAvoidingView` and the hook without the flag take the hidden navigation bar's height off the keyboard's,
+  so the field stays partly under it. Check after a full restart: a fast refresh keeps the old keyboard listener
+  ([chat keyboard](docs/build/2026-11-10-chat-keyboard.md)).
 - Defer post-focus work with `runAfterTransition()`, not `InteractionManager`
   ([performance note](docs/build/2026-10-29-ui-performance-tab-jank.md)).
 

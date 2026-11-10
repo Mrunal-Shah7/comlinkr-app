@@ -7,7 +7,7 @@ _2026-11-04. Made from the earlier section doc (written from code, 2026-10-29) a
 
 | ID | Kind | What will change | Triage | Plan |
 |---|---|---|---|---|
-| — | | None yet | | |
+| P08 | change | The city comes from the phone's location; an admin can override it | TR-042 | [08](../plan/08-gps-city.md) |
 
 ## What it is for
 
@@ -41,7 +41,7 @@ be verified.
 
 ### Onboarding (`app/(auth)/onboarding.tsx`, backend `onboarding`)
 
-Steps: location (country, state, city) → vibes → interests → communities → agreement → complete. Until it is
+Steps: location (from the phone's GPS since plan 08; typed before) → vibes → interests → communities → agreement → complete. Until it is
 complete, `OnboardingGuard` refuses most authenticated APIs [code].
 
 ### Profile
@@ -121,3 +121,12 @@ Walked on the phone; rows A-, R- and S- in the [run log](../device-runs/2026-11-
 - Sign-in and onboarding now replace the auth screens (`enterApp`), so Back does not return to them (E-04); a link to a signed-in screen waits for the stored session (F-06).
 - The six code boxes shrink to fit narrow phones (A-06, S-10, not yet seen on the phone).
 - Open: the sidebar's requests answer 403 before onboarding ends (A-05); a role change applies only after the next sign-in (S-13, TR-030).
+
+## Update 2026-11-10: the city comes from the phone's location (TR-042, plan 08, branch `feature/gps-city`)
+
+- Onboarding step 1 is "Use my location": the phone's position, reverse geocoded on the phone, sets the city;
+  Continue stays disabled without one. No typing a city. **[phone]**
+- Settings and Edit profile show the city with "Update from my location". **[phone]**
+- `UserLocation.source` records where a city came from: `GPS`, `ADMIN` (admin override) or `MANUAL` (typed before
+  plan 08, or an older app). The roommate profile no longer changes the user's city.
+- Guests still pick a city to browse.

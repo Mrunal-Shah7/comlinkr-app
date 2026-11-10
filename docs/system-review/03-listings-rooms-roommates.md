@@ -159,3 +159,28 @@ Walked on the phone; rows L- and S-14 in the [run log](../device-runs/2026-11-10
 - A tenant can withdraw an application until the landlord approves; the landlord is notified (L-23, owner's decision). Applying again reopens your application (L-22).
 - Cancel request on a roommate calls `/cancel` (L-16); editing a room keeps its description (L-12).
 - Open: L-05, L-06, L-14, L-17, L-18, L-20. The landlord dashboard now tells a non-landlord that the badge is needed (S-14, TR-031).
+
+## Update 2026-11-10: the move-in date and the order of the offer (plan 12, TR-036, branch `feature/move-in-rules`, not merged)
+
+- A move-in date may not be before the home's available day: the picker starts there ("Available from 2 Dec 2026"),
+  and steps 1 and 4 return 400 `MOVE_IN_BEFORE_AVAILABLE` naming the day. A listing without an available day adds
+  no rule. **[phone]**
+- New order: Apply (with the lease length) sends the application with its terms (steps 1 and 4, then submit) →
+  **Sent**, waiting for the landlord → the landlord approves → **Your offer** (read only) → sign → the agreement is
+  made (`SIGNED`, the PDF in My Documents). **[phone]**
+- "Change a term" is gone from the offer: terms are fixed when sent. `termsRead`/`termsAgreed` are optional on
+  step 4. [e2e]
+- An approved offer the tenant has not signed can be declined (withdrawn); the landlord is told. This replaces L-23
+  ("withdraw until the landlord approves"). Once signed, withdrawing is refused. **[phone]**
+- Tapping an application notification opens it: the applicant's application (the offer once approved), or the
+  landlord dashboard. **[phone]** (applicant side)
+- The landlord dashboard labels an approved, unsigned application "Waiting for signature". [code]
+- The server refuses a tenant signature before approval (409 `NOT_APPROVED`, TR-048). A row an older build signed
+  early still becomes signed when approved. [test]
+
+## Update 2026-11-10: preferences from the roommate list (TR-040 L-18, branch `fix/walk-leftovers`, not merged)
+
+From the [build note](../build/2026-11-10-walk-leftovers.md).
+- Roommates → the count line has "Your preferences", which opens the preferences sheet. Before, it opened only from
+  the empty state or Profile **[phone]**.
+- A sheet left open does not stay over another tab after a deep link (TR-009, checked again) **[phone]**.

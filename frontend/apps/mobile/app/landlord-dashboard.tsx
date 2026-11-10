@@ -56,6 +56,11 @@ function statusMeta(s: ApplicationStatus) {
   return STATUS_META[s] ?? { label: s, color: palette.gray500, bg: palette.gray100, icon: "help-circle-outline" };
 }
 
+/** Plan 12: an approved application the tenant has not signed is waiting for their signature. */
+function statusLabel(a: PropertyApplication) {
+  return a.status === "approved" && !a.signature ? "Waiting for signature" : statusMeta(a.status).label;
+}
+
 function formatDate(iso?: string) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -224,19 +229,18 @@ export default function LandlordDashboard() {
         ) : sortedApps.length === 0 ? (
           <EmptyState icon="document-text-outline" title="No applications yet" sub="When someone applies for one of your homes, it shows up here." />
         ) : sortedApps.map((a, i) => {
-          const meta = statusMeta(a.status);
           const rows = appRows(a);
           const name = a.personalInfo?.fullName || "Applicant";
           return (
             <SlideAway key={a.id} i={i} leaving={leaving[a.id]}>
-              <PressableScale onPress={() => { setSelectedApp(a); setDecisionNote(""); }} accessibilityRole="button" accessibilityLabel={`${name}, ${meta.label}`} style={[card, { padding: 14 }]}>
+              <PressableScale onPress={() => { setSelectedApp(a); setDecisionNote(""); }} accessibilityRole="button" accessibilityLabel={`${name}, ${statusLabel(a)}`} style={[card, { padding: 14 }]}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                   <PersonAvatar name={name} size={40} />
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]} numberOfLines={1}>{name}</Text>
                     <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>for {a.listingTitle || "your listing"}</Text>
                   </View>
-                  {tagD(meta.label, tone(a.status))}
+                  {tagD(statusLabel(a), tone(a.status))}
                 </View>
                 {rows.length ? (
                   <View style={{ marginTop: 12, borderRadius: 16, paddingHorizontal: 12, backgroundColor: tc.inputBg }}>
@@ -275,7 +279,7 @@ export default function LandlordDashboard() {
       <DSheet visible={!!selectedApp} onClose={() => setSelectedApp(null)} title={selectedApp?.listingTitle || "Application"}>
         {selectedApp ? (
           <ScrollView style={{ maxHeight: 560 }} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 16 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <View style={{ marginBottom: 12 }}>{tagD(statusMeta(selectedApp.status).label, tone(selectedApp.status))}</View>
+            <View style={{ marginBottom: 12 }}>{tagD(statusLabel(selectedApp), tone(selectedApp.status))}</View>
             <View style={[card, { paddingHorizontal: 14 }]}>
               {([
                 ["Sent", selectedApp.submittedAt ? formatDate(selectedApp.submittedAt) : ""],

@@ -17,7 +17,6 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
-  Modal,
   Alert,
   Linking,
   Share,
@@ -27,6 +26,7 @@ import {
   useWindowDimensions,
   BackHandler,
 } from "react-native";
+import { InWindowModal } from "../../src/shared/d/InWindowModal";
 // Gesture-handler scrollers keep horizontal drags away from the tab-swipe pager.
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -831,7 +831,7 @@ export default function RestaurantDetailScreen() {
       </View>
 
       {/* ── Report Sheet ── */}
-      <Modal
+      <InWindowModal
         visible={!!reportSheetId}
         animationType="slide"
         transparent
@@ -914,7 +914,7 @@ export default function RestaurantDetailScreen() {
           </View>
         </View>
         </KeyboardAvoidingView>
-      </Modal>
+      </InWindowModal>
 
     </>
   );

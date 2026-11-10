@@ -60,8 +60,9 @@ export class ChallengesService {
   }
 
   private formatChallenge(challenge: any, currentUserId?: string) {
-    const participantCount =
-      challenge.participantCount ?? challenge._count?.participants ?? 0;
+    const participantCount = challenge.participantCount ?? 0;
+    // Plan 17: `_count.participants` counts the members marked done (a filtered count).
+    const completedCount: number = challenge._count?.participants ?? 0;
     const maxParticipants = challenge.maxParticipants;
     const isFull =
       maxParticipants != null && participantCount >= maxParticipants;
@@ -70,6 +71,8 @@ export class ChallengesService {
         ? Math.max(0, maxParticipants - participantCount)
         : null;
     const isJoined = currentUserId && (challenge.participants?.length ?? 0) > 0;
+    const isCompleted =
+      !!currentUserId && !!challenge.participants?.[0]?.completedAt;
     const timeLeft = this.formatTimeLeft(challenge.endsAt, challenge.status);
     return {
       id: challenge.id,
@@ -83,6 +86,7 @@ export class ChallengesService {
       hashtags: challenge.hashtags ?? [],
       location: challenge.location,
       participantCount,
+      completedCount,
       status: challenge.status,
       startsAt: challenge.startsAt,
       endsAt: challenge.endsAt,
@@ -96,6 +100,7 @@ export class ChallengesService {
           : null,
       },
       isJoined: !!isJoined,
+      isCompleted,
       isFull,
       isOwner: currentUserId ? challenge.authorId === currentUserId : false,
       spotsLeft,
@@ -138,9 +143,14 @@ export class ChallengesService {
           participants: userId
             ? {
                 where: { userId },
-                select: { id: true },
+                select: { id: true, completedAt: true },
               }
             : false,
+          _count: {
+            select: {
+              participants: { where: { completedAt: { not: null } } },
+            },
+          },
         },
       }),
       this.prisma.challenge.count({ where }),
@@ -165,9 +175,14 @@ export class ChallengesService {
         participants: userId
           ? {
               where: { userId },
-              select: { id: true },
+              select: { id: true, completedAt: true },
             }
           : false,
+        _count: {
+          select: {
+            participants: { where: { completedAt: { not: null } } },
+          },
+        },
       },
     });
     if (!challenge) {
@@ -202,6 +217,7 @@ export class ChallengesService {
           ? this.buildFileUrl(p.user.avatarUrl)
           : null,
         joinedAt: p.joinedAt,
+        completedAt: p.completedAt,
       })),
       totalParticipants: challenge.participantCount,
     };
@@ -247,7 +263,11 @@ export class ChallengesService {
         },
         participants: {
           where: { userId },
-          select: { id: true },
+          select: { id: true, completedAt: true },
+        },
+        // Plan 17: how many members marked it done.
+        _count: {
+          select: { participants: { where: { completedAt: { not: null } } } },
         },
       },
     });
@@ -311,6 +331,97 @@ export class ChallengesService {
       return updated.participantCount;
     });
     return { joined: true, participantCount: newCount };
+  }
+
+  /**
+   * Plan 10 (TR-038): a member leaves a quest. The count goes down only when a membership row was removed, so a
+   * second tap or a non-member changes nothing. The author cannot leave (they delete it), nor can anyone leave an
+   * ended quest (the record of who took part stays).
+   */
+  async leaveChallenge(userId: string, challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { authorId: true, status: true, endsAt: true },
+    });
+    if (!challenge) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Challenge not found',
+      });
+    }
+    if (challenge.authorId === userId) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'You started this quest. Delete it from My posts instead.',
+      });
+    }
+    if (challenge.status !== 'ACTIVE' || challenge.endsAt < new Date()) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'This quest has ended.',
+      });
+    }
+    const participantCount = await this.prisma.$transaction(async (tx) => {
+      const removed = await tx.challengeParticipant.deleteMany({
+        where: { challengeId, userId },
+      });
+      if (removed.count === 1) {
+        await tx.challenge.updateMany({
+          where: { id: challengeId, participantCount: { gt: 0 } },
+          data: { participantCount: { decrement: 1 } },
+        });
+      }
+      const updated = await tx.challenge.findUniqueOrThrow({
+        where: { id: challengeId },
+        select: { participantCount: true },
+      });
+      return updated.participantCount;
+    });
+    return { joined: false, participantCount };
+  }
+
+  /**
+   * Plan 17 (TR-052): a member says they finished the quest, or takes it back. Self-reported: nobody checks a proof.
+   * Only members, only while the quest runs (the same rule as leaving), so the record is fixed once it ends. A second
+   * call changes nothing.
+   */
+  async setCompleted(userId: string, challengeId: string, done: boolean) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { status: true, endsAt: true },
+    });
+    if (!challenge) {
+      throw new NotFoundException({
+        code: 'RESOURCE_NOT_FOUND',
+        message: 'Challenge not found',
+      });
+    }
+    if (challenge.status !== 'ACTIVE' || challenge.endsAt < new Date()) {
+      throw new BadRequestException({
+        code: 'BAD_REQUEST',
+        message: 'This quest has ended.',
+      });
+    }
+    const member = await this.prisma.challengeParticipant.findUnique({
+      where: { challengeId_userId: { challengeId, userId } },
+      select: { id: true },
+    });
+    if (!member) {
+      throw new ForbiddenException({
+        code: 'FORBIDDEN',
+        message: 'Join the quest first.',
+      });
+    }
+    await this.prisma.challengeParticipant.updateMany({
+      where: done
+        ? { challengeId, userId, completedAt: null }
+        : { challengeId, userId, completedAt: { not: null } },
+      data: { completedAt: done ? new Date() : null },
+    });
+    const completedCount = await this.prisma.challengeParticipant.count({
+      where: { challengeId, completedAt: { not: null } },
+    });
+    return { completed: done, completedCount };
   }
 
   /** The author deletes their own challenge; its participants go with it (cascade). */

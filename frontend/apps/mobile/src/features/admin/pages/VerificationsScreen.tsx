@@ -3,9 +3,18 @@
 import { palette } from "../../../theme/palette";
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Pressable,
-  RefreshControl, Alert, TextInput, Modal, Linking,
-  KeyboardAvoidingView, } from 'react-native';
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  RefreshControl,
+  Alert,
+  TextInput,
+  Linking,
+  KeyboardAvoidingView,
+} from 'react-native';
+import { InWindowModal } from '../../../shared/d/InWindowModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -156,7 +165,7 @@ function RejectModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <InWindowModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={process.env.EXPO_OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={m.overlay}>
           <ScrollView
@@ -232,7 +241,7 @@ function RejectModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </InWindowModal>
   );
 }
 

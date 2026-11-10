@@ -165,14 +165,13 @@ async function storageDeleteItem(key: string): Promise<void> {
   await SecureStore.deleteItemAsync(key);
 }
 
+/** ADMIN → admin; SUPER_ADMIN → superadmin; MODERATOR and all others → user (SPRINT-41). */
+export function apiRoleToAppRole(apiRole: string | null | undefined): UserRole {
+  return apiRole === "SUPER_ADMIN" ? "superadmin" : apiRole === "ADMIN" ? "admin" : "user";
+}
+
 function profileToAppUser(profile: UserProfile): User {
-  // SPRINT-41: ADMIN → admin; SUPER_ADMIN → superadmin; MODERATOR → user (no longer admin).
-  const role: UserRole = // SPRINT-41:
-    profile.role === "SUPER_ADMIN" // SPRINT-41:
-      ? "superadmin" // SPRINT-41:
-      : profile.role === "ADMIN" // SPRINT-41:
-        ? "admin" // SPRINT-41:
-        : "user"; // SPRINT-41: MODERATOR and all others map to user
+  const role = apiRoleToAppRole(profile.role);
   return withBadgeDefaults({
     id: profile.id,
     name: [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || profile.username,
