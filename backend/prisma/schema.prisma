@@ -1506,6 +1506,8 @@ model ChallengeParticipant {
   challengeId String
   userId      String
   joinedAt    DateTime @default(now())
+  /// Plan 17 (TR-052): when the member said they finished the quest; null while not done.
+  completedAt DateTime?
 
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
