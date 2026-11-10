@@ -55,6 +55,8 @@ import { getMyListings, listingImageUrlList, subscribeToListingUpdates, type Hou
 import { getMyRestaurants, type Restaurant } from "../src/api/food.api";
 import { showToast } from "../src/shared/ui/Toast";
 import { appAlert } from '../src/shared/ui/Dialogs';
+import { apiErrorMessage } from '../src/utils/apiErrorMessage';
+import { openLocationSettings, refreshCityFromLocation } from '../src/features/location/detectLocation';
 import { createThemedStyles } from '../src/theme/themedStyles';
 import { useThemeStore } from "../src/store/theme.store";
 import { TYPE } from "../src/theme/d";
@@ -316,6 +318,22 @@ export default function SettingsScreen() {
   const [privacyModal, setPrivacyModal] = useState(false);
   const [blockedModal, setBlockedModal] = useState(false);
   const [cityModal, setCityModal] = useState(false);
+  // Plan 08 (TR-042): the city comes from the phone's location.
+  const [locating, setLocating] = useState(false);
+  const updateCity = async () => {
+    if (locating) return;
+    setLocating(true);
+    try {
+      const failed = await refreshCityFromLocation();
+      if (!failed) { showToast("City updated from your location.", "success"); setCityModal(false); return; }
+      if (failed.reason === "blocked") appAlert("Location is off", failed.message, [{ text: "Cancel", style: "cancel" }, { text: "Open settings", onPress: openLocationSettings }]);
+      else showToast(failed.message, "error");
+    } catch (e) {
+      showToast(apiErrorMessage(e, "Could not update your city."), "error");
+    } finally {
+      setLocating(false);
+    }
+  };
   const [interestsModal, setInterestsModal] = useState(false);
   const [notifsModal, setNotifsModal] = useState(false);
 
@@ -335,6 +353,7 @@ export default function SettingsScreen() {
   const [notiComments, setNotiComments] = useState(true);
   const [notiLikes, setNotiLikes] = useState(false);
   const [notiMessages, setNotiMessages] = useState(true);
+  const [notiFollowers, setNotiFollowers] = useState(true); // plan 16 (TR-049)
   const [notifPrefsSaving, setNotifPrefsSaving] = useState(false);
 
   type DisplayBlockedUser = BlockedUserEntry & { localOnly?: boolean };
@@ -402,6 +421,7 @@ export default function SettingsScreen() {
       setNotiComments(notif.comments);
       setNotiLikes(notif.likes);
       setNotiMessages(notif.messages);
+      setNotiFollowers(notif.followers !== false); // absent on older servers: on
       setProfilePublic(privacy.publicProfile);
       setShowLocation(privacy.showLocation);
       setShowActivity(privacy.activityStatus);
@@ -479,6 +499,7 @@ export default function SettingsScreen() {
       setNotiComments(next.comments);
       setNotiLikes(next.likes);
       setNotiMessages(next.messages);
+      setNotiFollowers(next.followers !== false);
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Update failed.";
       showToast(msg, "error");
@@ -606,6 +627,7 @@ export default function SettingsScreen() {
         comments: notiComments,
         likes: notiLikes,
         messages: notiMessages,
+        followers: notiFollowers,
       });
       setNotifsModal(false);
       showToast("Notification preferences updated.", "success");
@@ -861,7 +883,7 @@ export default function SettingsScreen() {
         <Group label="About" i={6}>
           <SettingsRow icon="help-circle-outline" title="Help" onPress={() => router.push("/help-support" as any)} />
           <SettingsRow icon="document-text-outline" title="Terms and privacy" onPress={() => router.push("/privacy-policy" as any)} />
-          <SettingsRow icon="information-circle-outline" title="Comlinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
+          <SettingsRow icon="information-circle-outline" title="ComLinkr" right={<Text style={[TYPE.small, { color: tc.textTertiary }]}>v{APP_VERSION}</Text>} />
         </Group>
 
         {isAdmin ? (
@@ -1048,7 +1070,10 @@ export default function SettingsScreen() {
           <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18) }}>
             Your city determines the local content you see across Explore, Listings, Food and Community.
           </Text>
-          <GradientButton block label={user?.city ? "Change city" : "Set your city"} onPress={() => { setCityModal(false); router.push("/edit-profile" as any); }} style={{ marginTop: 20 }} />
+          <Text style={{ fontSize: rs(13), color: tc.textSecondary, lineHeight: rs(18), marginTop: rs(8) }}>
+            It is set from your phone's location and can't be typed.
+          </Text>
+          <GradientButton block label={locating ? "Finding your location…" : "Update from my location"} disabled={locating} onPress={() => void updateCity()} style={{ marginTop: 20 }} />
         </View>
       </SettingsModal>
 
@@ -1113,6 +1138,15 @@ export default function SettingsScreen() {
             desc="Direct messages"
             enabled={notiMessages}
             onToggle={() => setNotiMessages((p) => !p)}
+            disabled={notifPrefsSaving}
+          />
+          <ToggleRow
+            icon="person-add-outline"
+            iconColors={[Colors.brand.green, Colors.brand.blue]}
+            title="New followers"
+            desc="New followers and follow requests"
+            enabled={notiFollowers}
+            onToggle={() => setNotiFollowers((p) => !p)}
             disabled={notifPrefsSaving}
           />
           </View>

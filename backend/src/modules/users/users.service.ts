@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { ExpoNotificationService } from '../notifications/expo-notification.service';
+import { FollowsService } from './follows.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { computeAge } from '../../common/utils/age'; // SPRINT-57
 import { CreateSupportTicketDto } from './dto/create-support-ticket.dto';
@@ -24,6 +25,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly expoNotificationService: ExpoNotificationService,
+    private readonly followsService: FollowsService,
   ) {}
 
   // SPRINT-46: route every media value through the shared resolver instead of returning it raw
@@ -89,7 +91,18 @@ export class UsersService {
       }
     }
 
-    return { postsCount, savedCount, eventsCount, neighborsCount };
+    const [followersCount, followingCount] = await Promise.all([
+      this.followsService.countFollowers(userId),
+      this.followsService.countFollowing(userId),
+    ]);
+    return {
+      postsCount,
+      savedCount,
+      eventsCount,
+      neighborsCount,
+      followersCount,
+      followingCount,
+    };
   }
 
   private async computeAchievements(userId: string): Promise<AchievementDto[]> {
@@ -168,6 +181,7 @@ export class UsersService {
         dialCode: string;
         state: string;
         city: string;
+        source: string;
       } | null;
       vibes: Array<{
         id: string;
@@ -230,6 +244,7 @@ export class UsersService {
             dialCode: user.location.dialCode,
             state: user.location.state,
             city: user.location.city,
+            source: user.location.source, // plan 08: GPS, ADMIN or MANUAL
           }
         : null,
       vibes: user.vibes ?? [],
@@ -292,6 +307,8 @@ export class UsersService {
     },
     privacySettings: { publicProfile?: boolean; showLocation?: boolean } | null,
     stats: UserStatsDto,
+    /** Plan 16: an accepted follower (or the person) sees a private profile in full. */
+    canSeePrivate = false,
   ) {
     const base = {
       id: user.id,
@@ -309,8 +326,9 @@ export class UsersService {
     };
 
     const isPublic = privacySettings?.publicProfile !== false;
-    if (!isPublic) {
-      return base;
+    if (!isPublic && !canSeePrivate) {
+      // Plan 16: the app shows "This account is private" and the Follow (request) button.
+      return { ...base, isPrivate: true };
     }
 
     const showLocation = privacySettings?.showLocation !== false;
@@ -520,8 +538,23 @@ export class UsersService {
       });
     }
 
-    const stats = await this.computeStats(targetUserId);
-    return this.formatPublicProfile(user, user.privacySettings ?? null, stats);
+    const isPublic = user.privacySettings?.publicProfile !== false;
+    const [stats, relation, canSeePrivate] = await Promise.all([
+      this.computeStats(targetUserId),
+      this.followsService.relation(requestingUserId, targetUserId),
+      isPublic
+        ? Promise.resolve(false)
+        : this.followsService.canSeePrivate(requestingUserId, targetUserId),
+    ]);
+    return {
+      ...this.formatPublicProfile(
+        user,
+        user.privacySettings ?? null,
+        stats,
+        canSeePrivate,
+      ),
+      ...relation,
+    };
   }
 
   async getUserByUsername(requestingUserId: string, username: string) {

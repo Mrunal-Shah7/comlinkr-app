@@ -243,7 +243,12 @@ export type ConversationUpdatedSocketPayload = {
   messagePreview: string;
   unreadCount: number;
   updatedAt: string;
+  /** Plan 09: a message was deleted; reload the row instead of moving it to the top. */
+  removed?: boolean;
 };
+
+/** Server → conversation room: a message was deleted by its sender or removed by an admin (plan 09, Sprint 53). */
+export type MessageRemovedSocketPayload = { conversationId: string; messageId: string };
 
 /** Server → conversation room excluding sender (Sprint 36). */ // SPRINT-39:
 export type TypingIndicatorPayload = {

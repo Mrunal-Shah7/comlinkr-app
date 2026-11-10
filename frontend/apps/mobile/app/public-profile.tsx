@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Image } from "expo-image"; // SPRINT-31:
+import { UserAvatar } from "../components/UserAvatar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Redirect, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -51,33 +51,7 @@ const ACHIEVEMENT_ICONS: Record<string, { icon: string; color: string }> = {
   verified_owner:   { icon: "shield-checkmark",     color: palette.brandGreen },
 };
 
-function Avatar({ name, uri, size = 88 }: { name: string; uri?: string; size?: number }) {
-  const colors = [palette.brandBlue, palette.brandTeal, palette.brandGreen, palette.brandBlueDark, palette.brandGreenDark];
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  const bg = colors[Math.abs(h) % colors.length];
-  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-      {uri ? (
-        <Image
-          source={{ uri }}
-          style={{ width: size, height: size }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-          transition={200}
-        />
-      ) : (
-        <Text style={[display(800), { fontSize: size * 0.34, color: palette.white }]}>{initials}</Text>
-      )}
-    </View>
-  );
-}
-
 type PostLike = { id: string; title: string; content: string; createdAt: string; likesCount: number; commentsCount: number };
-
-/** The backend has no follow endpoint yet; turn this on when it does. */
-const FOLLOW_ENABLED = false;
 
 export default function PublicProfileScreen() {
   const { isDark, tc } = useTheme();
@@ -98,6 +72,9 @@ export default function PublicProfileScreen() {
       return { profile: prof, posts: rawPosts as PostLike[], postsFailed: !postsRes.ok };
     },
     enabled: !!userId,
+    // Plan 16: a follow request can be accepted elsewhere (the "accepted" notice opens this screen), so a cached
+    // profile would still say private and "Follow". Show the cache at once, then read it again.
+    refetchOnMount: "always",
   });
   const profile: PublicProfile | null = query.data?.profile ?? null;
   const posts: PostLike[] = query.data?.posts ?? [];
@@ -108,21 +85,31 @@ export default function PublicProfileScreen() {
     : query.error
       ? (query.error instanceof ApiError ? query.error.message : "Could not load profile.")
       : null;
-  // Follow is toggled optimistically on screen; the server's answer replaces it.
-  const [followOverride, setFollowing] = useState<boolean | null>(null);
-  const following = followOverride ?? profile?.followedByMe ?? false;
+  // Follow is toggled optimistically on screen; the server's answer replaces it. Plan 16: a private account's first
+  // tap sends a request ("Requested"); tapping again cancels it.
+  type FollowState = "none" | "requested" | "following";
+  const [followOverride, setFollowState] = useState<FollowState | null>(null);
+  const followState: FollowState = followOverride ?? (profile?.followedByMe ? "following" : profile?.followRequested ? "requested" : "none");
   const [followLoading, setFollowLoading] = useState(false);
+  // Plan 14: the server's follower count after a tap; the counts line shows only when the profile carries them.
+  const [followersOverride, setFollowersOverride] = useState<number | null>(null);
+  const followersCount = followersOverride ?? profile?.stats.followersCount;
+  const followingCount = profile?.stats.followingCount;
+  const isPrivate = !!profile?.isPrivate;
 
   const handleFollow = async () => {
     if (!profile) return;
     setFollowLoading(true);
-    const prev = following;
-    setFollowing(!prev);
+    const prev = followState;
+    setFollowState(prev === "none" ? (isPrivate ? "requested" : "following") : "none");
     try {
       const res = await toggleFollow(profile.id);
-      setFollowing(res.following);
+      const next: FollowState = res.following ? "following" : res.requested ? "requested" : "none";
+      setFollowState(next);
+      if (typeof res.followersCount === "number") setFollowersOverride(res.followersCount);
+      if (next === "requested") showToast("Request sent. They'll see it in their follow requests.", "info");
     } catch (e) {
-      setFollowing(prev);
+      setFollowState(prev);
       appAlert("Error", e instanceof ApiError ? e.message : "Could not update follow.");
     } finally {
       setFollowLoading(false);
@@ -211,7 +198,7 @@ export default function PublicProfileScreen() {
           <Reveal i={0} style={{ alignItems: "center", paddingTop: 6, paddingHorizontal: 24 }}>
             <GradientFill style={{ width: 98, height: 98, borderRadius: 49, alignItems: "center", justifyContent: "center" }}>
               <View style={{ width: 92, height: 92, borderRadius: 46, borderWidth: 3, borderColor: tc.pageBg, overflow: "hidden" }}>
-                <Avatar name={profile.name} uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined} size={86} />
+                <UserAvatar name={profile.name} uri={profile.avatar ? resolveApiAssetUrl(profile.avatar) : undefined} size={86} />
               </View>
             </GradientFill>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 }}>
@@ -222,19 +209,50 @@ export default function PublicProfileScreen() {
               {[profile.username ? `@${profile.username}` : "", [profile.city, profile.country].filter(Boolean).join(", "), profile.joinedAt ? `member since ${new Date(profile.joinedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : ""].filter(Boolean).join(" · ")}
             </Text>
             {profile.bio ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]}>{profile.bio}</Text> : null}
+            {followersCount != null && followingCount != null ? (
+              <Pressable
+                disabled={!isOwnProfile}
+                onPress={() => router.push("/follows" as never)}
+                accessibilityRole={isOwnProfile ? "button" : "text"}
+                hitSlop={6}
+                style={{ marginTop: 8 }}
+              >
+                <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>
+                  <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{followersCount}</Text>
+                  {followersCount === 1 ? " follower" : " followers"}{"  ·  "}
+                  <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{followingCount}</Text> following
+                </Text>
+              </Pressable>
+            ) : null}
             {!isOwnProfile ? (
               <View style={{ flexDirection: "row", gap: 8, marginTop: 14 }}>
                 <GradientButton small label="Message" icon={<Ionicons name="chatbubble-outline" size={15} color={palette.white} />} onPress={handleMessage} />
-                {/* Follow is hidden until the backend has it: POST /users/:id/follow does not exist and every tap showed
-                    "Cannot POST" (walkthrough S-06, TR-029). */}
-                {FOLLOW_ENABLED ? (
-                  <SoftButton small label={following ? "Following" : "Follow"} icon={following ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : undefined} disabled={followLoading} onPress={handleFollow} />
-                ) : null}
+                {/* Plan 14 (TR-029): tapping "Following" unfollows. Plan 16: "Requested" cancels the request. */}
+                <SoftButton
+                  small
+                  label={followState === "following" ? "Following" : followState === "requested" ? "Requested" : "Follow"}
+                  icon={followState === "following" ? <Ionicons name="checkmark" size={15} color={tc.accentText} /> : followState === "requested" ? <Ionicons name="time-outline" size={15} color={tc.accentText} /> : undefined}
+                  disabled={followLoading}
+                  onPress={handleFollow}
+                />
               </View>
             ) : null}
           </Reveal>
 
-          <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginHorizontal: 16, marginTop: 20 }}>
+          {/* Plan 16: a private account shows its details to accepted followers only. */}
+          {isPrivate && !isOwnProfile ? (
+            <View style={[card, { flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 20, padding: 16, borderRadius: 18 }]}>
+              <Ionicons name="lock-closed-outline" size={22} color={tc.textSecondary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>This account is private</Text>
+                <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 2 }]}>
+                  {followState === "requested" ? "Your request is waiting for their approval." : "Follow to ask to see their posts and details."}
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          {isPrivate && !isOwnProfile ? null : <Reveal i={1} style={{ flexDirection: "row", gap: 8, marginHorizontal: 16, marginTop: 20 }}>
             {[
               { label: "Posts", value: profile.stats.postsCount },
               { label: "Saved", value: profile.stats.savedCount },
@@ -246,7 +264,7 @@ export default function PublicProfileScreen() {
                 <Text style={[TYPE.small, { color: tc.textTertiary }]}>{s.label}</Text>
               </View>
             ))}
-          </Reveal>
+          </Reveal>}
 
           {profile.achievements.filter((a) => a.earned).length > 0 ? (
             <>
@@ -265,8 +283,8 @@ export default function PublicProfileScreen() {
             </>
           ) : null}
 
-          {h2("Posts")}
-          {posts.length > 0 ? posts.map((p, i) => (
+          {isPrivate && !isOwnProfile ? null : h2("Posts")}
+          {isPrivate && !isOwnProfile ? null : posts.length > 0 ? posts.map((p, i) => (
             <Reveal key={p.id} i={i + 2} style={[card, { marginHorizontal: 16, marginBottom: 10, padding: 14 }]}>
               {p.title ? <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{p.title}</Text> : null}
               {p.content?.trim() ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: p.title ? 4 : 0 }]} numberOfLines={3}>{p.content}</Text> : null}

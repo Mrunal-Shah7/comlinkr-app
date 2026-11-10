@@ -731,6 +731,17 @@ export default function ProfileScreen() {
           </View>
           {meta ? <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center", marginTop: 2 }]}>{meta}</Text> : null}
           {bio ? <Text style={[TYPE.body, { color: tc.textSecondary, textAlign: "center", marginTop: 8 }]} numberOfLines={4}>{bio}</Text> : null}
+          {/* Plan 14: followers and following; opens the Follows screen. Hidden until the server sends the counts. */}
+          {serverProfile?.stats?.followersCount != null && serverProfile.stats.followingCount != null ? (
+            <Pressable onPress={() => router.push("/follows" as never)} accessibilityRole="button" hitSlop={6} style={{ marginTop: 8 }}
+              accessibilityLabel={`${serverProfile.stats.followersCount} ${serverProfile.stats.followersCount === 1 ? "follower" : "followers"}, ${serverProfile.stats.followingCount} following`}>
+              <Text style={[TYPE.small, { color: tc.textSecondary, textAlign: "center" }]}>
+                <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{serverProfile.stats.followersCount}</Text>
+                {serverProfile.stats.followersCount === 1 ? " follower" : " followers"}{"  ·  "}
+                <Text style={{ fontWeight: "700", color: tc.textPrimary }}>{serverProfile.stats.followingCount}</Text> following
+              </Text>
+            </Pressable>
+          ) : null}
           <SoftButton small label="Edit profile" icon={<Ionicons name="pencil" size={14} color={tc.accentText} />} onPress={goToEditProfile} style={{ marginTop: 14 }} />
         </Reveal>
 

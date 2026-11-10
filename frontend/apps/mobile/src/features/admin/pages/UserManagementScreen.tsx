@@ -34,6 +34,7 @@ import { createThemedStyles } from '../../../theme/themedStyles';
 import { AdminBackdrop } from '../components/AdminBackdrop';
 import { showToast } from '../../../shared/ui/Toast';
 import { useBackState } from '../../../hooks/useBackState';
+import { ChangeCityModal } from '../components/ChangeCityModal';
 
 const GRANT_BADGE_OPTIONS: { value: string; label: string; icon: string; color: string }[] = [
   { value: 'LANDLORD',         label: 'Verified Landlord',         icon: 'home',       color: Colors.brand.blue  },
@@ -82,6 +83,7 @@ function UserProfileModal({
   onRequestDelete: (user: ListUser) => void; // SPRINT-41:
 }) {
   const { data: detail, isLoading, errorMessage, refetch } = useAdminUserDetail(visible ? userId : null); // SPRINT-41:
+  const [cityOpen, setCityOpen] = useState(false); // plan 08: an admin overrides the user's city
 
   if (!listUser || !userId) return null;
 
@@ -319,6 +321,18 @@ function UserProfileModal({
                 <Text style={pm.actionBtnSub}>Reports, warnings, bans & sessions</Text>
               </Pressable>
 
+              <Pressable
+                style={[pm.actionBtn, { backgroundColor: 'rgba(59,130,246,0.10)' }]}
+                onPress={() => setCityOpen(true)}
+                accessibilityRole="button"
+              >
+                <View style={[pm.actionBtnIconBox, { backgroundColor: 'rgba(59,130,246,0.15)' }]}>
+                  <Ionicons name="location" size={18} color={palette.brandBlue} />
+                </View>
+                <Text style={[pm.actionBtnText, { color: palette.brandBlue }]}>Change city</Text>
+                <Text style={pm.actionBtnSub}>{city ? `Now ${city}` : 'No city yet'}</Text>
+              </Pressable>
+
               {isActive ? (
                 <>
                   <Pressable
@@ -397,6 +411,14 @@ function UserProfileModal({
           </View>
         </ScrollView>
       </View>
+          <ChangeCityModal
+        visible={cityOpen}
+        userId={userId}
+        userName={firstName}
+        current={{ city, state: detail?.location?.state ?? null, country }}
+        onClose={() => setCityOpen(false)}
+        onSaved={() => void refetch()}
+      />
     </InWindowModal>
   );
 }

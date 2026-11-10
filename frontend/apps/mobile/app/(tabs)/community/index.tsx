@@ -377,63 +377,63 @@ const INITIAL_QUESTIONS = [
   {
     id: "1",
     author: "Alex P.",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    avatar: "",
     question: "Best neighborhoods for young professionals?",
     tags: ["Housing", "Lifestyle"],
     votes: 24,
     answers: [
-      { id: "a1", author: "Sarah W.", avatar: "https://randomuser.me/api/portraits/women/22.jpg", text: "Downtown is great for young professionals! Tons of restaurants, nightlife, and easy access to transit.", time: "2h ago", votes: 12 },
-      { id: "a2", author: "Mark J.", avatar: "https://randomuser.me/api/portraits/men/40.jpg", text: "I'd recommend the Midtown area. Affordable rent and lots of co-working spaces nearby.", time: "2h ago", votes: 8 },
+      { id: "a1", author: "Sarah W.", avatar: "", text: "Downtown is great for young professionals! Tons of restaurants, nightlife, and easy access to transit.", time: "2h ago", votes: 12 },
+      { id: "a2", author: "Mark J.", avatar: "", text: "I'd recommend the Midtown area. Affordable rent and lots of co-working spaces nearby.", time: "2h ago", votes: 8 },
     ],
     time: "3h ago",
   },
   {
     id: "2",
     author: "Maria L.",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    avatar: "",
     question: "Where to find authentic Mexican food?",
     tags: ["Food"],
     votes: 31,
     answers: [
-      { id: "a3", author: "Carlos R.", avatar: "https://randomuser.me/api/portraits/men/28.jpg", text: "La Casita on 5th Street is incredible! Family-owned, been there for 20 years. Their mole is the best in town.", time: "4h ago", votes: 15 },
-      { id: "a4", author: "Elena G.", avatar: "https://randomuser.me/api/portraits/women/31.jpg", text: "Check out the taco trucks along Main Ave on weekends. Authentic street food and very affordable!", time: "4h ago", votes: 9 },
+      { id: "a3", author: "Carlos R.", avatar: "", text: "La Casita on 5th Street is incredible! Family-owned, been there for 20 years. Their mole is the best in town.", time: "4h ago", votes: 15 },
+      { id: "a4", author: "Elena G.", avatar: "", text: "Check out the taco trucks along Main Ave on weekends. Authentic street food and very affordable!", time: "4h ago", votes: 9 },
     ],
     time: "5h ago",
   },
   {
     id: "3",
     author: "David K.",
-    avatar: "https://randomuser.me/api/portraits/men/55.jpg",
+    avatar: "",
     question: "Is the subway safe after midnight?",
     tags: ["Transit", "Safety"],
     votes: 45,
     answers: [
-      { id: "a5", author: "Jessica M.", avatar: "https://randomuser.me/api/portraits/women/50.jpg", text: "Generally yes, especially on main lines. Avoid empty cars and stay near other passengers. The blue line is usually busy even late.", time: "6h ago", votes: 22 },
+      { id: "a5", author: "Jessica M.", avatar: "", text: "Generally yes, especially on main lines. Avoid empty cars and stay near other passengers. The blue line is usually busy even late.", time: "6h ago", votes: 22 },
     ],
     time: "8h ago",
   },
   {
     id: "4",
     author: "Priya S.",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+    avatar: "",
     question: "Dog-friendly parks with off-leash areas?",
     tags: ["Pets"],
     votes: 19,
     answers: [
-      { id: "a6", author: "Tom H.", avatar: "https://randomuser.me/api/portraits/men/20.jpg", text: "Riverside Park has a huge off-leash section before 9am and after 7pm. My dog loves it there!", time: "10h ago", votes: 7 },
+      { id: "a6", author: "Tom H.", avatar: "", text: "Riverside Park has a huge off-leash section before 9am and after 7pm. My dog loves it there!", time: "10h ago", votes: 7 },
     ],
     time: "12h ago",
   },
   {
     id: "5",
     author: "James T.",
-    avatar: "https://randomuser.me/api/portraits/men/12.jpg",
+    avatar: "",
     question: "Best rooftop bars with live music?",
     tags: ["Nightlife", "Events"],
     votes: 37,
     answers: [
-      { id: "a7", author: "Nina P.", avatar: "https://randomuser.me/api/portraits/women/65.jpg", text: "SkyLounge on 7th has live jazz on weekends. The Rooftop at Hotel Central also has amazing views and indie bands on Fridays.", time: "20h ago", votes: 18 },
-      { id: "a8", author: "Rick D.", avatar: "https://randomuser.me/api/portraits/men/36.jpg", text: "Don't miss Sunset Terrace! Happy hour from 5-7pm and live DJs every Thursday.", time: "22h ago", votes: 11 },
+      { id: "a7", author: "Nina P.", avatar: "", text: "SkyLounge on 7th has live jazz on weekends. The Rooftop at Hotel Central also has amazing views and indie bands on Fridays.", time: "20h ago", votes: 18 },
+      { id: "a8", author: "Rick D.", avatar: "", text: "Don't miss Sunset Terrace! Happy hour from 5-7pm and live DJs every Thursday.", time: "22h ago", votes: 11 },
     ],
     time: "1d ago",
   },
@@ -460,7 +460,7 @@ function toUiAnswer(a: Answer | any): UIAnswer {
     id: String(a.id),
     authorId: a.author?.id != null ? String(a.author.id) : "",
     author: a.author?.name || a.author?.username || "User",
-    avatar: a.author?.avatar || a.author?.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
+    avatar: a.author?.avatar || a.author?.avatarUrl || "",
     text: a.text || a.content || "",
     time: relativeTime(a.createdAt),
     votes: a.votes ?? a.upvoteCount ?? 0,
@@ -480,7 +480,7 @@ function toUiQuestion(q: Question): UIQuestion {
     id: q.id,
     authorId: authorAny.id != null && authorAny.id !== "" ? String(authorAny.id) : "",
     author: authorAny.name || authorAny.username || "User",
-    avatar: authorAny.avatar || authorAny.avatarUrl || "https://randomuser.me/api/portraits/lego/1.jpg",
+    avatar: authorAny.avatar || authorAny.avatarUrl || "",
     question: (q as any).question || (q as any).title || "",
     tags: Array.isArray(tagsAny) ? tagsAny.map(String) : [],
     votes: (q as any).votes ?? (q as any).upvoteCount ?? 0,
@@ -557,6 +557,13 @@ export default function CommunityScreen() {
   const [filter, setFilter] = useBackState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [showAsk, setShowAsk] = useState(false);
+  // TR-040 C-08: autoFocus fired while the sheet slid in and Android dropped it; focus once the slide is done.
+  const askInputRef = useRef<TextInput>(null);
+  useEffect(() => {
+    if (!showAsk) return;
+    const t = setTimeout(() => askInputRef.current?.focus(), 350);
+    return () => clearTimeout(t);
+  }, [showAsk]);
   // Long-press on the Community tab opens the composer (`/community?ask=<token>`); each token fires once.
   const consumedAskRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -1119,7 +1126,7 @@ export default function CommunityScreen() {
               <Reveal key={q.id} i={qi}>
                 <View style={[s.qaCard, { backgroundColor: tc.cardBg, borderColor: tc.glassLine, borderWidth: isDark ? 1 : 0, borderRadius: 22, borderBottomLeftRadius: 6 }]}>
                   <View style={s.qaHead}>
-                    <FadeImage uri={q.avatar} style={{ width: 26, height: 26, borderRadius: 13 }} showLoadingSpinner={true} />
+                    <FadeImage fallbackIcon="person" uri={q.avatar} style={{ width: 26, height: 26, borderRadius: 13 }} showLoadingSpinner={true} />
                     <Text style={[TYPE.small, { color: tc.textSecondary, flex: 1 }]} numberOfLines={1}>
                       <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{q.author.split(" ")[0]}</Text> · {q.time}
                     </Text>
@@ -1170,7 +1177,7 @@ export default function CommunityScreen() {
                         <Reveal key={a.id} i={ai}>
                           <View style={{ padding: 12, borderRadius: 16, backgroundColor: tc.inputBg }}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                              <FadeImage uri={a.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} showLoadingSpinner={true} />
+                              <FadeImage fallbackIcon="person" uri={a.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} showLoadingSpinner={true} />
                               <Text style={[TYPE.small, { flex: 1, color: tc.textSecondary }]} numberOfLines={1}>
                                 <Text style={[TYPE.small, { color: tc.textPrimary, fontFamily: "Manrope_700Bold" }]}>{a.author}</Text> · {a.time}
                               </Text>
@@ -1232,7 +1239,7 @@ export default function CommunityScreen() {
               accessibilityLabel="Your question"
               editable={!posting}
               multiline
-              autoFocus
+              ref={askInputRef}
             />
             <Text style={[TYPE.small, { color: tc.textSecondary, marginTop: 10, marginBottom: 8 }]}>
               Topic <Text style={{ color: tc.textTertiary }}>{pickedTopic ? "" : guessed ? "(guessed from your words)" : "(we guess it from your words)"}</Text>

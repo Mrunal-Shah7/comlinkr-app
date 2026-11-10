@@ -60,6 +60,7 @@ export function redirectSystemPath({
       ['openListing', '/listing/'],
       ['openRestaurant', '/restaurant/'],
       ['openEvent', '/events/'],
+      ['openQuest', '/quest/'],
       ['openRoommate', '/roommate/'],
     ];
     for (const [param, prefix] of routeFor) {

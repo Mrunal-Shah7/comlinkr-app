@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuthService } from '../auth/auth.service';
+import { locationProvenance } from '../../common/utils/location-provenance';
 import {
   SetLocationDto,
   SetVibesDto,
@@ -77,23 +78,18 @@ export class OnboardingService {
 
   async setLocation(userId: string, dto: SetLocationDto) {
     this.assertSupportedEnrollmentRegion(dto.country);
+    const fields = {
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      ...locationProvenance(dto),
+    };
     await this.prisma.userLocation.upsert({
       where: { userId },
-      create: {
-        userId,
-        country: dto.country,
-        countryCode: dto.countryCode,
-        dialCode: dto.dialCode,
-        state: dto.state,
-        city: dto.city,
-      },
-      update: {
-        country: dto.country,
-        countryCode: dto.countryCode,
-        dialCode: dto.dialCode,
-        state: dto.state,
-        city: dto.city,
-      },
+      create: { userId, ...fields },
+      update: fields,
     });
     return { message: 'Location saved' };
   }

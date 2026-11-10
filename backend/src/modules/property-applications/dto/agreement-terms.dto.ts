@@ -35,11 +35,15 @@ export class AgreementTermsDto {
   @MaxLength(30)
   moveInDate: string;
 
-  @ApiProperty()
+  // Plan 12: the terms are sent with the application, before the tenant has read the agreement; the signature on
+  // the offer is the acknowledgement. Older builds still send both as true.
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsBoolean()
-  termsRead: boolean;
+  termsRead?: boolean;
 
-  @ApiProperty()
-  @Equals(true, { message: 'termsAgreed must be true to continue' })
-  termsAgreed: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Equals(true, { message: 'termsAgreed must be true when sent' })
+  termsAgreed?: boolean;
 }

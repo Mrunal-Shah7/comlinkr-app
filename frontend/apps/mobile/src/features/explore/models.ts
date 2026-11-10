@@ -8,6 +8,7 @@ import { getShareLink } from "../../utils/shareLinks";
 import { type Poll } from "../../api/community.api";
 import { CATEGORY_COLOR, type CommunityStory, type StoryCategory, LIVE_WALL_ITEMS, type LiveCategory, LIVE_CATEGORY_META, POSTS } from "./constants";
 import { newsTimeAgo } from "./news";
+import { eventDayDate } from "../../utils/eventDay";
 
 /** Deep link for sharing feed posts — opens the app directly via the comlinkr.app universal link. */
 export function getFeedPostShareUrl(postId: string): string {
@@ -79,6 +80,8 @@ export interface ExploreEventRow {
   isAttending: boolean; // SPRINT-42: active registration alias
   hasReviewed?: boolean; // SPRINT-42: detail-only caller state
   myReviewId?: string | null; // SPRINT-42: detail-only caller review id
+  /** Plan 15: the host cancelled it; kept, marked Cancelled. */
+  cancelled?: boolean;
 }
 
 export const EVENT_IMAGE_BY_CATEGORY: Record<string, string> = {
@@ -126,10 +129,11 @@ export function eventCategoryEmoji(category: string): string {
 }
 
 export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
-  const d = new Date(e.date);
-  const dateStr = Number.isNaN(d.getTime())
-    ? String(e.date).slice(0, 10)
-    : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // Plan 11: the calendar day as stored, not converted through the phone's zone.
+  const d = eventDayDate(e.date);
+  const dateStr = d
+    ? d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : String(e.date).slice(0, 10);
   const uiCat = mapApiEventCategoryToUi(e.category);
   const price =
     e.ticketType === "FREE" || e.ticketPrice == null || Number(e.ticketPrice) === 0
@@ -166,6 +170,7 @@ export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
     startTimeRaw: String(e.startTime ?? ""), // SPRINT-42:
     endTimeRaw: e.endTime ?? null, // SPRINT-42:
     isAttending: !!(e.isAttending || e.registeredByMe), // SPRINT-42:
+    cancelled: e.cancelled === true || !!e.cancelledAt, // plan 15
     hasReviewed: e.hasReviewed === true, // SPRINT-42:
     myReviewId: e.myReviewId ?? null, // SPRINT-42:
   };
@@ -225,7 +230,7 @@ export function buildHeroTickerRows(args: {
 
   for (const p of args.posts) {
     const name = p.author?.name || p.author?.username || "Neighbor";
-    const av = p.author?.avatarUrl ? resolveApiAssetUrl(p.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/1.jpg";
+    const av = p.author?.avatarUrl ? resolveApiAssetUrl(p.author.avatarUrl) : "";
     const target = (p.title || String(p.category || "Post")).slice(0, 38);
     acc.push({
       t: new Date(p.createdAt).getTime(),
@@ -246,7 +251,7 @@ export function buildHeroTickerRows(args: {
 
   for (const e of args.events) {
     const name = e.author?.name || e.author?.username || "Host";
-    const av = e.author?.avatarUrl ? resolveApiAssetUrl(e.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/1.jpg";
+    const av = e.author?.avatarUrl ? resolveApiAssetUrl(e.author.avatarUrl) : "";
     acc.push({
       t: new Date(e.createdAt).getTime(),
       row: {
@@ -268,7 +273,7 @@ export function buildHeroTickerRows(args: {
 
   for (const L of args.listings) {
     const name = L.owner?.name || L.owner?.username || L.landlord?.name || "Host"; // SPRINT-42: prefer the canonical listing owner alias.
-    const av = resolveApiAssetUrl(L.owner?.avatarUrl ?? L.landlord?.avatarUrl) || "https://randomuser.me/api/portraits/lego/2.jpg"; // SPRINT-42: use canonical owner avatar for the housing ticker.
+    const av = resolveApiAssetUrl(L.owner?.avatarUrl ?? L.landlord?.avatarUrl) || ""; // SPRINT-42: use canonical owner avatar for the housing ticker.
     acc.push({
       t: new Date(L.createdAt).getTime(),
       row: {
@@ -289,7 +294,7 @@ export function buildHeroTickerRows(args: {
     const sl = (s.location || "").toLowerCase();
     if (sl && cityLc && !sl.includes(cityLc)) continue;
     const name = s.author?.name || s.author?.username || "Creator";
-    const av = s.author?.avatarUrl ? resolveApiAssetUrl(s.author.avatarUrl) : "https://randomuser.me/api/portraits/lego/3.jpg";
+    const av = s.author?.avatarUrl ? resolveApiAssetUrl(s.author.avatarUrl) : "";
     acc.push({
       t: new Date(s.createdAt).getTime(),
       row: {
@@ -341,7 +346,7 @@ export function mapApiStoryToCommunityStory(s: ApiStory): CommunityStory {
   const thumb =
     mediaUrl ||
     "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=400&q=70";
-  const av = resolveApiAssetUrl(s.author.avatarUrl) || "https://randomuser.me/api/portraits/lego/1.jpg";
+  const av = resolveApiAssetUrl(s.author.avatarUrl) || "";
   const mediaType: CommunityStory["mediaType"] =
     s.mediaType === "REEL" ? "reel" : s.mediaType === "VIDEO" ? "video" : "photo";
 
@@ -398,7 +403,7 @@ export function mapFeedPostToLiveItem(p: FeedPost): (typeof LIVE_WALL_ITEMS)[0] 
 
   const meta = LIVE_CATEGORY_META[type];
   const author = p.author?.name || p.author?.username || "Neighbor";
-  const avatar = resolveApiAssetUrl(p.author?.avatarUrl) || "https://randomuser.me/api/portraits/lego/2.jpg";
+  const avatar = resolveApiAssetUrl(p.author?.avatarUrl) || "";
   const created = p.createdAt ? new Date(p.createdAt).getTime() : 0;
   const isNew = Date.now() - created < 48 * 3600 * 1000;
 

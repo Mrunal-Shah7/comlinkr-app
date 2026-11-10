@@ -43,6 +43,8 @@ import type { SendBroadcastDto } from './dto/send-broadcast.dto';
 import type { ReplyToTicketDto } from './dto/reply-to-ticket.dto';
 import type { AdminSessionsQueryDto } from './dto/admin-sessions-query.dto'; // SPRINT-35: type paginated session-list filters
 import type { AdminReportsQueryDto } from './dto/admin-reports-query.dto'; // SPRINT-51
+import { LocationSource } from '@prisma/client';
+import { SetUserLocationDto } from './dto/set-user-location.dto';
 import {
   AdminReportAction,
   type ReportActionDto,
@@ -550,6 +552,42 @@ export class AdminService {
   async deleteAdminChatMessage(adminUserId: string, messageId: string) {
     await this.assertActiveAdmin(adminUserId); // SPRINT-53: defence-in-depth
     return this.messagingService.adminRemoveMessage(messageId);
+  }
+
+  /** Plan 08 (TR-042): an admin overrides a user's city; recorded as ADMIN, without coordinates. */
+  async setUserLocation(
+    adminUserId: string,
+    userId: string,
+    dto: SetUserLocationDto,
+  ) {
+    await this.assertActiveAdmin(adminUserId);
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    const fields = {
+      country: dto.country,
+      countryCode: dto.countryCode,
+      dialCode: dto.dialCode,
+      state: dto.state,
+      city: dto.city,
+      source: LocationSource.ADMIN,
+      latitude: null,
+      longitude: null,
+    };
+    const location = await this.prisma.userLocation.upsert({
+      where: { userId },
+      create: { userId, ...fields },
+      update: fields,
+    });
+    return {
+      userId,
+      city: location.city,
+      state: location.state,
+      country: location.country,
+      source: location.source,
+    };
   }
 
   async updateUser(

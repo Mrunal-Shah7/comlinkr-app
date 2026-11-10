@@ -174,6 +174,21 @@ export class MessagingController {
     return this.messagingService.sendMessage(userId, conversationId, dto, file);
   }
 
+  // Plan 09 (TR-039): the sender deletes their own message
+  @Delete(':id/messages/:messageId')
+  @HttpCode(HttpStatus.OK)
+  async deleteMessage(
+    @CurrentUser('id') userId: string,
+    @Param('id') conversationId: string,
+    @Param('messageId') messageId: string,
+  ) {
+    return this.messagingService.deleteOwnMessage(
+      userId,
+      conversationId,
+      messageId,
+    );
+  }
+
   @Patch(':id/read')
   async markAsRead(
     @CurrentUser('id') userId: string,
