@@ -131,6 +131,8 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-10: [First triage sweep](build/2026-11-10-triage-sweep.md) (TR-003, 007, 009, 030, 033, 035): Explore
+  without a city, Saved, the Listings sheet after a deep link, role changes, restaurant time zones, sidebar 403s.
 - 2026-11-10: [Fixes from the full walkthrough](build/2026-11-10-walkthrough.md) (TR-028, TR-024): uploads work again
   under `expo/fetch`, failed uploads no longer leave half-made posts, Resend errors are logged, missing API routes
   (pets filter, question, answer and quest deletes, withdraw, saved news), and 60 fixes in all across the four sections,
