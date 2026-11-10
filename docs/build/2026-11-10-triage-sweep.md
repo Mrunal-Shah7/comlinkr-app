@@ -1,6 +1,6 @@
 # 2026-11-10: First triage sweep (TR-003, 007, 009, 030, 033, 035)
 
-Branch `fix/triage-sweep`, from `chore/docs-cleanup`. Not merged.
+Branch `fix/triage-sweep`, from `chore/docs-cleanup`. Merged as pull request 25 (merge `cac80f6`), reaching `main` with PR 24.
 
 ## Problems and changes
 

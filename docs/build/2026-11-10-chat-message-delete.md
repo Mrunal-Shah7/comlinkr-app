@@ -1,6 +1,6 @@
 # 2026-11-10: Deleting your own chat message (TR-039, plan 09; TR-044)
 
-Branch `feature/chat-delete`, from `fix/triage-leftovers`. Not merged.
+Branch `feature/chat-delete`, from `fix/triage-leftovers`. Merged as pull request 29 (merge `663828c`), reaching `main` with PR 24.
 
 ## Problem
 

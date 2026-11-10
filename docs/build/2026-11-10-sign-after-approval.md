@@ -1,6 +1,6 @@
 # 2026-11-10: A tenant signs only after the landlord approves (TR-048)
 
-Branch `fix/sign-after-approval`, from `chore/brand-comlinkr`. Not merged.
+Branch `fix/sign-after-approval`, from `chore/brand-comlinkr`. Merged as pull request 37 (merge `78e2eae`), reaching `main` with PR 24.
 
 ## Problem
 

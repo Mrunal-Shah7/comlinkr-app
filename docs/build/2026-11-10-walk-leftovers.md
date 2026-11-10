@@ -1,6 +1,6 @@
 # 2026-11-10: The last walkthrough findings: a steady bento, preferences from the list (TR-040: E-14, L-18)
 
-Branch `fix/walk-leftovers`, from `fix/chat-keyboard`. Not merged.
+Branch `fix/walk-leftovers`, from `fix/chat-keyboard`. Merged as pull request 42 (merge `d56165a`), reaching `main` with PR 24.
 
 ## Problem
 

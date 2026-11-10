@@ -1,6 +1,6 @@
 # 2026-11-10: The move-in date and the order of the offer (TR-036, plan 12)
 
-Branch `feature/move-in-rules`, from `feature/event-edit`. Not merged.
+Branch `feature/move-in-rules`, from `feature/event-edit`. Merged as pull request 32 (merge `8a5f539`), reaching `main` with PR 24.
 
 ## Problem
 

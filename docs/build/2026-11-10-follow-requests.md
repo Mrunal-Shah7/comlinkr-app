@@ -1,6 +1,6 @@
 # 2026-11-10: Follow requests, the Following tab, the "New followers" switch (TR-049, TR-050, TR-051, TR-053, plan 16)
 
-Branch `feature/follow-requests`, from `feature/event-cancelled`. Not merged.
+Branch `feature/follow-requests`, from `feature/event-cancelled`. Merged as pull request 39 (merge `d238035`), reaching `main` with PR 24.
 
 ## Problem
 

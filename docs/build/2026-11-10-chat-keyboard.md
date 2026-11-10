@@ -1,6 +1,6 @@
 # 2026-11-10: The chat composer above the Android keyboard (TR-045)
 
-Branch `fix/chat-keyboard`, from `feature/quest-progress`. Not merged.
+Branch `fix/chat-keyboard`, from `feature/quest-progress`. Merged as pull request 41 (merge `b896144`), reaching `main` with PR 24.
 
 ## Problem
 

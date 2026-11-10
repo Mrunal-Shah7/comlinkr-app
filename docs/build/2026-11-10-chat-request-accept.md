@@ -1,6 +1,6 @@
 # 2026-11-10: Accepting a message request (TR-043)
 
-Branch `fix/chat-request-accept`, from `feature/follow`. Not merged.
+Branch `fix/chat-request-accept`, from `feature/follow`. Merged as pull request 35 (merge `7c0bf94`), reaching `main` with PR 24.
 
 ## Problem
 

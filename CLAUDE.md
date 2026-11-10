@@ -33,6 +33,10 @@ repository, reinstall both: pnpm's links hold absolute paths.
   - Lint: `npx eslint "src/**/*.ts"` to check. `pnpm lint` runs `--fix` and rewrites files.
 - **mobile (`frontend/apps/mobile/`):** `pnpm install`, `pnpm typecheck`. There are no automated mobile tests;
   behaviour is checked on a phone (see "Testing on the phone" below).
+  - Release APK for sideloading: `scripts\build-release-apk.cmd --no-pause` from the repository root, output
+    `D:\ComLinkr\builds\ComLinkr-arm64.apk`. After a change to `app.config.js` or a native dependency, run
+    `expo prebuild --clean` first and keep `android/app/debug.keystore`. Steps, checks and known failures:
+    [docs/system-map.md, "How it deploys"](docs/system-map.md#how-it-deploys).
 - **Database:** Prisma migrations in `backend/prisma/migrations/`. Locally: `pnpm migrate:dev` to create one,
   `pnpm migrate:status` to check. Production runs `migrate:deploy` on each deploy.
 

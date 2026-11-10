@@ -1,6 +1,6 @@
 # 2026-11-10: A cancelled event is kept, marked Cancelled (TR-047, plan 15)
 
-Branch `feature/event-cancelled`, from `fix/sign-after-approval`. Not merged.
+Branch `feature/event-cancelled`, from `fix/sign-after-approval`. Merged as pull request 38 (merge `e870960`), reaching `main` with PR 24.
 
 ## Problem
 
