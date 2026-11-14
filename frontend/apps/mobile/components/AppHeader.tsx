@@ -1,6 +1,6 @@
 // components/AppHeader.tsx — the top bar of the four tabs (design D, plan 01).
 //
-// Left: your avatar in a gradient ring (opens the menu). Centre: the tab's title, which fades into the bar as
+// Left: your avatar (opens the menu). Centre: the tab's title, which fades into the bar as
 // the page's large title scrolls away (interpolate(scrollY, [0, 64], [0, 1])); the bar's glass background
 // fades in with it. Right: notifications and messages, each with a dot while something is unread.
 // The prototype's search button is left out: there is no city-wide search behind it yet (plan 01).
@@ -60,13 +60,11 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
       <View style={s.header}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: tc.glass, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: tc.glassLine }, barBg]} />
         <Pressable onPress={() => setDrawerOpen(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Open menu" style={s.avBtn}>
-          <GradientFill style={s.ring}>
-            <View style={[s.avInner, { borderColor: tc.pageBg }]}>
-              {avatarUri ? <FadeImage uri={avatarUri} style={s.avImg} /> : (
-                <GradientFill style={s.avImg}><Text style={[body(800), { color: palette.white, fontSize: 11 }]}>{initials}</Text></GradientFill>
-              )}
-            </View>
-          </GradientFill>
+          <View style={s.avInner}>
+            {avatarUri ? <FadeImage uri={avatarUri} style={s.avImg} /> : (
+              <GradientFill style={s.avImg}><Text style={[body(800), { color: palette.white, fontSize: 12 }]}>{initials}</Text></GradientFill>
+            )}
+          </View>
         </Pressable>
 
         {title ? (
@@ -95,9 +93,8 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
 const s = StyleSheet.create({
   header: { height: APP_HEADER_HEIGHT, flexDirection: "row", alignItems: "center", paddingHorizontal: 10, zIndex: 10 },
   avBtn: { padding: 4 },
-  ring: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  avInner: { width: 33, height: 33, borderRadius: 17, borderWidth: 2.5, overflow: "hidden", alignItems: "center", justifyContent: "center" },
-  avImg: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  avInner: { width: 34, height: 34, borderRadius: 17, overflow: "hidden", alignItems: "center", justifyContent: "center" },
+  avImg: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   titleWrap: { position: "absolute", left: 64, right: 104, alignItems: "center" },
   right: { marginLeft: "auto", flexDirection: "row", gap: 2 },
   ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },

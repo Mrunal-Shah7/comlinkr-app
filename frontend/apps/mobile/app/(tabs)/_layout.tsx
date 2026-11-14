@@ -47,7 +47,7 @@ export default function TabsLayout() {
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="community/index" contentStyle={{ backgroundColor: tc.pageBg }}>
           <NativeTabs.Trigger.Icon sf={{ default: "person.3", selected: "person.3.fill" }} md="groups" />
-          <NativeTabs.Trigger.Label>Community</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Label>Q&A</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
       </NativeTabs>
       <ComposeSheet visible={composeOpen} onClose={() => setComposeOpen(false)} />

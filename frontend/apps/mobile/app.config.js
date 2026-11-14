@@ -5,7 +5,7 @@ module.exports = ({ config }) => ({
   name: 'ComLinkr',
   slug: 'comlinkr',
   scheme: 'comlinkr',
-  version: '1.0.4',
+  version: '1.0.6',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
 
@@ -48,7 +48,8 @@ module.exports = ({ config }) => ({
       backgroundColor: '#FFFFFF',
     },
     package: 'com.comlinkr.app',
-    googleServicesFile: './google-services.json',
+    // On EAS Build the file comes from the GOOGLE_SERVICES_JSON file variable (git-ignored files are not uploaded).
+    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     intentFilters: [
       {
         action: 'VIEW',

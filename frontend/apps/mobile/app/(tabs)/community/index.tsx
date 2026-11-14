@@ -447,6 +447,8 @@ type UIQuestion = {
   avatar: string;
   question: string;
   tags: string[];
+  /** The category the question was saved under (HOUSING, FOOD, …), when the API sends it. */
+  category?: string;
   votes: number;
   answerCount: number;
   answers: UIAnswer[];
@@ -483,6 +485,7 @@ function toUiQuestion(q: Question): UIQuestion {
     avatar: authorAny.avatar || authorAny.avatarUrl || "",
     question: (q as any).question || (q as any).title || "",
     tags: Array.isArray(tagsAny) ? tagsAny.map(String) : [],
+    category: (q as any).category ? String((q as any).category) : undefined,
     votes: (q as any).votes ?? (q as any).upvoteCount ?? 0,
     answerCount: (q as any).answerCount ?? (q as any).answersCount ?? (Array.isArray(answersAny) ? answersAny.length : 0),
     answers: (Array.isArray(answersAny) ? answersAny : []).map(toUiAnswer),
@@ -505,6 +508,16 @@ function relativeTime(iso: string): string {
 }
 
 const EMPTY_QUESTIONS: UIQuestion[] = [];
+
+/** A question belongs to a topic by its saved category, its tags, or what it says (the semantic matcher above). */
+function questionMatchesTopic(q: UIQuestion, topic: string): boolean {
+  const t = topic.toUpperCase();
+  if (q.category && q.category.toUpperCase() === t) return true;
+  if (q.tags.some((x) => x.trim().toUpperCase() === t)) return true;
+  if (TOPIC_SIGNALS[topic]) return scoreForCategory(q.question, q.tags, topic) >= 2;
+  // General: saved as General (above), or about none of the other topics.
+  return !QUESTION_CATEGORIES.some((c) => c !== topic && TOPIC_SIGNALS[c] && scoreForCategory(q.question, q.tags, c) >= 2);
+}
 const questionId = (q: UIQuestion) => q.id;
 
 export default function CommunityScreen() {
@@ -597,7 +610,9 @@ export default function CommunityScreen() {
     staleTime: LIST_STALE_MS,
     getId: questionId,
     fetchPage: async (targetPage) => {
-      const res = await getQuestions({ page: targetPage, pageSize: 20, sort: sortBy, city, tag: (filter ?? undefined) as any });
+      // A topic is matched on the phone (saved category, tags or the question's words), so the server is asked
+      // for all questions, in bigger pages because some are dropped.
+      const res = await getQuestions({ page: targetPage, pageSize: filter ? 50 : 20, sort: sortBy, city });
       const items = Array.isArray(res?.data) ? res.data : [];
       // Backend returns `isUpvoted` / `isSaved` / `answers[].isUpvoted`.
       const upvoted: string[] = [];
@@ -612,8 +627,8 @@ export default function CommunityScreen() {
       }
       const meta = (res as any)?.meta;
       return {
-        items: items.map(toUiQuestion),
-        hasMore: meta ? targetPage < Number(meta.totalPages ?? 1) : items.length >= 20,
+        items: items.map(toUiQuestion).filter((u) => !filter || questionMatchesTopic(u, filter)),
+        hasMore: meta ? targetPage < Number(meta.totalPages ?? 1) : items.length >= (filter ? 50 : 20),
         upvoted, saved, answerUpvoted,
       };
     },
@@ -680,7 +695,7 @@ export default function CommunityScreen() {
     })();
   }, [questionsQ.refetch]);
 
-  // Category filtering is server-side (COM-03); only locally blocked authors are hidden here.
+  // Topic filtering happens when a page is fetched (questionMatchesTopic); only locally blocked authors are hidden here.
   const filtered = questions.filter((q) => !isQuestionHiddenByBlock(q, isBlocked));
   const answerTotal = (q: UIQuestion) => Math.max(q.answerCount, q.answers.length);
 
@@ -1014,7 +1029,7 @@ export default function CommunityScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: tc.pageBg }]} edges={["top"]}>
-      <AppHeader title="Community" scrollY={communityScrollY} />
+      <AppHeader title="Q&A"scrollY={communityScrollY} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={process.env.EXPO_OS === "ios" ? "padding" : "height"}
@@ -1038,7 +1053,7 @@ export default function CommunityScreen() {
         }
       >
         {/* ── Design D (plan 01): large title, ask box, topic chips ── */}
-        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Community</Text>
+        <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Q&A</Text>
         <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 14 }]}>Questions from people around you</Text>
         <PressableScale
           onPress={() => { if (requireAuth(undefined, "Sign in to ask your neighbors a question.")) setShowAsk(true); }}

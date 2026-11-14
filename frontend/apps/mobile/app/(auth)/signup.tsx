@@ -317,13 +317,13 @@ export default function SignupScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Reveal i={0} style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 22 }}>
+            <Reveal i={0} style={{ alignSelf: "stretch", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 22 }}>
               <Pressable onPress={() => (step === "verify" ? (setStep("form"), setCode(""), setError("")) : router.back())} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back"
-                style={{ width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center", marginLeft: -10 }}>
+                style={{ position: "absolute", left: -10, width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" }}>
                 <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
               </Pressable>
-              <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 32, height: 32, borderRadius: 10 }} contentFit="contain" />
-              <Text style={[display(800), { fontSize: 19, color: tc.textPrimary, letterSpacing: -0.4 }]}>comlinkr</Text>
+              <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 44, height: 44, borderRadius: 13 }} contentFit="contain" />
+              <Text style={[display(800), { fontSize: 28, color: tc.textPrimary, letterSpacing: -0.8 }]}>comlinkr</Text>
             </Reveal>
 
             <View>

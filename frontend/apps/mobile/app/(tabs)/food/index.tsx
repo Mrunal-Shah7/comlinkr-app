@@ -427,7 +427,7 @@ export default function FoodScreen() {
         {hasCity && filtered.length > 0 && !debouncedSearch ? (() => {
           const pick = [...restaurants].sort((a, b) => b.rating - a.rating)[0];
           const openCount = restaurants.filter((r) => restaurantIsOpen(r)).length;
-          const topCount = restaurants.filter((r) => r.rating >= 4.5).length;
+          const topCount = 0; // "Rated 4.5+" tile hidden on purpose; the "Top rated" chip below still filters.
           return (
             <View style={{ paddingHorizontal: 16, gap: 10, marginBottom: 14 }}>
               {pick ? (

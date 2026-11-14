@@ -45,6 +45,10 @@ type Props = {
   onQuestion: (q: Question) => void;
 };
 
+// Hidden on Explore on purpose: each has its own tab (Housing, Q&A, stories and polls in the feed tabs).
+// Set a flag to true to bring its tile back.
+const SHOW = { homes: false, question: false, stories: false, poll: false };
+
 function Glow() {
   const reduce = useReducedMotion();
   const t = useSharedValue(0);
@@ -66,10 +70,12 @@ export function ExploreBento(p: Props) {
   const { data: hot } = useQuery({
     queryKey: ["explore-hot-question", p.city],
     queryFn: () => getQuestions({ city: p.city, sort: "trending", limit: 1 }),
-    enabled: !!p.city,
+    enabled: !!p.city && SHOW.question,
     staleTime: 5 * 60_000,
   });
-  const question = hot?.data?.[0];
+  const question = SHOW.question ? hot?.data?.[0] : undefined;
+  const poll = SHOW.poll ? p.poll : undefined;
+  const sideTiles = SHOW.homes || SHOW.question;
   // The list endpoint is not normalised (getQuestion is): the text can arrive as title.
   const questionText = question ? String(question.question || (question as any).title || "") : "";
   const e = p.nextEvent;
@@ -108,15 +114,16 @@ export function ExploreBento(p: Props) {
             <BentoTile style={{ minHeight: 246 }}><View /></BentoTile>
           </View>
         ) : null}
+        {sideTiles ? (
         <View style={[s.col, { gap: 10 }]}>
-          {p.homesCount > 0 ? (
+          {SHOW.homes && p.homesCount > 0 ? (
             <TileIn i={i++}>
               <BentoTile tone="mint" onPress={p.onHomes} accessibilityLabel={`${p.homesCount} homes in ${p.city}`}>
                 <TileLabel style={{ color: "rgba(255,255,255,0.85)" }}>HOMES IN {p.city.toUpperCase()}</TileLabel>
                 <Text style={[TYPE.tileBig, { color: palette.white, marginTop: "auto" }]}>{p.homesCount}</Text>
               </BentoTile>
             </TileIn>
-          ) : p.heroLoading ? (
+          ) : SHOW.homes && p.heroLoading ? (
             <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <BentoTile style={{ minHeight: 118 }}><View /></BentoTile>
             </View>
@@ -130,9 +137,11 @@ export function ExploreBento(p: Props) {
             </TileIn>
           ) : null}
         </View>
+        ) : null}
       </View>
 
       {/* stories */}
+      {SHOW.stories ? (
       <TileIn i={i++} style={s.wide}>
         <BentoTile style={{ minHeight: 0 }}>
           <TileLabel>STORIES NEARBY</TileLabel>
@@ -158,8 +167,9 @@ export function ExploreBento(p: Props) {
           </GHScrollView>
         </BentoTile>
       </TileIn>
+      ) : null}
 
-      {p.quest || p.poll ? (
+      {p.quest || poll ? (
         <View style={s.cols}>
           {p.quest ? (
             <TileIn i={i++} style={s.col}>
@@ -170,12 +180,12 @@ export function ExploreBento(p: Props) {
               </BentoTile>
             </TileIn>
           ) : null}
-          {p.poll ? (
+          {poll ? (
             <TileIn i={i++} style={s.col}>
-              <BentoTile onPress={p.onPoll} accessibilityLabel={`Poll: ${p.poll.question}`}>
-                <TileLabel>POLL{p.poll.category ? ` · ${p.poll.category.toUpperCase()}` : ""}</TileLabel>
-                <Text style={[display(700), { color: tc.textPrimary, fontSize: 15, lineHeight: 18, marginTop: 4 }]} numberOfLines={3}>{p.poll.question}</Text>
-                {p.poll.totalVotes > 0 ? <TileLabel style={{ marginTop: "auto" }}>{p.poll.totalVotes} voted</TileLabel> : null}
+              <BentoTile onPress={p.onPoll} accessibilityLabel={`Poll: ${poll.question}`}>
+                <TileLabel>POLL{poll.category ? ` · ${poll.category.toUpperCase()}` : ""}</TileLabel>
+                <Text style={[display(700), { color: tc.textPrimary, fontSize: 15, lineHeight: 18, marginTop: 4 }]} numberOfLines={3}>{poll.question}</Text>
+                {poll.totalVotes > 0 ? <TileLabel style={{ marginTop: "auto" }}>{poll.totalVotes} voted</TileLabel> : null}
               </BentoTile>
             </TileIn>
           ) : null}
