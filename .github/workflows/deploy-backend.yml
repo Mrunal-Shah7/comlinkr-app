@@ -36,8 +36,13 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Node comes from nvm on the VPS, which only loads in interactive shells. Load it before set -e:
+            # nvm.sh can return non-zero while it sets up.
+            export NVM_DIR="$HOME/.nvm"
+            . "$NVM_DIR/nvm.sh"
             set -e
             export PATH="$HOME/.local/bin:$PATH"
+            command -v npx >/dev/null || { echo "npx not found after loading nvm"; exit 1; }
             cd /var/www/comlinkr-app
             git fetch origin main
             git merge --ff-only origin/main
