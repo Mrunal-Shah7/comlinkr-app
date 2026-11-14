@@ -139,12 +139,16 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
   handshake answers 200, and `/api/users/me/follow-requests` (only in this code) answers 401 rather than 404.
   The server itself was not seen from here; the switch guide used `/var/www/comlinkr-app`, with the `.env` copied
   from the old clone.
-  - **Deploys are manual for now.** On the VPS: `git pull origin main` in the clone, then in `backend/`
+  - **GitHub Actions deploys** (`.github/workflows/deploy-backend.yml`, TR-056): a push to `main` touching
+    `backend/**` runs `tsc` and the unit tests, then, in the `production` environment, fast-forwards the VPS clone
+    over SSH, builds, takes a `pg_dump`, migrates, restarts pm2 and checks `/api/health`. Merging a backend change
+    is a production deploy.
+  - **By hand**, when the workflow cannot run. On the VPS: `git pull origin main` in the clone, then in `backend/`
     `npx pnpm@9.15.0 install --frozen-lockfile`, `npx prisma migrate status`, `npx pnpm@9.15.0 migrate:deploy`,
     `npx pnpm@9.15.0 generate`, `npx pnpm@9.15.0 build`, `pm2 restart comlinkr-api`. A database backup
     (`pg_dump`) comes before any new migration.
   - `backend/.github/workflows/deploy.yml` does not run: GitHub only reads `.github/workflows/` at the repository
-    root, and it still names `/var/www/comlinkr_backend`. Moving it is T-001 in the index, "Later work".
+    root, and it still names `/var/www/comlinkr_backend`. It is replaced by the root workflow and can be deleted.
   - The old repository's own deploy workflow still targets the old clone. Disable it there (or archive the
     repository) so a push to it cannot redeploy old code.
   - Rollback: start pm2 from the old clone again. The new migrations only add columns, tables and types, so the

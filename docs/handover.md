@@ -9,7 +9,8 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-Nothing in progress: PR 45 (docs for app 1.0.6) was merged into `main` on 2026-11-15.
+- `chore/backend-deploy-workflow` (TR-056, T-001): the root deploy workflow; left: merge, which runs the first
+  production deploy.
 
 ## 2026-11-15 - docs for app 1.0.6 (commit `60cdd7b`, pushed without a PR)
 
