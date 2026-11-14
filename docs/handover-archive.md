@@ -3,6 +3,28 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
+
+- Walked every section (Explore, Listings, Food, Community), the shared screens and admin on the OnePlus against
+  the local backend; 60 bugs fixed (Follow hidden, not fixed), findings recorded. Everything is in [the run log](device-runs/2026-11-10-full-walkthrough.md)
+  and [the build note](build/2026-11-10-walkthrough.md). New triage: TR-029 to TR-040. Nothing committed.
+- Resend works locally with the key set: sign-up and reset emails were delivered. The old "not working" was the
+  documented empty `RESEND_API_KEY`, plus a real bug: SDK errors were never logged (R-03).
+- Decided without the owner (they asked for autopilot): Follow hidden instead of built (TR-029); quest and story
+  delete added to My posts; event photos deleted with the event; Saved news lists article saves; the owner's local
+  account kept (role back to USER, password reset to the same value); admin walk read-only on other people's
+  content.
+- L-23, F-13 and F-14 change what the product does; the owner decided them in chat, with no plan file.
+- Checks: backend tsc, unit 103, e2e 47 pass; lint has 27 errors, all already in the committed code; mobile tsc
+  passes; `check-docs` passes.
+- Still running: backend on port 4003 (email off, `RESEND_API_KEY=` empty) and Metro on 8085, both from this
+  session. The walk's earlier backend (4000) and Metro (8084) were stopped. Not from this walk and left alone: Metro
+  on 8083 and three `nest start --watch` from 9 Nov. `adb reverse tcp:4000` points at 4003. No phone setting was
+  changed.
+- Slowed down by: the login screen closing on a Back sent with the keyboard already down, a mistyped password after
+  the field jump, `uiautomator dump /dev/tty` printing nothing, MCPier's 25-call limit, and Metro dying with its
+  parent task. All are now rules in `CLAUDE.md` (Tools).
+
 ## 2026-11-09 - docs checks and tooling rules (TR-025, PR 21)
 
 - Merged into `main` as PR 21.
