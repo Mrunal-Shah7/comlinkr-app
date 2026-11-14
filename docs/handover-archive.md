@@ -3,6 +3,17 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-09 - docs checks and tooling rules (TR-025, PR 21)
+
+- Merged into `main` as PR 21.
+- `CLAUDE.md`: Tools (MCPier `android` for the phone, adb fallback, Claude in Chrome for PRs since `gh` is not
+  installed), After a merge, "In progress" in this file, "Slowed down by:" on every entry, removing stale rules,
+  and Checks on the docs ([build note](build/2026-11-09-docs-tooling.md)).
+- `scripts/check-docs.mjs`, run by hooks at session start and before `git push`. Its first run found five merged
+  tasks still marked built and three build notes without their PR; all fixed.
+- Older handover entries moved to [handover-archive.md](handover-archive.md).
+- Slowed down by: finding how earlier PRs were opened (`gh` missing, searched the old session log); now in Tools.
+
 ## 2026-11-09 - back history (TR-023, PR 20)
 
 - Merged into `main` as PR 20 (`0ec3a44`): tab history and in-screen undo on Android Back

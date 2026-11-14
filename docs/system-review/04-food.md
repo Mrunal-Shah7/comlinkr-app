@@ -109,3 +109,9 @@ From the [build note](../build/2026-11-10-nearby.md).
   restaurants within 3 miles, nearest first, loading further pages (up to 200 restaurants); cards then show
   "x.x mi", and the list credits OpenStreetMap **[phone]**.
 - Sharing a restaurant no longer says how far away it is [code].
+
+## Update 2026-11-14: no "Rated 4.5+" tile (TR-054, plan 18, commit `60cdd7b`, no PR)
+
+From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walked on the phone.
+- The hero's "Rated 4.5+" count is hidden (`topCount` is fixed at 0 in `app/(tabs)/food/index.tsx`). The Pick of the week
+  and Open now tiles stay, and the Top rated chip still filters [code].
