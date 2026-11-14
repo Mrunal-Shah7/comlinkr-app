@@ -142,7 +142,8 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
   - **GitHub Actions deploys** (`.github/workflows/deploy-backend.yml`, TR-056): a push to `main` touching
     `backend/**` runs `tsc` and the unit tests, then, in the `production` environment, fast-forwards the VPS clone
     over SSH, builds, takes a `pg_dump`, migrates, restarts pm2 and checks `/api/health`. Merging a backend change
-    is a production deploy.
+    is a production deploy. Working since 2026-11-15 (PR 50). Secrets `VPS_HOST`, `VPS_USER` (`ubuntu`),
+    `VPS_SSH_KEY`; the script loads nvm (Node 22 on the VPS) and keeps a dump per deploy in `~/backups/`.
   - **By hand**, when the workflow cannot run. On the VPS: `git pull origin main` in the clone, then in `backend/`
     `npx pnpm@9.15.0 install --frozen-lockfile`, `npx prisma migrate status`, `npx pnpm@9.15.0 migrate:deploy`,
     `npx pnpm@9.15.0 generate`, `npx pnpm@9.15.0 build`, `pm2 restart comlinkr-api`. A database backup
