@@ -38,5 +38,11 @@ Left as it was: `backend/.github/workflows/deploy.yml` (it never runs; delete it
   `test` passed (install, generate, `tsc`, unit tests). `deploy` failed in its first second, in the SSH step,
   before reaching the server: most likely the `VPS_*` secrets are not set (the job log needs a signed-in
   browser and was not read). Production was untouched: `/api/health` answered 200 afterwards.
-- **To finish:** add `VPS_HOST`, `VPS_USER` and `VPS_SSH_KEY` (and the `production` environment, with an
-  approval rule if wanted) in the repository settings, then re-run the failed job.
+- **Re-runs, after the owner added the secrets:**
+  - Attempt 2: `ssh: unable to authenticate`. The new key had been generated on the VPS, but only an older key
+    (`github-actions-deploy`) was in `~ubuntu/.ssh/authorized_keys`. The owner added the new public key.
+  - Attempt 3: logged in, fast-forwarded `/var/www/comlinkr-app` to `main`, then stopped at
+    `npx: command not found`. Node is installed with nvm (`~/.nvm`, v22), which a non-interactive SSH shell does
+    not load; `pm2` is in `~/.local/bin`, `pg_dump` in `/usr/bin`. Nothing was built or restarted.
+- **Fix** (`fix/backend-deploy-nvm`): the script sources `~/.nvm/nvm.sh` before `set -e` and stops with a clear
+  message if `npx` is still missing. Its merge runs the workflow again, as the workflow file changed.
