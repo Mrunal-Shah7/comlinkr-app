@@ -1,6 +1,6 @@
 # 2026-11-15: The backend deploys from GitHub Actions again (TR-056, T-001)
 
-Branch `chore/backend-deploy-workflow`. The workflow file was written by the owner on 2026-11-11 and left
+Branch `chore/backend-deploy-workflow`, merged as pull request 48 (merge `6407403`). The workflow file was written by the owner on 2026-11-11 and left
 uncommitted; this branch commits it.
 
 ## Problem
@@ -34,4 +34,9 @@ Left as it was: `backend/.github/workflows/deploy.yml` (it never runs; delete it
 ## How it was checked
 
 - Read the workflow. `node scripts/check-docs.mjs` passes.
-- Not run yet: its first run is the merge of this branch.
+- **First run** (merge of PR 48, [run 43637726615](https://github.com/Mrunal-Shah7/comlinkr-app/actions/runs/43637726615)):
+  `test` passed (install, generate, `tsc`, unit tests). `deploy` failed in its first second, in the SSH step,
+  before reaching the server: most likely the `VPS_*` secrets are not set (the job log needs a signed-in
+  browser and was not read). Production was untouched: `/api/health` answered 200 afterwards.
+- **To finish:** add `VPS_HOST`, `VPS_USER` and `VPS_SSH_KEY` (and the `production` environment, with an
+  approval rule if wanted) in the repository settings, then re-run the failed job.
