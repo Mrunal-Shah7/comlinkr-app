@@ -152,3 +152,12 @@ Rows E-07, E-23, F-05, F-06 and F-14 in the [run log](../device-runs/2026-11-10-
   username picker) use `InWindowModal`, the same props, drawn as a full-screen layer on Android (TR-019).
 - The first tap after a sheet closes now works (TR-020): there is no closing window left on top.
 - A Listings sheet closes when the tab loses focus (TR-009).
+
+## Update 2026-11-14: app 1.0.6 (TR-054, commit `60cdd7b`, no PR)
+
+From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walked on the phone.
+- The app header's avatar has no gradient ring: a plain 34 px circle that opens the side menu. The side menu
+  starts with the logo and wordmark [code].
+- Build: version 1.0.6; `node_modules` is hoisted flat (`shamefully-hoist`); on EAS the Android Google Services
+  file comes from the `GOOGLE_SERVICES_JSON` file variable, locally from `google-services.json`; the Metro
+  transformer finds `@expo/metro-config` through `expo` [code].

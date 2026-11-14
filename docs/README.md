@@ -121,6 +121,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [15. A cancelled event is kept](plan/15-event-cancelled.md) (TR-047): built.
 - [16. Follow requests, the Following tab, the "New followers" switch](plan/16-follow-requests-and-following.md) (TR-049, TR-050, TR-051, TR-053): built.
 - [17. Marking a quest done](plan/17-quest-progress.md) (TR-052): built.
+- [18. The Q&A tab, topics matched on the phone, a lighter Explore](plan/18-qa-tab-and-lighter-explore.md) (TR-054): done in commit `60cdd7b` before the plan; four questions open for the owner.
 
 ## Reviews (`review/`)
 
@@ -143,6 +144,7 @@ Each gets a plan in `plan/` when it is picked up.
 
 ## Build notes (`build/`)
 
+- 2026-11-14: [App 1.0.6: the Q&A tab, topics matched on the phone, a lighter Explore](build/2026-11-14-app-1-0-6.md) (TR-054, TR-055, plan 18; commit `60cdd7b`, no PR).
 - 2026-11-10: [The brand is spelled "ComLinkr"](build/2026-11-10-brand-spelling.md) (TR-046).
 - 2026-11-10: [A tenant signs only after the landlord approves](build/2026-11-10-sign-after-approval.md) (TR-048).
 - 2026-11-10: [A cancelled event is kept, marked Cancelled](build/2026-11-10-event-cancelled.md) (TR-047, plan 15).

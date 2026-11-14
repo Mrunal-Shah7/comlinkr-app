@@ -130,3 +130,11 @@ Walked on the phone; rows A-, R- and S- in the [run log](../device-runs/2026-11-
 - `UserLocation.source` records where a city came from: `GPS`, `ADMIN` (admin override) or `MANUAL` (typed before
   plan 08, or an older app). The roommate profile no longer changes the user's city.
 - Guests still pick a city to browse.
+
+## Update 2026-11-14: a bigger logo on sign-in (TR-054, commit `60cdd7b`, no PR)
+
+From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walked on the phone.
+- Login and sign-up show the logo and the lower-case "comlinkr" wordmark larger and centred. On sign-up the Back
+  button sits at the left, over the row [code].
+- Google sign-in code is unchanged. A release APK built on this machine needs its signing key's SHA-1 registered
+  with Google first (TR-055) [code].
