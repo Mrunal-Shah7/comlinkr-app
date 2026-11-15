@@ -16,6 +16,55 @@ A push to `main` is meant to deploy the backend to production and run its migrat
 [docs/system-map.md](docs/system-map.md)), so nothing reaches `main` without a pull request.
 Do not commit or push unless the owner asks.
 
+## Owner's working scope and change log
+
+The owner works on the **mobile app only** (`frontend/apps/mobile/`): frontend changes, never the backend, web app
+or shared packages unless they say otherwise. Every change made in that scope is added to the list below, newest
+last, as each increment lands.
+
+- **Increment 1 (2026-11-14), brand text and logo:** the "comlinkr" wordmark and icon on the login screen
+  (`app/(auth)/login.tsx`) and sign-up screen (`app/(auth)/signup.tsx`) were too small; enlarged (login: icon 52,
+  text 32; sign-up: icon 44, text 28). The hamburger menu (`components/HamburgerMenu.tsx`) showed no logo; added
+  the app icon and "comlinkr" wordmark as a header row at the top of the sheet. Frontend only.
+- **Increment 2 (2026-11-14), Community tab renamed to "Q&A":** the tab only holds questions and answers. Changed
+  the tab label (`app/(tabs)/_layout.tsx`) and the screen's header and page title
+  (`app/(tabs)/community/index.tsx`). Route name `community`, code identifiers and backend calls are unchanged.
+  Type check deferred to the end of the batch, at the owner's request.
+- **Increment 3 (2026-11-14), Explore bento trimmed:** hid the "Homes in <city>", "Hot question", "Stories nearby"
+  and "Poll" tiles, since each has its own tab. Done with a `SHOW` flags object at the top of
+  `src/features/explore/components/ExploreBento.tsx` (set a flag to `true` to bring a tile back); the hot-question
+  request no longer runs while its flag is off. Greeting, next-event and quest tiles stay; the next-event tile now
+  fills the width. Frontend only.
+- **Increment 4 (2026-11-14), Food tab:** hid the "RATED 4.5+" tile under the search bar
+  (`app/(tabs)/food/index.tsx`, `topCount` set to 0). The "Top rated" filter chip stays. The "Open now" tile now
+  fills the row. Frontend only.
+- **Increment 5 (2026-11-14), Q&A topic chips filter by the question:** the chips (All, Housing, Food, Transit,
+  Events, Safety, General) asked the server for the category saved on each question, so a rent question saved as
+  General never showed under Housing. `app/(tabs)/community/index.tsx` now fetches all questions (pages of 50 while
+  a chip is on) and keeps those whose saved category, tags or words match the topic (`questionMatchesTopic`, using
+  the existing `scoreForCategory`). General also takes questions that match no other topic. Frontend only; the
+  API call no longer sends `category` from this screen.
+- **Increment 6 (2026-11-14), header ring removed:** the gradient ring around the avatar in the top bar of the
+  four tabs (`components/AppHeader.tsx`) is gone; the avatar is shown plain (34 px) and still opens the menu. The
+  red unread dots on notifications and messages stay. Frontend only.
+- **Increment 7 (2026-11-14), brand centred on login and sign-up:** the icon and "comlinkr" wordmark are centred
+  horizontally (`app/(auth)/login.tsx`, `app/(auth)/signup.tsx`). On sign-up the back button is positioned at the
+  left edge so it no longer pushes the logo off centre. Frontend only.
+- **Increment 8 (2026-11-14), version 1.0.6:** app version raised from 1.0.4 to 1.0.6 in
+  `frontend/apps/mobile/app.config.js` and `frontend/apps/mobile/package.json`. The Android build number
+  (`versionCode`) is not in the repository: `eas.json` uses `appVersionSource: "remote"`, so EAS counts it.
+- **Increment 9 (2026-11-14), Android EAS build fix:** the Android build failed in prebuild with
+  `google-services.json is missing` because EAS Build uploads only git-tracked files and that file is git-ignored.
+  `app.config.js` now reads `process.env.GOOGLE_SERVICES_JSON` first (falling back to the local file), as iOS
+  already does with `GOOGLE_SERVICE_INFO_PLIST`. The owner creates the EAS file variable `GOOGLE_SERVICES_JSON`
+  from the local `google-services.json` (`eas env:create`). Not a source of secrets in the repository.
+- **Increment 10 (2026-11-14), iOS EAS build fix:** the iOS build failed in the Xcode "Bundle React Native code"
+  step with `Cannot find module '@expo/metro-config/build/babel-transformer'` (shown as "Cannot read properties of
+  undefined (reading 'transformFile')"). `metro.transformer.js` required that package, which the app does not list
+  as a dependency: it worked with npm's flat `node_modules` (the 1.0.5 builds) but not with pnpm on EAS.
+  It is now resolved through `expo`, which depends on it (no `package.json` or lockfile change). Also reinstalled
+  the local `node_modules` (it was half-written from interrupted installs).
+
 ## Building and testing
 
 Node 24 on this machine. Both apps use pnpm, at different versions: the backend pins `pnpm@9.15.0`
