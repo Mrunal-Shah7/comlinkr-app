@@ -64,6 +64,79 @@ last, as each increment lands.
   as a dependency: it worked with npm's flat `node_modules` (the 1.0.5 builds) but not with pnpm on EAS.
   It is now resolved through `expo`, which depends on it (no `package.json` or lockfile change). Also reinstalled
   the local `node_modules` (it was half-written from interrupted installs).
+- **Increment 11 (2026-11-15), Explore "Following" tab hidden:** removed from the row of tabs on Explore
+  (`app/(tabs)/feed/index.tsx`, filtered out where the row is drawn; the tab's code stays, so it can come back).
+  Frontend only.
+- **Increment 12 (2026-11-15), tab bar no longer hidden behind the Android navigation buttons:** on phones with
+  button navigation the system buttons were drawn over the tab labels. The app no longer hides the Android
+  navigation bar: removed `<NavigationBar hidden />` from `app/_layout.tsx` and the `hidden: true` option of the
+  `expo-navigation-bar` plugin in `app.config.js` (needs a new native build). Not yet checked on a phone. This
+  undoes the earlier "hide the navigation bar until a swipe" behaviour. Frontend only.
+- **Increment 13 (2026-11-15), city search no longer pushed under the status bar:** on Android, a full-height sheet
+  (the "Your city" picker in `components/GuestCityBanner.tsx`) opened with the keyboard up grew taller than the room
+  above the keyboard, so its title and search box sat under the status bar. The in-window sheet card
+  (`src/shared/d/SheetPortal.tsx`) now has a `maxHeight` of the window height minus the status bar and the
+  keyboard; its content shrinks to fit. Applies to every Android sheet. Not yet checked on a phone. Frontend only.
+- **Increment 14 (2026-11-15), brand in the top bar:** the centre of the top bar (`components/AppHeader.tsx`) now
+  shows the app icon and "comlinkr" at rest. Once the page's large title scrolls away, the brand fades out and the
+  tab's name (Explore, Listings, Food, Q&A) fades in, as the name did before. Screens without a title keep the
+  brand. Not yet checked on a phone. Frontend only.
+- **Increment 15 (2026-11-15), "Comlinkr" with a capital C:** the wordmark was written "comlinkr"; it is now
+  "Comlinkr" on the login and sign-up screens (`app/(auth)/`), in the menu sheet (`components/HamburgerMenu.tsx`)
+  and in the top bar (`components/AppHeader.tsx`). Other texts that say "ComLinkr" (the app's name, permission
+  messages, share text) are unchanged. Frontend only.
+- **Increment 16 (2026-11-15), listing detail stat tiles:** the Beds / Baths / Sq ft / Floor tiles cut a long value
+  short ("2nd Fl…"). In `src/features/housing/components/PropertyDetail.tsx` a value longer than 5 characters now
+  uses a smaller size (15) and may wrap to two lines; values are centred and the tiles have side padding. The
+  Floor tile also drops a trailing "Floor" from its value ("2nd Floor" shows as "2nd") because the label already
+  says it. Not yet checked on a phone. Frontend only.
+- **Increment 17 (2026-11-15), text boxes no longer stuck together:** the shared `Input` (`src/shared/ui/Input.tsx`)
+  has no outer spacing, so boxes stacked in a plain view touched. Fixed where it showed: on the Apply screen
+  (`app/property-agreement.tsx`) the Job box and "People moving in" row, the three "edit your details" boxes
+  (gap 14) and the pets box; in the event registration sheet
+  (`src/features/explore/components/EventRegistrationModal.tsx`) the Name / Email / Phone boxes (gap 14). Login,
+  sign-up and forgot-password already space theirs. Rule of thumb: put `Input` inside a view with `gap`. Not yet
+  checked on a phone. Frontend only.
+- **Increment 18 (2026-11-15), Stories tab tidied:** "Add a story" was the first cell of the two-column grid, a
+  tall dashed box with a blank half beside it. `AddStoryTile` (`src/features/explore/components/StoryCard.tsx`)
+  has a `wide` form: a slim full-width row (icon, "Add a story" / "Photo or video", plus) shown first in the
+  Stories section of `app/(tabs)/feed/index.tsx`, and no longer a grid cell. The category chips (All, Events,
+  Food, ...) and the sort chips (Trending, Latest, Popular) now show only when there are stories to narrow down.
+  When the user has a story, the row reads "Your story / Tap to view". Not yet checked on a phone. Frontend only.
+- **Increment 19 (2026-11-15), every listing is a full-width card:** on the Listings tab only the first home was
+  the large "feature" card (`ListingFeature`) and the rest were small two-column tiles. `app/(tabs)/housing/index.tsx`
+  now builds one `listing` row per home, so all homes use the feature card. `ListingTile` and the `listingPair` row
+  stay in the code but are unused for listings. Available-room tiles are unchanged. Not yet checked on a phone.
+  Frontend only.
+- **Increment 20 (2026-11-15), Listings header spacing:** the gap between the Homes / Rooms / Roommates switcher and
+  the search box was about 22 (12 under the switcher plus 10 above the search box). The switcher's bottom margin in
+  `app/(tabs)/housing/index.tsx` is now 0, leaving the search box's own 10. Frontend only.
+- **Increment 21 (2026-11-15), Q&A "Latest" heading and "Recent" toggle smaller:** in
+  `app/(tabs)/community/index.tsx` the heading is 17 instead of 21, and the Recent / Popular sort control is a
+  small pill (13 px icon, 12 px text, little padding) instead of a full-size chip. It still switches between
+  Recent and Popular. Not yet checked on a phone. Frontend only.
+- **Increment 22 (2026-11-15), no white box on Explore while loading:** the Explore bento kept an empty white tile
+  (246 high) where the next-event tile goes while the events load (E-14, so the page would not jump). It showed
+  as a big blank box on start-up. Removed in `src/features/explore/components/ExploreBento.tsx`: nothing shows
+  until the event arrives, then the tile appears (the page below moves down a little at that moment). The
+  `heroLoading` prop is still passed but no longer used there. Not yet checked on a phone. Frontend only.
+- **Increment 23 (2026-11-15), floating circle removed from the Explore greeting card:** the greeting tile in
+  `src/features/explore/components/ExploreBento.tsx` had a big translucent circle that drifted and pulsed in a
+  loop (`Glow`). Removed (component, style and its imports): the tile is a plain gradient. It was the only
+  animated circle in the app. The faint decorative circles in the admin screens and the unused `decorCircle`
+  styles in the login, sign-up and forgot-password screens are not drawn on the user screens and were left. The
+  note in "Tools" about Explore's `uiautomator dump` failing because the glow never settles no longer applies.
+  Not yet checked on a phone. Frontend only.
+- **Increment 24 (2026-11-15), menu logo centred:** the icon and "Comlinkr" row at the top of the menu sheet
+  (`components/HamburgerMenu.tsx`) is centred (it was left-aligned). The capital C was already in place (Increment
+  15); a phone still showing "comlinkr" is running an older build. Frontend only.
+- **Increment 25 (2026-11-15), News post form spacing:** on the "News for neighbours" form the Content box and the
+  "More options (category, tags, location)" button touched. The button's style (`moreOptionsBtn` in
+  `src/features/compose/styles.ts`) now has a 14 top margin. Frontend only.
+- **Increment 26 (2026-11-15), Rooms tab spacing:** the search box and the "Rent out a room in my home" button
+  touched. The button's wrapper in `app/(tabs)/housing/index.tsx` has a 12 top margin. Frontend only.
+- **Increment 27 (2026-11-15), version 1.0.7:** app version raised from 1.0.6 to 1.0.7 in
+  `frontend/apps/mobile/app.config.js` and `frontend/apps/mobile/package.json`. EAS counts the build number.
 
 ## Building and testing
 
