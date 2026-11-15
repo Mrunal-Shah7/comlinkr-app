@@ -1,0 +1,59 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", ".github/workflows/deploy-backend.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false   # never cut a deploy off halfway through a migration
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm, cache-dependency-path: backend/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm generate
+      - run: npx tsc --noEmit
+      - run: pnpm test:unit
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production        # lets you require a manual approval in GitHub
+    steps:
+      - uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Node comes from nvm on the VPS, which only loads in interactive shells. Load it before set -e:
+            # nvm.sh can return non-zero while it sets up.
+            export NVM_DIR="$HOME/.nvm"
+            . "$NVM_DIR/nvm.sh"
+            set -e
+            export PATH="$HOME/.local/bin:$PATH"
+            command -v npx >/dev/null || { echo "npx not found after loading nvm"; exit 1; }
+            cd /var/www/comlinkr-app
+            git fetch origin main
+            git merge --ff-only origin/main
+            cd backend
+            npx pnpm@9.15.0 install --frozen-lockfile
+            npx pnpm@9.15.0 generate
+            npx pnpm@9.15.0 build            # build before migrating: a failed build leaves the database untouched
+            mkdir -p ~/backups
+            set -a; . ./.env; set +a
+            pg_dump "${DATABASE_URL%%\?*}" -Fc -f ~/backups/comlinkr-$(date +%F-%H%M).dump
+            npx pnpm@9.15.0 migrate:deploy
+            pm2 restart comlinkr-api
+            for i in $(seq 1 10); do curl -fsS http://127.0.0.1:4000/api/health && exit 0; sleep 3; done
+            echo "Health check failed"; exit 1

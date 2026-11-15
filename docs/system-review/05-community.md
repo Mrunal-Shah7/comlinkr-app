@@ -15,14 +15,16 @@ Asking locals: questions and answers about the city, with upvotes, plus communit
 
 ## Who uses it, and where
 
-- Screen: `frontend/apps/mobile/app/(tabs)/community/index.tsx` (about 1.7k lines) [code].
+- Screen: `frontend/apps/mobile/app/(tabs)/community/index.tsx` (about 1.7k lines), the tab labelled **Q&A**
+  since 1.0.6 (it was "Community") [code].
 - Backend: `community` module [code].
 
 ## How it works
 
 - Hero with an **Ask bar** → Ask Question modal (title, body, category). The category is suggested from the text by
   a keyword scorer (`scoreForCategory`, word-boundary and stem matching) [code].
-- Topic chips: All, Housing, Food, Transit, Events, Safety, General; sort [code].
+- Topic chips: All, Housing, Food, Transit, Events, Safety, General; sort [code]. Since 1.0.6 a topic is matched
+  on the phone, not by the API's `category` filter (update 2026-11-14 below) [code].
 - Question cards: upvote, answer count, share, bookmark, more menu (report question or member, block); inline
   answers with their own upvotes [code].
 - Questions from blocked users are hidden on the phone (`isQuestionHiddenByBlock`) [code].
@@ -103,3 +105,14 @@ From the [build note](../build/2026-11-10-follow-requests.md).
   covers news posts, events not cancelled, stories not expired and quests. Each row opens the item **[phone]** for a
   news post, [e2e] for the rest.
 - **Explore's six tabs** scroll sideways in a row of text tabs, which replaces the segmented control **[phone]**.
+
+## Update 2026-11-14: the Q&A tab, topics matched on the phone (TR-054, plan 18, commit `60cdd7b`, no PR)
+
+From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walked on the phone.
+- The tab, its header and its page title say **Q&A**. The route and deep links (`/community`) are unchanged [code].
+- **A topic is matched on the phone** (`questionMatchesTopic`): the question's saved category, a tag equal to the
+  topic, or the keyword scorer (`scoreForCategory` ≥ 2). General takes questions saved as General and any question
+  that scores for no other topic. With a topic chosen, the screen asks `GET /community/questions` for the whole city
+  with no `category`, 50 per page, and keeps the matches; without one, 20 per page [code].
+- So a question can show under two topics, and a topic's page can hold few or no questions while more pages load.
+  Whether to keep this or move the rule to the API is plan 18, question 1 [code].

@@ -9,7 +9,49 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-Nothing in progress: PRs 24 to 42 were merged into `main` on 2026-11-10, PR 43 on 2026-11-11.
+Nothing in progress: PRs 45 to 50 were merged into `main` on 2026-11-15.
+
+## 2026-11-15 - the backend deploys from GitHub Actions (TR-056, PRs 47 to 50)
+
+- **Merged:** PR 47 (the `ponytail` project skill), PR 48 (`.github/workflows/deploy-backend.yml`, T-001),
+  PR 49 (after-merge docs), PR 50 (load nvm in the deploy script). PRs 48 to 50 were opened and merged through
+  MCPier's `github` server.
+- **Pipeline live:** merging a change to `backend/**` now tests and deploys to production. First success:
+  run 43639906602, attempt 2. Getting there took the owner adding the secrets, the deploy key to
+  `~ubuntu/.ssh/authorized_keys`, and `%40` for the `@` in the VPS database password
+  ([build note](build/2026-11-15-backend-deploy-workflow.md), [lessons](production-lessons.md)).
+- **Left for the owner:** delete `~/.ssh/comlinkr_deploy` on the VPS if still there; remove the old
+  `github-actions-deploy` key once the old repository's workflow is disabled; prune `~/backups/` now and then;
+  TR-055 (Google sign-in SHA-1) and plan 18's questions are still open.
+- **Still running:** nothing. **Phone:** not used.
+- **Slowed down by:**
+  - Every deploy failure needed the owner to paste the job log: the MCPier GitHub server has no Actions tools and
+    the logs API needs a sign-in. Now in `CLAUDE.md` (Tools, GitHub).
+  - nvm and the unencoded password, both only visible on the real server. Now rules in `CLAUDE.md`, "Rules
+    learned from production".
+
+## 2026-11-15 - docs for app 1.0.6 (commit `60cdd7b`, pushed without a PR)
+
+- **What happened:** a developer pushed `60cdd7b` (app 1.0.6) straight to `main` on 2026-11-14: the Community tab
+  renamed Q&A, topics matched on the phone, four Explore tiles and Food's "Rated 4.5+" tile hidden, a bigger logo,
+  the header avatar without its ring, and EAS build fixes (Google Services file from `GOOGLE_SERVICES_JSON`,
+  hoisted `node_modules`, the Metro transformer). No docs came with it.
+- **Docs written afterwards** on `chore/docs-app-1-0-6`: TR-054 and TR-055 in triage,
+  [plan 18](plan/18-qa-tab-and-lighter-explore.md) (four questions for the owner),
+  [build note](build/2026-11-14-app-1-0-6.md), updates to reviews 01, 02, 04, 05 and 08, the system map and
+  `CLAUDE.md` (Building and testing).
+- **Checked:** mobile `pnpm typecheck` passes at `60cdd7b`; it reinstalled `node_modules` (hoisted) first.
+  Nothing of 1.0.6 was walked on the phone, by the author or here.
+- **Left for the owner:** register the debug keystore's SHA-1 with Google before trying Google sign-in on a
+  release APK (TR-055); answer plan 18's questions.
+- **Still running:** nothing. **Phone:** not used.
+- **Slowed down by:**
+  - A direct push to `main` passes `check-docs`, which only compares docs with merged branches and PRs, so the
+    missing docs were found by reading the diff. Not made a rule: the rule that nothing reaches `main` without a
+    pull request already exists. The push went through, so GitHub does not enforce it on `main`: branch protection
+    is the owner's call.
+  - Whether Google sign-in works on the local APK took reading the keystore's SHA-1 and `google-services.json`;
+    now in `CLAUDE.md` (Building and testing) and the system map.
 
 ## 2026-11-11 - production on this repository, release APK, after-merge docs (PR 43)
 
@@ -108,36 +150,3 @@ Nothing in progress: PRs 24 to 42 were merged into `main` on 2026-11-10, PR 43 o
   - `/api` written twice in an e2e URL;
   - the scratchpad API helper cutting responses at 600 characters (now `AS_MAX`).
   - The first two are now rules in `CLAUDE.md` (Tools).
-
-## 2026-11-10 - full walkthrough (TR-028), autopilot overnight
-
-- Walked every section (Explore, Listings, Food, Community), the shared screens and admin on the OnePlus against
-  the local backend; 60 bugs fixed (Follow hidden, not fixed), findings recorded. Everything is in [the run log](device-runs/2026-11-10-full-walkthrough.md)
-  and [the build note](build/2026-11-10-walkthrough.md). New triage: TR-029 to TR-040. Nothing committed.
-- Resend works locally with the key set: sign-up and reset emails were delivered. The old "not working" was the
-  documented empty `RESEND_API_KEY`, plus a real bug: SDK errors were never logged (R-03).
-- Decided without the owner (they asked for autopilot): Follow hidden instead of built (TR-029); quest and story
-  delete added to My posts; event photos deleted with the event; Saved news lists article saves; the owner's local
-  account kept (role back to USER, password reset to the same value); admin walk read-only on other people's
-  content.
-- L-23, F-13 and F-14 change what the product does; the owner decided them in chat, with no plan file.
-- Checks: backend tsc, unit 103, e2e 47 pass; lint has 27 errors, all already in the committed code; mobile tsc
-  passes; `check-docs` passes.
-- Still running: backend on port 4003 (email off, `RESEND_API_KEY=` empty) and Metro on 8085, both from this
-  session. The walk's earlier backend (4000) and Metro (8084) were stopped. Not from this walk and left alone: Metro
-  on 8083 and three `nest start --watch` from 9 Nov. `adb reverse tcp:4000` points at 4003. No phone setting was
-  changed.
-- Slowed down by: the login screen closing on a Back sent with the keyboard already down, a mistyped password after
-  the field jump, `uiautomator dump /dev/tty` printing nothing, MCPier's 25-call limit, and Metro dying with its
-  parent task. All are now rules in `CLAUDE.md` (Tools).
-
-## 2026-11-09 - docs checks and tooling rules (TR-025, PR 21)
-
-- Merged into `main` as PR 21.
-- `CLAUDE.md`: Tools (MCPier `android` for the phone, adb fallback, Claude in Chrome for PRs since `gh` is not
-  installed), After a merge, "In progress" in this file, "Slowed down by:" on every entry, removing stale rules,
-  and Checks on the docs ([build note](build/2026-11-09-docs-tooling.md)).
-- `scripts/check-docs.mjs`, run by hooks at session start and before `git push`. Its first run found five merged
-  tasks still marked built and three build notes without their PR; all fixed.
-- Older handover entries moved to [handover-archive.md](handover-archive.md).
-- Slowed down by: finding how earlier PRs were opened (`gh` missing, searched the old session log); now in Tools.

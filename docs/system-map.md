@@ -9,7 +9,7 @@ wrong; it is read before everything else._
 | | |
 |---|---|
 | What | City-scoped community app: housing, roommates, news, events, stories, food, local Q&A. See [reference/ProductOverview.md](reference/ProductOverview.md) |
-| Platforms | Android and iOS (Expo app, version 1.0.4, package `com.comlinkr.app`). A Vite web app exists but is not developed |
+| Platforms | Android and iOS (Expo app, version 1.0.6, package `com.comlinkr.app`). A Vite web app exists but is not developed |
 | People | Guests (browse a city), signed-in users, badge holders (LANDLORD, RESTAURANT_OWNER, AGENCY, LOCAL_REVIEWER), admins (`role = ADMIN`, in-app admin console) |
 | Money | No payments in the app today. Restaurant reservations and property-application deposits are recorded, not charged [question: is a deposit ever charged?] |
 | Data | Personal profiles, locations, chat, identity documents for badges, rental applications with signatures, tenancy-agreement PDFs. Data export and account deletion exist (30-day window) |
@@ -56,7 +56,7 @@ Each tab and area is described in its system review (`system-review/`).
 |---|---|---|
 | Resend | OTP and password-reset emails | Leave `RESEND_API_KEY` empty: with `NODE_ENV=development` the OTP is logged by the backend |
 | Cloudinary | Avatars, listing, restaurant, story and event media | Real uploads if keys are set; use a test cloud or leave empty |
-| Google Sign-In, Sign in with Apple | Social sign-in | Needs a development build, not Expo Go |
+| Google Sign-In, Sign in with Apple | Social sign-in | Needs a development build, not Expo Go. On Android, Google checks the signing key: each key's SHA-1 must be registered as an Android OAuth client for `com.comlinkr.app` (TR-055) |
 | Expo push (`exp.host`) | Push notifications | Reaches only devices registered against the local database |
 | Google News RSS | Live News on Explore | Called by `news.cron` every 4 minutes |
 | Firebase Analytics | App analytics (`@react-native-firebase/analytics`) | Development build only; events go to the real Firebase project |
@@ -139,12 +139,17 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
   handshake answers 200, and `/api/users/me/follow-requests` (only in this code) answers 401 rather than 404.
   The server itself was not seen from here; the switch guide used `/var/www/comlinkr-app`, with the `.env` copied
   from the old clone.
-  - **Deploys are manual for now.** On the VPS: `git pull origin main` in the clone, then in `backend/`
+  - **GitHub Actions deploys** (`.github/workflows/deploy-backend.yml`, TR-056): a push to `main` touching
+    `backend/**` runs `tsc` and the unit tests, then, in the `production` environment, fast-forwards the VPS clone
+    over SSH, builds, takes a `pg_dump`, migrates, restarts pm2 and checks `/api/health`. Merging a backend change
+    is a production deploy. Working since 2026-11-15 (PR 50). Secrets `VPS_HOST`, `VPS_USER` (`ubuntu`),
+    `VPS_SSH_KEY`; the script loads nvm (Node 22 on the VPS) and keeps a dump per deploy in `~/backups/`.
+  - **By hand**, when the workflow cannot run. On the VPS: `git pull origin main` in the clone, then in `backend/`
     `npx pnpm@9.15.0 install --frozen-lockfile`, `npx prisma migrate status`, `npx pnpm@9.15.0 migrate:deploy`,
     `npx pnpm@9.15.0 generate`, `npx pnpm@9.15.0 build`, `pm2 restart comlinkr-api`. A database backup
     (`pg_dump`) comes before any new migration.
   - `backend/.github/workflows/deploy.yml` does not run: GitHub only reads `.github/workflows/` at the repository
-    root, and it still names `/var/www/comlinkr_backend`. Moving it is T-001 in the index, "Later work".
+    root, and it still names `/var/www/comlinkr_backend`. It is replaced by the root workflow and can be deleted.
   - The old repository's own deploy workflow still targets the old clone. Disable it there (or archive the
     repository) so a push to it cannot redeploy old code.
   - Rollback: start pm2 from the old clone again. The new migrations only add columns, tables and types, so the
@@ -154,12 +159,17 @@ DELETE FROM "User" WHERE username LIKE 'uit\_%' OR username = 'ui_tester';
   `EXPO_PUBLIC_API_BASE_URL` to production. JavaScript-only changes ship as OTA updates
   (`eas update --branch production`) and reach every user at once. Native changes need a store build. Full guide:
   `frontend/apps/mobile/docs/BUILD_AND_DEPLOY.md`.
+  - `google-services.json` is git-ignored, so EAS does not upload it: since 1.0.6 `app.config.js` reads its path
+    from `GOOGLE_SERVICES_JSON`, an EAS file variable, and falls back to the local file. The mobile app's
+    `node_modules` is hoisted (`shamefully-hoist`); run `pnpm install` after pulling a change to it.
 - **Release APK (sideloading, built on this machine).** `scripts\build-release-apk.cmd --no-pause` from the
   repository root. It refuses any `EXPO_PUBLIC_API_BASE_URL` in `frontend/apps/mobile/.env` other than
   `https://api.comlinkr.com/api`, uses the JDK, SDK and Gradle cache on D:, builds arm64 only into `D:\cl`, and
   copies the APK to `D:\ComLinkr\builds\ComLinkr-arm64.apk` (about 18 minutes; install with
   `adb install -r`). Signed with the debug keystore: fine for sideloading, not for the Play Store. OTA updates
-  are off in it (`APP_ENV=development`).
+  are off in it (`APP_ENV=development`). Google sign-in works in it only once that keystore's SHA-1
+  (`5E:8F:16…F6:25`, `keytool -list -v -keystore android/app/debug.keystore -storepass android`) is registered
+  with Google (TR-055); a new keystore needs registering again.
   - `android/` is generated and git-ignored. When `app.config.js` or a native dependency changed since the last
     build, regenerate it first, keeping the keystore, or the APK silently lacks the new permissions and plugin
     settings:

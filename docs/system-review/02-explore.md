@@ -185,3 +185,12 @@ From the [build note](../build/2026-11-10-quest-progress.md).
 From the [build note](../build/2026-11-10-walk-leftovers.md).
 - While the hero loads, empty tiles hold the places of the next event and of "Homes in …". The stories card no
   longer jumps down when they arrive **[phone]**.
+
+## Update 2026-11-14: a lighter bento (TR-054, plan 18, commit `60cdd7b`, no PR)
+
+From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walked on the phone.
+- The bento no longer shows the **Homes in …** count, the **trending question**, **Stories nearby** or the **Poll**
+  tile: a `SHOW` object in `ExploreBento.tsx` hides them, all `false`. The trending-question request is not sent.
+  Each still has its own place (Housing, Q&A, Explore's Stories and Polls tabs) [code].
+- The hero, the next event and the quest tile stay. When both tiles of the right-hand column are hidden, the column
+  is left out. The 2026-11-10 placeholder for "Homes in …" no longer appears [code].

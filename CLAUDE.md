@@ -80,11 +80,13 @@ repository, reinstall both: pnpm's links hold absolute paths.
     The tests do not migrate that database: after a new migration, apply it there first (`prisma migrate deploy`
     with `DATABASE_URL` set to `TEST_DATABASE_URL`), or the tests fail with a missing column.
   - Lint: `npx eslint "src/**/*.ts"` to check. `pnpm lint` runs `--fix` and rewrites files.
-- **mobile (`frontend/apps/mobile/`):** `pnpm install`, `pnpm typecheck`. There are no automated mobile tests;
+- **mobile (`frontend/apps/mobile/`):** `pnpm install`, `pnpm typecheck`. Its `node_modules` is hoisted
+  (`shamefully-hoist`, since 1.0.6); run `pnpm install` again after pulling a change to `.npmrc` or the lock file. There are no automated mobile tests;
   behaviour is checked on a phone (see "Testing on the phone" below).
   - Release APK for sideloading: `scripts\build-release-apk.cmd --no-pause` from the repository root, output
     `D:\ComLinkr\builds\ComLinkr-arm64.apk`. After a change to `app.config.js` or a native dependency, run
-    `expo prebuild --clean` first and keep `android/app/debug.keystore`. Steps, checks and known failures:
+    `expo prebuild --clean` first and keep `android/app/debug.keystore`: Google sign-in in the APK works only
+    while that key's SHA-1 is registered with Google (TR-055). Steps, checks and known failures:
     [docs/system-map.md, "How it deploys"](docs/system-map.md#how-it-deploys).
 - **Database:** Prisma migrations in `backend/prisma/migrations/`. Locally: `pnpm migrate:dev` to create one,
   `pnpm migrate:status` to check. Production runs `migrate:deploy` on each deploy.
@@ -146,10 +148,11 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   local time); compare with `now()` in the same query.
 - **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe
   Back. Check gestures by hand.
-- **Browser and GitHub:** the `gh` CLI is not installed. Use Claude in Chrome for anything in a browser, including
-  opening and merging pull requests: push the branch, open
-  `https://github.com/Mrunal-Shah7/comlinkr-app/compare/<base>...<branch>?expand=1` with the title and body
-  filled in, then create the pull request there. Merge only when the owner asks, and close the tab afterwards.
+- **GitHub:** the `gh` CLI is not installed. Open and merge pull requests with MCPier's `github` server
+  (`github__create_pull_request`, `github__merge_pull_request` with the full 40-character head SHA). Merge only
+  when the owner asks. It has no Actions tools: read a run's status and step times from the public API
+  (`https://api.github.com/repos/Mrunal-Shah7/comlinkr-app/actions/runs/<id>/jobs`); a job's log needs a
+  signed-in browser, so ask the owner for it or read it in Claude in Chrome.
 - **Phone settings** changed for a check (navigation mode, dark mode, a test user's role) are put back before the
   session ends, and the handover says so.
 
@@ -222,7 +225,12 @@ in a pull request like any other code.
 ## Rules learned from production
 
 Each comes from a real incident; the story is in `docs/production-lessons.md`. Add to both when a fix lands for
-something production showed first. None yet.
+something production showed first.
+
+- A command run over non-interactive SSH on the VPS (a deploy script, a one-off) loads nvm first
+  (`. ~/.nvm/nvm.sh`): without it there is no `node`, `npx` or `pnpm` (TR-056).
+- Special characters in a password inside a database URL are percent-encoded (`@` → `%40`). Prisma accepts them
+  raw; `pg_dump` and other libpq tools do not (TR-056).
 
 ## Rules from bugs already found
 
