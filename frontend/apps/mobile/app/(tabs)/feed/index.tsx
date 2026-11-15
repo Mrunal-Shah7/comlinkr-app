@@ -1601,8 +1601,8 @@ export default function FeedScreen() {
       for (let i = 0; i < exploreEvents.length; i += 2) feedRows.push({ kind: "eventPair", events: exploreEvents.slice(i, i + 2) });
     }
     else if (feedTab === "Stories") {
-      // Design D: a two-column grid of tall tiles, "Add a story" first.
-      const items: (ApiStory | "add")[] = ["add", ...filteredApiStories];
+      // Design D: a two-column grid of tall tiles. "Add a story" is a slim row above the grid (see the header).
+      const items: (ApiStory | "add")[] = [...filteredApiStories];
       for (let i = 0; i < items.length; i += 2) feedRows.push({ kind: "storyPair", items: items.slice(i, i + 2) });
     }
     else if (feedTab === "Quests") feedRows = questsList.map((quest) => ({ kind: "quest", quest }));
@@ -1834,7 +1834,7 @@ export default function FeedScreen() {
             {/* Plan 16: six tabs no longer fit the segmented control; this row scrolls. */}
             <ScrollTabs
               style={{ marginBottom: 12 }}
-              items={FEED_TABS.map((t) => ({ key: t, label: t }))}
+              items={FEED_TABS.filter((t) => t !== "Following").map((t) => ({ key: t, label: t }))} // "Following" hidden on purpose
               value={feedTab}
               onChange={(k) => setFeedTab(k as typeof feedTab)}
             />
@@ -1895,17 +1895,25 @@ export default function FeedScreen() {
             {/* ── STORIES (Sprint 14) ── */}
             {hasChosenCity && feedTab === "Stories" && (
               <>
-                {/* ── Design D: category chips, then sort chips; tiles below ── */}
-                <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 10 }}>
-                  {STORY_CATEGORIES.map((cat) => (
-                    <Chip key={cat} label={cat} on={storyFilter === cat} onPress={() => setStoryFilter(cat)} />
-                  ))}
-                </GHScrollView>
-                <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>
-                  {(["trending", "latest", "popular"] as const).map((sortOpt) => (
-                    <Chip key={sortOpt} label={sortOpt.charAt(0).toUpperCase() + sortOpt.slice(1)} on={storySortBy === sortOpt} onPress={() => setStorySortBy(sortOpt)} />
-                  ))}
+                {/* "Add a story" (or "Your story") first, as a slim row; then, only when there are stories to narrow down,
+                    the category chips and the sort chips; the tiles are below. */}
+                <View style={{ paddingHorizontal: 16, marginTop: 4, marginBottom: 14 }}>
+                  <AddStoryTile wide hasOwn={myStoriesFromApi.length > 0} onPress={onAddStoryTile} />
                 </View>
+                {storiesFromApi.length > 0 ? (
+                  <>
+                    <GHScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 10 }}>
+                      {STORY_CATEGORIES.map((cat) => (
+                        <Chip key={cat} label={cat} on={storyFilter === cat} onPress={() => setStoryFilter(cat)} />
+                      ))}
+                    </GHScrollView>
+                    <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 16, paddingBottom: 14 }}>
+                      {(["trending", "latest", "popular"] as const).map((sortOpt) => (
+                        <Chip key={sortOpt} label={sortOpt.charAt(0).toUpperCase() + sortOpt.slice(1)} on={storySortBy === sortOpt} onPress={() => setStorySortBy(sortOpt)} />
+                      ))}
+                    </View>
+                  </>
+                ) : null}
                 {storiesLoading && storiesFromApi.length === 0 && myStoriesFromApi.length === 0 ? (
                   <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, marginBottom: 10 }}>
                     <View style={{ flex: 1, aspectRatio: 3 / 4.4, borderRadius: 24, backgroundColor: tc.skeletonBg }} />

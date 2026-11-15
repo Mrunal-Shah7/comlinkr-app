@@ -9,7 +9,7 @@
 // The content renders under the root, not under the screen that opened it: it keeps its props and closures, but
 // hooks inside it read the root's context (no screen-scoped navigation hooks inside sheet content).
 import { useEffect, type ReactElement } from 'react';
-import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { create } from 'zustand';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -86,9 +86,14 @@ function InWindowSheet({ visible, onClose, containerColor, children }: {
       else drag.set(withTiming(0, { duration: 180 }));
     });
 
+  // The card never grows past the room between the status bar and the keyboard: a full-height sheet (the city
+  // picker) opened with the keyboard up used to push its title row and search box under the status bar. Its content
+  // shrinks to fit (DSheet's content view has flexShrink: 1).
+  const { height: windowHeight } = useWindowDimensions();
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: drag.get() }],
     marginBottom: keyboard.height.get(),
+    maxHeight: Math.max(200, windowHeight - insets.top - 8 - keyboard.height.get()),
   }));
 
   // The layer stays mounted so the scrim and the card, its direct children, can play their exit animations.

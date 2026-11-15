@@ -8,12 +8,13 @@ import { palette } from "../src/theme/palette";
 import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { interpolate, useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import { useQuery } from "@tanstack/react-query";
 import HamburgerMenu from "./HamburgerMenu";
 import { useTheme } from "../src/theme/useTheme";
-import { TYPE, body } from "../src/theme/d";
+import { TYPE, body, display } from "../src/theme/d";
 import { GradientFill } from "../src/shared/d";
 import { FadeImage } from "./FadeImage";
 import { useAuthStore } from "../src/store/auth.store";
@@ -39,6 +40,8 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
   });
 
   const barBg = useAnimatedStyle(() => ({ opacity: scrollY ? interpolate(scrollY.value, [0, 64], [0, 1], "clamp") : 1 }));
+  // The brand shows at rest; the tab's name takes its place once the page's large title has scrolled away.
+  const brandStyle = useAnimatedStyle(() => ({ opacity: scrollY && title ? 1 - interpolate(scrollY.value, [0, 64], [0, 1], "clamp") : 1 }));
   const titleStyle = useAnimatedStyle(() => {
     const c = scrollY ? interpolate(scrollY.value, [0, 64], [0, 1], "clamp") : 1;
     return { opacity: c, transform: [{ translateY: (1 - c) * 6 }] };
@@ -66,6 +69,11 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
             )}
           </View>
         </Pressable>
+
+        <Animated.View pointerEvents="none" style={[s.titleWrap, s.brandRow, brandStyle]}>
+          <Image source={require("../assets/images/brand/app_icon_1024.png")} style={s.brandIcon} contentFit="contain" />
+          <Text style={[display(800), { fontSize: 20, color: tc.textPrimary, letterSpacing: -0.6 }]}>Comlinkr</Text>
+        </Animated.View>
 
         {title ? (
           <Animated.View pointerEvents="none" style={[s.titleWrap, titleStyle]}>
@@ -96,6 +104,8 @@ const s = StyleSheet.create({
   avInner: { width: 34, height: 34, borderRadius: 17, overflow: "hidden", alignItems: "center", justifyContent: "center" },
   avImg: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   titleWrap: { position: "absolute", left: 64, right: 104, alignItems: "center" },
+  brandRow: { flexDirection: "row", justifyContent: "center", gap: 8 },
+  brandIcon: { width: 28, height: 28, borderRadius: 8 },
   right: { marginLeft: "auto", flexDirection: "row", gap: 2 },
   ib: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   dot: { position: "absolute", top: 9, right: 9, width: 9, height: 9, borderRadius: 5, backgroundColor: palette.red500, borderWidth: 2 },

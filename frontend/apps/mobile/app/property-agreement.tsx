@@ -605,7 +605,7 @@ export default function PropertyAgreementScreen() {
               </Reveal>
               <Reveal i={1}>
                 {editProfile ? (
-                  <View>
+                  <View style={{ gap: 14, marginBottom: 14 }}>
                     <Input label="Full name" value={fullName} onChangeText={setFullName} autoCapitalize="words" />
                     <Input label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+1 555 123 4567" />
                     <Input label="Where you live now" value={currentAddress} onChangeText={setCurrentAddress} placeholder="City, state, country" />
@@ -661,7 +661,7 @@ export default function PropertyAgreementScreen() {
                 </View>
                 <Input label="Job" value={employer} onChangeText={setEmployer} placeholder="Job title and employer" />
               </Reveal>
-              <Reveal i={5} style={{ marginBottom: 14 }}>
+              <Reveal i={5} style={{ marginTop: 14, marginBottom: 14 }}>
                 <Stepper label="People moving in" value={occupants} onChange={setOccupants} min={1} max={12} />
               </Reveal>
               <Reveal i={6}>
@@ -681,7 +681,7 @@ export default function PropertyAgreementScreen() {
               {moreOpen ? (
                 <Animated.View entering={reduce ? undefined : FadeInRight.duration(260)} style={{ marginTop: 12 }}>
                   <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>Pets</Text><Switch value={hasPets} onValueChange={setHasPets} /></View>
-                  {hasPets ? <Input label="About your pets" value={petDetails} onChangeText={setPetDetails} placeholder="For example, one small dog" /> : null}
+                  {hasPets ? <View style={{ marginBottom: 12 }}><Input label="About your pets" value={petDetails} onChangeText={setPetDetails} placeholder="For example, one small dog" /></View> : null}
                   <View style={st.switchRow}><Text style={[TYPE.body, { color: tc.textPrimary, flex: 1 }]}>I smoke</Text><Switch value={smokes} onValueChange={setSmokes} /></View>
                   <FieldLabel>Have you seen the place?</FieldLabel>
                   <View style={[st.chips, { marginBottom: 14 }]}>

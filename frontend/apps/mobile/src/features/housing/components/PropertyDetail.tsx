@@ -168,7 +168,8 @@ export function PropertyDetail({
     { v: listing.beds > 0 ? String(listing.beds) : "", l: "Beds" },
     { v: listing.baths > 0 ? String(listing.baths) : "", l: "Baths" },
     { v: has(listing.sqft) ? listing.sqft : "", l: "Sq ft" },
-    { v: has(listing.floor) ? listing.floor : "", l: "Floor" },
+    // The label already says "Floor": "2nd Floor" shows as "2nd".
+    { v: has(listing.floor) ? String(listing.floor).replace(/\s*(floor|flr|fl)\.?$/i, "").trim() || String(listing.floor) : "", l: "Floor" },
   ].filter((x) => x.v);
   const details = ([
     ["Available", listing.available], ["Deposit", listing.deposit], ["Lease", listing.leaseTerm], ["Furnished", listing.furnished],
@@ -236,7 +237,8 @@ export function PropertyDetail({
             <Reveal i={2} style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
               {facts.map((x) => (
                 <View key={x.l} style={[pd.fact, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
-                  <Text style={[display(800), { fontSize: 19, color: tc.textPrimary }]} numberOfLines={1}>{x.v}</Text>
+                  {/* A long value ("2nd Floor") gets a smaller size and may wrap to two lines instead of being cut off. */}
+                  <Text style={[display(800), { fontSize: String(x.v).length > 5 ? 15 : 19, lineHeight: String(x.v).length > 5 ? 18 : 23, color: tc.textPrimary, textAlign: "center" }]} numberOfLines={2}>{x.v}</Text>
                   <Text style={[TYPE.small, { color: tc.textSecondary, fontSize: 12 }]}>{x.l}</Text>
                 </View>
               ))}
@@ -343,7 +345,7 @@ export function PropertyDetail({
 
 const pd = StyleSheet.create({
   tag: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
-  fact: { flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 18, borderWidth: 1 },
+  fact: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12, paddingHorizontal: 6, borderRadius: 18, borderWidth: 1 },
   amen: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1 },
   dl: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 14 },
   dlRow: { flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 12 },

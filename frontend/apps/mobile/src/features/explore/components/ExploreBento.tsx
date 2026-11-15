@@ -2,14 +2,11 @@
 //
 // Tiles pop in one after another (scale 0.96 → 1, 35 ms apart). Each tile shows only when it has data (B6):
 // greeting (gradient) · next event (photo, tall) · homes in the city (green) · the top question · stories ·
-// a quest · a poll. The greeting tile carries a slow floating glow (6 s loop), off with reduce motion.
+// a quest · a poll. The greeting tile is a plain gradient (the floating glow circle was removed).
 // Left out on purpose (plan 01): the temperature (no weather source).
 import { palette } from "../../../theme/palette";
-import { useCallback } from "react";
-import { useFocusEffect } from "expo-router";
 import { ScrollView as GHScrollView } from "react-native-gesture-handler";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useTheme } from "../../../theme/useTheme";
@@ -49,22 +46,6 @@ type Props = {
 // Set a flag to true to bring its tile back.
 const SHOW = { homes: false, question: false, stories: false, poll: false };
 
-function Glow() {
-  const reduce = useReducedMotion();
-  const t = useSharedValue(0);
-  // Runs only while Explore is the focused screen: an endless loop otherwise keeps the phone redrawing at 60 fps
-  // behind the other tabs and under pushed screens (the tab pager keeps Explore mounted).
-  useFocusEffect(
-    useCallback(() => {
-      if (reduce) return;
-      t.set(withRepeat(withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }), -1, true));
-      return () => cancelAnimation(t);
-    }, [reduce, t]),
-  );
-  const st = useAnimatedStyle(() => ({ transform: [{ translateX: -14 * t.get() }, { translateY: 10 * t.get() }, { scale: 1 + 0.1 * t.get() }] }));
-  return <Animated.View pointerEvents="none" style={[s.glow, st]} />;
-}
-
 export function ExploreBento(p: Props) {
   const { tc } = useTheme();
   const { data: hot } = useQuery({
@@ -86,7 +67,6 @@ export function ExploreBento(p: Props) {
       {/* greeting */}
       <TileIn i={i++} style={s.wide}>
         <BentoTile tone="gradient" style={{ minHeight: 150 }}>
-          <Glow />
           <TileLabel light>{p.dateLine}</TileLabel>
           <Text style={[display(800), { color: palette.white, fontSize: 26, lineHeight: 29, marginTop: 6, marginBottom: 10 }]}>{p.greeting},{"\n"}{p.firstName}</Text>
           <Pressable onPress={p.onCity} hitSlop={8} style={s.city} accessibilityRole="button" accessibilityLabel={`Change city, currently ${p.city}`}>
@@ -108,12 +88,7 @@ export function ExploreBento(p: Props) {
               {e.interested > 0 ? <TileLabel light style={{ marginTop: 2 }}>{e.interested} going</TileLabel> : null}
             </BentoTile>
           </TileIn>
-        ) : p.heroLoading ? (
-          // E-14: an empty tile holds the next event's place while it loads, so nothing below jumps when it arrives.
-          <View style={s.col} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <BentoTile style={{ minHeight: 246 }}><View /></BentoTile>
-          </View>
-        ) : null}
+        ) : null /* No empty placeholder while the next event loads (it showed as a big white box): the tile appears when it arrives. */}
         {sideTiles ? (
         <View style={[s.col, { gap: 10 }]}>
           {SHOW.homes && p.homesCount > 0 ? (
@@ -201,7 +176,6 @@ const s = StyleSheet.create({
   cols: { flexDirection: "row", gap: 10 },
   col: { flex: 1 },
   imgTile: { justifyContent: "flex-end", padding: 14 },
-  glow: { position: "absolute", right: -30, top: -30, width: 140, height: 140, borderRadius: 70, backgroundColor: "rgba(255,255,255,0.18)" },
   city: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: "auto", alignSelf: "flex-start" },
   story: { alignItems: "center", width: 60 },
   add: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderStyle: "dashed", alignItems: "center", justifyContent: "center" },

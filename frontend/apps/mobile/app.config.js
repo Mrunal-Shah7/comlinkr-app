@@ -5,7 +5,7 @@ module.exports = ({ config }) => ({
   name: 'ComLinkr',
   slug: 'comlinkr',
   scheme: 'comlinkr',
-  version: '1.0.6',
+  version: '1.0.7',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
 
@@ -87,8 +87,8 @@ module.exports = ({ config }) => ({
     'expo-font',
     'expo-image',
     'expo-status-bar',
-    // Android: the navigation bar starts hidden; a swipe up from the bottom edge shows it for a moment.
-    ['expo-navigation-bar', { hidden: true }],
+    // Android: the navigation bar is no longer hidden (it covered the tab bar on phones with button navigation).
+    'expo-navigation-bar',
     'expo-web-browser',
     // Plan 08: the city comes from the phone's location, read once while the app is open.
     ['expo-location', {

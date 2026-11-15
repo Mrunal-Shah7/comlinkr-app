@@ -239,7 +239,7 @@ export default function EventRegistrationModal({
           <Stepper label="Tickets" value={tickets} onChange={setTickets} min={1} max={4} />
           <View style={{ height: 14 }} />
           {editing ? (
-            <Animated.View entering={FadeIn.duration(200)}>
+            <Animated.View entering={FadeIn.duration(200)} style={{ gap: 14 }}>
               <Input label="Name" value={regName} onChangeText={setRegName} autoCapitalize="words" placeholder="Your full name" />
               <Input label="Email" value={regEmail} onChangeText={(v) => { setRegEmail(v); if (emailError) setEmailError(""); }} error={emailError || undefined}
                 keyboardType="email-address" autoCapitalize="none" placeholder="your@email.com" />

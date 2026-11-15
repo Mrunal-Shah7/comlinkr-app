@@ -323,7 +323,7 @@ export default function SignupScreen() {
                 <Ionicons name="chevron-back" size={24} color={tc.textPrimary} />
               </Pressable>
               <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 44, height: 44, borderRadius: 13 }} contentFit="contain" />
-              <Text style={[display(800), { fontSize: 28, color: tc.textPrimary, letterSpacing: -0.8 }]}>comlinkr</Text>
+              <Text style={[display(800), { fontSize: 28, color: tc.textPrimary, letterSpacing: -0.8 }]}>Comlinkr</Text>
             </Reveal>
 
             <View>

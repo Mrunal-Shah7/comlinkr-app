@@ -1072,9 +1072,14 @@ export default function CommunityScreen() {
         </GHScrollView>
 
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingBottom: 10 }}>
-          <Text style={[TYPE.section, { color: tc.textPrimary, flex: 1 }]}>{filter ? `About ${filter}` : "Latest"}</Text>
-          <Chip label={sortBy === "popular" ? "Popular" : "Recent"} on={false} onPress={() => setSortBy(sortBy === "recent" ? "popular" : "recent")}
-            icon={<Ionicons name={sortBy === "popular" ? "flame-outline" : "time-outline"} size={14} color={tc.textSecondary} />} />
+          <Text style={[TYPE.section, { color: tc.textPrimary, flex: 1, fontSize: 17, lineHeight: 21 }]}>{filter ? `About ${filter}` : "Latest"}</Text>
+          {/* A small sort toggle, not a full-size chip. */}
+          <Pressable onPress={() => setSortBy(sortBy === "recent" ? "popular" : "recent")} hitSlop={8} accessibilityRole="button"
+            accessibilityLabel={`Sorted by ${sortBy === "popular" ? "popular" : "recent"}. Tap to change.`}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 12, backgroundColor: tc.chipBg }}>
+            <Ionicons name={sortBy === "popular" ? "flame-outline" : "time-outline"} size={13} color={tc.textSecondary} />
+            <Text style={[TYPE.small, { color: tc.textSecondary, fontSize: 12 }]}>{sortBy === "popular" ? "Popular" : "Recent"}</Text>
+          </Pressable>
         </View>
 
         {hasCity && loadError && sorted.length > 0 ? (

@@ -449,6 +449,7 @@ export const s = createThemedStyles({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
+    marginTop: 14,
     marginBottom: 14,
   },
   moreOptionsBtnText: { fontSize: 14, fontWeight: "600" },

@@ -92,9 +92,23 @@ export const StoryCard = memo(function StoryCard({
   );
 });
 
-/** The first tile of the Stories grid: add your own. */
-export function AddStoryTile({ onPress, hasOwn }: { onPress: () => void; hasOwn: boolean }) {
+/** Add your own story: a slim full-width row above the Stories grid ("wide"), or a grid tile. */
+export function AddStoryTile({ onPress, hasOwn, wide }: { onPress: () => void; hasOwn: boolean; wide?: boolean }) {
   const { tc } = useTheme();
+  if (wide) {
+    return (
+      <PressableScale onPress={onPress} style={[s.addRow, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }]} accessibilityRole="button" accessibilityLabel={hasOwn ? "View your story" : "Add a story"}>
+        <View style={[s.addIcon, { backgroundColor: tc.accentSoft }]}>
+          <Ionicons name={hasOwn ? "book-outline" : "camera-outline"} size={22} color={tc.accentText} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[body(700), { color: tc.textPrimary, fontSize: 15 }]}>{hasOwn ? "Your story" : "Add a story"}</Text>
+          <Text style={[body(500), { color: tc.textSecondary, fontSize: 12.5 }]}>{hasOwn ? "Tap to view" : "Photo or video"}</Text>
+        </View>
+        <Ionicons name={hasOwn ? "chevron-forward" : "add-circle"} size={hasOwn ? 20 : 26} color={hasOwn ? tc.textTertiary : tc.accent} />
+      </PressableScale>
+    );
+  }
   return (
     <PressableScale onPress={onPress} outerStyle={{ flex: 1 }} style={[s.tile, s.add, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }]} accessibilityRole="button" accessibilityLabel={hasOwn ? "View your story" : "Add a story"}>
       <Ionicons name={hasOwn ? "book-outline" : "camera-outline"} size={30} color={tc.textPrimary} />
@@ -107,6 +121,8 @@ export function AddStoryTile({ onPress, hasOwn }: { onPress: () => void; hasOwn:
 const s = StyleSheet.create({
   tile: { flex: 1, aspectRatio: 3 / 4.4, borderRadius: 24, overflow: "hidden" },
   add: { alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderStyle: "dashed" },
+  addRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1.5, borderStyle: "dashed" },
+  addIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   ring: { position: "absolute", top: 10, left: 10, width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   ringIn: { width: 31, height: 31, borderRadius: 16, borderWidth: 2, overflow: "hidden", alignItems: "center", justifyContent: "center" },
   av: { width: 27, height: 27, borderRadius: 14, alignItems: "center", justifyContent: "center" },

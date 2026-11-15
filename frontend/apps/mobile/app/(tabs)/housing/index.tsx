@@ -561,11 +561,12 @@ export default function HousingScreen() {
   // One FlatList for every mode: the hero / switcher / search / chips live in ListHeaderComponent,
   // the rows are whichever list the active (sub-)tab shows, so only on-screen cards are mounted.
   const listRows = useMemo<HousingRow[]>(() => {
-    // Design D: the first home is a feature card, the rest two-column tiles; rooms are tiles too.
+    // Every home is a full-width feature card; rooms are two-column tiles.
     const pairs = <T,>(arr: T[]) => { const out: T[][] = []; for (let i = 0; i < arr.length; i += 2) out.push(arr.slice(i, i + 2)); return out; };
     if (activeTab === "listings") {
       if (filtered.length === 0) return [];
-      return [{ kind: "listing", listing: filtered[0] } as HousingRow, ...pairs(filtered.slice(1)).map((listings) => ({ kind: "listingPair", listings }) as HousingRow)];
+      // Every home uses the full-width feature card (owner's request); the two-column tile is no longer used here.
+      return filtered.map((listing) => ({ kind: "listing", listing }) as HousingRow);
     }
     if (rmSubTab === "searching") {
       return pairs(availableRoomsLoading ? [] : availableRooms).map((rooms) => ({ kind: "roomPair", rooms }) as HousingRow);
@@ -662,7 +663,7 @@ export default function HousingScreen() {
             <Text style={[TYPE.pageTitle, { color: tc.textPrimary, paddingHorizontal: 18, paddingTop: 2 }]}>Listings</Text>
             {userCity ? <Text style={[TYPE.small, { color: tc.textSecondary, paddingHorizontal: 18, marginTop: 2, marginBottom: 12 }]}>{userCity}</Text> : <View style={{ height: 12 }} />}
             <Segmented
-              style={{ marginHorizontal: 16, marginBottom: 12 }}
+              style={{ marginHorizontal: 16, marginBottom: 0 }}
               items={[{ key: "homes", label: "Homes" }, { key: "rooms", label: "Rooms" }, { key: "mates", label: "Roommates" }]}
               value={activeTab === "listings" ? "homes" : rmSubTab === "searching" ? "rooms" : "mates"}
               onChange={(k) => {
@@ -746,7 +747,7 @@ export default function HousingScreen() {
                 {rmSubTab === "searching" && (
                   <>
                     {/* Design D: one button to list a room */}
-                    <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                    <View style={{ paddingHorizontal: 16, marginTop: 12, marginBottom: 14 }}>
                       <SoftButton
                         block
                         label="Rent out a room in my home"
