@@ -9,8 +9,8 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-- `fix/ios-ui-batch` (TR-057 to TR-062, plan 19): six fixes from the owner's iPhone screenshots, walked on
-  Android, pull request open; left: the owner's iPhone check of the tab bar and the Ask sheet, then merge.
+Nothing in progress: PR 52 was merged into `main` on 2026-11-19. Still open: the owner's iPhone check of the
+tab bar and the Ask sheet (TR-057, TR-059), and plan 19's two questions.
 
 ## 2026-11-19 - iOS fixes from the owner's screenshots (TR-057 to TR-062)
 
