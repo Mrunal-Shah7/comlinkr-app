@@ -16,6 +16,9 @@ export default function TabsLayout() {
       <NativeTabs
         // Plan 05: Back retraces the tabs in the order visited, then leaves the app from the first tab.
         backBehavior="history"
+        // iOS: UIKit makes the bar transparent when the list's end meets it (scroll-edge appearance), so cards
+        // drew through the tab icons on some screens. Keep the bar's background on every tab.
+        disableTransparentOnScrollEdge
         backgroundColor={tc.cardBg}
         tintColor={tc.accent}
         iconColor={{ default: tc.textSecondary, selected: tc.accent }}

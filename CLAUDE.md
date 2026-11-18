@@ -10,7 +10,8 @@ One repository holds every app, one folder each:
 
 This repository started on 2026-11-04 without history; the old repositories are kept read-only.
 
-Work goes from short branches to `development` to `main`. Branch, commit and pull request names follow the
+Work goes from short branches to `development` to `main`. Run `git fetch` before cutting a branch: other
+developers push to `main`, and a local `main` can be behind. Branch, commit and pull request names follow the
 "Naming" section of the root `README.md` (`feature/…`, `fix/…`, `hotfix/…`, `chore/…`; Conventional Commits).
 A push to `main` is meant to deploy the backend to production and run its migrations (see "How it deploys" in
 [docs/system-map.md](docs/system-map.md)), so nothing reaches `main` without a pull request.
@@ -206,7 +207,10 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
     password, type it, and Enter again to sign in; the first password typed after that jump was wrong twice, so on a
     401 clear the field and type it again.
   - `uiautomator dump /dev/tty` sometimes prints nothing (during start-up or an animation): dump to
-    `/sdcard/u.xml` and `cat` it, under `timeout 30`.
+    `/sdcard/u.xml` and `cat` it, under `timeout 30`. Run `rm -f /sdcard/u.xml` first: when the dump fails, `cat`
+    prints the previous screen's file, which looks real.
+  - Test passwords typed on the phone are letters and digits only: one with `_` and `!` typed through MCPier was
+    refused every time.
   - In sheets, swipe slowly (600 ms or more); a fast swipe closes the sheet. Expo Go's floating gear sits over the
     top right of every screen: tap around it.
   - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.

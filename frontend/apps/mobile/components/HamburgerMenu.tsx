@@ -117,7 +117,7 @@ export default function HamburgerMenu({ visible, onClose }: Props) {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8, paddingTop: 4 }} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 6, marginBottom: 6 }}>
           <Image source={require("../assets/images/brand/app_icon_1024.png")} style={{ width: 40, height: 40, borderRadius: 12 }} contentFit="contain" />
-          <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, letterSpacing: -0.8 }]}>Comlinkr</Text>
+          <Text style={[display(800), { fontSize: 26, color: tc.textPrimary, letterSpacing: -0.8 }]}>ComLinkr</Text>
         </View>
 
         {isAuthed ? (

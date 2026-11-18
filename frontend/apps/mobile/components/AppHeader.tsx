@@ -72,7 +72,7 @@ export default function AppHeader({ title, scrollY }: { title?: string; scrollY?
 
         <Animated.View pointerEvents="none" style={[s.titleWrap, s.brandRow, brandStyle]}>
           <Image source={require("../assets/images/brand/app_icon_1024.png")} style={s.brandIcon} contentFit="contain" />
-          <Text style={[display(800), { fontSize: 20, color: tc.textPrimary, letterSpacing: -0.6 }]}>Comlinkr</Text>
+          <Text style={[display(800), { fontSize: 20, color: tc.textPrimary, letterSpacing: -0.6 }]}>ComLinkr</Text>
         </Animated.View>
 
         {title ? (

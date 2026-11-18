@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
 import { rs } from "../../../utils/responsive";
+import { getBusinessCurrency } from "../../../utils/currency";
 import { ApiError } from "../../../api/client";
 import { updateSharedSpace } from "../../../api/roommates.api";
 import { showToast } from "../../../shared/ui/Toast";
@@ -31,6 +32,7 @@ export function EditSharedSpaceModal({
   const [editRoomDeposit, setEditRoomDeposit] = useState("");
   const [editRoomSpots, setEditRoomSpots] = useState("");
   const [editRoomSaving, setEditRoomSaving] = useState(false);
+  const symbol = getBusinessCurrency(room?.api?.currency ?? null, null)?.symbol ?? "$";
 
   // Fill the form each time a room is opened for editing.
   useEffect(() => {
@@ -119,7 +121,7 @@ export function EditSharedSpaceModal({
                   Monthly Rent
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), backgroundColor: tc.inputBg, paddingHorizontal: rs(10), height: rs(46) }}>
-                  <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>$</Text>
+                  <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>{symbol}</Text>
                   <TextInput
                     style={{ flex: 1, fontSize: rs(14), color: tc.textPrimary }}
                     value={editRoomPrice}
@@ -136,7 +138,7 @@ export function EditSharedSpaceModal({
                   Deposit
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1.5, borderColor: tc.borderLight, borderRadius: rs(10), backgroundColor: tc.inputBg, paddingHorizontal: rs(10), height: rs(46) }}>
-                  <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>$</Text>
+                  <Text style={{ color: tc.textSecondary, fontWeight: "700", marginRight: rs(4) }}>{symbol}</Text>
                   <TextInput
                     style={{ flex: 1, fontSize: rs(14), color: tc.textPrimary }}
                     value={editRoomDeposit}

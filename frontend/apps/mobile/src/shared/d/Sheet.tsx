@@ -23,7 +23,9 @@ export function DSheet({ visible, onClose, title, children, full, style }: {
   // adds either here.
   const android = process.env.EXPO_OS === 'android';
   // On iOS the native sheet does not move React Native content above the keyboard; growing the content by the
-  // keyboard's height lifts the fields into view.
+  // keyboard's height lifts the fields into view. The sheet keeps its size mode while the keyboard is up: switching a
+  // content-sized iOS sheet to full height rebuilds @expo/ui's SwiftUI content, and the React Native views inside it
+  // were lost (a blank white sheet over the keyboard, Ask on Q&A).
   const [kb, setKb] = useState(0);
   useEffect(() => {
     if (!visible) return;
@@ -35,7 +37,7 @@ export function DSheet({ visible, onClose, title, children, full, style }: {
   // its footer (a comment field) would sit under the keyboard: take the keyboard off that height.
   const room = height * (full ? 0.94 : 0.88) - (android ? kb : 0);
   return (
-    <SheetFrame visible={visible} onClose={onClose} full={full || kb > 0} containerColor={tc.sheetBg} colorScheme={isDark ? 'dark' : 'light'}>
+    <SheetFrame visible={visible} onClose={onClose} full={full} containerColor={tc.sheetBg} colorScheme={isDark ? 'dark' : 'light'}>
       <View
         style={[{ width, backgroundColor: tc.sheetBg, paddingBottom: (android ? 0 : kb || insets.bottom) + 16, maxHeight: room, flexShrink: 1 }, full && { height: room }, style]}
       >

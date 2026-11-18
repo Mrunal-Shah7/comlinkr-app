@@ -338,6 +338,8 @@ export interface AvailableRoom {
   petFriendly: boolean;
   smokingAllowed: boolean;
   genderPref: string;
+  /** TR-061: the community the owner would like to live with; empty when open to anyone. */
+  communityPref: string;
   amenities: string[];
   houseRules: string[];
   images: string[];
@@ -491,6 +493,7 @@ export function toUiAvailableRoom(r: SharedSpaceListing): AvailableRoom {
     petFriendly: !!(r.petPolicy?.toLowerCase().includes("pet") || (r as any).petFriendly),
     smokingAllowed: !!r.smoking,
     genderPref: (r as any).genderPreference || (r as any).genderPref || "Any",
+    communityPref: (r.communityPreference ?? "").trim(),
     amenities: r.amenities || [],
     houseRules: r.houseRules || [],
     images: listingImageUrlList(r.images),
