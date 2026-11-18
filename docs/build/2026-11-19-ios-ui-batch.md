@@ -1,7 +1,7 @@
 # 2026-11-19: iOS fixes from the owner's screenshots (TR-057 to TR-062)
 
 Branch `fix/ios-ui-batch`, from `origin/main` (which holds `5cbf35e` and `a4790e7` from another developer that the
-local `main` did not have). Not merged.
+local `main` did not have). Merged as pull request 52 (merge `adc6406`).
 
 ## Problems and changes
 

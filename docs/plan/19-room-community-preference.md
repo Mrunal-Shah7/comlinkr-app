@@ -1,6 +1,6 @@
 # 19. A community a spare room is looking for
 
-**Status: Building** on `fix/ios-ui-batch`. Triage [TR-061](../triage.md); [build note](../build/2026-11-19-ios-ui-batch.md).
+**Status: Done.** Merged in pull request 52 (merge `adc6406`); the two questions below are still open. Triage [TR-061](../triage.md); [build note](../build/2026-11-19-ios-ui-batch.md).
 
 ## Problem
 
