@@ -9,7 +9,45 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-Nothing in progress: PRs 45 to 50 were merged into `main` on 2026-11-15.
+- `fix/ios-ui-batch` (TR-057 to TR-062, plan 19): six fixes from the owner's iPhone screenshots, walked on
+  Android, pull request open; left: the owner's iPhone check of the tab bar and the Ask sheet, then merge.
+
+## 2026-11-19 - iOS fixes from the owner's screenshots (TR-057 to TR-062)
+
+- **What:** tab bar kept opaque on iOS, "ComLinkr" in the word mark, the blank Ask sheet on iOS, chat day labels,
+  the room form's currency symbol, and an optional "Looking for" community on spare rooms (plan 19, new column).
+  [Build note](build/2026-11-19-ios-ui-batch.md), [run log](device-runs/2026-11-19-ios-ui-batch.md).
+- **Branch:** `fix/ios-ui-batch` from `origin/main`: the local `main` lacked two commits from another developer.
+  The previous session's uncommitted `CLAUDE.md` and handover edits are committed on this branch.
+- **Still running:** backend on 4000 (email off) and Metro on 8083 with the local API, started from this session.
+  **Phone:** the Motorola, Expo Go, signed in as Rohan (demo); no setting changed.
+- **Slowed down by:**
+  - The OnePlus named in the notes has no Expo Go any more; the Motorola on USB has it, and the owner chose it.
+    Which phone is current is the owner's call, so it is not a rule yet.
+  - The local `main` was behind `origin/main`; fetch before branching. Now a rule in `CLAUDE.md` (Tools).
+  - A heredoc with a large Python script failed in the Bash tool; writing the script to a file worked.
+
+## 2026-11-15 - Chicago demo data for the promo video screen recordings (no code change)
+
+- **What:** a HyperFrames prompt for a 40 s vertical promo, and Chicago demo content in the **local** database
+  so the six screens to record are full. Nothing in the repository changed apart from this entry and `CLAUDE.md`.
+- **Seed:** `D:ComLinkrideo-demoseed-chicago-demo.js` (outside the repository; run from `backend/`, refuses
+  any database but local `comlinkr`; re-running replaces the data). 22 people with `@demo.comlinkr.test` emails
+  and real-looking usernames (they show on screen), 10 listings, 5 rooms, 8 restaurants, 6 events, 7 stories
+  (expire after about 23 h: re-run before recording), 3 quests, 8 posts, 6 Q&A threads, 3 polls, one chat. Photos
+  are Unsplash URLs. Sign-in: `rohan@demo.comlinkr.test`, password in `D:ComLinkrideo-demodemo-account.txt`.
+  Clean-up: `DELETE FROM "User" WHERE email LIKE '%@demo.comlinkr.test'; DELETE FROM "CommunityPoll" WHERE city = 'Chicago';`
+- **Still running:** backend (`RESEND_API_KEY=` empty) on 4000 and Metro on 8083 with the local API, started
+  from this session. **Phone:** Expo Go signed in as Rohan (demo account), dark mode; no setting changed. Expo Go's
+  Tools button was turned off for the recordings and turned back on.
+- **Recordings:** six clips (1080×2408, 60 fps) in `D:ComLinkrideo-demoscreens`, made with scrcpy while
+  adb input drove the app; Explore and Food are joined from segments kept in `screenssegments`. They left a
+  saved listing, a poll vote, a Q&A upvote and a pending request to Aditya; re-running the seed resets them.
+- **Slowed down by:**
+  - A password with `_` and `!` typed through MCPier was refused every time; letters and digits worked. Now a
+    rule in `CLAUDE.md` (Tools).
+  - When `uiautomator dump` fails, `cat /sdcard/u.xml` prints the previous screen's dump, which looked real. Now
+    in `CLAUDE.md` (Tools): remove the file before dumping.
 
 ## 2026-11-15 - the backend deploys from GitHub Actions (TR-056, PRs 47 to 50)
 
@@ -74,79 +112,3 @@ Nothing in progress: PRs 45 to 50 were merged into `main` on 2026-11-15.
     did, and `Remove-Item` cannot, past the path-length limit (`rmdir /s /q "\\?\<path>"` can).
   - Not knowing the `android/` folder was out of date: nothing checks it. Both are now in the release APK build
     note, and the prebuild rule is in `CLAUDE.md`, "Building and testing".
-
-## 2026-11-10 - the owner's eight answers, and the rest of the pending list (TR-045 to TR-053)
-
-- Seven branches, each stacked on the one before, are PRs 36 to 42. None is merged. Each has a build note.
-  - PR 36 `chore/brand-comlinkr`: "ComLinkr" (TR-046).
-  - PR 37 `fix/sign-after-approval`: the server refuses a signature before approval (TR-048).
-  - PR 38 `feature/event-cancelled`: a cancelled event is kept (TR-047, plan 15). Migration.
-  - PR 39 `feature/follow-requests`: follow requests, the Following tab, the "New followers" switch, and the
-    settings reset bug (TR-049, 050, 051, 053, plan 16). Migration.
-  - PR 40 `feature/quest-progress`: members mark a quest done (TR-052, plan 17). Migration.
-  - PR 41 `fix/chat-keyboard`: the chat composer above the Android keyboard (TR-045).
-  - PR 42 `fix/walk-leftovers`: the last TR-040 findings (E-14, L-18), and the review composer opening in owner
-    mode; run log of the loose ends in `docs/device-runs/2026-11-10-loose-ends.md`.
-- **Owner decisions in chat:** the Following feed gets its own tab; private accounts approve followers; a "New
-  followers" switch; keep a cancelled event; refuse an early signature; Nominatim stays as it is; "ComLinkr";
-  resolve quest progress.
-- **For the owner** (each PR body says more):
-  - **Quests:** completion is self-reported, with no proof and no notice to the host. Claude chose this.
-  - **Follow requests:** older app builds send a request to a private account but still show "Follow".
-  - **Messages:** a declined request is silent. The sender can keep writing and is not told.
-- **Not walked, with reasons in the run log:** door check-in (camera), badge submission, story comments and L-06
-  (Cloudinary uploads), 403 gating after a real sign-up, the first-time location prompt.
-- **Checks:** backend unit 124, e2e 77; mobile tsc; `check-docs` passes.
-- **Still running:** backend on 4003 (email off) and Metro on 8085. Not mine and left alone: Metro on 8083.
-- **Phone:** no settings changed.
-- **Test data:**
-  - deleted: the walk's quests, posts, chats, follows, the block and their notices;
-  - `uit_gps1` is public again;
-  - Hannah's privacy row was removed (she had none before).
-- **Slowed down by:**
-  - `prisma migrate dev --create-only` run twice: it applied the first migration under today's timestamp and made an
-    empty second one. Fixed by renaming the folder and its `_prisma_migrations` row.
-  - The API client drops `hasMore` from paged answers: read `meta.page < meta.totalPages`.
-  - A fast refresh keeps the old keyboard listener, so the keyboard fix looked like it failed until a full restart.
-  - An item inside Explore opened through a route parameter: the stale parameter switched tabs and the same item
-    would not reopen. Use a callback.
-  - On GitHub's compare page, the first "Create pull request" button only folds the form; `find` once returned the
-    previous page's "Merge pull request". Click the visible submit button in the form, after checking the title.
-  - The keyboard rule is now in `CLAUDE.md` ("Rules from bugs already found").
-
-## 2026-11-10 - the open triage rows, one stacked PR each (TR-036, 037, 032, 029, 043)
-
-- Five branches, each stacked on the one before, all built, tested and walked on the phone (OnePlus, Expo Go, local
-  backend). Each has a build note. None is merged.
-  - PR 31 `feature/event-edit`: TR-037.
-  - PR 32 `feature/move-in-rules`: TR-036.
-  - PR 33 `feature/nearby`: TR-032, plan 13.
-  - PR 34 `feature/follow`: TR-029, plan 14.
-  - PR 35 `fix/chat-request-accept`: TR-043.
-- **Owner decisions in chat:** refuse an early move-in; show the offer only after approval; geocode restaurant
-  addresses; ask for location only when Nearby is tapped; build Follow.
-- **For the owner** (each PR body says more):
-  - **Nearby:** after deploy the backend geocodes restaurants through Nominatim, four a minute. To stop it, set
-    `GEOCODING_ENABLED=false` and restart.
-  - **Follow:** it does not change the feed; there are no private accounts; "New follower" has no setting.
-  - **Events:** a CANCELLED state (PR 31) is your call.
-  - **Agreements:** enforcing sign-after-approval on the server (PR 32) is your call.
-- **New triage:** TR-045, the Android chat composer half under the keyboard. Two attempts were reverted.
-- **Still open from the walkthrough:**
-  - fixes not walked again: S-04, E-26, F-15;
-  - findings: E-27, L-06 and the rest of TR-040;
-  - checks never done: notification preferences, badge submission, door check-in, story comments, 403 gating after
-    a real sign-up.
-- **Checks:** backend unit 123, e2e 67; mobile tsc; `check-docs` passes.
-- **Still running:** backend on 4003 (email off) and Metro on 8085, with the development location in Los Angeles.
-  Both outlived their task ids after the session restart. Not mine and left alone: Metro on 8083.
-  `adb reverse tcp:4000` points at 4003.
-- **Phone:** no settings changed. Expo Go keeps the location permission from plan 08.
-- **Test data:** the walk's follows, applications, temporary restaurants, the test chat and their notifications were
-  deleted. The restaurants now have coordinates, which is intended.
-- **Slowed down by:**
-  - a plan linking a build note that did not exist yet: the docs hook then refused every shell call;
-  - a stopped Metro task whose node process kept port 8085;
-  - `/api` written twice in an e2e URL;
-  - the scratchpad API helper cutting responses at 600 characters (now `AS_MAX`).
-  - The first two are now rules in `CLAUDE.md` (Tools).

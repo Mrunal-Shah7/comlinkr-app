@@ -162,7 +162,10 @@ function Avatar({
 const TABS = ["All", "Listings", "Events"] as const;
 type Tab = typeof TABS[number];
 
-type ThreadMsg =
+type ThreadMsg = ({
+  /** When it was sent (ms); missing on a message still being sent, which counts as now. */
+  at?: number;
+}) & (
   | { id: string; kind: "system"; text: string; time: string }
   | {
       id: string;
@@ -197,14 +200,43 @@ type ThreadMsg =
       isOwn: boolean; // SPRINT-40:
       senderName: string; // SPRINT-40:
       isHost: boolean; // SPRINT-40:
-    };
+    });
 
 type AudioThreadMsg = Extract<ThreadMsg, { kind: "audio" }>; // SPRINT-40:
 
+/** A day label in the thread ("Today", "Yesterday", "Monday", "12 Nov", "12 Nov 2025"). */
+type DayRow = { id: string; kind: "day"; label: string };
+
+function dayLabel(d: Date, now = new Date()): string {
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOf(now) - startOf(d)) / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days > 1 && days < 7) return d.toLocaleDateString([], { weekday: "long" });
+  return d.toLocaleDateString([], { day: "numeric", month: "short", ...(d.getFullYear() !== now.getFullYear() ? { year: "numeric" } : {}) });
+}
+
+/** The thread with a day label before the first message of each day (the thread used to say "Today" above all). */
+function withDayRows(msgs: ThreadMsg[]): (ThreadMsg | DayRow)[] {
+  const out: (ThreadMsg | DayRow)[] = [];
+  let lastDay = "";
+  for (const m of msgs) {
+    const d = new Date(m.at ?? Date.now());
+    const day = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    if (day !== lastDay) {
+      out.push({ id: `day-${day}-${m.id}`, kind: "day", label: dayLabel(d) });
+      lastDay = day;
+    }
+    out.push(m);
+  }
+  return out;
+}
+
 function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
   const time = new Date(m.createdAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const at = new Date(m.createdAt).getTime();
   if (m.type === "SYSTEM") {
-    return { id: m.id, kind: "system", text: m.content, time };
+    return { id: m.id, kind: "system", text: m.content, time, at };
   }
   const isHost = conv.isGroup && !!conv.host && m.sender.name === conv.host;
   const attachmentUrl = m.imageUrl ?? m.file?.url ?? ""; // SPRINT-40: backend exposes IMAGE/AUDIO URL as imageUrl
@@ -216,6 +248,7 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
       durationSeconds: Math.min(600, Math.max(1, Math.round(m.durationSeconds))), // SPRINT-40:
       deliveryState: "sent", // SPRINT-40:
       time, // SPRINT-40:
+      at,
       isOwn: m.isOwn, // SPRINT-40:
       senderName: m.sender.name, // SPRINT-40:
       isHost, // SPRINT-40:
@@ -227,6 +260,7 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
       kind: "image",
       imageUrl: resolveApiAssetUrl(attachmentUrl), // SPRINT-40:
       time,
+      at,
       isOwn: m.isOwn,
       senderName: m.sender.name,
       isHost,
@@ -237,6 +271,7 @@ function apiMessageToThreadMsg(m: ApiMessage, conv: ChatListRow): ThreadMsg {
     kind: "text",
     text: m.content,
     time,
+    at,
     isOwn: m.isOwn,
     senderName: m.sender.name,
     isHost,
@@ -1161,9 +1196,6 @@ function Thread({
         </View>
       )}
 
-      {/* Day separator */}
-      <Text style={[TYPE.small, { textAlign: "center", color: tc.textTertiary, paddingTop: 10, fontSize: 12 }]}>Today</Text>
-
       {/* Messages — SPRINT-39: wrap so typing overlay does not change ScrollView layout height */}
       <View style={{ flex: 1, backgroundColor: tc.pageBg }}>
       <ScrollView
@@ -1178,7 +1210,10 @@ function Thread({
             <ActivityIndicator color={Colors.brand.blue} />
           </View>
         ) : null}
-        {threadMsgs.map((msg) => {
+        {withDayRows(threadMsgs).map((msg) => {
+          if (msg.kind === "day") {
+            return <Text key={msg.id} style={[TYPE.small, { textAlign: "center", color: tc.textTertiary, paddingVertical: 6, fontSize: 12 }]}>{msg.label}</Text>;
+          }
           if (msg.kind === "system") {
             return (
               <View key={msg.id} style={[th.systemMsg, isDark && { backgroundColor: tc.inputBg, borderColor: tc.borderLight }]}>

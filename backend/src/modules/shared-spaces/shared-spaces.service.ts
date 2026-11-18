@@ -107,6 +107,7 @@ export class SharedSpacesService {
       guestPolicy: space.guestPolicy ?? null, // SPRINT-28
       leaseTerm: space.leaseTerm ?? null, // SPRINT-28
       genderPreference: space.genderPreference ?? null, // SPRINT-28
+      communityPreference: space.communityPreference ?? null,
       amenities: space.amenities,
       houseRules: space.houseRules,
       isVerified: space.isVerified,
@@ -271,6 +272,7 @@ export class SharedSpacesService {
         guestPolicy: dto.guestPolicy ?? null, // SPRINT-28
         leaseTerm: dto.leaseTerm ?? null, // SPRINT-28
         genderPreference: dto.genderPreference ?? null, // SPRINT-28
+        communityPreference: dto.communityPreference?.trim() || null,
         amenities: dto.amenities ?? [],
         houseRules: dto.houseRules ?? [],
       },
@@ -329,6 +331,8 @@ export class SharedSpacesService {
       data.availableSpots = dto.availableSpots;
     if (dto.petPolicy !== undefined) data.petPolicy = dto.petPolicy;
     if (dto.smoking !== undefined) data.smoking = dto.smoking;
+    if (dto.communityPreference !== undefined)
+      data.communityPreference = dto.communityPreference.trim() || null;
     if (dto.amenities !== undefined) data.amenities = dto.amenities;
     if (dto.houseRules !== undefined) data.houseRules = dto.houseRules;
 

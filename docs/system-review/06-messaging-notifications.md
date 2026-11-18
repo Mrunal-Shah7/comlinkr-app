@@ -15,7 +15,8 @@ Talking to landlords, roommates, restaurant owners and other users, and being to
 
 ## Who uses it, and where
 
-- `app/chat.tsx`: the conversation list and the thread in one screen [code].
+- `app/chat.tsx`: the conversation list and the thread in one screen [code]. The thread puts a day label before
+  the first message of each day: Today, Yesterday, a weekday within a week, then "12 Nov" (TR-060) [code].
 - `app/notifications.tsx`: in-app notifications [code].
 - Backend: `messaging` (REST and the Socket.IO gateway), `notifications` (in-app list, Expo push, broadcasts)
   [code].

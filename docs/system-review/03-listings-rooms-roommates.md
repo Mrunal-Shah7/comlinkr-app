@@ -50,6 +50,9 @@ roommates) [code].
 - Available Rooms: "Have a Spare Room?" (→ `create-post?type=shared_space`), `AvailableRoomCard`s; the detail is the
   route `app/room/[id].tsx` with apply or request (requested ids in AsyncStorage `comlinkr_requested_rooms`, re-read
   when the tab is shown) and the owner's quick edit (`EditSharedSpaceModal`) [code].
+- A spare room may name the community the owner is looking for (`SharedSpace.communityPreference`, optional, up to
+  80 characters, plan 19). The detail then shows "Looking for: ..." instead of "Open to anyone". The rent fields
+  show the symbol of the room's currency (TR-062) [code].
 - Find Roommates: chips Best Match / Budget / Move-in Soon / Verified, `RoommateCard`s with match %, shared tags,
   connect / cancel / chat, save; the profile is the route `app/roommate/[id].tsx` (connect, accept, decline, cancel,
   save; signed-in users only). A preferences modal (budget, move-in, sleep,

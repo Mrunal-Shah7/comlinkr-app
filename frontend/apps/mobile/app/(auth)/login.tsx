@@ -254,7 +254,7 @@ export default function LoginScreen() {
           <ScrollView contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 48, paddingBottom: 32 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Reveal i={0} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 28 }}>
               <Image source={require("../../assets/images/brand/app_icon_1024.png")} style={{ width: 52, height: 52, borderRadius: 15 }} contentFit="contain" />
-              <Text style={[display(800), { fontSize: 32, color: tc.textPrimary, letterSpacing: -1 }]}>Comlinkr</Text>
+              <Text style={[display(800), { fontSize: 32, color: tc.textPrimary, letterSpacing: -1 }]}>ComLinkr</Text>
             </Reveal>
 
             <Reveal i={1}>

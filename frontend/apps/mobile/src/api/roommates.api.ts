@@ -109,6 +109,8 @@ export interface SharedSpaceListing {
   houseRules?: string[];
   petPolicy?: string;
   smoking?: boolean;
+  communityPreference?: string | null;
+  currency?: string;
   verified: boolean;
   savedByMe?: boolean;
   isSaved?: boolean;
@@ -170,6 +172,7 @@ export interface CreateSharedSpacePayload {
   houseRules?: string[];
   petPolicy?: string;
   smoking?: boolean;
+  communityPreference?: string;
 }
 
 export interface SharedSpaceQueryParams {

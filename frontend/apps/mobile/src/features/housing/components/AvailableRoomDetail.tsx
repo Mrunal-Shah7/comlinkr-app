@@ -3,7 +3,7 @@
 // and amenities as chips, and a glass bar with Message and Apply. Apply with a note opens a D sheet.
 import { palette } from "../../../theme/palette";
 import { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, useWindowDimensions, KeyboardAvoidingView } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -124,11 +124,13 @@ export function AvailableRoomDetail({
         <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1, marginTop: -26, backgroundColor: tc.pageBg, borderTopLeftRadius: 30, borderTopRightRadius: 30 }}
           contentContainerStyle={{ paddingHorizontal: 18, paddingTop: 22, paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
           <Reveal i={0}>
-            <View style={{ flexDirection: "row", gap: 6 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
               <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.mintSoft }}>
                 <Text style={[TYPE.label, { color: tc.successText }]}>{room.availableRooms} of {room.totalRooms} {room.totalRooms === 1 ? "room" : "rooms"} free</Text>
               </View>
-              {has(room.genderPref) ? <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.accentSoft }}><Text style={[TYPE.label, { color: tc.accentText }]}>{/^any$/i.test(room.genderPref.trim()) ? "Open to anyone" : room.genderPref}</Text></View> : null}
+              {/* TR-061: a community the owner chose replaces "Open to anyone"; a gender preference still shows. */}
+              {has(room.genderPref) && !(room.communityPref && /^any$/i.test(room.genderPref.trim())) ? <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.accentSoft }}><Text style={[TYPE.label, { color: tc.accentText }]}>{/^any$/i.test(room.genderPref.trim()) ? "Open to anyone" : room.genderPref}</Text></View> : null}
+              {room.communityPref ? <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10, backgroundColor: tc.accentSoft, maxWidth: "100%" }}><Text style={[TYPE.label, { color: tc.accentText }]} numberOfLines={2}>Looking for: {room.communityPref}</Text></View> : null}
             </View>
             <Text style={[TYPE.pageTitle, { fontSize: 26, lineHeight: 30, color: tc.textPrimary, marginTop: 10 }]}>{[room.roomType, room.apartmentDesc].filter(has).join(" · ") || "A room"}</Text>
             {has(room.location) ? <Text style={[TYPE.body, { color: tc.textSecondary, marginTop: 4 }]}>{room.location}</Text> : null}
@@ -203,7 +205,8 @@ export function AvailableRoomDetail({
         </View>
 
         <DSheet visible={applySheet} onClose={() => setApplySheet(false)} title="Apply for this room">
-          <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
+          {/* DSheet lifts its content above the keyboard; a KeyboardAvoidingView here lifted it twice on iOS. */}
+          <>
             <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
               <Text style={[TYPE.small, { color: tc.textSecondary, marginBottom: 10 }]}>A short hello helps the host say yes.</Text>
               <TextInput
@@ -220,7 +223,7 @@ export function AvailableRoomDetail({
                 <GradientButton block label="Send" outerStyle={{ flex: 1.4 }} onPress={() => { setApplySheet(false); onApplyWithMessage?.(applyMsg.trim() || undefined); }} />
               </View>
             </View>
-          </KeyboardAvoidingView>
+          </>
         </DSheet>
     </View>
   );

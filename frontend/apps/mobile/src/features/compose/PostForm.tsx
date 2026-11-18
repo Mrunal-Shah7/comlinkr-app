@@ -277,6 +277,8 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
   const [sharedSpacePrice, setSharedSpacePrice] = useState("");
   const [sharedSpaceDeposit, setSharedSpaceDeposit] = useState("");
   const [sharedSpaceCurrency, setSharedSpaceCurrency] = useState("USD");
+  // The rent fields show the currency the space is priced in (it said "$" while the hint said GBP).
+  const sharedSpaceSymbol = getBusinessCurrency(sharedSpaceCurrency.trim().toUpperCase(), null)?.symbol ?? "$";
   const [sharedSpaceRooms, setSharedSpaceRooms] = useState("1");
   const [sharedSpaceBaths, setSharedSpaceBaths] = useState("1");
   const [sharedSpaceTotalOccupants, setSharedSpaceTotalOccupants] = useState("1");
@@ -291,6 +293,8 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
   const [sharedSpacePetPolicy, setSharedSpacePetPolicy] = useState("");
   const [sharedSpaceSmoking, setSharedSpaceSmoking] = useState(false);
   const [sharedSpaceHouseRules, setSharedSpaceHouseRules] = useState("");
+  // TR-061: optional, the community the owner would like to live with; empty means open to anyone.
+  const [sharedSpaceCommunity, setSharedSpaceCommunity] = useState("");
   const [sharedSpaceAmenities, setSharedSpaceAmenities] = useState<string[]>([]);
 
   const hasPhotoAttachment = attachedFiles.some((file) => file.mediaType === "photo");
@@ -471,7 +475,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     challengeHashtags,
     sharedSpacePrice, sharedSpaceDeposit, sharedSpaceRooms, sharedSpaceBaths, sharedSpaceTotalOccupants,
     sharedSpaceAvailableSpots, sharedSpaceCity, sharedSpaceState, sharedSpaceCountry, sharedSpacePetPolicy,
-    sharedSpaceSmoking, sharedSpaceHouseRules, sharedSpaceAmenities,
+    sharedSpaceSmoking, sharedSpaceHouseRules, sharedSpaceAmenities, sharedSpaceCommunity,
   ]);
   // The form as it opened (or as an edit loaded); null until then.
   const baselineRef = useRef<string | null>(null);
@@ -854,6 +858,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             smoking: sharedSpaceSmoking,
             amenities: sharedSpaceAmenities.length ? sharedSpaceAmenities : undefined,
             houseRules: sharedSpaceHouseRules.trim() ? [sharedSpaceHouseRules.trim()] : [],
+            communityPreference: sharedSpaceCommunity.trim() || undefined,
           });
           createdSpaceId = space.id;
           const photoFiles = attachedFiles.filter((f) => f.mediaType === "photo");
@@ -1858,7 +1863,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             <View style={s.rowFields}>
               <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
-                  <Text style={[s.fieldPrefix, { color: type.color }]}>$</Text>
+                  <Text style={[s.fieldPrefix, { color: type.color }]}>{sharedSpaceSymbol}</Text>
                   <TextInput
                     style={[s.fieldInput, { color: tc.textPrimary }]}
                     placeholder="Rent/mo"
@@ -1871,7 +1876,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               </View>
               <View style={[s.inputWrap, { flex: 1, backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
                 <View style={s.fieldWithIcon}>
-                  <Text style={[s.fieldPrefix, { color: type.color }]}>$</Text>
+                  <Text style={[s.fieldPrefix, { color: type.color }]}>{sharedSpaceSymbol}</Text>
                   <TextInput
                     style={[s.fieldInput, { color: tc.textPrimary }]}
                     placeholder="Deposit"
@@ -1941,6 +1946,22 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                 placeholderTextColor={tc.textTertiary}
                 value={sharedSpaceCountry}
                 onChangeText={setSharedSpaceCountry}
+              />
+            </View>
+
+            <SectionLabel label="LOOKING FOR (OPTIONAL)" color={type.color} />
+            <Text style={{ fontSize: 12, color: tc.textTertiary, marginTop: -6, marginBottom: 10 }}>
+              The community you'd like to live with. Leave it empty if the room is open to anyone.
+            </Text>
+            <View style={[s.inputWrap, { backgroundColor: tc.inputBg, borderColor: "transparent" }]}>
+              <TextInput
+                style={[s.fieldInput, { color: tc.textPrimary, paddingHorizontal: 12, paddingVertical: 12 }]}
+                placeholder="e.g. Gujarati community, students"
+                placeholderTextColor={tc.textTertiary}
+                value={sharedSpaceCommunity}
+                onChangeText={setSharedSpaceCommunity}
+                maxLength={80}
+                accessibilityLabel="Community you're looking for (optional)"
               />
             </View>
 

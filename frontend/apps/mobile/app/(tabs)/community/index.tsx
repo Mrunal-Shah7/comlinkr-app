@@ -1246,7 +1246,8 @@ export default function CommunityScreen() {
 
       {/* Ask a question (design D sheet) */}
       <DSheet visible={showAsk} onClose={() => { if (!posting) setShowAsk(false); }} title="Ask your neighbours">
-        <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined}>
+        {/* DSheet lifts its content above the keyboard; a KeyboardAvoidingView here lifted it twice on iOS. */}
+        <>
           <View style={{ paddingHorizontal: 18, paddingBottom: 12 }}>
             <Text style={[TYPE.label, { color: tc.textSecondary, marginBottom: 6 }]}>Your question</Text>
             <TextInput
@@ -1271,7 +1272,7 @@ export default function CommunityScreen() {
             </View>
             <GradientButton block label="Ask" loading={posting} disabled={!newQ.trim()} onPress={handleSubmitQuestion} />
           </View>
-        </KeyboardAvoidingView>
+        </>
       </DSheet>
       <GuestCityPickerModal visible={cityPickerVisible} onClose={() => setCityPickerVisible(false)} />
     </SafeAreaView>

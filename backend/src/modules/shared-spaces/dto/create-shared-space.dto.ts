@@ -147,6 +147,12 @@ export class CreateSharedSpaceDto {
   @MaxLength(100)
   genderPreference?: string;
 
+  /** Optional: the community the owner would like to live with ("Gujarati", "students"). Empty clears it. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  communityPreference?: string;
+
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

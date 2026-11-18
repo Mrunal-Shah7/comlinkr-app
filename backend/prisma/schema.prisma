@@ -747,41 +747,43 @@ model HousingSave {
 }
 
 model SharedSpace {
-  id               String           @id @default(uuid())
-  ownerId          String
-  title            String           @db.VarChar(120)
-  description      String           @db.VarChar(2000)
-  address          String
-  city             String
-  state            String?
-  country          String
-  latitude         Float?
-  longitude        Float?
-  price            Decimal
-  currency         String           @default("USD")
-  deposit          Decimal?
-  rooms            Int
-  bathrooms        Int
-  totalOccupants   Int
-  currentOccupants Int              @default(0)
-  availableSpots   Int
-  petPolicy        String?
-  smoking          Boolean          @default(false)
-  sleepSchedule    SleepSchedule? // SPRINT-28
-  noiseTolerance   NoiseTolerance? // SPRINT-28
-  roomType         RoomType? // SPRINT-28
-  furnishedStatus  FurnishedStatus? // SPRINT-28
-  availableFrom    DateTime? // SPRINT-28
-  cleanliness      String?          @db.VarChar(100) // SPRINT-28
-  guestPolicy      String?          @db.VarChar(200) // SPRINT-28
-  leaseTerm        String?          @db.VarChar(100) // SPRINT-28
-  genderPreference String?          @db.VarChar(100) // SPRINT-28
-  amenities        String[]
-  houseRules       String[]
-  isVerified       Boolean          @default(false)
-  isActive         Boolean          @default(true)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                  String           @id @default(uuid())
+  ownerId             String
+  title               String           @db.VarChar(120)
+  description         String           @db.VarChar(2000)
+  address             String
+  city                String
+  state               String?
+  country             String
+  latitude            Float?
+  longitude           Float?
+  price               Decimal
+  currency            String           @default("USD")
+  deposit             Decimal?
+  rooms               Int
+  bathrooms           Int
+  totalOccupants      Int
+  currentOccupants    Int              @default(0)
+  availableSpots      Int
+  petPolicy           String?
+  smoking             Boolean          @default(false)
+  sleepSchedule       SleepSchedule? // SPRINT-28
+  noiseTolerance      NoiseTolerance? // SPRINT-28
+  roomType            RoomType? // SPRINT-28
+  furnishedStatus     FurnishedStatus? // SPRINT-28
+  availableFrom       DateTime? // SPRINT-28
+  cleanliness         String?          @db.VarChar(100) // SPRINT-28
+  guestPolicy         String?          @db.VarChar(200) // SPRINT-28
+  leaseTerm           String?          @db.VarChar(100) // SPRINT-28
+  genderPreference    String?          @db.VarChar(100) // SPRINT-28
+  /// Optional free text: the community the owner would like to live with (TR-061). Null means open to anyone.
+  communityPreference String?          @db.VarChar(80)
+  amenities           String[]
+  houseRules          String[]
+  isVerified          Boolean          @default(false)
+  isActive            Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
   owner        User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   images       SharedSpaceImage[]
@@ -1502,10 +1504,10 @@ model Challenge {
 }
 
 model ChallengeParticipant {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   challengeId String
   userId      String
-  joinedAt    DateTime @default(now())
+  joinedAt    DateTime  @default(now())
   /// Plan 17 (TR-052): when the member said they finished the quest; null while not done.
   completedAt DateTime?
 
