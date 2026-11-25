@@ -123,6 +123,7 @@ Each gets a plan in `plan/` when it is picked up.
 - [17. Marking a quest done](plan/17-quest-progress.md) (TR-052): built.
 - [18. The Q&A tab, topics matched on the phone, a lighter Explore](plan/18-qa-tab-and-lighter-explore.md) (TR-054): done in commit `60cdd7b` before the plan; four questions open for the owner.
 - [19. A community a spare room is looking for](plan/19-room-community-preference.md) (TR-061): merged (PR 52); two questions open for the owner.
+- [20. The listing detail's first view](plan/20-listing-detail-first-view.md) (TR-066): built on `feature/ui-polish-currency-listing`.
 
 ## Reviews (`review/`)
 
@@ -146,6 +147,7 @@ Each gets a plan in `plan/` when it is picked up.
 ## Build notes (`build/`)
 
 - 2026-11-19: [iOS fixes: tab bar, ComLinkr, Ask sheet, chat days, room currency, room community](build/2026-11-19-ios-ui-batch.md) (TR-057 to TR-062, plan 19; PR 52, merge `adc6406`).
+- 2026-11-25: [Themed date and time pickers, prices in the user's currency, a shorter listing detail, the tab row](build/2026-11-25-ui-polish-currency-listing.md) (TR-063 to TR-067, plan 20; branch `feature/ui-polish-currency-listing`).
 - 2026-11-15: [The backend deploys from GitHub Actions again](build/2026-11-15-backend-deploy-workflow.md) (TR-056, T-001).
 - 2026-11-14: [App 1.0.6: the Q&A tab, topics matched on the phone, a lighter Explore](build/2026-11-14-app-1-0-6.md) (TR-054, TR-055, plan 18; commit `60cdd7b`, no PR).
 - 2026-11-10: [The brand is spelled "ComLinkr"](build/2026-11-10-brand-spelling.md) (TR-046).

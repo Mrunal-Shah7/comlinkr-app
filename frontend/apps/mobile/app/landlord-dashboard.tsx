@@ -24,6 +24,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
 import { useAuthStore } from "../src/store/auth.store";
+import { useUserCurrency } from "../src/hooks/useUserCurrency";
+import { formatPrice } from "../src/utils/currency";
 import {
   getReceivedApplications,
   decideApplication,
@@ -96,6 +98,7 @@ export default function LandlordDashboard() {
   const { isDark, tc } = useTheme();
   const isAuthed = useAuthStore((s) => s.isAuthed);
   const user = useAuthStore((s) => s.user);
+  const userCurrency = useUserCurrency();
 
   const [tab, setTab] = useBackState<Tab>("applications");
   const dash = useScreenQuery({
@@ -193,7 +196,7 @@ export default function LandlordDashboard() {
   const card = { borderRadius: 22, borderWidth: 1, borderColor: tc.glassLine, backgroundColor: tc.cardBg };
   const appRows = (a: PropertyApplication) => ([
     ["Move-in", a.agreementTerms?.moveInDate ? formatDate(a.agreementTerms.moveInDate) : ""],
-    ["Income", a.financialDetails?.monthlyIncome ? `$${a.financialDetails.monthlyIncome.toLocaleString()} /mo` : ""],
+    ["Income", a.financialDetails?.monthlyIncome ? `${formatPrice(a.financialDetails.monthlyIncome, userCurrency.code)} /mo` : ""],
     ["Job", [a.personalInfo?.jobTitle, a.personalInfo?.employerName].filter(Boolean).join(", ")],
   ] as [string, string][]).filter(([, v]) => !!v);
   const order = (s: ApplicationStatus) => (s === "submitted" || s === "under_review" ? 0 : s === "draft" ? 2 : 1);
@@ -269,7 +272,7 @@ export default function LandlordDashboard() {
         <View style={[card, { marginHorizontal: 16, overflow: "hidden" }]}>
           {listings.map((l, i) => (
             <DRow key={l.id} first={i === 0} icon="home-outline" label={l.title}
-              value={[l.price ? `$${Number(l.price).toLocaleString()} /mo` : "", l.bedrooms ? `${l.bedrooms} bed` : ""].filter(Boolean).join(" · ") || undefined}
+              value={[l.price ? `${formatPrice(Number(l.price), (l as { currency?: string | null }).currency ?? userCurrency.code)} /mo` : "", l.bedrooms ? `${l.bedrooms} bed` : ""].filter(Boolean).join(" · ") || undefined}
               onPress={() => router.push({ pathname: "/my-listings" as any })} />
           ))}
         </View>
@@ -289,8 +292,8 @@ export default function LandlordDashboard() {
                 ["Phone", selectedApp.personalInfo?.phone ?? ""],
                 ["Employer", selectedApp.personalInfo?.employerName ?? ""],
                 ["Job", selectedApp.personalInfo?.jobTitle ?? ""],
-                ["Income", selectedApp.financialDetails?.monthlyIncome ? `$${selectedApp.financialDetails.monthlyIncome.toLocaleString()} /mo` : ""],
-                ["Rent agreed", selectedApp.agreementTerms?.rentAmount ? `$${selectedApp.agreementTerms.rentAmount.toLocaleString()} /mo` : ""],
+                ["Income", selectedApp.financialDetails?.monthlyIncome ? `${formatPrice(selectedApp.financialDetails.monthlyIncome, userCurrency.code)} /mo` : ""],
+                ["Rent agreed", selectedApp.agreementTerms?.rentAmount ? `${formatPrice(selectedApp.agreementTerms.rentAmount, userCurrency.code)} /mo` : ""],
                 ["Move-in", selectedApp.agreementTerms?.moveInDate ? formatDate(selectedApp.agreementTerms.moveInDate) : ""],
                 ["Lease", selectedApp.agreementTerms?.leaseTerm ?? ""],
                 ["Your decision", selectedApp.landlordDecision ? (selectedApp.landlordDecision === "approved" ? "Approved" : "Rejected") : ""],

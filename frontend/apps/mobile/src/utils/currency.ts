@@ -1,23 +1,44 @@
 type CurrencyInfo = { code: string; symbol: string };
 
+const USD: CurrencyInfo = { code: 'USD', symbol: '$' };
+const GBP: CurrencyInfo = { code: 'GBP', symbol: '£' };
+const EUR: CurrencyInfo = { code: 'EUR', symbol: '€' };
+
+/** ISO 3166 country code → the currency prices there are quoted in. */
+const COUNTRY_CODE_TO_CURRENCY: Record<string, CurrencyInfo> = {
+  US: USD,
+  GB: GBP,
+  IN: { code: 'INR', symbol: '₹' },
+  CA: { code: 'CAD', symbol: '$' },
+  AU: { code: 'AUD', symbol: '$' },
+  NZ: { code: 'NZD', symbol: '$' },
+  SG: { code: 'SGD', symbol: '$' },
+  AE: { code: 'AED', symbol: 'AED ' },
+  IE: EUR, DE: EUR, FR: EUR, ES: EUR, IT: EUR, NL: EUR, BE: EUR, PT: EUR, AT: EUR, FI: EUR,
+};
+
+/** Currency for a country code; US dollars when the code is unknown. */
 export function getCurrencyForCountry(
   countryCode: string | null | undefined,
 ): CurrencyInfo {
-  if (countryCode === 'GB') return { code: 'GBP', symbol: '£' };
-  return { code: 'USD', symbol: '$' };
+  return COUNTRY_CODE_TO_CURRENCY[(countryCode ?? '').trim().toUpperCase()] ?? USD;
 }
 
+/** The symbol written before an amount in this currency ("$", "£", "AED "); the code itself when unknown. */
+export function currencySymbol(currencyCode: string | null | undefined): string {
+  const code = (currencyCode ?? '').trim().toUpperCase();
+  if (!code) return '$';
+  return Object.values(COUNTRY_CODE_TO_CURRENCY).find((c) => c.code === code)?.symbol ?? `${code} `;
+}
+
+/**
+ * "$1,250", "£650", "€12.50". The symbol comes from the currency, not the phone's locale: `Intl` wrote "US$15" on a
+ * phone set to British English, which read as a different currency.
+ */
 export function formatPrice(price: number, currencyCode: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: 'currency',
-      currency: currencyCode,
-      maximumFractionDigits: 0,
-    }).format(price);
-  } catch {
-    const symbol = currencyCode === 'GBP' ? '£' : '$';
-    return `${symbol}${Number(price || 0).toLocaleString()}`;
-  }
+  const n = Number(price || 0);
+  const digits = Number.isInteger(n) ? 0 : 2;
+  return `${currencySymbol(currencyCode)}${n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
 
 export function getPriceRangeSymbol(
@@ -46,7 +67,12 @@ const COUNTRY_NAME_TO_CURRENCY: Record<string, CurrencyInfo> = {
   spain: { code: 'EUR', symbol: '€' },
   italy: { code: 'EUR', symbol: '€' },
   netherlands: { code: 'EUR', symbol: '€' },
-  'united arab emirates': { code: 'AED', symbol: 'AED' },
+  'united arab emirates': { code: 'AED', symbol: 'AED ' },
+  'new zealand': { code: 'NZD', symbol: '$' },
+  belgium: EUR,
+  portugal: EUR,
+  austria: EUR,
+  finland: EUR,
   singapore: { code: 'SGD', symbol: '$' },
 };
 
@@ -61,3 +87,20 @@ export function getBusinessCurrency(
   }
   return COUNTRY_NAME_TO_CURRENCY[(countryName ?? '').trim().toLowerCase()] ?? null;
 }
+
+type UserLike = { country?: string | null; countryCode?: string | null; userLocation?: { countryCode?: string | null } | null } | null | undefined;
+
+/**
+ * The currency of the country the user chose (profile or onboarding), then of the country the phone located them
+ * in, then US dollars. The chosen country comes first: the located one used to win, so changing the country
+ * did not change the prices.
+ */
+export function currencyForUser(user: UserLike, guestCountry?: string | null): CurrencyInfo {
+  const byName = (name?: string | null) => COUNTRY_NAME_TO_CURRENCY[(name ?? '').trim().toLowerCase()];
+  return byName(user?.country)
+    ?? (user?.countryCode || user?.userLocation?.countryCode ? getCurrencyForCountry((user?.countryCode || user?.userLocation?.countryCode) as string) : undefined)
+    ?? byName(guestCountry)
+    ?? USD;
+}
+
+export type { CurrencyInfo };

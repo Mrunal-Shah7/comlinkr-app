@@ -16,7 +16,8 @@ import { getEvent, getEventAttendees, type ApiEvent, type EventAttendee } from "
 import { getShareLink } from "../../../utils/shareLinks";
 import { LinkifiedText } from "../../../../components/LinkifiedText";
 import { RatingSummary, EventReviewsSection } from "../../../../components/events";
-import { type ExploreEventRow, apiEventToExploreRow } from "../models";
+import { type ExploreEventRow, apiEventToExploreRow, eventPriceLabel } from "../models";
+import { useUserCurrency } from "../../../hooks/useUserCurrency";
 import { CATEGORY_COLOR } from "../constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TYPE } from "../../../theme/d";
@@ -66,6 +67,7 @@ export function EventDetail({
   const [attendeesLoading, setAttendeesLoading] = useState(false);
   const [attendeesExpanded, setAttendeesExpanded] = useState(false);
   const { isDark, tc } = useTheme();
+  const currency = useUserCurrency();
   const { width: screenW } = useWindowDimensions();
 
   useEffect(() => {
@@ -124,6 +126,7 @@ export function EventDetail({
       };
   const catColor = CATEGORY_COLOR[displayEvent.category] ?? { bg: palette.skyL96, text: palette.brandBlue };
   const isFree = displayEvent.price === "Free";
+  const priceLabel = eventPriceLabel(displayEvent, currency.code);
   const heroImages = displayEvent.images?.length ? displayEvent.images : [displayEvent.image];
 
   const handleRegister = () => {
@@ -171,7 +174,7 @@ export function EventDetail({
   const facts = ([
     ["When", [displayEvent.date, displayEvent.time].filter(Boolean).join(" · ")],
     ["Where", displayEvent.location],
-    ["Entry", displayEvent.price],
+    ["Entry", priceLabel],
     ["Going", displayEvent.interested > 0 ? `${displayEvent.interested} ${displayEvent.interested === 1 ? "person" : "people"}` : ""],
   ] as [string, string][]).filter(([, v]) => !!v);
   const hasChat = !!(displayEvent.canAccessChat && displayEvent.conversationId);
@@ -306,7 +309,7 @@ export function EventDetail({
         {/* Glass bar: the price and the next step */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 18, paddingTop: 12, paddingBottom: insetsD.bottom + 12, backgroundColor: tc.glass, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.glassLine }}>
           <View style={{ flex: 1 }}>
-            <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{displayEvent.price}</Text>
+            <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]}>{priceLabel}</Text>
             <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[displayEvent.date, displayEvent.time].filter(Boolean).join(" · ")}</Text>
           </View>
           {cancelled ? (

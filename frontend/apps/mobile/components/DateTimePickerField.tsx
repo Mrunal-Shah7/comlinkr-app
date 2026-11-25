@@ -1,18 +1,15 @@
+// components/DateTimePickerField.tsx: a date field and a time field with the app's own pickers.
+//
+// Both used to open the platform's picker (a grey Material dialog on Android, a spinner on iOS) that ignored the
+// app's colours. They now open an inline panel under the field, drawn with the theme: a month calendar for dates,
+// hour and minute chips for times. Inline, not a sheet, because several forms using them already sit in a sheet.
 import { palette } from "../src/theme/palette";
-import React, { useState } from "react";
-import {
-  Pressable,
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  useColorScheme,
-} from "react-native";
-// import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
-// New:
-import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-
+import React, { useMemo, useState } from "react";
+import { Pressable, Text, View, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../src/theme/useTheme";
+import { TYPE } from "../src/theme/d";
 
 type DateFormat = "display" | "iso" | "uk" | "us" | "event";
 
@@ -25,7 +22,7 @@ interface PickerProps {
   textStyle?: object;
   dateFormat?: DateFormat;
   minimumDate?: Date;
-  /** Override auto-detected color scheme — pass when rendered inside a Modal */
+  /** Kept for callers; the colours now follow the app theme. */
   forceDark?: boolean;
 }
 
@@ -43,11 +40,9 @@ function formatDate(date: Date, fmt: DateFormat): string {
   return `${dd} ${mon} ${y}`;
 }
 
-function formatTime(date: Date): string {
-  const h    = date.getHours();
-  const min  = date.getMinutes();
-  const ampm = h >= 12 ? "PM" : "AM";
-  const h12  = h % 12 || 12;
+function formatTime(h24: number, min: number): string {
+  const ampm = h24 >= 12 ? "PM" : "AM";
+  const h12  = h24 % 12 || 12;
   return `${h12}:${String(min).padStart(2, "0")} ${ampm}`;
 }
 
@@ -67,9 +62,8 @@ function parseDate(str: string, fmt: DateFormat = "display"): Date {
     const [mm, dd] = fmt === "us" ? [a, b] : [b, a];
     return new Date(+y, +mm - 1, +dd);
   }
-  // "event" format is `formatDate`'s own output, e.g. "Mar 15, 2026" — parse it
-  // explicitly rather than relying on the JS engine's free-form Date parsing,
-  // which is not guaranteed consistent across platforms/engines (Hermes included).
+  // "event" format is formatDate's own output ("Mar 15, 2026"): parsed explicitly, not by the engine's free-form
+  // Date parsing.
   const event = str.match(/^([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})$/);
   if (event) {
     const month = MONTH_ABBR[event[1]];
@@ -79,365 +73,238 @@ function parseDate(str: string, fmt: DateFormat = "display"): Date {
   return isNaN(d.getTime()) ? new Date() : d;
 }
 
-// ─── Inline iOS bottom-sheet picker (no nested Modal) ────────────────────────
-function InlinePickerSheet({
-  visible,
-  accentColor,
-  onCancel,
-  onDone,
-  children,
-  isDark,
-}: {
-  visible: boolean;
-  accentColor: string;
-  onCancel: () => void;
-  onDone: () => void;
-  children: React.ReactNode;
-  isDark: boolean;
+/** "7:30 PM", "19:30" or "" → hours (0-23) and minutes; null when it cannot be read. */
+function parseTime(str: string): { h: number; m: number } | null {
+  const t = str.trim().match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/);
+  if (!t) return null;
+  let h = +t[1];
+  const m = +t[2];
+  if (t[3]) {
+    const pm = /p/i.test(t[3]);
+    h = (h % 12) + (pm ? 12 : 0);
+  }
+  return h < 24 && m < 60 ? { h, m } : null;
+}
+
+const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+/** The field both pickers share: icon, value or placeholder, chevron. */
+function Field({ icon, text, placeholder, open, accent, style, textStyle, onPress, label }: {
+  icon: keyof typeof Ionicons.glyphMap; text: string; placeholder: string; open: boolean; accent: string;
+  style?: object; textStyle?: object; onPress: () => void; label: string;
 }) {
-  if (!visible) return null;
-  const bg     = isDark ? palette.blueL20_2 : palette.white;
-  const border = isDark ? palette.blueL27 : palette.slate200;
-  const gray   = isDark ? palette.gray400 : palette.gray400;
+  const { tc } = useTheme();
   return (
-    <View style={[styles.inlineSheet, { backgroundColor: bg, borderColor: border }]}>
-      <View style={[styles.toolbar, { borderBottomColor: border }]}>
-        <TouchableOpacity onPress={onCancel} hitSlop={10}>
-          <Text style={[styles.toolbarBtn, { color: gray }]}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onDone} hitSlop={10}>
-          <Text style={[styles.toolbarBtn, { color: accentColor, fontWeight: "700" }]}>Done</Text>
-        </TouchableOpacity>
-      </View>
-      {children}
-    </View>
+    <Pressable
+      style={[styles.field, { backgroundColor: tc.inputBg, borderColor: open ? accent : tc.borderLight }, style]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={text ? `${label}: ${text}` : placeholder}
+      accessibilityState={{ expanded: open }}
+    >
+      <Ionicons name={icon} size={16} color={accent} />
+      <Text style={[styles.fieldText, { color: text ? tc.textPrimary : tc.textTertiary }, textStyle]} numberOfLines={1}>
+        {text || placeholder}
+      </Text>
+      <Ionicons name={open ? "chevron-up" : "chevron-down"} size={14} color={tc.textTertiary} />
+    </Pressable>
   );
 }
 
 // ─── DatePickerField ──────────────────────────────────────────────────────────
 
+const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+
 export function DatePickerField({
   value,
   onChange,
   placeholder = "Select date",
-  accentColor = palette.brandBlue,
+  accentColor,
   style,
   textStyle,
   dateFormat = "display",
   minimumDate,
-  forceDark,
 }: PickerProps) {
-  const scheme = useColorScheme();
-  const isDark = forceDark ?? scheme === "dark";
-  const [show, setShow]       = useState(false);
-  const [pending, setPending] = useState<Date>(parseDate(value, dateFormat));
+  const { tc } = useTheme();
+  const accent = accentColor ?? tc.accent;
+  const [open, setOpen] = useState(false);
+  const selected = value ? parseDate(value, dateFormat) : null;
+  // The month on show; starts at the chosen date, or this month.
+  const [month, setMonth] = useState(() => {
+    const d = selected ?? new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
 
-  const bg        = isDark ? palette.blueL18_2 : palette.white;
-  const border    = isDark ? palette.blueL27 : palette.slate200;
-  const textColor = isDark ? palette.slate100 : palette.slate900;
-  const phColor   = isDark ? palette.slate500 : palette.gray400;
-  const chevColor = isDark ? palette.slate500 : palette.gray400;
+  const minTime = minimumDate ? dayStart(minimumDate) : null;
+  const today = dayStart(new Date());
+  const cells = useMemo(() => {
+    const first = new Date(month.getFullYear(), month.getMonth(), 1);
+    const lead = (first.getDay() + 6) % 7; // Monday first
+    const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    const out: (Date | null)[] = Array.from({ length: lead }, () => null);
+    for (let d = 1; d <= days; d++) out.push(new Date(month.getFullYear(), month.getMonth(), d));
+    while (out.length % 7) out.push(null);
+    return out;
+  }, [month]);
+  // No going back past the month of the minimum date.
+  const canGoBack = minTime === null || new Date(month.getFullYear(), month.getMonth(), 0).getTime() >= minTime;
 
-//   const onAndroid = (_: DateTimePickerEvent, selected?: Date) => {
-//       setShow(false);
-//       if (selected) onChange(formatDate(selected, dateFormat));
-//     };
-//
-//     const onIOS = (_: unknown, selected?: Date) => {
-//       if (selected) setPending(selected);
-//     };
-//
-//     const confirmIOS = () => {
-//       onChange(formatDate(pending, dateFormat));
-//       setShow(false);
-//     };
-//
-//     const displayText = value
-//       ? (() => {
-//           try { return formatDate(parseDate(value, dateFormat), "event"); }
-//           catch { return value; }
-//         })()
-//       : "";
-//
-//     return (
-//       <>
-//         <Pressable
-//           style={[styles.field, { backgroundColor: bg, borderColor: border }, style]}
-//           onPress={() => { setPending(parseDate(value, dateFormat)); setShow(true); }}
-//         >
-//           <Ionicons name="calendar-outline" size={16} color={accentColor} />
-//           <Text
-//             style={[styles.fieldText, { color: displayText ? textColor : phColor }, textStyle]}
-//             numberOfLines={1}
-//           >
-//             {displayText || placeholder}
-//           </Text>
-//           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
-//         </Pressable>
-//
-//         {process.env.EXPO_OS === "ios" ? (
-//           <InlinePickerSheet
-//             visible={show}
-//             accentColor={accentColor}
-//             onCancel={() => setShow(false)}
-//             onDone={confirmIOS}
-//             isDark={isDark}
-//           >
-//             <DateTimePicker
-//               value={pending}
-//               mode="date"
-//               display="spinner"
-//               onValueChange={onIOS}
-//               minimumDate={minimumDate}
-//               themeVariant={isDark ? "dark" : "light"}
-//               style={{ width: "100%" }}
-//             />
-//           </InlinePickerSheet>
-//         ) : (
-//           show && (
-//             <DateTimePicker
-//               value={pending}
-//               mode="date"
-//               display="default"
-//               onChange={onAndroid}
-//               minimumDate={minimumDate}
-//             />
-//           )
-//         )}
-//       </>
-//     );
-//   }
-  // New:
-  const onIOS = (_: unknown, selected?: Date) => {
-      if (selected) setPending(selected);
-    };
+  const toggle = () => {
+    if (!open) {
+      const d = selected ?? (minimumDate && dayStart(minimumDate) > today ? minimumDate : new Date());
+      setMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+    }
+    setOpen(!open);
+  };
 
-    const confirmIOS = () => {
-      onChange(formatDate(pending, dateFormat));
-      setShow(false);
-    };
+  const pick = (d: Date) => {
+    void Haptics.selectionAsync();
+    onChange(formatDate(d, dateFormat));
+    setOpen(false);
+  };
 
-    const openAndroidPicker = () => {
-      // Re-parse the currently displayed value fresh on every open (not from a stale
-      // closure) so a date picked and saved once doesn't "stick" as the picker's
-      // initial position on the next open.
-      const initial = value ? parseDate(value, dateFormat) : new Date();
-      DateTimePickerAndroid.open({
-        value: initial,
-        mode: "date",
-        display: "default",
-        ...(minimumDate ? { minimumDate } : {}),
-        // onValueChange fires only for a picked value (onChange is deprecated in datetimepicker 9).
-        onValueChange: (_event: unknown, selected: Date) => onChange(formatDate(selected, dateFormat)),
-      });
-    };
-
-    const openPicker = () => {
-      if (process.env.EXPO_OS === "android") {
-        openAndroidPicker();
-        return;
-      }
-      setPending(parseDate(value, dateFormat));
-      setShow(true);
-    };
-
-    const displayText = value
-      ? (() => {
-          try { return formatDate(parseDate(value, dateFormat), "event"); }
-          catch { return value; }
-        })()
-      : "";
-
-    return (
-      <>
-        <Pressable
-          style={[styles.field, { backgroundColor: bg, borderColor: border }, style]}
-          onPress={openPicker}
-        >
-          <Ionicons name="calendar-outline" size={16} color={accentColor} />
-          <Text
-            style={[styles.fieldText, { color: displayText ? textColor : phColor }, textStyle]}
-            numberOfLines={1}
-          >
-            {displayText || placeholder}
-          </Text>
-          <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
-        </Pressable>
-
-        {process.env.EXPO_OS === "ios" && (
-          <InlinePickerSheet
-            visible={show}
-            accentColor={accentColor}
-            onCancel={() => setShow(false)}
-            onDone={confirmIOS}
-            isDark={isDark}
-          >
-            <DateTimePicker
-              value={pending}
-              mode="date"
-              display="spinner"
-              onValueChange={onIOS}
-              minimumDate={minimumDate}
-              themeVariant={isDark ? "dark" : "light"}
-              style={{ width: "100%" }}
-            />
-          </InlinePickerSheet>
-        )}
-      </>
-    );
-  }
+  const shown = selected ? formatDate(selected, "event") : "";
+  return (
+    <>
+      <Field icon="calendar-outline" text={shown} placeholder={placeholder} open={open} accent={accent} style={style}
+        textStyle={textStyle} onPress={toggle} label="Date" />
+      {open ? (
+        <View style={[styles.panel, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+          <View style={styles.monthRow}>
+            <Pressable onPress={() => canGoBack && setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+              hitSlop={8} style={[styles.navBtn, { backgroundColor: tc.chipBg, opacity: canGoBack ? 1 : 0.35 }]}
+              accessibilityRole="button" accessibilityLabel="Previous month" disabled={!canGoBack}>
+              <Ionicons name="chevron-back" size={18} color={tc.textPrimary} />
+            </Pressable>
+            <Text style={[TYPE.bodyStrong, { color: tc.textPrimary }]}>
+              {month.toLocaleString("en-US", { month: "long", year: "numeric" })}
+            </Text>
+            <Pressable onPress={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+              hitSlop={8} style={[styles.navBtn, { backgroundColor: tc.chipBg }]}
+              accessibilityRole="button" accessibilityLabel="Next month">
+              <Ionicons name="chevron-forward" size={18} color={tc.textPrimary} />
+            </Pressable>
+          </View>
+          {/* One row per week, each cell flex: 1: seven percentage widths rounded past 100% and wrapped Sunday. */}
+          <View style={styles.row}>
+            {WEEKDAYS.map((w, i) => (
+              <View key={`w${i}`} style={[styles.cell, styles.headCell]}>
+                <Text style={[TYPE.label, { color: tc.textTertiary }]}>{w}</Text>
+              </View>
+            ))}
+          </View>
+          {Array.from({ length: Math.ceil(cells.length / 7) }, (_, w) => cells.slice(w * 7, w * 7 + 7)).map((week, w) => (
+            <View key={`r${w}`} style={styles.row}>
+              {Array.from({ length: 7 }, (_, j) => week[j] ?? null).map((d, j) => {
+                if (!d) return <View key={`e${w}-${j}`} style={styles.cell} />;
+                const t = d.getTime();
+                const disabled = minTime !== null && t < minTime;
+                const isSel = selected !== null && dayStart(selected) === t;
+                const isToday = t === today;
+                return (
+                  <View key={t} style={styles.cell}>
+                    <Pressable
+                      onPress={() => pick(d)}
+                      disabled={disabled}
+                      accessibilityRole="button"
+                      accessibilityLabel={d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                      accessibilityState={{ selected: isSel, disabled }}
+                      style={[styles.day, isSel && { backgroundColor: accent }, !isSel && isToday && { borderWidth: 1.5, borderColor: accent }]}
+                    >
+                      <Text style={[TYPE.bodyStrong, { fontSize: 14, color: isSel ? palette.white : disabled ? tc.textTertiary : tc.textPrimary, opacity: disabled ? 0.45 : 1 }]}>
+                        {d.getDate()}
+                      </Text>
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </>
+  );
+}
 
 // ─── TimePickerField ──────────────────────────────────────────────────────────
+
+const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+const MINUTES = [0, 15, 30, 45];
 
 export function TimePickerField({
   value,
   onChange,
   placeholder = "Select time",
-  accentColor = palette.brandBlue,
+  accentColor,
   style,
   textStyle,
-  forceDark,
 }: Omit<PickerProps, "dateFormat" | "minimumDate">) {
-  const scheme = useColorScheme();
-  const isDark = forceDark ?? scheme === "dark";
-  const [show, setShow]       = useState(false);
-  const [pending, setPending] = useState<Date>(new Date());
+  const { tc } = useTheme();
+  const accent = accentColor ?? tc.accent;
+  const [open, setOpen] = useState(false);
+  const current = parseTime(value);
+  // The time being chosen; starts at the field's value, or 7:00 PM.
+  const [h12, setH12] = useState(12);
+  const [min, setMin] = useState(0);
+  const [pm, setPm] = useState(true);
 
-  const bg        = isDark ? palette.blueL18_2 : palette.white;
-  const border    = isDark ? palette.blueL27 : palette.slate200;
-  const textColor = isDark ? palette.slate100 : palette.slate900;
-  const phColor   = isDark ? palette.slate500 : palette.gray400;
-  const chevColor = isDark ? palette.slate500 : palette.gray400;
+  const toggle = () => {
+    if (!open) {
+      const t = current ?? { h: 19, m: 0 };
+      setH12(t.h % 12 || 12);
+      setMin(t.m);
+      setPm(t.h >= 12);
+    }
+    setOpen(!open);
+  };
 
-//   const onAndroid = (_: DateTimePickerEvent, selected?: Date) => {
-//       setShow(false);
-//       if (selected) onChange(formatTime(selected));
-//     };
-//
-//     const onIOS = (_: unknown, selected?: Date) => {
-//       if (selected) setPending(selected);
-//     };
-//
-//     const confirmIOS = () => {
-//       onChange(formatTime(pending));
-//       setShow(false);
-//     };
-//
-//     return (
-//       <>
-//         <Pressable
-//           style={[styles.field, { backgroundColor: bg, borderColor: border }, style]}
-//           onPress={() => setShow(true)}
-//         >
-//           <Ionicons name="time-outline" size={16} color={accentColor} />
-//           <Text
-//             style={[styles.fieldText, { color: value ? textColor : phColor }, textStyle]}
-//             numberOfLines={1}
-//           >
-//             {value || placeholder}
-//           </Text>
-//           <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
-//         </Pressable>
-//
-//         {process.env.EXPO_OS === "ios" ? (
-//           <InlinePickerSheet
-//             visible={show}
-//             accentColor={accentColor}
-//             onCancel={() => setShow(false)}
-//             onDone={confirmIOS}
-//             isDark={isDark}
-//           >
-//             <DateTimePicker
-//               value={pending}
-//               mode="time"
-//               display="spinner"
-//               onValueChange={onIOS}
-//               is24Hour={false}
-//               themeVariant={isDark ? "dark" : "light"}
-//               style={{ width: "100%" }}
-//             />
-//           </InlinePickerSheet>
-//         ) : (
-//           show && (
-//             <DateTimePicker
-//               value={pending}
-//               mode="time"
-//               display="default"
-//               onChange={onAndroid}
-//               is24Hour={false}
-//             />
-//           )
-//         )}
-//       </>
-//     );
-//   }
-  // New:
-  const onIOS = (_: unknown, selected?: Date) => {
-      if (selected) setPending(selected);
-    };
+  const done = () => {
+    void Haptics.selectionAsync();
+    onChange(formatTime((h12 % 12) + (pm ? 12 : 0), min));
+    setOpen(false);
+  };
 
-    const confirmIOS = () => {
-      onChange(formatTime(pending));
-      setShow(false);
-    };
+  const chip = (label: string, on: boolean, onPress: () => void, key: string | number) => (
+    <Pressable key={key} onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: on }}
+      style={[styles.chip, { backgroundColor: on ? accent : tc.inputBg }]}>
+      <Text style={[TYPE.bodyStrong, { fontSize: 14, color: on ? palette.white : tc.textPrimary }]}>{label}</Text>
+    </Pressable>
+  );
+  // A minute off the quarter hours (from a saved value) still shows as a chip.
+  const minutes = MINUTES.includes(min) ? MINUTES : [...MINUTES, min].sort((a, b) => a - b);
 
-    const openAndroidPicker = () => {
-      DateTimePickerAndroid.open({
-        value: pending,
-        mode: "time",
-        display: "default",
-        is24Hour: false,
-        // onValueChange fires only for a picked value (onChange is deprecated in datetimepicker 9).
-        onValueChange: (_event: unknown, selected: Date) => onChange(formatTime(selected)),
-      });
-    };
-
-    const openPicker = () => {
-      if (process.env.EXPO_OS === "android") {
-        openAndroidPicker();
-        return;
-      }
-      setShow(true);
-    };
-
-    return (
-      <>
-        <Pressable
-          style={[styles.field, { backgroundColor: bg, borderColor: border }, style]}
-          onPress={openPicker}
-        >
-          <Ionicons name="time-outline" size={16} color={accentColor} />
-          <Text
-            style={[styles.fieldText, { color: value ? textColor : phColor }, textStyle]}
-            numberOfLines={1}
-          >
-            {value || placeholder}
-          </Text>
-          <Ionicons name={show ? "chevron-up" : "chevron-down"} size={14} color={chevColor} />
-        </Pressable>
-
-        {process.env.EXPO_OS === "ios" && (
-          <InlinePickerSheet
-            visible={show}
-            accentColor={accentColor}
-            onCancel={() => setShow(false)}
-            onDone={confirmIOS}
-            isDark={isDark}
-          >
-            <DateTimePicker
-              value={pending}
-              mode="time"
-              display="spinner"
-              onValueChange={onIOS}
-              is24Hour={false}
-              themeVariant={isDark ? "dark" : "light"}
-              style={{ width: "100%" }}
-            />
-          </InlinePickerSheet>
-        )}
-      </>
-    );
-  }
+  return (
+    <>
+      <Field icon="time-outline" text={current ? formatTime(current.h, current.m) : value} placeholder={placeholder}
+        open={open} accent={accent} style={style} textStyle={textStyle} onPress={toggle} label="Time" />
+      {open ? (
+        <View style={[styles.panel, { backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
+          <Text style={[TYPE.overline, { color: tc.textTertiary, marginBottom: 8 }]}>Hour</Text>
+          <View style={styles.chips}>{HOURS.map((h) => chip(String(h), h12 === h, () => setH12(h), `h${h}`))}</View>
+          <Text style={[TYPE.overline, { color: tc.textTertiary, marginTop: 14, marginBottom: 8 }]}>Minutes</Text>
+          <View style={styles.chips}>{minutes.map((m) => chip(`:${String(m).padStart(2, "0")}`, min === m, () => setMin(m), `m${m}`))}</View>
+          <View style={[styles.footer, { borderTopColor: tc.divider }]}>
+            <View style={[styles.ampm, { backgroundColor: tc.inputBg }]}>
+              {(["AM", "PM"] as const).map((p) => {
+                const on = (p === "PM") === pm;
+                return (
+                  <Pressable key={p} onPress={() => setPm(p === "PM")} accessibilityRole="button" accessibilityState={{ selected: on }}
+                    style={[styles.ampmBtn, on && { backgroundColor: accent }]}>
+                    <Text style={[TYPE.bodyStrong, { fontSize: 14, color: on ? palette.white : tc.textSecondary }]}>{p}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable onPress={done} accessibilityRole="button" accessibilityLabel={`Set ${formatTime((h12 % 12) + (pm ? 12 : 0), min)}`}
+              style={[styles.doneBtn, { backgroundColor: accent }]}>
+              <Text style={[TYPE.button, { color: palette.white }]}>Set {formatTime((h12 % 12) + (pm ? 12 : 0), min)}</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+    </>
+  );
+}
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -455,26 +322,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     flex: 1,
   },
-  inlineSheet: {
-    borderRadius: 14,
+  // Full width of its container: in a row of two fields (start / end time), the row wraps and the open panel
+  // takes a line of its own instead of squeezing in beside them.
+  panel: {
+    width: "100%",
+    borderRadius: 18,
     borderWidth: 1,
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: 8,
-    overflow: "hidden",
-    shadowColor: palette.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: 12,
   },
-  toolbar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  toolbarBtn: {
-    fontSize: 16,
-  },
+  monthRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  navBtn: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
+  row: { flexDirection: "row" },
+  cell: { flex: 1, height: 44, alignItems: "center", justifyContent: "center" },
+  headCell: { height: 28 },
+  day: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  // Six hours or four minutes to a row, stretched to the panel's width.
+  chip: { flexGrow: 1, flexBasis: "14%", minWidth: 48, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, alignItems: "center" },
+  footer: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  ampm: { flexDirection: "row", borderRadius: 12, padding: 3 },
+  ampmBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  doneBtn: { flex: 1, borderRadius: 12, paddingVertical: 11, alignItems: "center", justifyContent: "center" },
 });

@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../../theme/colors";
 import { useTheme } from "../../../theme/useTheme";
 import { useAuthStore } from "../../../store/auth.store";
-import { getCurrencyForCountry } from "../../../utils/currency";
+import { currencyForUser } from "../../../utils/currency";
 import { getUserCurrencyCode } from "../utils";
 import { ar } from "../styles/availableRoom.styles";
 
@@ -25,10 +25,7 @@ export function ListYourSpaceModal({
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const currencyCode = getUserCurrencyCode(user);
-  const currencySymbol = getCurrencyForCountry(
-    (user as { userLocation?: { countryCode?: string | null } | null; country?: string | null } | null)?.userLocation?.countryCode ??
-      ((user as { country?: string | null } | null)?.country === "United Kingdom" ? "GB" : "US"),
-  ).symbol;
+  const currencySymbol = currencyForUser(user as Parameters<typeof currencyForUser>[0]).symbol;
   const [roomType, setRoomType] = useState<"Private Room" | "Shared Room" | "Full Apartment">("Private Room");
   const [rent, setRent] = useState("");
   const [availFrom, setAvailFrom] = useState("");

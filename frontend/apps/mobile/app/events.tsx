@@ -21,6 +21,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
 import { useAuthStore } from "../src/store/auth.store";
+import { useUserCurrency } from "../src/hooks/useUserCurrency";
+import { formatPrice } from "../src/utils/currency";
 import { useGuestLocationStore } from "../src/store/guestLocation.store";
 import { useRequireAuth } from "../src/shared/hooks/useRequireAuth";
 import { ApiError } from "../src/api/client";
@@ -101,7 +103,8 @@ function formatEventDateLabel(iso: string): string {
   return d ? d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) : iso;
 }
 
-function toUiEvent(e: ApiEvent): EventItem {
+// Events store no currency: a ticket is priced in the viewer's currency (the events shown are in their city).
+function toUiEvent(e: ApiEvent, currencyCode: string): EventItem {
   // Plan 11: past once the event's day is before today in its city.
   const isPast = /^\d{4}-\d{2}-\d{2}$/.test(eventDayIso(e.date)) && eventDayIso(e.date) < cityTodayIso(e.city);
   return {
@@ -112,7 +115,7 @@ function toUiEvent(e: ApiEvent): EventItem {
     time: e.endTime ? `${e.startTime} – ${e.endTime}` : e.startTime,
     location: e.venue,
     attendees: e.attendeeCount,
-    price: e.ticketType === "FREE" || !e.ticketPrice ? "Free" : `$${e.ticketPrice}`,
+    price: e.ticketType === "FREE" || !e.ticketPrice ? "Free" : formatPrice(Number(e.ticketPrice), currencyCode),
     tags: [e.category],
     category: isPast ? "past" : "upcoming",
     image: e.images?.[0] || "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=75",
@@ -151,7 +154,8 @@ export default function EventsScreen() {
     staleTime: 0,
     queryFn: async () => (await getEvents({ city: eventsCity, pageSize: 50 })).data,
   });
-  const events = useMemo(() => eventsQ.data.map(toUiEvent), [eventsQ.data]);
+  const currency = useUserCurrency();
+  const events = useMemo(() => eventsQ.data.map((e) => toUiEvent(e, currency.code)), [eventsQ.data, currency.code]);
   const loading = eventsQ.loading;
   const error = eventsQ.error ? (eventsQ.error instanceof ApiError ? eventsQ.error.message : "Could not load events.") : "";
   const loadEvents = eventsQ.refetch;

@@ -13,15 +13,18 @@ export function LinkifiedText({
   text,
   style,
   linkStyle,
+  numberOfLines,
 }: {
   text: string;
   style?: StyleProp<TextStyle>;
   linkStyle?: StyleProp<TextStyle>;
+  /** Clamp to this many lines (a preview); omit for the whole text. */
+  numberOfLines?: number;
 }) {
   const parts = text.split(URL_REGEX);
 
   return (
-    <Text style={style}>
+    <Text style={style} numberOfLines={numberOfLines}>
       {parts.map((part, i) => {
         if (!URL_REGEX.test(part)) {
           URL_REGEX.lastIndex = 0;

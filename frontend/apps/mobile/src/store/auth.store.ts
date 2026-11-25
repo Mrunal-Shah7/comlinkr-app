@@ -74,6 +74,8 @@ export interface User {
   bio?: string;
   phone?: string;
   country?: string;
+  /** ISO code of `country` ("GB"), from the server's saved location. */
+  countryCode?: string;
   stateProvince?: string;
   city?: string;
   vibe?: string[];
@@ -182,9 +184,28 @@ function profileToAppUser(profile: UserProfile): User {
     phone: profile.phone,
     city: profile.city,
     country: profile.country,
+    countryCode: profile.countryCode,
     avatarUrl: profile.avatar ?? undefined,
     role,
   });
+}
+
+/**
+ * The stored user is restored without asking the server, so a country saved on another phone (or before the app
+ * kept it) never arrived and prices showed in the wrong currency (TR-065). Fetch the saved location once after
+ * start-up and keep the server's country and city.
+ */
+async function refreshLocationFromServer(): Promise<void> {
+  try {
+    const { default: authService } = await import("../services/http/authService");
+    const me = (await authService.getMe()).data;
+    const current = useAuthStore.getState().user;
+    if (!me || !current || me.id !== current.id || !me.country) return;
+    if (me.country === current.country && me.countryCode === current.countryCode && (!me.city || me.city === current.city)) return;
+    await useAuthStore.getState().applyUser({ ...current, country: me.country, countryCode: me.countryCode, city: me.city ?? current.city });
+  } catch {
+    // Offline or signed out: keep what was stored.
+  }
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -217,6 +238,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           useApiAuthStore.getState().setSessionCookie(storedCookie);
         }
         set({ user, isAuthed: true, isLoading: false });
+        void refreshLocationFromServer();
       } else {
         set({ isLoading: false });
       }

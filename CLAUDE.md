@@ -138,6 +138,20 @@ last, as each increment lands.
   touched. The button's wrapper in `app/(tabs)/housing/index.tsx` has a 12 top margin. Frontend only.
 - **Increment 27 (2026-11-15), version 1.0.7:** app version raised from 1.0.6 to 1.0.7 in
   `frontend/apps/mobile/app.config.js` and `frontend/apps/mobile/package.json`. EAS counts the build number.
+- **Increment 28 (2026-11-25), themed date and time pickers (TR-064):** `components/DateTimePickerField.tsx` opens a
+  panel in the app's colours (month grid; hour, minute and AM/PM chips) instead of the grey system pickers. Same
+  props, so the reservation, event, housing, profile and application fields all change. Walked on the phone
+  (reservation). The Google account chooser (TR-063) is Google's screen and cannot be themed. Frontend only.
+- **Increment 29 (2026-11-25), prices in the user's currency (TR-065):** the app's user now carries the country of
+  the server's saved location (`authService.ts`, `auth.store.ts`, refreshed once after start-up);
+  `currencyForUser` / `formatPrice` (`src/utils/currency.ts`) and `useUserCurrency` replace hard-coded `$` on
+  events, my listings, the landlord dashboard, settings, saved listings, the composer and the room form. Walked on
+  the phone (events). Frontend only.
+- **Increment 30 (2026-11-25), listing detail first view (TR-066, plan 20):** `PropertyDetail.tsx` shows icons, four
+  facts at a glance, a three-line description and six amenities, with "More details" for the rest. Walked on the
+  phone. Frontend only.
+- **Increment 31 (2026-11-25), tab row fills the width (TR-067):** `src/shared/d/ScrollTabs.tsx` tabs grow to share
+  the row when they fit (Explore's News / Events / ...). Walked on the phone. Frontend only.
 
 ## Building and testing
 
@@ -216,11 +230,11 @@ A walk records its results in `docs/device-runs/` and updates the module's revie
   - If Metro's background task dies, the app stays on the splash screen: start Metro again rather than waiting.
   - Stopping Metro's task can leave its node process holding the port ("Port 8085 is being used"): find the
     process on the port, check its command line is that Metro, stop it, then start Metro again.
+  - Never start Metro with `CI=1`: it turns file watching off, so edits never reach the phone (the bundle stays
+    the one built at start-up). Run it in the background without `CI`.
   - Start Metro with `GOOGLE_SERVICE_INFO_PLIST` pointing at a placeholder plist outside the repository (command in
     `docs/device-testing.md`). Without it, every cold start of the app fails in Expo Go ("Failed to download remote
     update"); a warm reload hides it.
-  - `uiautomator dump` fails on Explore ("could not get idle state": the greeting tile's glow never settles). Use
-    screenshots there; the dump works again on other screens.
 - **Database (shell):** timestamps read through `pg` from Node print 5 h 30 early (naive timestamps read as
   local time); compare with `now()` in the same query.
 - **Injected touches are not system gestures:** a swipe from adb or scrcpy does not trigger Android's edge-swipe

@@ -87,6 +87,8 @@ export interface UserProfile {
   phone?: string;
   city?: string;
   country?: string;
+  /** ISO code of `country` ("GB"), from the saved location. */
+  countryCode?: string;
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;

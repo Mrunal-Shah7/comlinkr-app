@@ -18,6 +18,8 @@ import Input from "../../../shared/ui/Input";
 import { TYPE, body, display } from "../../../theme/d";
 import { SPRING } from "../../../shared/motion/presets";
 import { useAuthStore } from "../../../store/auth.store";
+import { useUserCurrency } from "../../../hooks/useUserCurrency";
+import { formatPrice } from "../../../utils/currency";
 
 export default function EventRegistrationModal({
   visible,
@@ -34,6 +36,7 @@ export default function EventRegistrationModal({
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [tickets, setTickets] = useState(1);
+  const currency = useUserCurrency();
   const [regSubmitted, setRegSubmitted] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -117,8 +120,9 @@ export default function EventRegistrationModal({
   if (!event) return null;
 
   const isFree = event.price === "Free";
-  const priceNum = isFree ? 0 : parseFloat((event.price ?? "0").replace("$", "")) || 0;
-  const totalPrice = isFree ? "Free" : `$${(priceNum * tickets).toFixed(0)}`;
+  // event.price is already formatted ("$20", "£12.50"): read the number back out of it.
+  const priceNum = isFree ? 0 : (event.priceAmount ?? (parseFloat(String(event.price ?? "0").replace(/[^\d.]/g, "")) || 0));
+  const totalPrice = isFree ? "Free" : formatPrice(priceNum * tickets, currency.code);
 
   const validateEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
   const validatePhone = (v: string) => {

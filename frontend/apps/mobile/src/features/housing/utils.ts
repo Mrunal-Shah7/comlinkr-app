@@ -1,13 +1,10 @@
 import { rs, screenWidth } from "../../utils/responsive";
-import { getCurrencyForCountry } from "../../utils/currency";
+import { currencyForUser } from "../../utils/currency";
 
 export const SW = screenWidth();
 export const CARD_W = SW - rs(32); // 16px margin on each side
 
+/** The user's currency code: the country they chose, then the one they were located in (currencyForUser). */
 export function getUserCurrencyCode(user: unknown): string {
-  const u = user as { userLocation?: { countryCode?: string | null } | null; country?: string | null } | null;
-  const countryCode =
-    u?.userLocation?.countryCode ??
-    (u?.country === "United Kingdom" ? "GB" : "US");
-  return getCurrencyForCountry(countryCode).code;
+  return currencyForUser(user as Parameters<typeof currencyForUser>[0]).code;
 }

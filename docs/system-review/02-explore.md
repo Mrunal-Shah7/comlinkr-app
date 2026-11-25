@@ -194,3 +194,10 @@ From the [build note](../build/2026-11-14-app-1-0-6.md). Read in code; not walke
   Each still has its own place (Housing, Q&A, Explore's Stories and Polls tabs) [code].
 - The hero, the next event and the quest tile stay. When both tiles of the right-hand column are hidden, the column
   is left out. The 2026-11-10 placeholder for "Homes in …" no longer appears [code].
+
+## Update 2026-11-25: event prices in the user's currency (TR-065, branch `feature/ui-polish-currency-listing`, not merged)
+
+From the [build note](../build/2026-11-25-ui-polish-currency-listing.md).
+- Events store no currency; a ticket shows in the viewer's country's currency, read from the server's saved
+  location. The tile, the detail and the registration total format it when drawn **[phone]**.
+- Explore's tab row fills its width when the tabs fit (TR-067) **[phone]**.

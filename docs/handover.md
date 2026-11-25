@@ -9,8 +9,25 @@ Older entries are in [handover-archive.md](handover-archive.md).
 
 _One line per open branch: branch, task, what is left. Removed when the branch merges._
 
-Nothing in progress: PR 52 was merged into `main` on 2026-11-19. Still open: the owner's iPhone check of the
-tab bar and the Ask sheet (TR-057, TR-059), and plan 19's two questions.
+- `feature/ui-polish-currency-listing` (TR-063 to TR-067, plan 20): built and walked on Android (Expo Go and the release APK), pull request open; left:
+  the owner's iPhone check (pickers, button alignment) and the merge.
+
+Also still open: the owner's iPhone check of the tab bar and the Ask sheet (TR-057, TR-059), and plan 19's two
+questions.
+
+## 2026-11-25 - themed pickers, currency, listing detail, tab row (TR-063 to TR-067)
+
+- **What:** date and time pickers in the app's colours, prices in the user's country's currency (the root cause:
+  the app never had the server's country), a shorter listing detail with icons and "More details" (plan 20), and
+  Explore's tab row filling its width. The Google chooser is Google's screen.
+  [Build note](build/2026-11-25-ui-polish-currency-listing.md), [run log](device-runs/2026-11-25-ui-polish-currency-listing.md).
+- **Still running:** backend on 4000 (email off) and Metro on 8083 with the local API, started from this session.
+  **Phone:** the OnePlus over wireless debugging, Expo Go 57.0.9, signed in as Rohan (demo); no setting changed.
+  The local database changes made for the walk are put back.
+- **Slowed down by:**
+  - Metro started with `CI=1` never saw an edit; three restarts before the cause was found. Now a rule in
+    `CLAUDE.md` (Tools).
+  - After a force-stop, the first `am start` of Expo Go lands on the home screen; start it twice. Already known.
 
 ## 2026-11-19 - iOS fixes from the owner's screenshots (TR-057 to TR-062)
 
@@ -90,25 +107,3 @@ tab bar and the Ask sheet (TR-057, TR-059), and plan 19's two questions.
     is the owner's call.
   - Whether Google sign-in works on the local APK took reading the keystore's SHA-1 and `google-services.json`;
     now in `CLAUDE.md` (Building and testing) and the system map.
-
-## 2026-11-11 - production on this repository, release APK, after-merge docs (PR 43)
-
-- **Production switch** (owner on the VPS, Claude wrote the steps): pm2 `comlinkr-api` now runs this repository's
-  `backend/` with `pnpm start:prod`; the nine new migrations ran on the production database; nginx unchanged.
-  Checked from outside only (health, Socket.IO, a route only the new code has). Written in `system-map.md`, "How it
-  deploys", with the manual deploy steps and the rollback.
-- **Release APK:** `D:\ComLinkr\builds\ComLinkr-arm64.apk`, built 2026-11-11 against `https://api.comlinkr.com/api`
-  (1.0.4, arm64, debug key, location permissions present). Not installed on a phone. `android/` was regenerated
-  with `expo prebuild --clean` (keystore kept): the one used for the 2026-11-09 APK dated from 2026-10-25.
-- **Docs:** PR 43 recorded PRs 24 to 42 as merged and wrote down the release APK process (CLAUDE.md, system map,
-  build note). This branch, `chore/docs-production-switch`, records the switch and PR 43.
-- **Left for the owner:** T-001 (deploy workflow at the root, pointed at the new clone); disable the old
-  repository's deploy workflow; ship the new app screens to users (store build or EAS update).
-- **Still running:** nothing of this session (the backend on 4003 and Metro on 8085 stopped with the old session).
-- **Phone:** no settings changed.
-- **Slowed down by:**
-  - A stale `expo-updates-gradle-plugin/build` folder in `node_modules`: Gradle called `compileKotlin` up to date
-    with no classes on disk and packed an empty jar. `--rerun-tasks` on the jar did not hold; deleting the folder
-    did, and `Remove-Item` cannot, past the path-length limit (`rmdir /s /q "\\?\<path>"` can).
-  - Not knowing the `android/` folder was out of date: nothing checks it. Both are now in the release APK build
-    note, and the prebuild rule is in `CLAUDE.md`, "Building and testing".
