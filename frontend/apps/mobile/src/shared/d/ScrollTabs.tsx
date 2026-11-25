@@ -22,7 +22,7 @@ export function ScrollTabs({ items, value, onChange, style }: SegmentedProps & {
 
   return (
     <View style={[{ borderBottomWidth: 1, borderBottomColor: tc.borderLight }, style]} accessibilityRole="tablist">
-      <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12 }}>
+      <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, flexGrow: 1 }}>
         {items.map((it) => {
           const on = it.key === value;
           return (
@@ -33,7 +33,8 @@ export function ScrollTabs({ items, value, onChange, style }: SegmentedProps & {
               accessibilityRole="tab"
               accessibilityState={{ selected: on }}
               hitSlop={4}
-              style={{ paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderBottomWidth: 3, borderBottomColor: on ? tc.accent : 'transparent', marginBottom: -1 }}
+              // flexGrow: when the tabs fit (a wide phone), they share the row instead of leaving a gap on the right.
+              style={{ flexGrow: 1, alignItems: 'center', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 9, borderBottomWidth: 3, borderBottomColor: on ? tc.accent : 'transparent', marginBottom: -1 }}
             >
               <Text style={{ fontFamily: on ? FONT.bodyBold : FONT.bodySemi, fontSize: 15, color: on ? tc.textPrimary : tc.textSecondary }}>{it.label}</Text>
             </Pressable>

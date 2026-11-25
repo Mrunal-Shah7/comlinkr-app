@@ -33,7 +33,7 @@ export function AvailableRoomCard({
   const { isDark, tc } = useTheme();
   const pc = usePaletteColor();
   const user = useAuthStore((s) => s.user);
-  const currencyCode = getUserCurrencyCode(user);
+  const currencyCode = room.api?.currency || getUserCurrencyCode(user);
   const compat = computeRoomCompatibility(room, buildCurrentUserForMatch(user));
   const compatColor = compat >= 80 ? Colors.brand.green : compat >= 60 ? Colors.brand.blue : Colors.brand.orange;
   const compatBg = pc(compat >= 80 ? palette.green100 : compat >= 60 ? palette.brandBlueLight : palette.brandTealLight, "backgroundColor");

@@ -24,6 +24,7 @@
  */
 
 import { api } from "./client";
+import { formatPrice } from "../utils/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ export async function getInterestedItems(params: { page?: number; pageSize?: num
     type: "listing",
     contentId: String(l.id),
     title: String(l.title ?? "Listing"),
-    subtitle: [l.address ?? l.neighborhood ?? l.city, l.price != null ? `${l.currency ?? "$"}${l.price}/mo` : null].filter(Boolean).join(" · ") || undefined,
+    subtitle: [l.address ?? l.neighborhood ?? l.city, l.price != null ? `${formatPrice(Number(l.price), l.currency ?? "USD")}/mo` : null].filter(Boolean).join(" · ") || undefined,
     image: Array.isArray(l.images) && l.images[0] ? (typeof l.images[0] === "string" ? l.images[0] : l.images[0].imageUrl ?? l.images[0].url) : undefined,
     tags: [l.propertyType].filter(Boolean),
     markedAt: String(l.interestedAt ?? l.createdAt ?? new Date().toISOString()),

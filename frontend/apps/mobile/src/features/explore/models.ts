@@ -1,4 +1,6 @@
 import { palette } from "../../theme/palette";
+import { formatPrice } from "../../utils/currency";
+import { userCurrencyNow } from "../../hooks/useUserCurrency";
 import { Ionicons } from "@expo/vector-icons";
 import { resolveApiAssetUrl, type Post as FeedPost } from "../../api/feed.api";
 import { type ApiEvent } from "../../api/events.api";
@@ -63,6 +65,8 @@ export interface ExploreEventRow {
   interested: number;
   category: string;
   price: string;
+  /** The ticket price as a number (none when free), so it can be shown again in the viewer's current currency. */
+  priceAmount?: number;
   desc: string;
   host: string;
   emoji?: string;
@@ -128,7 +132,8 @@ export function eventCategoryEmoji(category: string): string {
   return m[category] ?? "📅";
 }
 
-export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
+/** Events store no currency: a ticket is priced in the viewer's currency (the events shown are in their city). */
+export function apiEventToExploreRow(e: ApiEvent, currencyCode: string = userCurrencyNow().code): ExploreEventRow {
   // Plan 11: the calendar day as stored, not converted through the phone's zone.
   const d = eventDayDate(e.date);
   const dateStr = d
@@ -138,7 +143,7 @@ export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
   const price =
     e.ticketType === "FREE" || e.ticketPrice == null || Number(e.ticketPrice) === 0
       ? "Free"
-      : `$${Number(e.ticketPrice)}`;
+      : formatPrice(Number(e.ticketPrice), currencyCode);
   const fallback =
     EVENT_IMAGE_BY_CATEGORY[uiCat] ?? EVENT_IMAGE_BY_CATEGORY.Community;
   const rawPaths = Array.isArray(e.images) ? e.images : [];
@@ -155,6 +160,7 @@ export function apiEventToExploreRow(e: ApiEvent): ExploreEventRow {
     interested: e.attendeeCount,
     category: uiCat,
     price,
+    priceAmount: price === "Free" ? undefined : Number(e.ticketPrice),
     desc: e.description,
     host: e.author?.name || e.author?.username || "Host",
     emoji: eventCategoryEmoji(e.category),
@@ -424,3 +430,11 @@ export function mapFeedPostToLiveItem(p: FeedPost): (typeof LIVE_WALL_ITEMS)[0] 
 
 // ── Post card ────────────────────────────────────────────
 export type PostCardModel = (typeof POSTS)[number] & { isOwner?: boolean; isEdited?: boolean };
+
+/**
+ * The price label in the given currency. Rows are built when the events load, which can be before the user's
+ * country arrives from the server, so screens format it again at render time (TR-065).
+ */
+export function eventPriceLabel(row: Pick<ExploreEventRow, "price" | "priceAmount">, currencyCode: string): string {
+  return row.priceAmount != null && row.priceAmount > 0 ? formatPrice(row.priceAmount, currencyCode) : row.price;
+}

@@ -17,7 +17,7 @@ import { usePermissions } from "../../shared/hooks/usePermissions";
 import { createPost, getPost, updatePost, type FeedCategory, type UpdatePostPayload } from "../../api/feed.api";
 import { createEvent, uploadEventImages } from "../../api/events.api";
 import { createListing, getListing, removeListingImage, reorderListingImages, updateListing, uploadListingImages, type HousingListingImageRef, type ListingStatus, type UpdateListingPayload } from "../../api/housing.api";
-import { formatPrice, getCurrencyForCountry } from "../../utils/currency";
+import { formatPrice, currencyForUser } from "../../utils/currency";
 import { createSharedSpace, uploadSharedSpaceImages } from "../../api/roommates.api";
 import { getBusinessCurrency } from "../../utils/currency";
 import { createRestaurant, submitReview, uploadRestaurantImages, type Restaurant } from "../../api/food.api";
@@ -115,10 +115,8 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
   const [furnished, setFurnished] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
   const [listingStep, setListingStep] = useState(1);
-  const userCountryCode =
-    (user as any)?.userLocation?.countryCode ||
-    (user?.country === "United Kingdom" ? "GB" : "US");
-  const derivedListingCurrency = getCurrencyForCountry(userCountryCode);
+  // The user's currency: the country they chose, then the one they were located in.
+  const derivedListingCurrency = currencyForUser(user as Parameters<typeof currencyForUser>[0]);
   const [listingCurrency, setListingCurrency] = useState(derivedListingCurrency.code); // SPRINT-42: editable currency; edit mode loads the listing's actual currency.
   const [listingCity, setListingCity] = useState("");
   const [listingState, setListingState] = useState("");
@@ -1147,7 +1145,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
     if (eventTime) extraFields.push({ label: "Time", value: eventTime, icon: "time-outline" });
     if (eventFormat) extraFields.push({ label: "Format", value: eventFormat, icon: "globe-outline" });
     if (ticketType === "Free") extraFields.push({ label: "Tickets", value: "Free", icon: "ticket-outline" });
-    else if (ticketPrice) extraFields.push({ label: "Tickets", value: `$${ticketPrice}`, icon: "ticket-outline" });
+    else if (ticketPrice) extraFields.push({ label: "Tickets", value: `${derivedListingCurrency.symbol}${ticketPrice}`, icon: "ticket-outline" });
     if (maxAttendees) extraFields.push({ label: "Capacity", value: maxAttendees, icon: "people-outline" });
   } else if (type.id === "news") {
     if (newsCategory) extraFields.push({ label: "Category", value: newsCategory, icon: "newspaper-outline" });
@@ -2177,7 +2175,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
                 </View>
 
                 <SectionLabel label="OPENING HOURS" color={type.color} />
-                <View style={s.rowFields}>
+                <View style={[s.rowFields, { flexWrap: "wrap" }]}>
                   <TimePickerField
                     value={openTime}
                     onChange={setOpenTime}
@@ -2355,7 +2353,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
               style={{ borderColor: tc.borderLight, backgroundColor: tc.cardBg }}
               forceDark={isDark}
             />
-            <View style={[s.rowFields, { marginTop: 8 }]}>
+            <View style={[s.rowFields, { marginTop: 8, flexWrap: "wrap" }]}>
               <TimePickerField
                 value={eventTime}
                 onChange={setEventTime}
@@ -2386,7 +2384,7 @@ export function PostForm({ type, onBack, initialMode, editId }: { type: PostType
             />
             {ticketType === "Paid" && (
               <View style={[s.locationField, { marginTop: 8, backgroundColor: tc.cardBg, borderColor: tc.borderLight }]}>
-                <Text style={[s.fieldPrefix, { color: type.color }]}>$</Text>
+                <Text style={[s.fieldPrefix, { color: type.color }]}>{derivedListingCurrency.symbol.trim()}</Text>
                 <TextInput
                   style={[s.locationInput, { color: tc.textPrimary }]}
                   placeholder="Ticket price per person"

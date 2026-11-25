@@ -37,7 +37,7 @@ import {
 import { getRoommatePreferences, updateRoommatePreferences } from "../src/api/roommates.api";
 import { roommatePrefsFromGetEndpoint, roommatePrefsToPatchBody } from "../src/utils/roommatePrefsMap";
 import { getMyBadgeStatus, apiBadgeTypeToUserKey, type MyBadgeStatusRow } from "../src/api/badges.api";
-import { formatPrice, getCurrencyForCountry } from "../src/utils/currency";
+import { formatPrice, currencyForUser } from "../src/utils/currency";
 import { useSidebarStore } from "../src/store/sidebar.store";
 import { useBlockStore } from "../src/store/block.store";
 import { usePostsStore } from "../src/store/posts.store";
@@ -429,10 +429,10 @@ export default function ProfileScreen() {
     serverProfile?.location?.state?.trim() || user?.stateProvince?.trim() || "Not set";
   const displayCountry =
     serverProfile?.location?.country?.trim() || user?.country?.trim() || "Not set";
-  const profileCountryCode =
-    (serverProfile?.location as { countryCode?: string | null } | undefined)?.countryCode ||
-    (displayCountry === "United Kingdom" ? "GB" : "US");
-  const profileCurrencyCode = getCurrencyForCountry(profileCountryCode).code;
+  const profileCurrencyCode = currencyForUser({
+    country: displayCountry === "Not set" ? null : displayCountry,
+    userLocation: { countryCode: (serverProfile?.location as { countryCode?: string | null } | undefined)?.countryCode ?? null },
+  }).code;
   const cultureIds     = user?.culture       || [];
   const interestIds    = user?.interests     || [];
   const communityIds   = user?.communities   || [];

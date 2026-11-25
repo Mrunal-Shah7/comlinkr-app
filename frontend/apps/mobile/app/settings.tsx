@@ -24,6 +24,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, Redirect, useFocusEffect } from "expo-router";
 import Constants from "expo-constants";
 import { useAuthStore, type UserBadge, type VerificationStatus } from "../src/store/auth.store";
+import { formatPrice } from "../src/utils/currency";
 import { useBlockStore } from "../src/store/block.store";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
@@ -823,7 +824,7 @@ export default function SettingsScreen() {
                           </Text>
                         </View>
                         <Text style={[s.bizPreviewMeta, { color: tc.textTertiary }]}>
-                          {typeof l.price === "number" ? `$${l.price}` : ""}
+                          {typeof l.price === "number" ? formatPrice(l.price, (l as { currency?: string | null }).currency ?? "USD") : ""}
                         </Text>
                       </TouchableOpacity>
                     );

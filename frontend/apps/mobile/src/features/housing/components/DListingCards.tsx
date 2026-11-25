@@ -102,7 +102,7 @@ export const ListingTile = memo(function ListingTile({ listing: l, saved, onTogg
 export const RoomTile = memo(function RoomTile({ room, onOpen }: { room: AvailableRoom; onOpen: (r: AvailableRoom) => void }) {
   const { tc } = useTheme();
   const user = useAuthStore((st) => st.user);
-  const price = room.rentPerMonth > 0 ? formatPrice(room.rentPerMonth, getUserCurrencyCode(user)) : "";
+  const price = room.rentPerMonth > 0 ? formatPrice(room.rentPerMonth, room.api?.currency || getUserCurrencyCode(user)) : "";
   const title = room.api?.title || [room.roomType, room.neighborhood || room.location].filter(Boolean).join(" · ");
   const meta = [
     room.availableRooms > 0 ? `${room.availableRooms} free` : "",

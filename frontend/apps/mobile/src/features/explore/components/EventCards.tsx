@@ -11,7 +11,8 @@ import { TYPE, body, display } from "../../../theme/d";
 import { PressableScale } from "../../../shared/d";
 import { DetailLink, detailHref } from "../../../shared/d/DetailLink";
 import { SPRING } from "../../../shared/motion/presets";
-import { EVENT_IMAGE_BY_CATEGORY, type ExploreEventRow } from "../models";
+import { EVENT_IMAGE_BY_CATEGORY, type ExploreEventRow, eventPriceLabel } from "../models";
+import { useUserCurrency } from "../../../hooks/useUserCurrency";
 
 export function EventTile({ event, isSaved, onToggleSave, onPress }: {
   event: ExploreEventRow;
@@ -24,7 +25,8 @@ export function EventTile({ event, isSaved, onToggleSave, onPress }: {
   const imgRef = useRef<View>(null);
   const pop = useAnimatedStyle(() => ({ transform: [{ scale: sc.get() }] }));
   const fallback = EVENT_IMAGE_BY_CATEGORY[event.category] ?? EVENT_IMAGE_BY_CATEGORY.Community;
-  const meta = [event.interested > 0 ? `${event.interested} going` : "", event.price].filter(Boolean).join(" · ");
+  const currency = useUserCurrency();
+  const meta = [event.interested > 0 ? `${event.interested} going` : "", eventPriceLabel(event, currency.code)].filter(Boolean).join(" · ");
   return (
     <DetailLink href={detailHref.event(event.id)} style={{ flex: 1 }}
       actions={[{ title: isSaved ? "Remove from saved" : "Save event", icon: isSaved ? "bookmark.slash" : "bookmark", onPress: onToggleSave }]}>

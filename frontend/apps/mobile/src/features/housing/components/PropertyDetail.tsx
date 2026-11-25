@@ -47,6 +47,43 @@ export function DetailRow({
   );
 }
 
+// ── Icons for amenities and details (TR-066) ────────────────────────────────
+type IconName = keyof typeof Ionicons.glyphMap;
+const AMENITY_ICONS: [RegExp, IconName][] = [
+  [/wi-?fi|internet|broadband/i, "wifi-outline"],
+  // Before laundry: "Dishwasher" contains "washer".
+  [/dishwasher|kitchen/i, "restaurant-outline"],
+  [/parking|garage|\bcar\b/i, "car-outline"],
+  [/laundry|washer|dryer/i, "shirt-outline"],
+  [/gym|fitness/i, "barbell-outline"],
+  [/pet|dog|cat/i, "paw-outline"],
+  [/pool|swim/i, "water-outline"],
+  [/air ?con|\bac\b|a\/c|cooling/i, "snow-outline"],
+  [/heat/i, "flame-outline"],
+  [/balcony|terrace|patio|garden|yard/i, "leaf-outline"],
+  [/elevator|lift/i, "swap-vertical-outline"],
+  [/doorman|concierge/i, "person-outline"],
+  [/furnish/i, "bed-outline"],
+  [/storage/i, "cube-outline"],
+  [/rooftop|roof/i, "business-outline"],
+  [/security|cctv|gated/i, "shield-checkmark-outline"],
+  [/bike|bicycle/i, "bicycle-outline"],
+  [/transit|metro|subway|train|bus/i, "train-outline"],
+];
+function amenityIcon(tag: string): IconName {
+  return AMENITY_ICONS.find(([re]) => re.test(tag))?.[1] ?? "checkmark-circle-outline";
+}
+const DETAIL_ICONS: Record<string, IconName> = {
+  Available: "calendar-outline", Deposit: "wallet-outline", Lease: "document-text-outline", Furnishing: "bed-outline",
+  Pets: "paw-outline", Parking: "car-outline", Laundry: "shirt-outline", Heating: "flame-outline", Cooling: "snow-outline",
+  Utilities: "flash-outline", "Year built": "hammer-outline", Neighbourhood: "map-outline",
+};
+/** How many amenities, and which key facts, show before "More details". */
+const FIRST_AMENITIES = 6;
+const GLANCE_KEYS = ["Deposit", "Lease", "Pets", "Furnishing", "Parking", "Laundry", "Neighbourhood"];
+/** A description longer than this is shown as a three-line preview first. */
+const LONG_DESCRIPTION = 180;
+
 // ── Property detail (the body of the /listing/[id] route, plan 03) ───────────
 export function PropertyDetail({
   listing,
@@ -72,12 +109,14 @@ export function PropertyDetail({
   const { width: windowWidth } = useWindowDimensions();
   const [journeyStep,         setJourneyStep]         = useState(initialJourneyStep); // 0=none,1=interested,2=enquired,3=viewing,4=applied
   const [showReportModal,     setShowReportModal]     = useState(false);
+  // TR-066: the first view shows the essentials; "More details" opens the rest.
+  const [showAll,             setShowAll]             = useState(false);
   const { isDark, tc } = useTheme();
   const { requireAuth } = useRequireAuth();
   const navLockRef = useRef(false); // blocks repeat taps while a close-then-navigate is pending
 
   // Sync initialJourneyStep whenever a different listing is opened
-  useEffect(() => { setJourneyStep(initialJourneyStep); }, [listing?.id]);
+  useEffect(() => { setJourneyStep(initialJourneyStep); setShowAll(false); }, [listing?.id]);
   // A step changed elsewhere (sending or withdrawing an application) shows when the detail is back in front.
   useEffect(() => { setJourneyStep(initialJourneyStep); }, [initialJourneyStep]);
 
@@ -164,18 +203,23 @@ export function PropertyDetail({
 
   const CAROUSEL_H = 350;
   const statusMeta = listing.listingStatus === "RENTED" ? "Rented" : listing.listingStatus === "UNLISTED" ? "Unlisted" : null;
-  const facts = [
-    { v: listing.beds > 0 ? String(listing.beds) : "", l: "Beds" },
-    { v: listing.baths > 0 ? String(listing.baths) : "", l: "Baths" },
-    { v: has(listing.sqft) ? listing.sqft : "", l: "Sq ft" },
+  const facts: { v: string; l: string; icon: IconName }[] = [
+    { v: listing.beds > 0 ? String(listing.beds) : "", l: listing.beds === 1 ? "Bed" : "Beds", icon: "bed-outline" as IconName },
+    { v: listing.baths > 0 ? String(listing.baths) : "", l: listing.baths === 1 ? "Bath" : "Baths", icon: "water-outline" as IconName },
+    { v: has(listing.sqft) ? listing.sqft : "", l: "Sq ft", icon: "resize-outline" as IconName },
     // The label already says "Floor": "2nd Floor" shows as "2nd".
-    { v: has(listing.floor) ? String(listing.floor).replace(/\s*(floor|flr|fl)\.?$/i, "").trim() || String(listing.floor) : "", l: "Floor" },
+    { v: has(listing.floor) ? String(listing.floor).replace(/\s*(floor|flr|fl)\.?$/i, "").trim() || String(listing.floor) : "", l: "Floor", icon: "layers-outline" as IconName },
   ].filter((x) => x.v);
   const details = ([
-    ["Available", listing.available], ["Deposit", listing.deposit], ["Lease", listing.leaseTerm], ["Furnished", listing.furnished],
+    ["Available", listing.available], ["Deposit", listing.deposit], ["Lease", listing.leaseTerm], ["Furnishing", listing.furnished],
     ["Pets", listing.petPolicy], ["Parking", listing.parking], ["Laundry", listing.laundry], ["Heating", listing.heating],
     ["Cooling", listing.cooling], ["Utilities", listing.utilities], ["Year built", listing.yearBuilt], ["Neighbourhood", listing.neighborhood],
   ] as [string, string][]).filter(([, v]) => has(v));
+  // "Available" is already the green tag at the top.
+  const glance = GLANCE_KEYS.map((k) => details.find(([key]) => key === k)).filter((d): d is [string, string] => !!d).slice(0, 4);
+  const restDetails = details.filter(([k]) => k !== "Available" && !glance.some(([g]) => g === k));
+  const longDescription = has(listing.description) && listing.description.length > LONG_DESCRIPTION;
+  const hasMore = longDescription || listing.tags.length > FIRST_AMENITIES || restDetails.length > 0;
   const share = () => {
     const link = getShareLink("listing", listing.id);
     Share.share({ title: listing.title, message: `${listing.title} — ${listing.price}/mo at ${listing.address}. Check it out on ComLinkr!\n\n${link}`, ...(process.env.EXPO_OS === "ios" ? { url: link } : {}) });
@@ -237,6 +281,7 @@ export function PropertyDetail({
             <Reveal i={2} style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
               {facts.map((x) => (
                 <View key={x.l} style={[pd.fact, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
+                  <Ionicons name={x.icon} size={18} color={tc.accentText} style={{ marginBottom: 4 }} />
                   {/* A long value ("2nd Floor") gets a smaller size and may wrap to two lines instead of being cut off. */}
                   <Text style={[display(800), { fontSize: String(x.v).length > 5 ? 15 : 19, lineHeight: String(x.v).length > 5 ? 18 : 23, color: tc.textPrimary, textAlign: "center" }]} numberOfLines={2}>{x.v}</Text>
                   <Text style={[TYPE.small, { color: tc.textSecondary, fontSize: 12 }]}>{x.l}</Text>
@@ -245,39 +290,75 @@ export function PropertyDetail({
             </Reveal>
           ) : null}
 
+          {/* ── At a glance: four key facts with icons (TR-066) ── */}
+          {glance.length ? (
+            <Reveal i={3} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+              {glance.map(([k, v]) => (
+                <View key={k} style={[pd.glance, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
+                  <View style={[pd.glanceIcon, { backgroundColor: tc.accentSoft }]}>
+                    <Ionicons name={DETAIL_ICONS[k] ?? "information-circle-outline"} size={16} color={tc.accentText} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[TYPE.small, { color: tc.textTertiary, fontSize: 12 }]}>{k}</Text>
+                    <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, fontSize: 14 }]} numberOfLines={2}>{v}</Text>
+                  </View>
+                </View>
+              ))}
+            </Reveal>
+          ) : null}
+
           {has(listing.description) ? (
-            <Reveal i={3}>
+            <Reveal i={4}>
               {section("About this place")}
-              <LinkifiedText text={listing.description} style={[TYPE.body, { color: tc.textSecondary }]} />
+              <LinkifiedText text={listing.description} style={[TYPE.body, { color: tc.textSecondary }]} numberOfLines={showAll || !longDescription ? undefined : 3} />
             </Reveal>
           ) : null}
 
           {listing.tags.length ? (
-            <Reveal i={4}>
+            <Reveal i={5}>
               {section("What it has")}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {listing.tags.map((tag) => (
+                {(showAll ? listing.tags : listing.tags.slice(0, FIRST_AMENITIES)).map((tag) => (
                   <View key={tag} style={[pd.amen, { backgroundColor: tc.cardBg, borderColor: tc.borderMedium }]}>
-                    <Ionicons name="checkmark" size={14} color={tc.mint} />
+                    <Ionicons name={amenityIcon(tag)} size={15} color={tc.accentText} />
                     <Text style={[body(600), { fontSize: 13.5, color: tc.textPrimary }]}>{tag}</Text>
                   </View>
                 ))}
+                {!showAll && listing.tags.length > FIRST_AMENITIES ? (
+                  <View style={[pd.amen, { backgroundColor: tc.chipBg, borderColor: tc.chipBg }]}>
+                    <Text style={[body(600), { fontSize: 13.5, color: tc.textSecondary }]}>+{listing.tags.length - FIRST_AMENITIES} more</Text>
+                  </View>
+                ) : null}
               </View>
             </Reveal>
           ) : null}
 
-          {details.length ? (
-            <Reveal i={5}>
+          {/* ── The rest of the facts, behind "More details" ── */}
+          {showAll && restDetails.length ? (
+            <Reveal>
               {section("Details")}
               <View style={[pd.dl, { backgroundColor: tc.cardBg, borderColor: tc.glassLine }]}>
-                {details.map(([k, v], i) => (
+                {restDetails.map(([k, v], i) => (
                   <View key={k} style={[pd.dlRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: tc.borderLight }]}>
-                    <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <Ionicons name={DETAIL_ICONS[k] ?? "information-circle-outline"} size={17} color={tc.textTertiary} />
+                      <Text style={[TYPE.body, { color: tc.textSecondary }]}>{k}</Text>
+                    </View>
                     <Text style={[TYPE.bodyStrong, { color: tc.textPrimary, flexShrink: 1, textAlign: "right" }]}>{v}</Text>
                   </View>
                 ))}
               </View>
             </Reveal>
+          ) : null}
+
+          {hasMore ? (
+            <SoftButton
+              block
+              label={showAll ? "Fewer details" : "More details"}
+              icon={<Ionicons name={showAll ? "chevron-up" : "chevron-down"} size={18} color={tc.accentText} />}
+              onPress={() => { void Haptics.selectionAsync(); setShowAll(!showAll); }}
+              outerStyle={{ marginTop: 18 }}
+            />
           ) : null}
 
           {/* Journey: only once you have contacted the owner (design D, problem 12) */}
@@ -346,6 +427,8 @@ export function PropertyDetail({
 const pd = StyleSheet.create({
   tag: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
   fact: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12, paddingHorizontal: 6, borderRadius: 18, borderWidth: 1 },
+  glance: { width: "46%", flexGrow: 1, flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 18, borderWidth: 1 },
+  glanceIcon: { width: 32, height: 32, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   amen: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1 },
   dl: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 14 },
   dlRow: { flexDirection: "row", justifyContent: "space-between", gap: 16, paddingVertical: 12 },

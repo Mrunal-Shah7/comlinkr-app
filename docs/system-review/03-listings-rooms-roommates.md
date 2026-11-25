@@ -187,3 +187,11 @@ From the [build note](../build/2026-11-10-walk-leftovers.md).
 - Roommates → the count line has "Your preferences", which opens the preferences sheet. Before, it opened only from
   the empty state or Profile **[phone]**.
 - A sheet left open does not stay over another tab after a deep link (TR-009, checked again) **[phone]**.
+
+## Update 2026-11-25: a shorter listing detail and prices in the user's currency (TR-066, TR-065, plan 20, branch `feature/ui-polish-currency-listing`, not merged)
+
+From the [build note](../build/2026-11-25-ui-polish-currency-listing.md).
+- The listing detail opens with icons on the fact tiles, four facts "at a glance", three lines of a long
+  description and six amenities with icons; "More details" shows the rest **[phone]**.
+- Room cards and details, my listings and the landlord dashboard show the room's or listing's own currency, else
+  the user's country's (`useUserCurrency`) [code].

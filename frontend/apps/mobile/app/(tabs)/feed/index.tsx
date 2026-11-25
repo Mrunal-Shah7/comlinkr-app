@@ -603,7 +603,7 @@ export default function FeedScreen() {
       applyMoodSummary(moodSummary);
       setHeroEventsTotal(typeof res?.total === "number" ? res.total : res?.data?.length ?? 0);
       setHeroListingsTotal(typeof listingsRes?.total === "number" ? listingsRes.total : listingsRes?.data?.length ?? 0);
-      const rows = (res?.data ?? []).map(apiEventToExploreRow);
+      const rows = (res?.data ?? []).map((e) => apiEventToExploreRow(e));
       setExploreEvents(rows);
       const posts = Array.isArray(feedRes?.data) ? (feedRes.data as FeedPost[]) : [];
       const stories = Array.isArray(storiesRaw) ? storiesRaw : [];

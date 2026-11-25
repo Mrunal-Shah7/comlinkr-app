@@ -1,5 +1,6 @@
 // Split out of app/create-post.tsx (TR-013, point 9b).
 import { palette } from "../../theme/palette";
+import { currencySymbol } from "../../utils/currency";
 import { View, Text, ScrollView, Pressable, StyleSheet, useWindowDimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -383,7 +384,7 @@ export function PostPreview({
     const bathsVal = extraFields.find((f) => f.label === "Baths")?.value ?? "";
     const sqftVal = extraFields.find((f) => f.label === "Sqft")?.value ?? "";
     const propTypeVal = extraFields.find((f) => f.label === "Type")?.value ?? "";
-    const currSymbol = listingCurrency === "GBP" ? "£" : listingCurrency === "EUR" ? "€" : "$";
+    const currSymbol = currencySymbol(listingCurrency);
     const priceNum = parseFloat((listingPrice ?? "").replace(/,/g, ""));
     const priceStr = !Number.isNaN(priceNum) && priceNum > 0 ? `${currSymbol}${listingPrice}/mo` : "Price TBD";
     const depositStr = listingDeposit?.trim() ? `Deposit ${currSymbol}${listingDeposit}` : null;

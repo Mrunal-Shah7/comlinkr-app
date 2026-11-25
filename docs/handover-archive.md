@@ -3,6 +3,28 @@
 _Older entries moved from [handover.md](handover.md), newest first. Read only when the history of a piece of
 work is needed; the build notes and triage hold the details._
 
+## 2026-11-11 - production on this repository, release APK, after-merge docs (PR 43)
+
+- **Production switch** (owner on the VPS, Claude wrote the steps): pm2 `comlinkr-api` now runs this repository's
+  `backend/` with `pnpm start:prod`; the nine new migrations ran on the production database; nginx unchanged.
+  Checked from outside only (health, Socket.IO, a route only the new code has). Written in `system-map.md`, "How it
+  deploys", with the manual deploy steps and the rollback.
+- **Release APK:** `D:\ComLinkr\builds\ComLinkr-arm64.apk`, built 2026-11-11 against `https://api.comlinkr.com/api`
+  (1.0.4, arm64, debug key, location permissions present). Not installed on a phone. `android/` was regenerated
+  with `expo prebuild --clean` (keystore kept): the one used for the 2026-11-09 APK dated from 2026-10-25.
+- **Docs:** PR 43 recorded PRs 24 to 42 as merged and wrote down the release APK process (CLAUDE.md, system map,
+  build note). This branch, `chore/docs-production-switch`, records the switch and PR 43.
+- **Left for the owner:** T-001 (deploy workflow at the root, pointed at the new clone); disable the old
+  repository's deploy workflow; ship the new app screens to users (store build or EAS update).
+- **Still running:** nothing of this session (the backend on 4003 and Metro on 8085 stopped with the old session).
+- **Phone:** no settings changed.
+- **Slowed down by:**
+  - A stale `expo-updates-gradle-plugin/build` folder in `node_modules`: Gradle called `compileKotlin` up to date
+    with no classes on disk and packed an empty jar. `--rerun-tasks` on the jar did not hold; deleting the folder
+    did, and `Remove-Item` cannot, past the path-length limit (`rmdir /s /q "\\?\<path>"` can).
+  - Not knowing the `android/` folder was out of date: nothing checks it. Both are now in the release APK build
+    note, and the prebuild rule is in `CLAUDE.md`, "Building and testing".
+
 ## 2026-11-10 - the owner's eight answers, and the rest of the pending list (TR-045 to TR-053)
 
 - Seven branches, each stacked on the one before, are PRs 36 to 42. None is merged. Each has a build note.

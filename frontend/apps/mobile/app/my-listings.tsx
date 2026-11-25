@@ -22,6 +22,7 @@ import { usePermissions } from "../src/shared/hooks/usePermissions";
 import { Colors } from "../src/theme/colors";
 import { useTheme } from "../src/theme/useTheme";
 import { formatPrice } from "../src/utils/currency";
+import { useUserCurrency } from "../src/hooks/useUserCurrency";
 import { getMyListings, deleteListing, updateListing, listingImageUrlList, subscribeToListingUpdates, type HousingListing, type HousingListingImageRef } from "../src/api/housing.api"; // SPRINT-42: consume ordered images and in-memory listing updates.
 import { FadeImage } from "../components/FadeImage"; // SPRINT-42: render listing media through the shared image component.
 import { getSharedSpaces, deleteSharedSpace, getSpaceApplications, decideSpaceApplication, type SharedSpaceListing, type SpaceApplicant } from "../src/api/roommates.api";
@@ -60,6 +61,7 @@ function StatChip({ icon, value, label }: { icon: string; value: number | string
 
 export default function MyListingsScreen() {
   const user = useAuthStore((s) => s.user);
+  const userCurrency = useUserCurrency();
   const { isVerifiedLandlord, isVerifiedAgency } = usePermissions();
   const { isDark, tc } = useTheme();
   // Owner listings refetch on every focus (staleTime 0): the editor may have changed them.
@@ -263,7 +265,7 @@ export default function MyListingsScreen() {
               <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
                 {space.availableSpots > 0 ? tag(`${space.availableSpots} spot${space.availableSpots > 1 ? "s" : ""} open`, "ok") : tag("Full", "plain")}
                 <Text style={[TYPE.cardTitle, { color: tc.textPrimary }]} numberOfLines={1}>{space.title}</Text>
-                <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[`${formatPrice(space.price, "USD")} /mo`, `${space.rooms} room${space.rooms !== 1 ? "s" : ""}`, `${space.bathrooms} bath`, space.address || space.city].filter(Boolean).join(" · ")}</Text>
+                <Text style={[TYPE.small, { color: tc.textTertiary }]} numberOfLines={1}>{[`${formatPrice(space.price, space.currency ?? userCurrency.code)} /mo`, `${space.rooms} room${space.rooms !== 1 ? "s" : ""}`, `${space.bathrooms} bath`, space.address || space.city].filter(Boolean).join(" · ")}</Text>
               </View>
               <Pressable hitSlop={8} accessibilityRole="button" accessibilityLabel="Delete room listing" onPress={() => appAlert("Delete room listing", "Delete this room listing?", [
                 { text: "Cancel", style: "cancel" },
@@ -293,7 +295,7 @@ export default function MyListingsScreen() {
                   const isOpen = expandedApplicant === app.id;
                   const p = app.applicant.roommatePrefs;
                   const prefs = p ? [
-                    p.budgetMin != null && p.budgetMax != null ? `$${p.budgetMin}–$${p.budgetMax} /mo` : "",
+                    p.budgetMin != null && p.budgetMax != null ? `${formatPrice(p.budgetMin, userCurrency.code)}–${formatPrice(p.budgetMax, userCurrency.code)} /mo` : "",
                     p.moveInDate ? `Move-in ${p.moveInDate}` : "", p.sleepSchedule ?? "", p.cleanliness ?? "",
                     p.petFriendly != null ? (p.petFriendly ? "Pets OK" : "No pets") : "", p.smoking != null ? (p.smoking ? "Smoker" : "Non-smoker") : "",
                   ].filter(Boolean) : [];

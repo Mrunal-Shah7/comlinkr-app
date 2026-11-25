@@ -24,6 +24,8 @@ export interface BackendAuthUser {
   createdAt: string;
   /** From `UserLocation` when the user has completed location onboarding. */
   city?: string | null;
+  /** The user's saved location (country chosen in onboarding or the profile). */
+  userLocation?: { country?: string | null; countryCode?: string | null; city?: string | null; state?: string | null } | null;
 }
 
 export type AuthPayload = { user: BackendAuthUser; sessionCookie: SessionCookieHeader };
@@ -60,7 +62,10 @@ function mapAuthUser(u: BackendAuthUser): UserProfile {
     avatar: u.avatarUrl ?? undefined,
     bio: u.bio ?? undefined,
     phone: u.phoneNumber ?? undefined,
-    city: u.city?.trim() || undefined,
+    city: u.city?.trim() || u.userLocation?.city?.trim() || undefined,
+    // The country decides the currency prices are shown in (TR-065).
+    country: u.userLocation?.country?.trim() || undefined,
+    countryCode: u.userLocation?.countryCode?.trim() || undefined,
     createdAt: created,
     updatedAt: created,
   };

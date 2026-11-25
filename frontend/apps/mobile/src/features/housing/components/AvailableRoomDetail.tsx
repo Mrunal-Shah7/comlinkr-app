@@ -50,7 +50,8 @@ export function AvailableRoomDetail({
   const [applyMsg, setApplyMsg] = useState("");
   const { tc } = useTheme();
   const user = useAuthStore((s) => s.user);
-  const currencyCode = getUserCurrencyCode(user);
+  // The room's own currency (a London room is in pounds for everyone), then the viewer's.
+  const currencyCode = room?.api?.currency || getUserCurrencyCode(user);
   if (!room) return null;
 
   const compat = computeRoomCompatibility(room, buildCurrentUserForMatch(user));
